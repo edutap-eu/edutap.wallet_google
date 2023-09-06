@@ -50,22 +50,26 @@ class GiftCardClass(BaseModel):
     cardNumberLabel: str | None
     localizedCardNumberLabel: LocalizedString | None
     classTemplateInfo: ClassTemplateInfo | None
-    version: str | None = Field(exclude=True)  # deprecated
+    version: str | None = Field(description="deprecated", exclude=True)
     issuerName: str
     messages: list[Message] | None
-    allowMultipleUsersPerObject: bool | None = Field(exclude=True)  # deprecated
+    allowMultipleUsersPerObject: bool | None = Field(
+        description="deprecated", exclude=True
+    )
     homepageUri: Uri | None
     locations: list[LatLongPoint]
     reviewStatus: ReviewStatus | None
     review: Review | None
-    infoModuleData: InfoModuleData | None = Field(exclude=True)  # deprecated
+    infoModuleData: InfoModuleData | None = Field(
+        description="deprecated", exclude=True
+    )
     imageModulesData: list[ImageModuleData]
     textModulesData: list[TextModuleData] | None
     linksModuleData: LinksModuleData | None
     redemptionIssuers: list[str] | None
     countryCode: str | None
     heroImage: Image | None
-    wordMark: Image | None = Field(exclude=True)  # deprecated
+    wordMark: Image | None = Field(description="deprecated", exclude=True)
     enableSmartTap: bool | None
     hexBackgroundColor: str | None
     localizedIssuerName: LocalizedString | None
@@ -140,21 +144,25 @@ class LoyaltyClass(BaseModel):
     localizedSecondaryRewardsTier: LocalizedString | None
     discoverableProgram: DiscoverableProgram | None
     classTemplateInfo: ClassTemplateInfo | None
-    version: str | None = Field(exclude=True)  # deprecated / int64
+    version: str | None = Field(description="deprecated", exclude=True)  # int64
     messages: list[Message] | None
-    allowMultipleUsersPerObject: bool = Field(exclude=True, default=True)  # deprecated
+    allowMultipleUsersPerObject: bool = Field(
+        description="deprecated", exclude=True, default=True
+    )
     homepageUri: Uri | None
     locations: list[LatLongPoint] | None
     reviewStatus: ReviewStatus | None
     review: Review | None
-    infoModuleData: InfoModuleData | None = Field(exclude=True)  # deprecated
+    infoModuleData: InfoModuleData | None = Field(
+        description="deprecated", exclude=True
+    )
     imageModulesData: list[ImageModuleData] | None
     textModulesData: list[TextModuleData] | None
     linksModuleData: LinksModuleData | None
     redemptionIssuers: list[str] | None  # string (int64 format)
     countryCode: str | None
     heroImage: Image | None
-    wordMark: Image | None = Field(exclude=True)  # deprecated
+    wordMark: Image | None = Field(description="deprecated", exclude=True)
     enableSmartTap: bool | None = False
     hexBackgroundColor: str | None
     multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = (
@@ -177,14 +185,17 @@ class LoyaltyPointsBalance(BaseModel):
     double: float | None = None
     money: Money | None = None
 
-    @model_validator(mode='after')
-    def check_one_of(self) -> 'LoyaltyPointsBalance':
-        given_values = [val for val in (self.string, self.int_, self.double) if val is not None]
+    @model_validator(mode="after")
+    def check_one_of(self) -> "LoyaltyPointsBalance":
+        given_values = [
+            val for val in (self.string, self.int_, self.double) if val is not None
+        ]
         if len(given_values) == 0:
             raise ValueError("One of string, int, or double must be set")
         if len(given_values) > 1:
             raise ValueError("Only one of string, int, or double must be set")
         return self
+
 
 class LoyaltyPoints(BaseModel):
     """

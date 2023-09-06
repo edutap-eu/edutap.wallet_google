@@ -2,7 +2,6 @@ from .enums import DateFormat
 from .enums import PredefinedItem
 from .enums import TransitOption
 from pydantic import BaseModel
-from typing import List
 
 
 class FieldReference(BaseModel):
@@ -92,7 +91,7 @@ class CardTemplateOverride(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardtemplateoverride
     """
 
-    cardRowTemplateInfos: List[CardRowTemplateInfo] | None
+    cardRowTemplateInfos: list[CardRowTemplateInfo] | None
 
 
 class DetailsItemInfo(BaseModel):
@@ -108,7 +107,7 @@ class DetailsTemplateOverride(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#detailstemplateoverride
     """
 
-    detailsItemInfos: List[DetailsItemInfo] | None
+    detailsItemInfos: list[DetailsItemInfo] | None
 
 
 class FirstRowOption(BaseModel):
