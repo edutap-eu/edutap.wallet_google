@@ -3,9 +3,11 @@ name = "edutap.wallet_google"
 version = "1.0.0.dev1"
 description = "Library for Google Wallet Communication"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 license = { text = "EUPL 1.2" }
 classifiers = [
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
     "Development Status :: 3 - Alpha",
@@ -82,7 +84,7 @@ showcontent = true
 profile = "plone"
 
 [tool.black]
-target-version = ["py311"]
+target-version = ["py39"]
 
 [tool.codespell]
 ignore-words-list = "discreet,"
