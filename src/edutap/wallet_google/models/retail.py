@@ -188,12 +188,12 @@ class LoyaltyPointsBalance(BaseModel):
     @model_validator(mode="after")
     def check_one_of(self) -> "LoyaltyPointsBalance":
         given_values = [
-            val for val in (self.string, self.int_, self.double) if val is not None
+            val for val in (self.string, self.int_, self.double, self.money) if val is not None
         ]
         if len(given_values) == 0:
-            raise ValueError("One of string, int, or double must be set")
+            raise ValueError("One of string, int, double, or money must be set")
         if len(given_values) > 1:
-            raise ValueError("Only one of string, int, or double must be set")
+            raise ValueError("Only one of string, int, double, or money must be set")
         return self
 
 
