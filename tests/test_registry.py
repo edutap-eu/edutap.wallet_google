@@ -3,8 +3,8 @@ import pytest
 
 @pytest.fixture
 def clean_registry():
-    from edutap.google_wallet.registry import _REGISTRY
-    from edutap.google_wallet.registry import RegistrationType
+    from edutap.wallet_google.registry import _REGISTRY
+    from edutap.wallet_google.registry import RegistrationType
 
     OLD_CLASS_REGISTRY = _REGISTRY[RegistrationType.WALLETCLASS].copy()
     _REGISTRY[RegistrationType.WALLETCLASS].clear()
@@ -18,8 +18,8 @@ def clean_registry():
 
 
 def test_decorator(clean_registry):
-    from edutap.google_wallet.registry import register_model
-    from edutap.google_wallet.registry import RegistrationType
+    from edutap.wallet_google.registry import register_model
+    from edutap.wallet_google.registry import RegistrationType
 
     @register_model(RegistrationType.WALLETOBJECT, "foo")
     class Foo:
@@ -41,14 +41,14 @@ def test_decorator(clean_registry):
 
 
 def test_lookup(clean_registry):
-    from edutap.google_wallet.registry import register_model
-    from edutap.google_wallet.registry import RegistrationType
+    from edutap.wallet_google.registry import register_model
+    from edutap.wallet_google.registry import RegistrationType
 
     @register_model(RegistrationType.WALLETOBJECT, "foo")
     class Foo:
         pass
 
-    from edutap.google_wallet.registry import lookup
+    from edutap.wallet_google.registry import lookup
 
     assert lookup(RegistrationType.WALLETOBJECT, "foo") == Foo
 
