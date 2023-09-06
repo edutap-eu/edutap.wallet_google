@@ -1,16 +1,21 @@
-from google.auth.transport.requests import AuthorizedSession
 from .models.primitives import Pagination
 from .models.primitives.notification import AddMessageRequest
 from .models.primitives.notification import Message
+from .registry import lookup
 from .registry import RegistrationType
-from .registry import lookup_model
 from .session import session_manager
+from google.auth.transport.requests import AuthorizedSession
 from pydantic import BaseModel
 
 import json
 
 
-def _make_url(session: AuthorizedSession, registration_type: RegistrationType, name: str) -> str:
+def _make_url(
+    session: AuthorizedSession,
+    registration_type: RegistrationType,
+    name: str,
+    additional_path: str,
+) -> str:
     """
     Helper function to create the URL for the CRUD operations.
 
@@ -41,14 +46,14 @@ def create(
     :raises Exception:         if the response status code is not 200
     :return:                   the created model based on the data returned by the API
     """
-    model = lookup_model(registration_type, name)
+    model = lookup(registration_type, name)
     obj = model(**payload)
     data = obj.json(
         exclude_none=True,
         exclude_unset=True,
     )
     session = session_manager.session
-    response = session_manager.session.post(
+    response = session.post(
         url=_make_url(session, registration_type, name),
         data=data,
     )
@@ -59,23 +64,34 @@ def create(
     return model.parse_raw(response.content)
 
 
-# def read(
-#     http_client: AuthorizedSession,
-#     resource_id: str,
-#     *,
-#     obj_class: BaseModel,
-# ) -> BaseModel:
-#     """
-#     Generic Implementation of the CRUD --> (R) Read Methode.
-#     """
-#     response = http_client.get(f"{http_client.base_url}/{obj_class._url_path()}/{resource_id}")
-#     if response.status_code == 200:
-#         obj = obj_class.parse_raw(response.content)
-#         return obj
-#     elif response.status_code == 404:
-#         raise LookupError(f"{obj_class.__name__} not found")
-#     else:
-#         raise Exception(f"Error: {response.status_code} - {response.content}")
+def read(
+    registration_type: RegistrationType,
+    name: str,
+    resource_id: str,
+) -> BaseModel:
+    """
+    Generic CRUD Implementation of the `C` or `Create` method.
+
+    :param registration_type:  type of the model (either class or object)
+    :param name:               registered name of the model
+    :param resource_id:        id of the resource to read
+    :raises LookupError:       if the resource was not found (404)
+    :raises Exception:         if the response status code is not 200 or 404
+    :return:                   the created model based on the data returned by the API
+    """
+    session = session_manager.session
+    response = session.get(
+        url=_make_url(session, registration_type, name, f"/{resource_id}")
+    )
+
+    if response.status_code == 404:
+        raise LookupError(f"{registration_type}: {name} not found")
+
+    if response.status_code == 200:
+        model = lookup(registration_type, name)
+        return model.parse_raw(response.content)
+
+    raise Exception(f"Error: {response.status_code} - {response.content}")
 
 
 # def update(
