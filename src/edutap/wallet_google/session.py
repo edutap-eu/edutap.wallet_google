@@ -23,9 +23,9 @@ class SessionManager:
         key_file_path = os.environ.get(
             "EDUTAP_WALLET_GOOGLE_APPLICATION_CREDENTIALS_FILE"
         )
-        with open(key_file_path) as credential_file:
-            issuer_cred = json.load(credential_file)
-            self.issuer_account = issuer_cred["client_email"]
+        # with open(key_file_path) as credential_file:
+        #     issuer_cred = json.load(credential_file)
+        #     self.issuer_account = issuer_cred["client_email"]
 
         credentials = Credentials.from_service_account_file(
             key_file_path, scopes=SCOPES
@@ -34,7 +34,7 @@ class SessionManager:
 
     @property
     def session(self):
-        if _THREADLOCAL.session is None:
+        if getattr(_THREADLOCAL, "session", None) is None:
             _THREADLOCAL.session = self._make_session()
         return _THREADLOCAL.session
 

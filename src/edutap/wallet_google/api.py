@@ -9,7 +9,6 @@ from pydantic import BaseModel
 
 
 def _make_url(
-    session: AuthorizedSession,
     registration_type: RegistrationType,
     name: str,
     additional_path: str | None = None,
@@ -28,9 +27,9 @@ def _make_url(
     :return: the url of the google RESTful API endpoint to handle this model
     """
     base_type = (
-        "class" if registration_type == RegistrationType.WALLETCLASS else "object"
+        "Class" if registration_type == RegistrationType.WALLETCLASS else "Object"
     )
-    return f"{session.base_url}/{name}{base_type}{additional_path}"
+    return f"{session_manager.base_url}/{name}{base_type}{additional_path or ''}"
 
 
 def create(
@@ -54,13 +53,11 @@ def create(
         exclude_unset=True,
     )
     session = session_manager.session
-    response = session.post(
-        url=_make_url(session, registration_type, name),
-        data=data,
-    )
+    url = _make_url(registration_type, name)
+    response = session.post(url=url, data=data)
 
     if response.status_code != 200:
-        raise Exception(f"Error: {response.status_code} - {response.text}")
+        raise Exception(f"Error at {url}: {response.status_code} - {response.text}")
 
     return model.parse_raw(response.content)
 
@@ -82,7 +79,7 @@ def read(
     """
     session = session_manager.session
     response = session.get(
-        url=_make_url(session, registration_type, name, f"/{resource_id}")
+        url=_make_url(registration_type, name, f"/{resource_id}")
     )
 
     if response.status_code == 404:
@@ -118,7 +115,7 @@ def update(
     )
     session = session_manager.session
     response = session.put(
-        url=_make_url(session, registration_type, name, f"/{obj.id}"),
+        url=_make_url(registration_type, name, f"/{obj.id}"),
         data=data,
     )
     if response.status_code == 404:

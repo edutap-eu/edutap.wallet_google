@@ -29,17 +29,17 @@ class GenericClass(BaseModel):
     """
 
     id: str
-    classTemplateInfo: ClassTemplateInfo | None
-    imageModulesData: list[ImageModuleData] | None
-    textModulesData: list[TextModuleData] | None
-    linksModuleData: LinksModuleData | None
+    classTemplateInfo: ClassTemplateInfo | None = None
+    imageModulesData: list[ImageModuleData] | None = None
+    textModulesData: list[TextModuleData] | None = None
+    linksModuleData: LinksModuleData | None = None
     enableSmartTap: bool = False
-    redemptionIssuers: list[str] | None
-    securityAnimation: SecurityAnimation | None
+    redemptionIssuers: list[str] | None = None
+    securityAnimation: SecurityAnimation | None = None
     multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = (
         MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
-    callbackOptions: CallbackOptions | None
+    callbackOptions: CallbackOptions | None = None
     viewUnlockRequirement: ViewUnlockRequirement | None = (
         ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
     )
