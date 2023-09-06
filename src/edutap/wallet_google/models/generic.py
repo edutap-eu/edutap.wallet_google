@@ -22,7 +22,7 @@ from .primitives.notification import Notifications
 from pydantic import BaseModel
 
 
-@register_model(RegistrationType.WALLETCLASS, "genericClass")
+@register_model(RegistrationType.WALLETCLASS, "generic")
 class GenericClass(BaseModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericclass
@@ -45,7 +45,7 @@ class GenericClass(BaseModel):
     )
 
 
-@register_model(RegistrationType.WALLETOBJECT, "genericObject")
+@register_model(RegistrationType.WALLETOBJECT, "generic")
 class GenericObject(BaseModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject

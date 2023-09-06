@@ -126,6 +126,7 @@ def update(
 
     return model.parse_raw(response.content)
 
+
 # def disable(
 #     http_client: AuthorizedSession,
 #     resource_id: str,
