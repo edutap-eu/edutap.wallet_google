@@ -9,7 +9,6 @@ from pydantic import HttpUrl
 
 
 class Uri(BaseModel):
-    kind: str | None = "walletobjects#uri"
     uri: AnyUrl | str | None
     description: str | None
     localizedDescription: LocalizedString | None
@@ -37,11 +36,9 @@ class PassConstraints(BaseModel):
         ScreenshotEligibility.SCREENSHOT_ELIGIBILITY_UNSPECIFIED
     )
     nfcConstraint: list[NfcConstraint] | None = Field(
-        default_factory=list(
-            [
-                NfcConstraint.NFC_CONSTRAINT_UNSPECIFIED,
-            ]
-        )
+        default_factory=lambda: [
+            NfcConstraint.NFC_CONSTRAINT_UNSPECIFIED,
+        ]
     )
 
 

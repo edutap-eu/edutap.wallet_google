@@ -2,7 +2,6 @@ from . import Image
 from . import LocalizedString
 from . import Uri
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -12,7 +11,7 @@ class AppTarget:
 
 @dataclass
 class AppLinkInfo:
-    appLogoImage: Optional[Image]
+    appLogoImage: Image | None
     title: LocalizedString
     description: LocalizedString
     appTarget: AppTarget
@@ -20,6 +19,6 @@ class AppLinkInfo:
 
 @dataclass
 class AppLinkData:
-    androidAppLinkInfo: Optional[AppLinkInfo]
-    iosAppLinkInfo: Optional[AppLinkInfo]
-    webAppLinkInfo: Optional[AppLinkInfo]
+    androidAppLinkInfo: AppLinkInfo | None
+    iosAppLinkInfo: AppLinkInfo | None
+    webAppLinkInfo: AppLinkInfo | None
