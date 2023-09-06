@@ -27,7 +27,10 @@ def _make_url(
 
     :return: the url of the google RESTful API endpoint to handle this model
     """
-    return f"{session.base_url}/{name}{'class' if registration_type == RegistrationType.WALLETCLASS else 'object'}{additional_path}"
+    base_type = (
+        "class" if registration_type == RegistrationType.WALLETCLASS else "object"
+    )
+    return f"{session.base_url}/{name}{base_type}{additional_path}"
 
 
 def create(
