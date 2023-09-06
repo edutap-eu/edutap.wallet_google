@@ -134,7 +134,7 @@ def update(
 #     obj_class: BaseModel,
 # ):
 #     """
-#     Generic Implementation of the CRUD --> (D) usually delete, but here disbale since delete is not supported at Google Wallets.
+#     Generic Implementation of the CRUD --> (D) usually delete, but here disable since delete is not supported at Google Wallets.
 #     """
 #     raise NotImplementedError()
 
@@ -148,7 +148,7 @@ def update(
 #     token: str = None,
 # ) -> list[BaseModel]:
 #     """
-#     Generic Implementation of the List Methode.
+#     Generic Implementation of the List Method.
 #     """
 #     response = None
 #     url = f"{http_client.base_url}/{obj_class._url_path()}"
@@ -194,7 +194,7 @@ def update(
 #     obj_class: BaseModel,
 # ) -> BaseModel:
 #     """
-#     Generic Implementation addMessage Methode.
+#     Generic Implementation addMessage Method.
 #     """
 #     response = http_client.post(
 #         url=f"{http_client.base_url}/{obj_class._url_path()}/{resource_id}/addMessage",
