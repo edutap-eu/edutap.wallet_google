@@ -29,6 +29,7 @@ from .primitives.retail import DiscoverableProgram
 from .primitives.review import Review
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import model_validator
 
 
 @register_model(RegistrationType.WALLETCLASS, "giftcard")
@@ -169,15 +170,21 @@ class LoyaltyClass(BaseModel):
 class LoyaltyPointsBalance(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPointsBalance
-
-    this should be a union, but it is defined as separate fields, one of them needs to be set.
     """
 
     string: str | None = None
-    int: int | None = None
+    int_: int | None = Field(alias="int", default=None)
     double: float | None = None
     money: Money | None = None
 
+    @model_validator(mode='after')
+    def check_one_of(self) -> 'LoyaltyPointsBalance':
+        given_values = [val for val in (self.string, self.int_, self.double) if val is not None]
+        if len(given_values) == 0:
+            raise ValueError("One of string, int, or double must be set")
+        if len(given_values) > 1:
+            raise ValueError("Only one of string, int, or double must be set")
+        return self
 
 class LoyaltyPoints(BaseModel):
     """
