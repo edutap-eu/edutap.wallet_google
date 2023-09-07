@@ -2,6 +2,7 @@ from . import Image
 from . import Uri
 from .localized_string import LocalizedString
 from pydantic import BaseModel
+from pydantic import Field
 
 
 class TextModuleData(BaseModel):
@@ -58,7 +59,9 @@ class InfoModuleData(BaseModel):
     """
 
     labelValueRows: list[LabelValueRow]
-    showLastUpdatedTime: bool = Field(description="deprecated", exclude=True, default=False)
+    showLastUpdatedTime: bool = Field(
+        description="deprecated", exclude=True, default=False
+    )
 
 
 class AppTarget(BaseModel):

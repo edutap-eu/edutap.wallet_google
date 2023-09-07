@@ -73,7 +73,7 @@ class GiftCardClass(BaseModel):
     enableSmartTap: bool | None = None
     hexBackgroundColor: str | None = None
     localizedIssuerName: LocalizedString | None = None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = None = (
+    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = (
         MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
     callbackOptions: CallbackOptions | None = None

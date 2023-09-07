@@ -2,6 +2,7 @@ from .enums import DateFormat
 from .enums import PredefinedItem
 from .enums import TransitOption
 from pydantic import BaseModel
+from pydantic import Field
 
 
 class FieldReference(BaseModel):
@@ -126,7 +127,9 @@ class ListTemplateOverride(BaseModel):
 
     firstRowOption: FirstRowOption | None = None
     secondRowOption: FieldSelector | None = None
-    thirdRowOption: FieldSelector | None = Field(description="deprecated", exclude=True, default=None)
+    thirdRowOption: FieldSelector | None = Field(
+        description="deprecated", exclude=True, default=None
+    )
 
 
 class ClassTemplateInfo(BaseModel):
