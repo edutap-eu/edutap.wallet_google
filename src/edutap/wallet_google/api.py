@@ -50,7 +50,6 @@ def create(
     obj = model(**payload)
     data = obj.json(
         exclude_none=True,
-        exclude_unset=True,
     )
     session = session_manager.session
     url = _make_url(registration_type, name)
@@ -83,13 +82,13 @@ def read(
     )
 
     if response.status_code == 404:
-        raise LookupError(f"{registration_type}: {name} not found")
+        raise LookupError(f"{url} {registration_type}: {name} not found")
 
     if response.status_code == 200:
         model = lookup(registration_type, name)
         return model.parse_raw(response.content)
 
-    raise Exception(f"Error: {response.status_code} - {response.text}")
+    raise Exception(f"{url} {response.status_code} - {response.text}")
 
 
 def update(
@@ -128,12 +127,12 @@ def update(
 
 
 # def disable(
-#     http_client: AuthorizedSession,
-#     resource_id: str,
-#     *,
-#     obj_class: BaseModel,
+    # registration_type: RegistrationType,
+    # name: str,
+    # resource_id: str,
 # ):
 #     """
+#     Disables a Google Wallet Class or Object. `D` in CRUD.
 #     Generic Implementation of the CRUD --> (D) usually delete, but here disable since delete is not supported at Google Wallets.
 #     """
 #     raise NotImplementedError()

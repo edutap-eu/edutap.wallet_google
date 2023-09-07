@@ -20,7 +20,7 @@ from .primitives.enums import ViewUnlockRequirement
 from .primitives.localized_string import LocalizedString
 from .primitives.notification import Notifications
 from pydantic import BaseModel
-
+from pydantic import Field
 
 @register_model(RegistrationType.WALLETCLASS, "generic")
 class GenericClass(BaseModel):
@@ -36,12 +36,12 @@ class GenericClass(BaseModel):
     enableSmartTap: bool = False
     redemptionIssuers: list[str] | None = None
     securityAnimation: SecurityAnimation | None = None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = (
-        MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
+    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = Field(
+        default=MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
     callbackOptions: CallbackOptions | None = None
-    viewUnlockRequirement: ViewUnlockRequirement | None = (
-        ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
+    viewUnlockRequirement: ViewUnlockRequirement = Field(
+        default=ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
     )
 
 
@@ -53,23 +53,23 @@ class GenericObject(BaseModel):
 
     id: str
     classId: str
-    genericType: GenericType | None = GenericType.GENERIC_TYPE_UNSPECIFIED
+    genericType: GenericType = GenericType.GENERIC_TYPE_UNSPECIFIED
     cardTitle: LocalizedString
-    subheader: LocalizedString | None
+    subheader: LocalizedString | None = None
     header: LocalizedString
-    logo: Image | None
-    hexBackgroundColor: str | None
-    notifications: Notifications | None
-    barcode: Barcode | None
-    heroImage: Image | None
-    validTimeInterval: TimeInterval | None
-    imageModulesData: list[ImageModuleData] | None
-    textModulesData: list[TextModuleData] | None
-    linksModuleData: LinksModuleData | None
-    appLinkData: AppLinkData | None
-    groupingInfo: GroupingInfo | None
-    smartTapRedemptionValue: str | None
-    rotatingBarcode: RotatingBarcode | None
-    state: State | None
-    hasUsers: bool | None
-    passConstraints: PassConstraints | None
+    logo: Image | None = None
+    hexBackgroundColor: str | None = None
+    notifications: Notifications | None = None
+    barcode: Barcode | None = None
+    heroImage: Image | None = None
+    validTimeInterval: TimeInterval | None = None
+    imageModulesData: list[ImageModuleData] | None = None
+    textModulesData: list[TextModuleData] | None = None
+    linksModuleData: LinksModuleData | None = None
+    appLinkData: AppLinkData | None = None
+    groupingInfo: GroupingInfo | None = None
+    smartTapRedemptionValue: str | None = None
+    rotatingBarcode: RotatingBarcode | None = None
+    state: State = Field(default=State.STATE_UNSPECIFIED)
+    hasUsers: bool | None = None
+    passConstraints: PassConstraints | None = None

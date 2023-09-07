@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from pydantic import Field
 
 
 class TranslatedString(BaseModel):
@@ -6,9 +7,8 @@ class TranslatedString(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString#translatedstring
     """
 
-    kind: str | None = "walletobjects#translatedString"
-    language: str | None
-    value: str | None
+    language: str | None = Field(kwarg_only=False, default=None)
+    value: str | None = Field(kwarg_only=False, default=None)
 
 
 class LocalizedString(BaseModel):
@@ -16,6 +16,5 @@ class LocalizedString(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString
     """
 
-    kind: str | None = "walletobjects#localizedString"
-    translatedValues: list[TranslatedString] | None
-    defaultValue: TranslatedString
+    defaultValue: TranslatedString = Field(kwarg_only=False)
+    translatedValues: list[TranslatedString] = Field(kwarg_only=False, default=[])

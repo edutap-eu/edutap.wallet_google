@@ -9,16 +9,16 @@ from pydantic import HttpUrl
 
 
 class Uri(BaseModel):
-    uri: AnyUrl | str | None
-    description: str | None
-    localizedDescription: LocalizedString | None
-    id: str | None
+    uri: AnyUrl | str | None = None
+    description: str | None = None
+    localizedDescription: LocalizedString | None = None
+    id: str | None = None
 
 
 class ImageUri(BaseModel):
     uri: AnyUrl
-    description: str | None
-    localizedDescription: LocalizedString | None
+    description: str | None = None
+    localizedDescription: LocalizedString | None = None
 
 
 class Image(BaseModel):
@@ -28,7 +28,6 @@ class Image(BaseModel):
 
     sourceUri: ImageUri
     contentDescription: LocalizedString | None
-    kind: str | None = "walletobjects#image"
 
 
 class PassConstraints(BaseModel):
@@ -55,8 +54,8 @@ class GroupingInfo(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/GroupingInfo
     """
 
-    sortIndex: int | None
-    groupingId: str | None
+    sortIndex: int | None = None
+    groupingId: str | None = None
 
 
 class Pagination(BaseModel):
@@ -65,8 +64,7 @@ class Pagination(BaseModel):
     """
 
     resultsPerPage: int
-    nextPageToken: str | None
-    kind: str | None = "walletobjects#pagination"
+    nextPageToken: str | None = None
 
 
 class CallbackOptions(BaseModel):
@@ -74,5 +72,5 @@ class CallbackOptions(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/CallbackOptions
     """
 
-    url: HttpUrl | None
-    updateRequestUrl: HttpUrl | None  # deprecated Attribute
+    url: HttpUrl | None = None
+    updateRequestUrl: HttpUrl | None = None  # deprecated Attribute
