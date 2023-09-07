@@ -116,7 +116,6 @@ class GenericType(CamelCaseAliasEnum):
     GENERIC_LIBRARY_MEMBERSHIP = (
         "GENERIC_LIBRARY_MEMBERSHIP"  # Library membership cards
     )
-    genericLibraryMembership = "genericLibraryMembership"
     GENERIC_RESERVATIONS = "GENERIC_RESERVATIONS"  # Reservations
     GENERIC_AUTO_INSURANCE = "GENERIC_AUTO_INSURANCE"  # Auto-insurance cards
     GENERIC_HOME_INSURANCE = "GENERIC_HOME_INSURANCE"  # Home-insurance cards
