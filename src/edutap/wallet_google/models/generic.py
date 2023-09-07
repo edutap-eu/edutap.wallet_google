@@ -22,6 +22,7 @@ from .primitives.notification import Notifications
 from pydantic import BaseModel
 from pydantic import Field
 
+
 @register_model(RegistrationType.WALLETCLASS, "generic")
 class GenericClass(BaseModel):
     """
@@ -36,8 +37,8 @@ class GenericClass(BaseModel):
     enableSmartTap: bool = False
     redemptionIssuers: list[str] | None = None
     securityAnimation: SecurityAnimation | None = None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = Field(
-        default=MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
+    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = (
+        Field(default=MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED)
     )
     callbackOptions: CallbackOptions | None = None
     viewUnlockRequirement: ViewUnlockRequirement = Field(

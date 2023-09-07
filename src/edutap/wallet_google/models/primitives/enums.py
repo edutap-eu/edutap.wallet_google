@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class CamelCaseAliasEnum(Enum):
     """Add an value alias in camelcase to the enum,
     given the value in snakecase.

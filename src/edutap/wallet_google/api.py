@@ -77,9 +77,7 @@ def read(
     :return:                   the created model based on the data returned by the API
     """
     session = session_manager.session
-    response = session.get(
-        url=_make_url(registration_type, name, f"/{resource_id}")
-    )
+    response = session.get(url=_make_url(registration_type, name, f"/{resource_id}"))
 
     if response.status_code == 404:
         raise LookupError(f"{url} {registration_type}: {name} not found")
@@ -127,9 +125,9 @@ def update(
 
 
 # def disable(
-    # registration_type: RegistrationType,
-    # name: str,
-    # resource_id: str,
+# registration_type: RegistrationType,
+# name: str,
+# resource_id: str,
 # ):
 #     """
 #     Disables a Google Wallet Class or Object. `D` in CRUD.
