@@ -25,8 +25,8 @@ class Notifications(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject#notifications
     """
 
-    expiryNotification: ExpiryNotification | None
-    upcomingNotification: UpcomingNotification | None
+    expiryNotification: ExpiryNotification | None = None
+    upcomingNotification: UpcomingNotification | None = None
 
 
 class Message(BaseModel):
@@ -35,13 +35,13 @@ class Message(BaseModel):
     """
 
     kind: str | None = "walletobjects#walletObjectMessage"
-    header: str | None
-    body: str | None
-    displayInterval: TimeInterval | None
-    id: str | None
+    header: str | None = None
+    body: str | None = None
+    displayInterval: TimeInterval | None = None
+    id: str | None = None
     messageType: MessageType = MessageType.MESSAGE_TYPE_UNSPECIFIED
-    locaizedHeader: LocalizedString | None
-    localizedBody: LocalizedString | None
+    locaizedHeader: LocalizedString | None = None
+    localizedBody: LocalizedString | None = None
 
 
 class AddMessageRequest(BaseModel):

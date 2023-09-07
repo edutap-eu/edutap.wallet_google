@@ -28,10 +28,10 @@ class IssuerToUserInfo(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/smarttap#issuertouserinfo
     """
 
-    action: Action | None = Action.ACTION_UNSPECIFIED
-    url: AnyHttpUrl | None
-    value: Json | None
-    signUpInfo: SignUpInfo | None
+    action: Action = Action.ACTION_UNSPECIFIED
+    url: AnyHttpUrl | None = None
+    value: Json | None = None
+    signUpInfo: SignUpInfo | None = None
 
 
 class SmartTap(BaseModel):
@@ -39,10 +39,9 @@ class SmartTap(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/smarttap#resource:-smarttap
     """
 
-    kind: str | None = "walletobjects#smartTap"
     id: str
     merchantId: str
-    infos: list[IssuerToUserInfo] | None
+    infos: list[IssuerToUserInfo] | None = None
 
 
 class IssuerContactInfo(BaseModel):
@@ -50,11 +49,11 @@ class IssuerContactInfo(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/issuer#issuercontactinfo
     """
 
-    name: str | None
-    phone: str | None
-    homepageUrl: HttpUrl | None
-    email: EmailStr | None
-    alertsEmails: list[EmailStr] | None
+    name: str | None = None
+    phone: str | None = None
+    homepageUrl: HttpUrl | None = None
+    email: EmailStr | None = None
+    alertsEmails: list[EmailStr] | None = None
 
 
 class SmartTapMerchantData(BaseModel):
@@ -62,5 +61,5 @@ class SmartTapMerchantData(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/issuer#smarttapmerchantdata
     """
 
-    smartTapMerchantId: str | None
-    authenticationKeys: list[AuthenticationKey] | None
+    smartTapMerchantId: str | None = None
+    authenticationKeys: list[AuthenticationKey] | None = None

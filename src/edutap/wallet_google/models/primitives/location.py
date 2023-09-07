@@ -17,5 +17,5 @@ class EventVenue(BaseModel):
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventvenue
     """
 
-    name: LocalizedString | None
-    address: LocalizedString | None
+    name: LocalizedString | None = None
+    address: LocalizedString | None = None

@@ -10,7 +10,7 @@ class FieldReference(BaseModel):
     """
 
     fieldPath: str
-    dateFormat: DateFormat | None
+    dateFormat: DateFormat | None = None
 
 
 class FieldSelector(BaseModel):
@@ -26,9 +26,9 @@ class TemplateItem(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#templateitem
     """
 
-    firstValue: FieldSelector | None
-    secondValue: FieldSelector | None
-    predefinedItem: PredefinedItem | None
+    firstValue: FieldSelector | None = None
+    secondValue: FieldSelector | None = None
+    predefinedItem: PredefinedItem | None = None
 
 
 class BarcodeSectionDetail(BaseModel):
@@ -44,9 +44,9 @@ class CardBarcodeSectionDetails(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardbarcodesectiondetails
     """
 
-    firstTopDetail: BarcodeSectionDetail | None
-    firstBottomDetail: BarcodeSectionDetail | None
-    secondTopDetail: BarcodeSectionDetail | None
+    firstTopDetail: BarcodeSectionDetail | None = None
+    firstBottomDetail: BarcodeSectionDetail | None = None
+    secondTopDetail: BarcodeSectionDetail | None = None
 
 
 class CardRowOneItem(BaseModel):
@@ -54,7 +54,7 @@ class CardRowOneItem(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardrowoneitem
     """
 
-    item: TemplateItem | None
+    item: TemplateItem | None = None
 
 
 class CardRowTwoItems(BaseModel):
@@ -62,8 +62,8 @@ class CardRowTwoItems(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardrowtwoitems
     """
 
-    startItem: TemplateItem | None
-    endItem: TemplateItem | None
+    startItem: TemplateItem | None = None
+    endItem: TemplateItem | None = None
 
 
 class CardRowThreeItems(BaseModel):
@@ -71,9 +71,9 @@ class CardRowThreeItems(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardrowthreeitems
     """
 
-    startItem: TemplateItem | None
-    middleItem: TemplateItem | None
-    endItem: TemplateItem | None
+    startItem: TemplateItem | None = None
+    middleItem: TemplateItem | None = None
+    endItem: TemplateItem | None = None
 
 
 class CardRowTemplateInfo(BaseModel):
@@ -81,9 +81,9 @@ class CardRowTemplateInfo(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardrowtemplateinfo
     """
 
-    oneItem: CardRowOneItem | None
-    twoItems: CardRowTwoItems | None
-    threeItems: CardRowThreeItems | None
+    oneItem: CardRowOneItem | None = None
+    twoItems: CardRowTwoItems | None = None
+    threeItems: CardRowThreeItems | None = None
 
 
 class CardTemplateOverride(BaseModel):
@@ -91,7 +91,7 @@ class CardTemplateOverride(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardtemplateoverride
     """
 
-    cardRowTemplateInfos: list[CardRowTemplateInfo] | None
+    cardRowTemplateInfos: list[CardRowTemplateInfo] | None = None
 
 
 class DetailsItemInfo(BaseModel):
@@ -99,7 +99,7 @@ class DetailsItemInfo(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#detailsiteminfo
     """
 
-    item: TemplateItem | None
+    item: TemplateItem | None = None
 
 
 class DetailsTemplateOverride(BaseModel):
@@ -107,7 +107,7 @@ class DetailsTemplateOverride(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#detailstemplateoverride
     """
 
-    detailsItemInfos: list[DetailsItemInfo] | None
+    detailsItemInfos: list[DetailsItemInfo] | None = None
 
 
 class FirstRowOption(BaseModel):
@@ -115,8 +115,8 @@ class FirstRowOption(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#firstrowoption
     """
 
-    transitOption: TransitOption | None
-    fieldOption: FieldSelector | None
+    transitOption: TransitOption | None = None
+    fieldOption: FieldSelector | None = None
 
 
 class ListTemplateOverride(BaseModel):
@@ -124,9 +124,9 @@ class ListTemplateOverride(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#listtemplateoverride
     """
 
-    firstRowOption: FirstRowOption | None
-    secondRowOption: FieldSelector | None
-    thirdRowOption: FieldSelector | None  # deprecated attribute
+    firstRowOption: FirstRowOption | None = None
+    secondRowOption: FieldSelector | None = None
+    thirdRowOption: FieldSelector | None = Field(description="deprecated", exclude=True, default=None)
 
 
 class ClassTemplateInfo(BaseModel):
@@ -134,7 +134,7 @@ class ClassTemplateInfo(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo
     """
 
-    cardBarcodeSectionDetails: CardBarcodeSectionDetails | None
-    cardTemplateOverride: CardTemplateOverride | None
-    detailsTemplateOverride: DetailsTemplateOverride | None
-    listTemplateOverride: ListTemplateOverride | None
+    cardBarcodeSectionDetails: CardBarcodeSectionDetails | None = None
+    cardTemplateOverride: CardTemplateOverride | None = None
+    detailsTemplateOverride: DetailsTemplateOverride | None = None
+    listTemplateOverride: ListTemplateOverride | None = None

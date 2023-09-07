@@ -11,7 +11,7 @@ class AppTarget:
 
 @dataclass
 class AppLinkInfo:
-    appLogoImage: Image | None
+    appLogoImage: Image | None = None
     title: LocalizedString
     description: LocalizedString
     appTarget: AppTarget
@@ -19,6 +19,6 @@ class AppLinkInfo:
 
 @dataclass
 class AppLinkData:
-    androidAppLinkInfo: AppLinkInfo | None
-    iosAppLinkInfo: AppLinkInfo | None
-    webAppLinkInfo: AppLinkInfo | None
+    androidAppLinkInfo: AppLinkInfo | None = None
+    iosAppLinkInfo: AppLinkInfo | None = None
+    webAppLinkInfo: AppLinkInfo | None = None

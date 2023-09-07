@@ -39,45 +39,45 @@ class GiftCardClass(BaseModel):
     """
 
     id: str
-    merchantName: str | None
-    programLogo: Image | None
-    pinLabel: str | None
-    eventNumberLabel: str | None
+    merchantName: str | None = None
+    programLogo: Image | None = None
+    pinLabel: str | None = None
+    eventNumberLabel: str | None = None
     allowBarcodeRedemption: bool = False
-    localizedMerchantName: LocalizedString | None
-    localizedPinLabel: LocalizedString | None
-    localizedEventNumberLabel: LocalizedString | None
-    cardNumberLabel: str | None
-    localizedCardNumberLabel: LocalizedString | None
-    classTemplateInfo: ClassTemplateInfo | None
-    version: str | None = Field(description="deprecated", exclude=True)
+    localizedMerchantName: LocalizedString | None = None
+    localizedPinLabel: LocalizedString | None = None
+    localizedEventNumberLabel: LocalizedString | None = None
+    cardNumberLabel: str | None = None
+    localizedCardNumberLabel: LocalizedString | None = None
+    classTemplateInfo: ClassTemplateInfo | None = None
+    version: str | None = Field(description="deprecated", exclude=True, default=None)
     issuerName: str
-    messages: list[Message] | None
+    messages: list[Message] | None = None
     allowMultipleUsersPerObject: bool | None = Field(
-        description="deprecated", exclude=True
+        description="deprecated", exclude=True, default=None
     )
-    homepageUri: Uri | None
+    homepageUri: Uri | None = None
     locations: list[LatLongPoint]
-    reviewStatus: ReviewStatus | None
-    review: Review | None
+    reviewStatus: ReviewStatus | None = None
+    review: Review | None = None
     infoModuleData: InfoModuleData | None = Field(
         description="deprecated", exclude=True
     )
     imageModulesData: list[ImageModuleData]
-    textModulesData: list[TextModuleData] | None
-    linksModuleData: LinksModuleData | None
-    redemptionIssuers: list[str] | None
-    countryCode: str | None
-    heroImage: Image | None
+    textModulesData: list[TextModuleData] | None = None
+    linksModuleData: LinksModuleData | None = None
+    redemptionIssuers: list[str] | None = None
+    countryCode: str | None = None
+    heroImage: Image | None = None
     wordMark: Image | None = Field(description="deprecated", exclude=True)
-    enableSmartTap: bool | None
-    hexBackgroundColor: str | None
-    localizedIssuerName: LocalizedString | None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = (
+    enableSmartTap: bool | None = None
+    hexBackgroundColor: str | None = None
+    localizedIssuerName: LocalizedString | None = None
+    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = None = (
         MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
-    callbackOptions: CallbackOptions | None
-    securityAnimation: SecurityAnimation | None = SecurityAnimation()
+    callbackOptions: CallbackOptions | None = None
+    securityAnimation: SecurityAnimation | None = SecurityAnimation
     viewUnlockRequirement: ViewUnlockRequirement = (
         ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
     )

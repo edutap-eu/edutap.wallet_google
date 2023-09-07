@@ -10,14 +10,13 @@ class Barcode(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/Barcode
     """
 
-    kind: str | None = "walletobjects#barcode"
-    type: BarcodeType | None | None = BarcodeType.BARCODE_TYPE_UNSPECIFIED
-    renderEncoding: BarcodeRenderEncoding | None = (
+    type: BarcodeType = BarcodeType.BARCODE_TYPE_UNSPECIFIED
+    renderEncoding: BarcodeRenderEncoding = (
         BarcodeRenderEncoding.RENDER_ENCODING_UNSPECIFIED
     )
-    value: str | None
-    alternateText: str | None
-    showCodeText: LocalizedString | None
+    value: str | None = None
+    alternateText: str | None = None
+    showCodeText: LocalizedString | None = None
 
 
 class TotpParameters(BaseModel):
@@ -44,11 +43,11 @@ class RotatingBarcode(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode
     """
 
-    type: BarcodeType | None = BarcodeType.BARCODE_TYPE_UNSPECIFIED
-    renderEncoding: BarcodeRenderEncoding | None = (
+    type: BarcodeType = BarcodeType.BARCODE_TYPE_UNSPECIFIED
+    renderEncoding: BarcodeRenderEncoding = (
         BarcodeRenderEncoding.RENDER_ENCODING_UNSPECIFIED
     )
-    valuePattern: str | None
-    totpDetails: TotpDetails | None
-    alternateText: str | None
-    showCodeText: LocalizedString | None
+    valuePattern: str | None = None
+    totpDetails: TotpDetails | None = None
+    alternateText: str | None = None
+    showCodeText: LocalizedString | None = None

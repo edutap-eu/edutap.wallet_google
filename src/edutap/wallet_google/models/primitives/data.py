@@ -9,11 +9,11 @@ class TextModuleData(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/TextModuleData
     """
 
-    header: str | None
-    body: str | None
-    localizedHeader: LocalizedString | None
-    localizedBody: LocalizedString | None
-    id: str | None
+    header: str | None = None
+    body: str | None = None
+    localizedHeader: LocalizedString | None = None
+    localizedBody: LocalizedString | None = None
+    id: str | None = None
 
 
 class LabelValue(BaseModel):
@@ -21,10 +21,10 @@ class LabelValue(BaseModel):
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvalue
     """
 
-    label: str | None
-    value: str | None
-    localizedLabel: LocalizedString | None
-    localizedValue: LocalizedString | None
+    label: str | None = None
+    value: str | None = None
+    localizedLabel: LocalizedString | None = None
+    localizedValue: LocalizedString | None = None
 
 
 class LabelValueRow(BaseModel):
@@ -32,7 +32,7 @@ class LabelValueRow(BaseModel):
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvaluerow
     """
 
-    columns: list[LabelValue] | None
+    columns: list[LabelValue] | None = None
 
 
 class LinksModuleData(BaseModel):
@@ -40,7 +40,7 @@ class LinksModuleData(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/LinksModuleData
     """
 
-    uris: list[Uri] | None
+    uris: list[Uri] | None = None
 
 
 class ImageModuleData(BaseModel):
@@ -48,8 +48,8 @@ class ImageModuleData(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/ImageModuleData
     """
 
-    mainImage: Image | None
-    id: str | None
+    mainImage: Image | None = None
+    id: str | None = None
 
 
 class InfoModuleData(BaseModel):
@@ -58,7 +58,7 @@ class InfoModuleData(BaseModel):
     """
 
     labelValueRows: list[LabelValueRow]
-    showLastUpdatedTime: bool | None = False  # deprecated
+    showLastUpdatedTime: bool = Field(description="deprecated", exclude=True, default=False)
 
 
 class AppTarget(BaseModel):
@@ -66,7 +66,7 @@ class AppTarget(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#apptargets
     """
 
-    targetUri: Uri | None
+    targetUri: Uri | None = None
 
 
 class AppLinkInfo(BaseModel):
@@ -74,10 +74,10 @@ class AppLinkInfo(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#applinkinfo
     """
 
-    appLogoImage: Image | None
-    title: LocalizedString | None
-    description: LocalizedString | None
-    appTarget: AppTarget | None
+    appLogoImage: Image | None = None
+    title: LocalizedString | None = None
+    description: LocalizedString | None = None
+    appTarget: AppTarget | None = None
 
 
 class AppLinkData(BaseModel):
@@ -85,6 +85,6 @@ class AppLinkData(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData
     """
 
-    androidAppLinkInfo: AppLinkInfo | None
-    iosAppLinkInfo: AppLinkInfo | None
-    webAppLinkInfo: AppLinkInfo | None
+    androidAppLinkInfo: AppLinkInfo | None = None
+    iosAppLinkInfo: AppLinkInfo | None = None
+    webAppLinkInfo: AppLinkInfo | None = None

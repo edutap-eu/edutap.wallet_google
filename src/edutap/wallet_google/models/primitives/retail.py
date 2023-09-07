@@ -26,6 +26,6 @@ class DiscoverableProgram(BaseModel):
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#discoverableprogram
     """
 
-    merchantSignupInfo: DiscoverableProgramMerchantSignupInfo | None
-    merchantSigninInfo: DiscoverableProgramMerchantSigninInfo | None
-    state: State | None = State.STATE_UNSPECIFIED
+    merchantSignupInfo: DiscoverableProgramMerchantSignupInfo | None = None
+    merchantSigninInfo: DiscoverableProgramMerchantSigninInfo | None = None
+    state: State = State.STATE_UNSPECIFIED
