@@ -1,6 +1,19 @@
 from enum import Enum
 
 class CamelCaseAliasEnum(Enum):
+    """Add an value alias in camelcase to the enum,
+    given the value in snakecase.
+
+    example: a enum like
+
+    class FooExample(CamelCaseAliasEnum):
+        FOO_BAR_BAZ = "FOO_BAR_BAZ"
+
+    can be looked up like this:
+
+    FooExample("fooBarBaz")
+
+    """
 
     def __new__(cls, value):
         obj = object.__new__(cls)
