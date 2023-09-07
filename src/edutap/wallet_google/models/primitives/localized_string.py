@@ -7,8 +7,8 @@ class TranslatedString(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString#translatedstring
     """
 
-    language: str | None = Field(kwarg_only=False, default=None)
-    value: str | None = Field(kwarg_only=False, default=None)
+    language: str | None = Field(default=None)
+    value: str | None = Field(default=None)
 
 
 class LocalizedString(BaseModel):
@@ -16,5 +16,5 @@ class LocalizedString(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString
     """
 
-    defaultValue: TranslatedString = Field(kwarg_only=False)
-    translatedValues: list[TranslatedString] = Field(kwarg_only=False, default=[])
+    defaultValue: TranslatedString
+    translatedValues: list[TranslatedString] = Field(default=[])
