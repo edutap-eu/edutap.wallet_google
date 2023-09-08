@@ -2,6 +2,7 @@ from .models.primitives import Pagination
 from .models.primitives.notification import AddMessageRequest
 from .models.primitives.notification import Message
 from .registry import lookup
+from .registry import lookup_url_name
 from .registry import RegistrationType
 from .session import session_manager
 from google.auth.transport.requests import AuthorizedSession
@@ -9,8 +10,9 @@ from pydantic import BaseModel
 
 
 def _make_url(
-    registration_type: RegistrationType,
-    name: str,
+    #    registration_type: RegistrationType,
+    #    name: str,
+    model: type,
     additional_path: str | None = None,
 ) -> str:
     """
@@ -23,18 +25,22 @@ def _make_url(
 
     :param registration_type:  type of the model (either class or object)
     :param name:               registered name of the model
+    :param model:              type of the model
 
     :return: the url of the google RESTful API endpoint to handle this model
     """
-    base_type = (
-        "Class" if registration_type == RegistrationType.WALLETCLASS else "Object"
-    )
-    return f"{session_manager.base_url}/{name}{base_type}{additional_path or ''}"
+    # base_type = (
+    #     "Class" if registration_type == RegistrationType.WALLETCLASS else "Object"
+    # )
+    url_name = lookup_url_name(model)
+    # return f"{session_manager.base_url}/{name}{base_type}{additional_path or ''}"
+    return f"{session_manager.base_url}/{url_name}{f'/{additional_path}' if additional_path else ''}"
 
 
 def create(
-    registration_type: RegistrationType,
-    name: str,
+    # registration_type: RegistrationType,
+    # name: str,
+    model: type,
     **payload,
 ) -> BaseModel:
     """
@@ -62,8 +68,9 @@ def create(
 
 
 def read(
-    registration_type: RegistrationType,
-    name: str,
+    # registration_type: RegistrationType,
+    # name: str,
+    model: type,
     resource_id: str,
 ) -> BaseModel:
     """
@@ -71,20 +78,24 @@ def read(
 
     :param registration_type:  type of the model (either class or object) to use
     :param name:               registered name of the model to use
+    :param model:              registered model to use
     :param resource_id:        id of the resource to read from the Google RESTful API
     :raises LookupError:       if the resource was not found (404)
     :raises Exception:         if the response status code is not 200 or 404
     :return:                   the created model based on the data returned by the API
     """
     session = session_manager.session
-    response = session.get(url=_make_url(registration_type, name, f"/{resource_id}"))
+    url = _make_url(model, resource_id)
+    # response = session.get(url=_make_url(registration_type, name, f"/{resource_id}"))
+    response = session.get(url=url)
 
     if response.status_code == 404:
-        raise LookupError(f"{url} {registration_type}: {name} not found")
+        # raise LookupError(f"{url} {registration_type}: {name} not found")
+        raise LookupError(f"{url} {model.__name__} not found")
 
     if response.status_code == 200:
-        model = lookup(registration_type, name)
-        return model.parse_raw(response.content)
+        # model = lookup(registration_type, name)
+        return model.model_validate_json(response.content)
 
     raise Exception(f"{url} {response.status_code} - {response.text}")
 

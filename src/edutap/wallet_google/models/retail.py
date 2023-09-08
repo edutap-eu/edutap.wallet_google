@@ -32,7 +32,8 @@ from pydantic import Field
 from pydantic import model_validator
 
 
-@register_model(RegistrationType.WALLETCLASS, "giftcard")
+# @register_model(RegistrationType.WALLETCLASS, "giftcard")
+@register_model("gitCardClass")
 class GiftCardClass(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
@@ -83,7 +84,8 @@ class GiftCardClass(BaseModel):
     )
 
 
-@register_model(RegistrationType.WALLETOBJECT, "giftcard")
+# @register_model(RegistrationType.WALLETOBJECT, "giftcard")
+@register_model("giftcardObject")
 class GiftCardObject(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
@@ -118,7 +120,8 @@ class GiftCardObject(BaseModel):
     passConstraints: PassConstraints | None
 
 
-@register_model(RegistrationType.WALLETCLASS, "loyalty")
+# @register_model(RegistrationType.WALLETCLASS, "loyalty")
+@register_model("loyaltyClass", has_addmessage=True)
 class LoyaltyClass(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
@@ -209,7 +212,8 @@ class LoyaltyPoints(BaseModel):
     localizedLabel: LocalizedString | None
 
 
-@register_model(RegistrationType.WALLETOBJECT, "loyalty")
+# @register_model(RegistrationType.WALLETOBJECT, "loyalty")
+@register_model("loyaltyObject", has_addmessage=True)
 class LoyaltyObject(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
@@ -241,7 +245,8 @@ class LoyaltyObject(BaseModel):
     passConstraints: PassConstraints | None
 
 
-@register_model(RegistrationType.WALLETCLASS, "offer")
+# @register_model(RegistrationType.WALLETCLASS, "offer")
+@register_model("offerClass", has_addmessage=True)
 class OfferClass(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass
@@ -287,7 +292,8 @@ class OfferClass(BaseModel):
     viewUnlockRequirement: ViewUnlockRequirement | None
 
 
-@register_model(RegistrationType.WALLETOBJECT, "offer")
+# @register_model(RegistrationType.WALLETOBJECT, "offer")
+@register_model("offerObject", has_addmessage=True)
 class OfferObject(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerobject
