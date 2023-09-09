@@ -1,5 +1,4 @@
 from ..registry import register_model
-from ..registry import RegistrationType
 from .primitives import CallbackOptions
 from .primitives import GroupingInfo
 from .primitives import Image

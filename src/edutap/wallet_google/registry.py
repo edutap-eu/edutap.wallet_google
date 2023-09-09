@@ -1,37 +1,16 @@
 from enum import StrEnum
 
 
-class RegistrationType(StrEnum):
-    WALLETCLASS = "walletClass"
-    WALLETOBJECT = "walletObject"
-
-
-_REGISTRY = {
-    RegistrationType.WALLETCLASS: {},
-    RegistrationType.WALLETOBJECT: {},
-}
-
 _MODEL_REGISTRY = {}
 
 
-# class register_model:
-#     def __init__(self, registration_type: RegistrationType, name: str) -> None:
-#         self.registration_type = registration_type
-#         self.name = name
-
-#     def __call__(self, cls: type) -> type:
-#         cls.__registration_type__ = self.registration_type
-#         cls.__registration_name__ = self.name
-#         if self.name in _REGISTRY[self.registration_type]:
-#             raise ValueError(
-#                 f"Duplicate registration of {self.registration_type}: {self.name}"
-#             )
-#         _REGISTRY[self.registration_type][self.name] = cls
-#         return cls
-
-
-def lookup(registration_type: RegistrationType, name: str) -> type:
-    return _REGISTRY[registration_type][name]
+class Capability(StrEnum):
+    insert = "insert"
+    get = "get"
+    update = "update"
+    patch = "patch"
+    list = "list"
+    addmessage = "addmessage"
 
 
 class register_model:
@@ -69,5 +48,43 @@ class register_model:
         return cls
 
 
+def lookup_model(cls: type) -> str:
+    """
+    lookup the registerd model.
+
+    :param cls: Model to lookup url path elem for
+    :raises LookupError:         if the model was not found in registry
+    """
+    if cls not in _MODEL_REGISTRY.keys():
+        raise LookupError(f"Unkown model type: {cls.__name__}")
+    return cls
+
+
 def lookup_url_name(cls: type) -> str:
+    """
+    lookup the url path element for the registerd model.
+
+    :param cls: Model to lookup url path elem for
+    :raises LookupError:         if the model was not found in registry
+    :return:    url path element for registered model
+    """
+    if cls not in _MODEL_REGISTRY.keys():
+        raise LookupError(f"Unkown model type: {cls.__name__}")
     return _MODEL_REGISTRY[cls]["url_name"]
+
+
+def check_capability(cls: type, capability: Capability) -> bool:
+    """
+    Check if a model has a certain capability.
+
+    :param cls:                  Model to be checked
+    :raises LookupError:         if the model was not found in registry
+    :raises NotImplementedError: if the REST-method is not provided by the model
+    :return:                     true if the requested model provides that REST-method
+    """
+    if cls not in _MODEL_REGISTRY.keys():
+        raise LookupError(f"Unkown model type: {cls.__name__}")
+    has_capability: bool = _MODEL_REGISTRY[cls].get(f"has_{capability}", False)
+    # if not has_capability:
+    #     raise NotImplementedError(f"{capability} not implementend or supported by {cls.__name__}")
+    return has_capability

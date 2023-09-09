@@ -1,56 +1,92 @@
+from edutap.wallet_google import registry
+from edutap.wallet_google.models import retail
+
 import pytest
 
 
 @pytest.fixture
 def clean_registry():
-    from edutap.wallet_google.registry import _REGISTRY
-    from edutap.wallet_google.registry import RegistrationType
+    from edutap.wallet_google.registry import _MODEL_REGISTRY
 
-    OLD_CLASS_REGISTRY = _REGISTRY[RegistrationType.WALLETCLASS].copy()
-    _REGISTRY[RegistrationType.WALLETCLASS].clear()
-    OLD_OBJECT_REGISTRY = _REGISTRY[RegistrationType.WALLETOBJECT].copy()
-    _REGISTRY[RegistrationType.WALLETOBJECT].clear()
-    yield _REGISTRY
-    _REGISTRY[RegistrationType.WALLETCLASS].clear()
-    _REGISTRY[RegistrationType.WALLETCLASS].update(OLD_CLASS_REGISTRY)
-    _REGISTRY[RegistrationType.WALLETOBJECT].clear()
-    _REGISTRY[RegistrationType.WALLETOBJECT].update(OLD_OBJECT_REGISTRY)
+    OLD_REGISTRY = _MODEL_REGISTRY.copy()
+    _MODEL_REGISTRY.clear()
+    yield _MODEL_REGISTRY
+    _MODEL_REGISTRY.update(OLD_REGISTRY)
 
 
 def test_decorator(clean_registry):
     from edutap.wallet_google.registry import register_model
-    from edutap.wallet_google.registry import RegistrationType
 
-    @register_model(RegistrationType.WALLETOBJECT, "foo")
+    @register_model("foo")
     class Foo:
         pass
 
-    assert clean_registry[RegistrationType.WALLETOBJECT] == {"foo": Foo}
+    assert Foo in clean_registry.keys()
+    assert len(clean_registry) == 1
 
     with pytest.raises(ValueError):
 
-        @register_model(RegistrationType.WALLETOBJECT, "foo")
-        class AnotherFoo:
+        @register_model("foo")
+        class Foo:
             pass
 
-    @register_model(RegistrationType.WALLETCLASS, "foo")
+    @register_model("foo")
     class Foo:
         pass
 
-    assert clean_registry[RegistrationType.WALLETCLASS] == {"foo": Foo}
+    assert Foo in clean_registry.keys()
+    assert len(clean_registry) == 1
 
 
 def test_lookup(clean_registry):
     from edutap.wallet_google.registry import register_model
-    from edutap.wallet_google.registry import RegistrationType
 
-    @register_model(RegistrationType.WALLETOBJECT, "foo")
+    @register_model("foo")
     class Foo:
         pass
 
-    from edutap.wallet_google.registry import lookup
+    class Bar:
+        pass
 
-    assert lookup(RegistrationType.WALLETOBJECT, "foo") == Foo
+    with pytest.raises(LookupError):
+        registry.lookup_model(Bar)
 
-    with pytest.raises(KeyError):
-        lookup(RegistrationType.WALLETOBJECT, "bar")
+
+def test_registry():
+    print(registry._MODEL_REGISTRY)
+    assert len(registry._MODEL_REGISTRY)
+    assert retail.LoyaltyObject in registry._MODEL_REGISTRY
+
+
+@pytest.mark.parametrize(
+    ["cls", "url_name"],
+    [
+        (retail.LoyaltyClass, "loyaltyClass"),
+        (retail.LoyaltyObject, "loyaltyObject"),
+    ],
+)
+def test_lookup_url_name(cls, url_name):
+    assert registry.lookup_url_name(cls=cls) == url_name
+
+
+def test_lookuo_url_name_on_unknown_model():
+    with pytest.raises(LookupError):
+        registry.lookup_url_name(cls=str)
+
+
+@pytest.mark.parametrize(
+    ["cls", "method", "return_value"],
+    [
+        # LoyaltyClass
+        (retail.LoyaltyClass, registry.Capability.insert, True),
+        (retail.LoyaltyClass, registry.Capability.get, True),
+        (retail.LoyaltyClass, registry.Capability.update, True),
+        (retail.LoyaltyClass, registry.Capability.patch, True),
+        (retail.LoyaltyClass, registry.Capability.list, True),
+        (retail.LoyaltyClass, registry.Capability.addmessage, True),
+        # LoyaltyObject
+        (retail.LoyaltyObject, registry.Capability.insert, True),
+    ],
+)
+def test_capability(cls, method, return_value):
+    assert registry.check_capability(cls, method) is return_value
