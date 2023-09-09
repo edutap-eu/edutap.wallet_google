@@ -128,50 +128,54 @@ class LoyaltyClass(BaseModel):
     """
 
     id: str
-    issuerName: str | None
-    programName: str | None
-    programLogo: Image | None
-    accountNameLabel: str | None
-    accountIdLabel: str | None
-    rewardsTierLabel: str | None
-    rewardsTier: str | None
-    secondaryRewardsTierLabel: str | None
-    secondaryRewardsTier: str | None
-    localizedIssuerName: LocalizedString | None
-    localizedProgramName: LocalizedString | None
-    localizedAccountNameLabel: LocalizedString | None
-    localizedAccountIdLabel: LocalizedString | None
-    localizedRewardsTierLabel: LocalizedString | None
-    localizedRewardsTier: LocalizedString | None
-    localizedSecondaryRewardsTierLabel: LocalizedString | None
-    localizedSecondaryRewardsTier: LocalizedString | None
-    discoverableProgram: DiscoverableProgram | None
-    classTemplateInfo: ClassTemplateInfo | None
-    version: str | None = Field(description="deprecated", exclude=True)  # int64
-    messages: list[Message] | None
+    issuerName: str | None = None
+    programName: str | None = None
+    programLogo: Image | None = None
+    accountNameLabel: str | None = None
+    accountIdLabel: str | None = None
+    rewardsTierLabel: str | None = None
+    rewardsTier: str | None = None
+    secondaryRewardsTierLabel: str | None = None
+    secondaryRewardsTier: str | None = None
+    localizedIssuerName: LocalizedString | None = None
+    localizedProgramName: LocalizedString | None = None
+    localizedAccountNameLabel: LocalizedString | None = None
+    localizedAccountIdLabel: LocalizedString | None = None
+    localizedRewardsTierLabel: LocalizedString | None = None
+    localizedRewardsTier: LocalizedString | None = None
+    localizedSecondaryRewardsTierLabel: LocalizedString | None = None
+    localizedSecondaryRewardsTier: LocalizedString | None = None
+    discoverableProgram: DiscoverableProgram | None = None
+    classTemplateInfo: ClassTemplateInfo | None = None
+    version: str | None = Field(
+        description="deprecated", exclude=True, default=None
+    )  # int64
+    messages: list[Message] | None = None
     allowMultipleUsersPerObject: bool = Field(
         description="deprecated", exclude=True, default=True
     )
-    homepageUri: Uri | None
-    locations: list[LatLongPoint] | None
-    reviewStatus: ReviewStatus | None
-    review: Review | None
+    homepageUri: Uri | None = None
+    locations: list[LatLongPoint] | None = None
+    reviewStatus: ReviewStatus | None = None
+    review: Review | None = None
     infoModuleData: InfoModuleData | None = Field(
-        description="deprecated", exclude=True
+        description="deprecated",
+        exclude=True,
+        default=None,
     )
-    imageModulesData: list[ImageModuleData] | None
-    textModulesData: list[TextModuleData] | None
-    linksModuleData: LinksModuleData | None
-    redemptionIssuers: list[str] | None  # string (int64 format)
-    countryCode: str | None
-    heroImage: Image | None
-    wordMark: Image | None = Field(description="deprecated", exclude=True)
+    imageModulesData: list[ImageModuleData] | None = None
+    textModulesData: list[TextModuleData] | None = None
+    linksModuleData: LinksModuleData | None = None
+    redemptionIssuers: list[str] | None = None  # string (int64 format)
+    countryCode: str | None = None
+    heroImage: Image | None = None
+    wordMark: Image | None = Field(description="deprecated", exclude=True, default=None)
     enableSmartTap: bool | None = False
-    hexBackgroundColor: str | None
+    hexBackgroundColor: str | None = None
     multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = (
         MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
-    callbackOptions: CallbackOptions | None
+    callbackOptions: CallbackOptions | None = None
     securityAnimation: SecurityAnimation | None = SecurityAnimation()
     viewUnlockRequirement: ViewUnlockRequirement | None = (
         ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
@@ -207,9 +211,9 @@ class LoyaltyPoints(BaseModel):
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPoints
     """
 
-    label: str | None
-    balance: LoyaltyPointsBalance | None
-    localizedLabel: LocalizedString | None
+    label: str | None = None
+    balance: LoyaltyPointsBalance | None = None
+    localizedLabel: LocalizedString | None = None
 
 
 # @register_model(RegistrationType.WALLETOBJECT, "loyalty")
@@ -219,30 +223,39 @@ class LoyaltyObject(BaseModel):
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
     """
 
-    id: str
-    classId: str
-    accountName: str | None
-    accountId: str | None
-    loyaltyPoints: LoyaltyPoints | None
-    linkedOfferIds: list[str] | None
-    secondaryLoyaltyPoints: LoyaltyPoints | None
-    state: State | None
-    barcode: Barcode | None
-    messages: list[Message] | None
-    validTimeInterval: TimeInterval | None
-    locations: list[LatLongPoint] | None
-    hasUsers: bool | None
-    smartTapRedemptionValue: str | None
-    hasLinkedDevice: bool | None
-    disableExpirationNotification: bool | None
-    imageModule: ImageModuleData | None
-    imagesModuleData: list[ImageModuleData] | None
-    textModulesData: list[TextModuleData] | None
-    appLinkData: AppLinkData | None
-    rotatingBarcode: RotatingBarcode | None
-    heroImage: Image | None
-    groupingInfo: GroupingInfo | None
-    passConstraints: PassConstraints | None
+    kind: str | None = Field(
+        description="deprecated",
+        exclude=True,
+        default="walletobjects#offerClass",
+    )
+    id: str = Field(frozen=True)
+    classId: str = Field(frozen=True)
+    classReference: LoyaltyClass | None = None
+    accountName: str | None = None
+    accountId: str | None = None
+    loyaltyPoints: LoyaltyPoints | None = None
+    linkedOfferIds: list[str] | None = None
+    secondaryLoyaltyPoints: LoyaltyPoints | None = None
+    version: str | None = Field(
+        description="deprecated", exclude=True, default=None
+    )  # int64 = None
+    state: State | None = None
+    barcode: Barcode | None = None
+    messages: list[Message] | None = None
+    validTimeInterval: TimeInterval | None = None
+    locations: list[LatLongPoint] | None = None
+    hasUsers: bool | None = None
+    smartTapRedemptionValue: str | None = None
+    hasLinkedDevice: bool | None = None
+    disableExpirationNotification: bool | None = None
+    infoModuleData: InfoModuleData | None = None
+    imagesModuleData: list[ImageModuleData] | None = None
+    textModulesData: list[TextModuleData] | None = None
+    appLinkData: AppLinkData | None = None
+    rotatingBarcode: RotatingBarcode | None = None
+    heroImage: Image | None = None
+    groupingInfo: GroupingInfo | None = None
+    passConstraints: PassConstraints | None = None
 
 
 # @register_model(RegistrationType.WALLETCLASS, "offer")

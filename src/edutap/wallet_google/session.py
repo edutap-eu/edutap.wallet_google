@@ -2,7 +2,6 @@ from dotenv import load_dotenv
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials
 
-import json
 import os
 import threading
 

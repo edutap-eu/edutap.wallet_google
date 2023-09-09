@@ -8,6 +8,8 @@ from .session import session_manager
 from google.auth.transport.requests import AuthorizedSession
 from pydantic import BaseModel
 
+import json
+
 
 def _make_url(
     #    registration_type: RegistrationType,
@@ -70,7 +72,7 @@ def create(
 def read(
     # registration_type: RegistrationType,
     # name: str,
-    model: type,
+    model: BaseModel,
     resource_id: str,
 ) -> BaseModel:
     """
@@ -101,8 +103,9 @@ def read(
 
 
 def update(
-    registration_type: RegistrationType,
-    name: str,
+    # registration_type: RegistrationType,
+    # name: str,
+    model: BaseModel,
     **payload,
 ) -> BaseModel:
     """
@@ -115,24 +118,27 @@ def update(
     :raises Exception:         if the response status code is not 200 or 404
     :return:                   the created model based on the data returned by the API
     """
-    model = lookup(registration_type, name)
-    obj = model(**payload)
+    # model = lookup(registration_type, name)
+    if isinstance(payload["payload"], model):
+        obj = payload["payload"]
+    else:
+        obj = model(**payload)
     data = obj.json(
         exclude_none=True,
         exclude_unset=True,
     )
     session = session_manager.session
     response = session.put(
-        url=_make_url(registration_type, name, f"/{obj.id}"),
-        data=data,
+        url=_make_url(model, obj.id),
+        data=data.encode("utf-8"),
     )
     if response.status_code == 404:
-        raise LookupError(f"{registration_type}: {name} not found")
+        raise LookupError(f"{model.__name__} with id: {obj.id} not found")
 
     if response.status_code != 200:
         raise Exception(f"Error: {response.status_code} - {response.text}")
 
-    return model.parse_raw(response.content)
+    return model.model_validate_json(response.content)
 
 
 # def disable(

@@ -27,7 +27,7 @@ class Image(BaseModel):
     """
 
     sourceUri: ImageUri
-    contentDescription: LocalizedString | None
+    contentDescription: LocalizedString | None = None
 
 
 class PassConstraints(BaseModel):
