@@ -26,6 +26,7 @@ def _make_url(
 
 
 def create(
+    *,
     model_data: BaseModel = None,
     model: type = None,
     **payload,
@@ -88,38 +89,39 @@ def read(
         raise LookupError(f"{url} {model.__name__} not found")
 
     if response.status_code == 200:
-        # model = lookup(registration_type, name)
         return model.model_validate_json(response.content)
 
     raise Exception(f"{url} {response.status_code} - {response.text}")
 
 
 def update(
-    # registration_type: RegistrationType,
-    # name: str,
-    model: BaseModel,
+    *,
+    model_data: BaseModel | None = None,
+    model: type | None = None,
     **payload,
 ) -> BaseModel:
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
 
-    :param registration_type:  type of the model (either class or object) to use
-    :param name:               registered name of the model to use
     :param payload:            data to pass to the Google RESTful API
     :raises LookupError:       if the resource was not found (404)
     :raises Exception:         if the response status code is not 200 or 404
     :return:                   the created model based on the data returned by the API
     """
-    # model = lookup(registration_type, name)
-    if isinstance(payload["payload"], model):
-        obj = payload["payload"]
-    else:
+    session = session_manager.session
+    obj: BaseModel
+    if model_data and model_data.__class__ in registry._MODEL_REGISTRY.keys() and registry.check_capability(cls=model_data.__class__, registry.Capability.update) and not payload:
+        obj = model_data
+        model = model_data.__class__
+    elif model and model in registry._MODEL_REGISTRY.keys() and registry.check_capability(cls=model_data.__class__, registry.Capability.update) and model_data is None and payload:
         obj = model(**payload)
-    data = obj.json(
+    else:
+        breakpoint()
+
+    data = obj.model_dump_json(
         exclude_none=True,
         exclude_unset=True,
     )
-    session = session_manager.session
     response = session.put(
         url=_make_url(model, obj.id),
         data=data.encode("utf-8"),

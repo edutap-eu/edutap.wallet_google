@@ -1,5 +1,4 @@
 from edutap.wallet_google import registry
-from edutap.wallet_google.models import retail
 
 import pytest
 
@@ -50,4 +49,3 @@ def test_lookup(clean_registry):
 
     with pytest.raises(LookupError):
         registry.lookup_model(Bar)
-

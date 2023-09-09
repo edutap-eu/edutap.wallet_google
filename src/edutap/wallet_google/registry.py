@@ -1,4 +1,5 @@
 from enum import StrEnum
+from pydantic import BaseModel
 
 
 _MODEL_REGISTRY = {}
@@ -48,28 +49,28 @@ class register_model:
         return cls
 
 
-def lookup_model(cls: type) -> str:
+def lookup_model(cls: type) -> BaseModel:
     """
-    lookup the registerd model.
+    lookup the registered model.
 
-    :param cls: Model to lookup url path elem for
-    :raises LookupError:         if the model was not found in registry
+    :param cls:           Model to lookup url path elem for
+    :raises LookupError:  if the model was not found in registry
     """
     if cls not in _MODEL_REGISTRY.keys():
-        raise LookupError(f"Unkown model type: {cls.__name__}")
+        raise LookupError(f"Unknown model type: {cls.__name__}")
     return cls
 
 
 def lookup_url_name(cls: type) -> str:
     """
-    lookup the url path element for the registerd model.
+    lookup the url path element for the registered model.
 
-    :param cls: Model to lookup url path elem for
-    :raises LookupError:         if the model was not found in registry
-    :return:    url path element for registered model
+    :param cls:           Model to lookup url path elem for
+    :raises LookupError:  if the model was not found in registry
+    :return:              url path element for registered model
     """
     if cls not in _MODEL_REGISTRY.keys():
-        raise LookupError(f"Unkown model type: {cls.__name__}")
+        raise LookupError(f"Unknown model type: {cls.__name__}")
     return _MODEL_REGISTRY[cls]["url_name"]
 
 
@@ -83,7 +84,7 @@ def check_capability(cls: type, capability: Capability) -> bool:
     :return:                     true if the requested model provides that REST-method
     """
     if cls not in _MODEL_REGISTRY.keys():
-        raise LookupError(f"Unkown model type: {cls.__name__}")
+        raise LookupError(f"Unknown model type: {cls.__name__}")
     has_capability: bool = _MODEL_REGISTRY[cls].get(f"has_{capability}", False)
     # if not has_capability:
     #     raise NotImplementedError(f"{capability} not implementend or supported by {cls.__name__}")
