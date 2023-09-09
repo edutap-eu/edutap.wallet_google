@@ -61,6 +61,19 @@ def lookup_model(cls: type) -> BaseModel:
     return cls
 
 
+def lookup_model_by_name(name: str) -> BaseModel:
+    """
+    lookup the registered model.
+
+    :param name:          Model to lookup url path elem for
+    :raises LookupError:  if the model was not found in registry
+    """
+    for cls in _MODEL_REGISTRY.keys():
+        if name == cls.__name__:
+            return cls
+    raise LookupError(f"Unknown model type: {cls.__name__}")
+
+
 def lookup_url_name(cls: type) -> str:
     """
     lookup the url path element for the registered model.

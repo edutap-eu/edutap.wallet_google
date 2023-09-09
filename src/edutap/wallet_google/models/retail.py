@@ -31,8 +31,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 
-# @register_model(RegistrationType.WALLETCLASS, "giftcard")
-@register_model("gitCardClass")
+@register_model("giftCardClass")
 class GiftCardClass(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
@@ -83,8 +82,7 @@ class GiftCardClass(BaseModel):
     )
 
 
-# @register_model(RegistrationType.WALLETOBJECT, "giftcard")
-@register_model("giftcardObject")
+@register_model("giftCardObject")
 class GiftCardObject(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
@@ -119,7 +117,6 @@ class GiftCardObject(BaseModel):
     passConstraints: PassConstraints | None
 
 
-# @register_model(RegistrationType.WALLETCLASS, "loyalty")
 @register_model("loyaltyClass", has_addmessage=True)
 class LoyaltyClass(BaseModel):
     """
@@ -215,7 +212,6 @@ class LoyaltyPoints(BaseModel):
     localizedLabel: LocalizedString | None = None
 
 
-# @register_model(RegistrationType.WALLETOBJECT, "loyalty")
 @register_model("loyaltyObject", has_addmessage=True)
 class LoyaltyObject(BaseModel):
     """
@@ -257,7 +253,6 @@ class LoyaltyObject(BaseModel):
     passConstraints: PassConstraints | None = None
 
 
-# @register_model(RegistrationType.WALLETCLASS, "offer")
 @register_model("offerClass", has_addmessage=True)
 class OfferClass(BaseModel):
     """
@@ -304,7 +299,6 @@ class OfferClass(BaseModel):
     viewUnlockRequirement: ViewUnlockRequirement | None
 
 
-# @register_model(RegistrationType.WALLETOBJECT, "offer")
 @register_model("offerObject", has_addmessage=True)
 class OfferObject(BaseModel):
     """

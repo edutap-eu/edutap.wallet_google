@@ -1,5 +1,7 @@
 from edutap.wallet_google import registry
+from edutap.wallet_google.models import generic
 from edutap.wallet_google.models import retail
+from edutap.wallet_google.models import ticket_and_transit
 
 import pytest
 
@@ -11,10 +13,43 @@ def test_registry():
 
 
 @pytest.mark.parametrize(
+    ["name", "cls"],
+    [
+        # retail
+        ("GiftCardClass", retail.GiftCardClass),
+        ("GiftCardObject", retail.GiftCardObject),
+        ("LoyaltyClass", retail.LoyaltyClass),
+        ("LoyaltyObject", retail.LoyaltyObject),
+        ("OfferClass", retail.OfferClass),
+        ("OfferObject", retail.OfferObject),
+        # ticket and transit
+        ("EventTicketClass", ticket_and_transit.EventTicketClass),
+        ("EventTicketObject", ticket_and_transit.EventTicketObject),
+        # generic
+        ("GenericClass", generic.GenericClass),
+        ("GenericObject", generic.GenericObject),
+    ],
+)
+def test_lookup_model_by_name(name, cls):
+    assert registry.lookup_model_by_name(name) == cls
+
+
+@pytest.mark.parametrize(
     ["cls", "url_name"],
     [
+        # retail
+        (retail.GiftCardClass, "giftCardClass"),
+        (retail.GiftCardObject, "giftCardObject"),
         (retail.LoyaltyClass, "loyaltyClass"),
         (retail.LoyaltyObject, "loyaltyObject"),
+        (retail.OfferClass, "offerClass"),
+        (retail.OfferObject, "offerObject"),
+        # ticket and transit
+        (ticket_and_transit.EventTicketClass, "eventTicketClass"),
+        (ticket_and_transit.EventTicketObject, "eventTicketObject"),
+        # generic
+        (generic.GenericClass, "genericClass"),
+        (generic.GenericObject, "genericObject"),
     ],
 )
 def test_lookup_url_name(cls, url_name):
