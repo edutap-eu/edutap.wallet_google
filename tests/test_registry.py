@@ -23,6 +23,7 @@ def test_decorator(clean_registry):
     assert clean_registry["foo"] == {
         "can_create": True,
         "can_disable": True,
+        "can_list": True,
         "can_message": False,
         "can_read": True,
         "can_update": True,
@@ -44,6 +45,7 @@ def test_decorator(clean_registry):
         can_read=False,
         can_update=False,
         can_disable=False,
+        can_list=False,
         can_message=True,
     )
     class Bar:
@@ -52,6 +54,7 @@ def test_decorator(clean_registry):
     assert clean_registry["bar"] == {
         "can_create": False,
         "can_disable": False,
+        "can_list": False,
         "can_message": True,
         "can_read": False,
         "can_update": False,
@@ -90,6 +93,7 @@ def test_lookup_metadata(clean_registry):
         "can_disable": True,
         "can_message": False,
         "can_read": True,
+        "can_list": True,
         "can_update": True,
         "model": Foo,
         "name": "foo",

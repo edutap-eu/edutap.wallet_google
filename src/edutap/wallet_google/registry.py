@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 _MODEL_REGISTRY = {}
 
 
@@ -13,6 +14,7 @@ class register_model:
         can_read: bool = True,
         can_update: bool = True,
         can_disable: bool = True,
+        can_list: bool = True,
         can_message: bool = False,
     ):
         self.metadata = {
@@ -22,6 +24,7 @@ class register_model:
             "can_read": can_read,
             "can_update": can_update,
             "can_disable": can_disable,
+            "can_list": can_list,
             "can_message": can_message,
         }
 
