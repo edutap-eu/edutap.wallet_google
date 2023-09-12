@@ -1,32 +1,51 @@
-from enum import StrEnum
+from pydantic import BaseModel
 
-
-class RegistrationType(StrEnum):
-    WALLETCLASS = "walletClass"
-    WALLETOBJECT = "walletObject"
-
-
-_REGISTRY = {
-    RegistrationType.WALLETCLASS: {},
-    RegistrationType.WALLETOBJECT: {},
-}
+_MODEL_REGISTRY = {}
 
 
 class register_model:
-    def __init__(self, registration_type: RegistrationType, name: str) -> None:
-        self.registration_type = registration_type
-        self.name = name
+    def __init__(
+        self,
+        name: str,
+        *,
+        url_part: str | None = None,
+        can_create: bool = True,
+        can_read: bool = True,
+        can_update: bool = True,
+        can_disable: bool = True,
+        can_message: bool = False,
+    ):
+        self.metadata = {
+            "name": name,
+            "url_part": url_part or name,
+            "can_create": can_create,
+            "can_read": can_read,
+            "can_update": can_update,
+            "can_disable": can_disable,
+            "can_message": can_message,
+        }
 
-    def __call__(self, cls: type) -> type:
-        cls.__registration_type__ = self.registration_type
-        cls.__registration_name__ = self.name
-        if self.name in _REGISTRY[self.registration_type]:
-            raise ValueError(
-                f"Duplicate registration of {self.registration_type}: {self.name}"
-            )
-        _REGISTRY[self.registration_type][self.name] = cls
+    def __call__(self, cls: BaseModel) -> BaseModel:
+        name = self.metadata["name"]
+        if name in _MODEL_REGISTRY:
+            raise ValueError(f"Duplicate registration of '{name}'")
+        self.metadata["model"] = cls
+        _MODEL_REGISTRY[name] = self.metadata
         return cls
 
 
-def lookup(registration_type: RegistrationType, name: str) -> type:
-    return _REGISTRY[registration_type][name]
+def lookup_model(name: str) -> BaseModel:
+    return _MODEL_REGISTRY[name]["model"]
+
+
+def lookup_metadata(name: str) -> dict[str:any]:
+    return _MODEL_REGISTRY[name]
+
+
+def raise_when_operation_not_allowed(name, operation):
+    """Verifies that the given operation is allowed for the given registered name.
+
+    :raises: ValueError when the operation is not allowed.
+    """
+    if not _MODEL_REGISTRY[name][f"can_{operation}"]:
+        raise ValueError(f"Operation '{operation}' not allowed for '{name}'")

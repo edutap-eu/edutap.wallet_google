@@ -16,19 +16,16 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pydantic[email,dotenv]",
+    "pydantic[email,dotenv]>=2.0",
     "python-dotenv",
     "google-auth",
     "google-cloud-storage",
-    "pyjwt"
   ]
 
 [project.optional-dependencies]
 test = [
     "pytest",
-    "pytest-mock",
-    "jsondiff",
-    "freezegun",
+    "requests-mock",
 ]
 develop = [
     "pdbpp",

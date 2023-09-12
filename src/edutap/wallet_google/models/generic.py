@@ -1,5 +1,4 @@
 from ..registry import register_model
-from ..registry import RegistrationType
 from .primitives import CallbackOptions
 from .primitives import GroupingInfo
 from .primitives import Image
@@ -23,7 +22,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-@register_model(RegistrationType.WALLETCLASS, "generic")
+@register_model("genericClass")
 class GenericClass(BaseModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericclass
@@ -46,7 +45,7 @@ class GenericClass(BaseModel):
     )
 
 
-@register_model(RegistrationType.WALLETOBJECT, "generic")
+@register_model("genericObject")
 class GenericObject(BaseModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject

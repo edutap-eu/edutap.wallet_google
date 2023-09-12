@@ -1,127 +1,146 @@
-from .models.primitives import Pagination
-from .models.primitives.notification import AddMessageRequest
-from .models.primitives.notification import Message
-from .registry import lookup
-from .registry import RegistrationType
+# from .models.primitives import Pagination
+# from .models.primitives.notification import AddMessageRequest
+# from .models.primitives.notification import Message
+from .registry import lookup_model
+from .registry import raise_when_operation_not_allowed
 from .session import session_manager
-from google.auth.transport.requests import AuthorizedSession
 from pydantic import BaseModel
 
+import json
 
-def _make_url(
-    registration_type: RegistrationType,
-    name: str,
-    additional_path: str | None = None,
-) -> str:
+
+def _validate_data_and_convert_to_json(
+    model, data: dict | BaseModel, *, fetch_id=False
+) -> str | tuple[str, str]:
+    """Takes a model and data, validates it and convert to a json string.
+
+    :param model:      Pydantic model class to use for validation.
+    :param data:       Data to pass to the Google RESTful API.
+                       Either a simple python data structure using built-ins,
+                       or a Pydantic model instance.
+    :return:           JSON string of the data,
+                       or, when fetch_id is True a tuple of resource-id and JSON string.
     """
-    Helper function to create the URL for the CRUD operations.
-
-    For more information read
-
-    :param http_session: A Google authenticated session,
-                         see https://googleapis.dev/python/google-auth/1.7.0/reference/google.auth.transport.requests.html#google.auth.transport.requests.AuthorizedSession
-
-    :param registration_type:  type of the model (either class or object)
-    :param name:               registered name of the model
-
-    :return: the url of the google RESTful API endpoint to handle this model
-    """
-    base_type = (
-        "Class" if registration_type == RegistrationType.WALLETCLASS else "Object"
+    if not isinstance(data, BaseModel):
+        verified_data = model.model_validate(data)
+    else:
+        if not isinstance(data, model):
+            raise ValueError(
+                f"Model of given data mismatches given name. Expected {model}, got {type(data)}."
+            )
+        verified_data = data
+    verified_json = verified_data.model_dump_json(
+        exclude_none=True,
     )
-    return f"{session_manager.base_url}/{name}{base_type}{additional_path or ''}"
+    if fetch_id:
+        return (
+            verified_data.id,
+            verified_json,
+        )
+    return verified_json
 
 
 def create(
-    registration_type: RegistrationType,
     name: str,
-    **payload,
+    data: dict | BaseModel,
 ) -> BaseModel:
     """
     Creates a Google Wallet Class or Object. `C` in CRUD.
 
-    :param registration_type:  type of the model (either class or object) to use
-    :param name:               registered name of the model to use
-    :param payload:            data to pass to the Google RESTful API
-    :raises Exception:         if the response status code is not 200
-    :return:                   the created model based on the data returned by the API
+    :param name:       Registered name of the model to use
+    :param data:       Data to pass to the Google RESTful API.
+                       Either a simple python data structure using built-ins,
+                       or a Pydantic model instance matching the registered name's model.
+    :raises Exception: When the response status code is not 200.
+    :return:           The created model based on the data returned by the API.
     """
-    model = lookup(registration_type, name)
-    obj = model(**payload)
-    data = obj.json(
-        exclude_none=True,
-    )
+    raise_when_operation_not_allowed(name, "create")
+    model = lookup_model(name)
+    verified_json = _validate_data_and_convert_to_json(model, data)
     session = session_manager.session
-    url = _make_url(registration_type, name)
-    response = session.post(url=url, data=data)
+    url = session_manager.url(name)
+    response = session.post(url=url, data=verified_json)
 
     if response.status_code != 200:
         raise Exception(f"Error at {url}: {response.status_code} - {response.text}")
 
-    return model.parse_raw(response.content)
+    return model.model_validate_json(response.content)
 
 
 def read(
-    registration_type: RegistrationType,
     name: str,
     resource_id: str,
 ) -> BaseModel:
     """
     Reads a Google Wallet Class or Object. `R` in CRUD.
 
-    :param registration_type:  type of the model (either class or object) to use
     :param name:               registered name of the model to use
     :param resource_id:        id of the resource to read from the Google RESTful API
     :raises LookupError:       if the resource was not found (404)
     :raises Exception:         if the response status code is not 200 or 404
     :return:                   the created model based on the data returned by the API
     """
+    raise_when_operation_not_allowed(name, "read")
     session = session_manager.session
-    response = session.get(url=_make_url(registration_type, name, f"/{resource_id}"))
+    url = session_manager.url(name, f"/{resource_id}")
+    response = session.get(url=url)
 
     if response.status_code == 404:
-        raise LookupError(f"{url} {registration_type}: {name} not found")
+        raise LookupError(f"{url}: {name} not found")
 
     if response.status_code == 200:
-        model = lookup(registration_type, name)
-        return model.parse_raw(response.content)
+        model = lookup_model(name)
+        return model.model_validate_json(response.content)
 
     raise Exception(f"{url} {response.status_code} - {response.text}")
 
 
 def update(
-    registration_type: RegistrationType,
     name: str,
-    **payload,
+    data: dict | BaseModel,
+    *,
+    override_all=False,
 ) -> BaseModel:
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
 
-    :param registration_type:  type of the model (either class or object) to use
-    :param name:               registered name of the model to use
-    :param payload:            data to pass to the Google RESTful API
+    :param name:       Registered name of the model to use
+    :param data:       Data to pass to the Google RESTful API.
+                       Either a simple python data structure using built-ins,
+                       or a Pydantic model instance matching the registered name's model.
+    :param override_all:       If True, all fields will be overwritten, otherwise only given fields.
     :raises LookupError:       if the resource was not found (404)
     :raises Exception:         if the response status code is not 200 or 404
     :return:                   the created model based on the data returned by the API
     """
-    model = lookup(registration_type, name)
-    obj = model(**payload)
-    data = obj.json(
-        exclude_none=True,
-        exclude_unset=True,
-    )
+    raise_when_operation_not_allowed(name, "update")
+    model = lookup_model(name)
+    if not isinstance(data, BaseModel) and not override_all:
+        resource_id = data["id"]
+        # we can not validate partial data for patch yet
+        verified_json = json.dumps(data)
+    else:
+        resource_id, verified_json = _validate_data_and_convert_to_json(
+            model, data, fetch_id=True
+        )
     session = session_manager.session
-    response = session.put(
-        url=_make_url(registration_type, name, f"/{obj.id}"),
-        data=data,
-    )
+    if override_all:
+        response = session.put(
+            url=session_manager.url(name, f"/{resource_id}"),
+            data=verified_json,
+        )
+    else:
+        response = session.patch(
+            url=session_manager.url(name, f"/{resource_id}"),
+            data=verified_json,
+        )
     if response.status_code == 404:
-        raise LookupError(f"{registration_type}: {name} not found")
+        raise LookupError(f"Error 404, {name} not found: - {response.text}")
 
     if response.status_code != 200:
         raise Exception(f"Error: {response.status_code} - {response.text}")
 
-    return model.parse_raw(response.content)
+    return model.model_validate_json(response.content)
 
 
 # def disable(

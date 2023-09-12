@@ -1,5 +1,4 @@
 from ..registry import register_model
-from ..registry import RegistrationType
 from .primitives import CallbackOptions
 from .primitives import GroupingInfo
 from .primitives import Image
@@ -35,7 +34,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-@register_model(RegistrationType.WALLETCLASS, "eventticket")
+@register_model("eventticketClass")
 class EventTicketClass(BaseModel):
     id: str
     eventName: LocalizedString | None
@@ -99,7 +98,7 @@ class EventReservationInfo(BaseModel):
     confirmationCode: str | None
 
 
-@register_model(RegistrationType.WALLETOBJECT, "eventticket")
+@register_model("eventticketObject")
 class EventTicketObject(BaseModel):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketobject
