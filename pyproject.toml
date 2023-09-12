@@ -30,8 +30,6 @@ test = [
 develop = [
     "pdbpp",
     "ipython",
-    "qrcode",
-    "ecdsa",
 ]
 
 [build-system]
@@ -41,6 +39,11 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "tests",
+]
 [tool.towncrier]
 directory = "news/"
 filename = "CHANGES.rst"
