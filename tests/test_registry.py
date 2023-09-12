@@ -98,3 +98,18 @@ def test_lookup_metadata(clean_registry):
 
     with pytest.raises(KeyError):
         lookup_metadata("bar")
+
+
+def test_raise_when_operation_not_allowed(clean_registry):
+    from edutap.wallet_google.registry import register_model
+
+    @register_model("foo")
+    class Foo:
+        pass
+
+    from edutap.wallet_google.registry import raise_when_operation_not_allowed
+
+    assert raise_when_operation_not_allowed("foo", "create") is None
+
+    with pytest.raises(ValueError):
+        raise_when_operation_not_allowed("foo", "message")
