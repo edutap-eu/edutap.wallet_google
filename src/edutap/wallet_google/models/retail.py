@@ -31,7 +31,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 
-@register_model("giftcardClass")
+@register_model("giftcardClass", can_disable=False)
 class GiftCardClass(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
@@ -117,7 +117,7 @@ class GiftCardObject(BaseModel):
     passConstraints: PassConstraints | None
 
 
-@register_model("loyaltyClass")
+@register_model("loyaltyClass", can_disable=False)
 class LoyaltyClass(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
@@ -240,7 +240,7 @@ class LoyaltyObject(BaseModel):
     passConstraints: PassConstraints | None
 
 
-@register_model("offerClass")
+@register_model("offerClass", can_disable=False)
 class OfferClass(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass

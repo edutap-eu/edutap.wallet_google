@@ -34,7 +34,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-@register_model("eventticketClass")
+@register_model("eventticketClass", can_disable=False)
 class EventTicketClass(BaseModel):
     id: str
     eventName: LocalizedString | None

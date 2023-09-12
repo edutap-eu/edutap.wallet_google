@@ -1,12 +1,31 @@
 # from .models.primitives import Pagination
-# from .models.primitives.notification import AddMessageRequest
-# from .models.primitives.notification import Message
+from .models.primitives.enums import State
+from .models.primitives.notification import AddMessageRequest
+from .models.primitives.notification import Message
 from .registry import lookup_model
 from .registry import raise_when_operation_not_allowed
 from .session import session_manager
 from pydantic import BaseModel
 
 import json
+
+
+def _validate_data(model, data: dict | BaseModel):
+    """Takes a model and data, validates it and convert to a json string.
+
+    :param model:      Pydantic model class to use for validation.
+    :param data:       Data to pass to the Google RESTful API.
+                       Either a simple python data structure using built-ins,
+                       or a Pydantic model instance.
+    :return:           data as an instance of the given model
+    """
+    if not isinstance(data, BaseModel):
+        return model.model_validate(data)
+    if not isinstance(data, model):
+        raise ValueError(
+            f"Model of given data mismatches given name. Expected {model}, got {type(data)}."
+        )
+    return data
 
 
 def _validate_data_and_convert_to_json(
@@ -21,14 +40,7 @@ def _validate_data_and_convert_to_json(
     :return:           JSON string of the data,
                        or, when fetch_id is True a tuple of resource-id and JSON string.
     """
-    if not isinstance(data, BaseModel):
-        verified_data = model.model_validate(data)
-    else:
-        if not isinstance(data, model):
-            raise ValueError(
-                f"Model of given data mismatches given name. Expected {model}, got {type(data)}."
-            )
-        verified_data = data
+    verified_data = _validate_data(model, data)
     verified_json = verified_data.model_dump_json(
         exclude_none=True,
     )
@@ -52,7 +64,7 @@ def create(
                        Either a simple python data structure using built-ins,
                        or a Pydantic model instance matching the registered name's model.
     :raises Exception: When the response status code is not 200.
-    :return:           The created model based on the data returned by the API.
+    :return:           The created model based on the data returned by the Restful API.
     """
     raise_when_operation_not_allowed(name, "create")
     model = lookup_model(name)
@@ -74,11 +86,11 @@ def read(
     """
     Reads a Google Wallet Class or Object. `R` in CRUD.
 
-    :param name:               registered name of the model to use
-    :param resource_id:        id of the resource to read from the Google RESTful API
-    :raises LookupError:       if the resource was not found (404)
-    :raises Exception:         if the response status code is not 200 or 404
-    :return:                   the created model based on the data returned by the API
+    :param name:               Registered name of the model to use
+    :param resource_id:        Identifier of the resource to read from the Google RESTful API
+    :raises LookupError:       When the resource was not found (404)
+    :raises Exception:         When the response status code is not 200 or 404
+    :return:                   the created model based on the data returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "read")
     session = session_manager.session
@@ -104,14 +116,14 @@ def update(
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
 
-    :param name:       Registered name of the model to use
-    :param data:       Data to pass to the Google RESTful API.
-                       Either a simple python data structure using built-ins,
-                       or a Pydantic model instance matching the registered name's model.
-    :param override_all:       If True, all fields will be overwritten, otherwise only given fields.
-    :raises LookupError:       if the resource was not found (404)
-    :raises Exception:         if the response status code is not 200 or 404
-    :return:                   the created model based on the data returned by the API
+    :param name:         Registered name of the model to use
+    :param data:         Data to pass to the Google RESTful API.
+                         Either a simple python data structure using built-ins,
+                         or a Pydantic model instance matching the registered name's model.
+    :param override_all: When True, all fields will be overwritten, otherwise only given fields.
+    :raises LookupError: When the resource was not found (404)
+    :raises Exception:   When the response status code is not 200 or 404
+    :return:             The created model based on the data returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "update")
     model = lookup_model(name)
@@ -143,16 +155,60 @@ def update(
     return model.model_validate_json(response.content)
 
 
-# def disable(
-# registration_type: RegistrationType,
-# name: str,
-# resource_id: str,
-# ):
-#     """
-#     Disables a Google Wallet Class or Object. `D` in CRUD.
-#     Generic Implementation of the CRUD --> (D) usually delete, but here disable since delete is not supported at Google Wallets.
-#     """
-#     raise NotImplementedError()
+def disable(
+    name: str,
+    resource_id: str,
+) -> BaseModel:
+    """
+    Disables a Google Wallet Class or Object. `D` in CRUD.
+    Generic Implementation of the CRUD --> (D) usually delete,
+    but here disable since delete is not supported at Google Wallets.
+
+    Technically, there is no disable method in the Google Wallet API,
+     but a state can be set to expired to indicate disabled objects -
+     which is done here.
+
+    :param name:          Registered name of the model to use
+    :param resource_id:   Identifier of the resource to read from the Google RESTful API
+    :raises LookupError:  When the resource was not found (404)
+    :raises Exception:    When the response status code is not 200 or 404
+    :return:              The created model based on the data returned by the Restful API
+    """
+    raise_when_operation_not_allowed(name, "disable")
+    data = {"id": resource_id, "state": str(State.EXPIRED.value)}
+    return update(name, data)
+
+
+def message(
+    name: str,
+    resource_id: str,
+    message: dict | Message,
+) -> BaseModel:
+    """Sends a message to a Google Wallet Class or Object.
+
+    :param name:          Registered name of the model to use
+    :param resource_id:   Identfier of the resource to send to
+    :raises LookupError: When the resource was not found (404)
+    :raises Exception:   When the response status code is not 200 or 404
+    :return:             The created AddMessageRequest object as returned by the Restful API
+    """
+    raise_when_operation_not_allowed(name, "message")
+    message = _validate_data(Message, message)
+    add_message = AddMessageRequest(message=message)
+    verified_json = add_message.model_dump_json(
+        exclude_none=True,
+    )
+    session = session_manager.session
+    url = session_manager.url(name, f"/{resource_id}/addMessage")
+    response = session.post(url=url, data=verified_json)
+
+    if response.status_code == 404:
+        raise LookupError(f"Error 404, {name} not found: - {response.text}")
+
+    if response.status_code != 200:
+        raise Exception(f"Error: {response.status_code} - {response.text}")
+
+    return AddMessageRequest.model_validate_json(response.content)
 
 
 # def list(

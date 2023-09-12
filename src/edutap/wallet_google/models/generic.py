@@ -22,7 +22,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-@register_model("genericClass")
+@register_model("genericClass", can_disable=False)
 class GenericClass(BaseModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericclass
