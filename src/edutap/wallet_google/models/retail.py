@@ -89,32 +89,32 @@ class GiftCardObject(BaseModel):
     """
 
     id: str
-    classReference: GiftCardClass | None
-    cardNumber: str | None
-    pin: str | None
-    balance: Money | None
-    balanceUpdateTime: DateTime | None
-    eventNumber: str | None
-    classId: str | None
-    version: str | None
-    state: State | None
-    barcode: Barcode | None
-    messages: list[Message] | None
-    validTimeInterval: TimeInterval | None
-    locations: list[LatLongPoint] | None
+    classReference: GiftCardClass | None = None
+    cardNumber: str | None = None
+    pin: str | None = None
+    balance: Money | None = None
+    balanceUpdateTime: DateTime | None = None
+    eventNumber: str | None = None
+    classId: str | None = None
+    version: str | None = None
+    state: State | None = None
+    barcode: Barcode | None = None
+    messages: list[Message] | None = None
+    validTimeInterval: TimeInterval | None = None
+    locations: list[LatLongPoint] | None = None
     hasUsers: bool = False
-    smartTapRedemptionValue: str | None
+    smartTapRedemptionValue: str | None = None
     hasLinkedDevice: bool
     disableExpirationNotification: bool
-    infoModuleData: InfoModuleData | None
-    imageModulesData: list[ImageModuleData] | None
-    textModulesData: list[TextModuleData] | None
-    linksModuleData: LinksModuleData | None
-    appLinkData: AppLinkData | None
-    rotatingBarcode: RotatingBarcode | None
-    heroImage: Image | None
-    groupingInfo: GroupingInfo | None
-    passConstraints: PassConstraints | None
+    infoModuleData: InfoModuleData | None = None
+    imageModulesData: list[ImageModuleData] | None = None
+    textModulesData: list[TextModuleData] | None = None
+    linksModuleData: LinksModuleData | None = None
+    appLinkData: AppLinkData | None = None
+    rotatingBarcode: RotatingBarcode | None = None
+    heroImage: Image | None = None
+    groupingInfo: GroupingInfo | None = None
+    passConstraints: PassConstraints | None = None
 
 
 @register_model("loyaltyClass", can_disable=False)
@@ -124,46 +124,58 @@ class LoyaltyClass(BaseModel):
     """
 
     id: str
-    issuerName: str | None
-    programName: str | None
-    programLogo: Image | None
-    accountNameLabel: str | None
-    accountIdLabel: str | None
-    rewardsTierLabel: str | None
-    rewardsTier: str | None
-    secondaryRewardsTierLabel: str | None
-    secondaryRewardsTier: str | None
-    localizedIssuerName: LocalizedString | None
-    localizedProgramName: LocalizedString | None
-    localizedAccountNameLabel: LocalizedString | None
-    localizedAccountIdLabel: LocalizedString | None
-    localizedRewardsTierLabel: LocalizedString | None
-    localizedRewardsTier: LocalizedString | None
-    localizedSecondaryRewardsTierLabel: LocalizedString | None
-    localizedSecondaryRewardsTier: LocalizedString | None
-    discoverableProgram: DiscoverableProgram | None
-    classTemplateInfo: ClassTemplateInfo | None
-    version: str | None = Field(description="deprecated", exclude=True)  # int64
-    messages: list[Message] | None
+    issuerName: str | None = None
+    programName: str | None = None
+    programLogo: Image | None = None
+    accountNameLabel: str | None = None
+    accountIdLabel: str | None = None
+    rewardsTierLabel: str | None = None
+    rewardsTier: str | None = None
+    secondaryRewardsTierLabel: str | None = None
+    secondaryRewardsTier: str | None = None
+    localizedIssuerName: LocalizedString | None = None
+    localizedProgramName: LocalizedString | None = None
+    localizedAccountNameLabel: LocalizedString | None = None
+    localizedAccountIdLabel: LocalizedString | None = None
+    localizedRewardsTierLabel: LocalizedString | None = None
+    localizedRewardsTier: LocalizedString | None = None
+    localizedSecondaryRewardsTierLabel: LocalizedString | None = None
+    localizedSecondaryRewardsTier: LocalizedString | None = None
+    discoverableProgram: DiscoverableProgram | None = None
+    classTemplateInfo: ClassTemplateInfo | None = None
+    version: str | None = Field(
+        description="deprecated",
+        exclude=True,
+        default=None,
+    )  # int64
+    messages: list[Message] | None = None
     allowMultipleUsersPerObject: bool = Field(
-        description="deprecated", exclude=True, default=True
+        description="deprecated",
+        exclude=True,
+        default=True,
     )
-    homepageUri: Uri | None
-    locations: list[LatLongPoint] | None
-    reviewStatus: ReviewStatus | None
-    review: Review | None
+    homepageUri: Uri | None = None
+    locations: list[LatLongPoint] | None = None
+    reviewStatus: ReviewStatus | None = None
+    review: Review | None = None
     infoModuleData: InfoModuleData | None = Field(
-        description="deprecated", exclude=True
+        description="deprecated",
+        exclude=True,
+        default=None,
     )
-    imageModulesData: list[ImageModuleData] | None
-    textModulesData: list[TextModuleData] | None
-    linksModuleData: LinksModuleData | None
-    redemptionIssuers: list[str] | None  # string (int64 format)
-    countryCode: str | None
-    heroImage: Image | None
-    wordMark: Image | None = Field(description="deprecated", exclude=True)
+    imageModulesData: list[ImageModuleData] | None = None
+    textModulesData: list[TextModuleData] | None = None
+    linksModuleData: LinksModuleData | None = None
+    redemptionIssuers: list[str] | None = None  # string (int64 format)
+    countryCode: str | None = None
+    heroImage: Image | None = None
+    wordMark: Image | None = Field(
+        description="deprecated",
+        exclude=True,
+        default=None,
+    )
     enableSmartTap: bool | None = False
-    hexBackgroundColor: str | None
+    hexBackgroundColor: str | None = None
     multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = (
         MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
@@ -203,9 +215,9 @@ class LoyaltyPoints(BaseModel):
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPoints
     """
 
-    label: str | None
-    balance: LoyaltyPointsBalance | None
-    localizedLabel: LocalizedString | None
+    label: str | None = None
+    balance: LoyaltyPointsBalance | None = None
+    localizedLabel: LocalizedString | None = None
 
 
 @register_model("loyaltyObject")
@@ -216,28 +228,28 @@ class LoyaltyObject(BaseModel):
 
     id: str
     classId: str
-    accountName: str | None
-    accountId: str | None
-    loyaltyPoints: LoyaltyPoints | None
-    linkedOfferIds: list[str] | None
-    secondaryLoyaltyPoints: LoyaltyPoints | None
-    state: State | None
-    barcode: Barcode | None
-    messages: list[Message] | None
-    validTimeInterval: TimeInterval | None
-    locations: list[LatLongPoint] | None
-    hasUsers: bool | None
-    smartTapRedemptionValue: str | None
-    hasLinkedDevice: bool | None
-    disableExpirationNotification: bool | None
-    imageModule: ImageModuleData | None
-    imagesModuleData: list[ImageModuleData] | None
-    textModulesData: list[TextModuleData] | None
-    appLinkData: AppLinkData | None
-    rotatingBarcode: RotatingBarcode | None
-    heroImage: Image | None
-    groupingInfo: GroupingInfo | None
-    passConstraints: PassConstraints | None
+    accountName: str | None = None
+    accountId: str | None = None
+    loyaltyPoints: LoyaltyPoints | None = None
+    linkedOfferIds: list[str] | None = None
+    secondaryLoyaltyPoints: LoyaltyPoints | None = None
+    state: State | None = None
+    barcode: Barcode | None = None
+    messages: list[Message] | None = None
+    validTimeInterval: TimeInterval | None = None
+    locations: list[LatLongPoint] | None = None
+    hasUsers: bool | None = None
+    smartTapRedemptionValue: str | None = None
+    hasLinkedDevice: bool | None = None
+    disableExpirationNotification: bool | None = None
+    imageModule: ImageModuleData | None = None
+    imagesModuleData: list[ImageModuleData] | None = None
+    textModulesData: list[TextModuleData] | None = None
+    appLinkData: AppLinkData | None = None
+    rotatingBarcode: RotatingBarcode | None = None
+    heroImage: Image | None = None
+    groupingInfo: GroupingInfo | None = None
+    passConstraints: PassConstraints | None = None
 
 
 @register_model("offerClass", can_disable=False)
@@ -247,43 +259,45 @@ class OfferClass(BaseModel):
     """
 
     id: str
-    title: str | None
-    redemptionChannel: RedemptionChannel | None
-    provider: str | None
-    titleImage: Image | None
-    details: str | None
-    finePrint: str | None
-    helpUri: Uri | None
-    localizedTitle: LocalizedString | None
-    localizedProvider: LocalizedString | None
-    localizedDetails: LocalizedString | None
-    localizedFinePrint: LocalizedString | None
-    shortTitle: str | None
-    localizedShortTitle: LocalizedString | None
-    classTemplateInfo: ClassTemplateInfo | None
-    version: str | None
-    issuerName: str | None
-    messages: list[Message] | None
+    title: str | None = None
+    redemptionChannel: RedemptionChannel | None = None
+    provider: str | None = None
+    titleImage: Image | None = None
+    details: str | None = None
+    finePrint: str | None = None
+    helpUri: Uri | None = None
+    localizedTitle: LocalizedString | None = None
+    localizedProvider: LocalizedString | None = None
+    localizedDetails: LocalizedString | None = None
+    localizedFinePrint: LocalizedString | None = None
+    shortTitle: str | None = None
+    localizedShortTitle: LocalizedString | None = None
+    classTemplateInfo: ClassTemplateInfo | None = None
+    version: str | None = None
+    issuerName: str | None = None
+    messages: list[Message] | None = None
     allowMultipleUsersPerObject: bool = False
-    homepageUri: Uri | None
-    locations: list[LatLongPoint] | None
+    homepageUri: Uri | None = None
+    locations: list[LatLongPoint] | None = None
     reviewStatus: ReviewStatus
-    review: Review | None
-    infoModuleData: InfoModuleData | None
-    imageModulesData: list[ImageModuleData] | None
-    textModulesData: list[TextModuleData] | None
-    linksModuleData: LinksModuleData | None
-    redemptionIssuers: list[str] | None
-    countryCode: str | None
-    heroImage: Image | None
-    wordMark: Image | None
+    review: Review | None = None
+    infoModuleData: InfoModuleData | None = None
+    imageModulesData: list[ImageModuleData] | None = None
+    textModulesData: list[TextModuleData] | None = None
+    linksModuleData: LinksModuleData | None = None
+    redemptionIssuers: list[str] | None = None
+    countryCode: str | None = None
+    heroImage: Image | None = None
+    wordMark: Image | None = None
     enableSmartTap: bool = False
-    hexBackgroundColor: str | None
-    localizedIssuerName: LocalizedString | None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None
-    callbackOptions: CallbackOptions | None
-    securityAnimation: SecurityAnimation | None
-    viewUnlockRequirement: ViewUnlockRequirement | None
+    hexBackgroundColor: str | None = None
+    localizedIssuerName: LocalizedString | None = None
+    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = (
+        None
+    )
+    callbackOptions: CallbackOptions | None = None
+    securityAnimation: SecurityAnimation | None = None
+    viewUnlockRequirement: ViewUnlockRequirement | None = None
 
 
 @register_model("offerObject")
@@ -294,23 +308,23 @@ class OfferObject(BaseModel):
 
     id: str
     classId: str
-    classReference: OfferClass | None
-    version: str | None
-    state: State | None
+    classReference: OfferClass | None = None
+    version: str | None = None
+    state: State | None = None
     barcode: Barcode
-    messages: list[Message] | None
-    validTimeInterval: TimeInterval | None
-    locations: list[LatLongPoint] | None
+    messages: list[Message] | None = None
+    validTimeInterval: TimeInterval | None = None
+    locations: list[LatLongPoint] | None = None
     hasUsers: bool = False
     smartTapRedemptionValue: str
     hasLinkedDevice: bool = False
     disableExpirationNotification: bool = False
-    infoModuleData: InfoModuleData | None
-    imageModulesData: list[ImageModuleData] | None
-    textModulesData: list[TextModuleData] | None
-    linksModuleData: LinksModuleData | None
-    appLinkData: AppLinkData | None
-    rotatingBarcode: RotatingBarcode | None
-    heroImage: Image | None
-    groupingInfo: GroupingInfo | None
-    passConstraints: PassConstraints | None
+    infoModuleData: InfoModuleData | None = None
+    imageModulesData: list[ImageModuleData] | None = None
+    textModulesData: list[TextModuleData] | None = None
+    linksModuleData: LinksModuleData | None = None
+    appLinkData: AppLinkData | None = None
+    rotatingBarcode: RotatingBarcode | None = None
+    heroImage: Image | None = None
+    groupingInfo: GroupingInfo | None = None
+    passConstraints: PassConstraints | None = None

@@ -60,7 +60,9 @@ class InfoModuleData(BaseModel):
 
     labelValueRows: list[LabelValueRow]
     showLastUpdatedTime: bool = Field(
-        description="deprecated", exclude=True, default=False
+        description="deprecated",
+        exclude=True,
+        default=False,
     )
 
 
