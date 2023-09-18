@@ -256,27 +256,3 @@ def message(
 #     else:
 #         raise Exception(f"Error: {response.status_code} - {response.content}")
 #     return objs
-
-
-# def message(
-#     http_client: AuthorizedSession,
-#     resource_id: str,
-#     message: Message,
-#     *,
-#     obj_class: BaseModel,
-# ) -> BaseModel:
-#     """
-#     Generic Implementation addMessage Method.
-#     """
-#     response = http_client.post(
-#         url=f"{http_client.base_url}/{obj_class._url_path()}/{resource_id}/addMessage",
-#         data=AddMessageRequest(message=message).json(exclude_none=True),
-#     )
-#     if response.status_code == 200:
-#         data = json.loads(response.content)
-#         raw_obj = data["resource"]
-#         return obj_class.parse_obj(raw_obj)
-#     elif response.status_code == 404:
-#         raise ValueError(f"{obj_class} {resource_id} does not exist.")
-#     else:
-#         raise Exception(f"Error: {response.status_code} - {response.content}")
