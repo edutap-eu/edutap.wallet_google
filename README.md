@@ -27,8 +27,8 @@ The sources are in a GIT DVCS with its main branches at the [GitHub `edutap-eu` 
 
 We'd be happy to see many issue reports, forks and pull requests to make the package even better.
 
-## LICENSE
+## License
 
 The code is copyrighted by eduTAP - EUGLOH Working Package - Campus Life.
 
-It is under [EUROPEAN UNION PUBLIC LICENCE v. 1.2](https://opensource.org/license/eupl-1-2/), a free and OpenSource software license.
+It is licensed under the [EUROPEAN UNION PUBLIC LICENCE v. 1.2](https://opensource.org/license/eupl-1-2/), a free and OpenSource software license.
