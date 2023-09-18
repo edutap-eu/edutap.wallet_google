@@ -34,13 +34,12 @@ class Message(BaseModel):
     see: https://developers.google.com/wallet/tickets/events/rest/v1/Message
     """
 
-    kind: str | None = "walletobjects#walletObjectMessage"
     header: str | None = None
     body: str | None = None
     displayInterval: TimeInterval | None = None
     id: str | None = None
     messageType: MessageType = MessageType.MESSAGE_TYPE_UNSPECIFIED
-    locaizedHeader: LocalizedString | None = None
+    localizedHeader: LocalizedString | None = None
     localizedBody: LocalizedString | None = None
 
 
