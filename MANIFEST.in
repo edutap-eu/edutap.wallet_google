@@ -1,0 +1,2 @@
+recursive-include news *.internal
+recursive-include tests *.json

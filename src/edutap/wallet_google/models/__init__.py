@@ -1,3 +1,3 @@
 # import to register models
-from . import generic
-from . import retail
+from . import generic  # noqa: F401
+from . import retail  # noqa: F401

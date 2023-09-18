@@ -5,8 +5,8 @@ from .models.primitives.notification import Message
 from .registry import lookup_model
 from .registry import raise_when_operation_not_allowed
 from .session import session_manager
+from collections.abc import Generator
 from pydantic import BaseModel
-from typing import Generator
 
 import json
 import logging
@@ -193,7 +193,7 @@ def message(
     """Sends a message to a Google Wallet Class or Object.
 
     :param name:         Registered name of the model to use
-    :param resource_id:  Identfier of the resource to send to
+    :param resource_id:  Identifier of the resource to send to
     :raises LookupError: When the resource was not found (404)
     :raises Exception:   When the response status code is not 200 or 404
     :return:             The created AddMessageRequest object as returned by the Restful API
@@ -294,8 +294,9 @@ def list(
         for count, record in enumerate(data["resources"]):
             try:
                 yield model.model_validate(record)
-            except Exception as e:
+            except Exception:
                 logger.error(f"Error validating record {count}:\n{record}")
+                raise
         pagination = Pagination.model_validate(data["pagination"])
         if result_per_page > 0:
             if pagination.nextPageToken:

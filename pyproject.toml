@@ -2,7 +2,13 @@
 name = "edutap.wallet_google"
 version = "1.0.0.dev1"
 description = "Library for Google Wallet Communication"
+keywords = ["wallet", "google", "api", "pass"]
 readme = "README.md"
+authors = [
+    {name = "Philipp Auersperg-Castell", email = "phil@bluedynamics.com"},
+    {name = "Alexander Loechel", email = "Alexander.Loechel@verwaltung.uni-muenchen.de"},
+    {name = "Jens Klein", email = "jk@kleinundpartner.at"},
+]
 requires-python = ">=3.9"
 license = { text = "EUPL 1.2" }
 classifiers = [
@@ -21,6 +27,11 @@ dependencies = [
     "google-auth",
     "google-cloud-storage",
   ]
+
+[project.urls]
+Source = "https://github.com/edutap-eu/edutap.wallet_google"
+Issues = "https://github.com/edutap-eu/edutap.wallet_google/issues"
+Documentation = "https://docs.edutap.eu/packages/edutap_wallet_google.html"
 
 [project.optional-dependencies]
 test = [
@@ -85,6 +96,7 @@ profile = "plone"
 
 [tool.black]
 target-version = ["py39"]
+include = "src"
 
 [tool.codespell]
 ignore-words-list = "discreet,"

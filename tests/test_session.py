@@ -1,7 +1,7 @@
-from test_registry import clean_registry
+from test_registry import clean_registry  # noqa: F401
 
 
-def test_session_manager_url(clean_registry):
+def test_session_manager_url(clean_registry):  # noqa: F811
     from edutap.wallet_google.registry import register_model
 
     @register_model("foo")
@@ -57,7 +57,7 @@ def test_session_creation(monkeypatch):
     import threading
 
     def thread_check_different_session(other_session_id):
-        session = manager.session
+        session = manager.session  # noqa: F841
         assert id(_THREADLOCAL.session) != other_session_id
 
     threading.Thread(target=thread_check_different_session, args=[id(session)]).start()
