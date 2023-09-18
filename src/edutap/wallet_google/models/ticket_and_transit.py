@@ -34,7 +34,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-@register_model("eventticketClass", can_disable=False)
+@register_model("EventTicketClass", url_part="eventTicketClass", can_disable=False)
 class EventTicketClass(BaseModel):
     id: str
     eventName: LocalizedString | None
@@ -98,7 +98,7 @@ class EventReservationInfo(BaseModel):
     confirmationCode: str | None
 
 
-@register_model("eventticketObject")
+@register_model("EventTicketObject", url_part="eventTicketObject")
 class EventTicketObject(BaseModel):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketobject

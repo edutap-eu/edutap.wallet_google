@@ -117,7 +117,7 @@ class GiftCardObject(BaseModel):
     passConstraints: PassConstraints | None = None
 
 
-@register_model("loyaltyClass", can_disable=False)
+@register_model("LoyaltyClass", url_part="loyaltyClass", can_disable=False)
 class LoyaltyClass(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
@@ -220,7 +220,7 @@ class LoyaltyPoints(BaseModel):
     localizedLabel: LocalizedString | None = None
 
 
-@register_model("loyaltyObject")
+@register_model("LoyaltyObject", url_part="loyaltyObject")
 class LoyaltyObject(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
@@ -252,7 +252,7 @@ class LoyaltyObject(BaseModel):
     passConstraints: PassConstraints | None = None
 
 
-@register_model("offerClass", can_disable=False)
+@register_model("OfferClass", url_part="offerClass", can_disable=False)
 class OfferClass(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass
@@ -300,7 +300,7 @@ class OfferClass(BaseModel):
     viewUnlockRequirement: ViewUnlockRequirement | None = None
 
 
-@register_model("offerObject")
+@register_model("OfferObject", url_part="offerObject")
 class OfferObject(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerobject
