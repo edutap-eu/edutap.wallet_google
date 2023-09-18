@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from .modelbase import GoogleWalletModel
 
 
-_MODEL_REGISTRY = {}
+_MODEL_REGISTRY: dict[str, dict[str:any]] = {}
 
 
 class register_model:
@@ -15,7 +15,7 @@ class register_model:
         can_update: bool = True,
         can_disable: bool = True,
         can_list: bool = True,
-        can_message: bool = False,
+        can_message: bool = True,
     ):
         self.metadata = {
             "name": name,
@@ -28,7 +28,7 @@ class register_model:
             "can_message": can_message,
         }
 
-    def __call__(self, cls: BaseModel) -> BaseModel:
+    def __call__(self, cls: GoogleWalletModel) -> GoogleWalletModel:
         name = self.metadata["name"]
         if name in _MODEL_REGISTRY:
             raise ValueError(f"Duplicate registration of '{name}'")
@@ -37,7 +37,7 @@ class register_model:
         return cls
 
 
-def lookup_model(name: str) -> BaseModel:
+def lookup_model(name: str) -> GoogleWalletModel:
     return _MODEL_REGISTRY[name]["model"]
 
 

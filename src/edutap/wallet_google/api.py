@@ -1,3 +1,5 @@
+from .modelbase import GoogleWalletModel
+from .modelbase import GoogleWalletObjectReference
 from .models.primitives import Pagination
 from .models.primitives.enums import State
 from .models.primitives.notification import AddMessageRequest
@@ -6,7 +8,8 @@ from .registry import lookup_model
 from .registry import raise_when_operation_not_allowed
 from .session import session_manager
 from collections.abc import Generator
-from pydantic import BaseModel
+from google.auth import crypt
+from google.auth import jwt
 
 import json
 import logging
@@ -16,7 +19,7 @@ import os
 logger = logging.getLogger(__name__)
 
 
-def _validate_data(model, data: dict | BaseModel):
+def _validate_data(model: type[GoogleWalletModel], data: dict | GoogleWalletModel):
     """Takes a model and data, validates it and convert to a json string.
 
     :param model:      Pydantic model class to use for validation.
@@ -25,7 +28,7 @@ def _validate_data(model, data: dict | BaseModel):
                        or a Pydantic model instance.
     :return:           data as an instance of the given model
     """
-    if not isinstance(data, BaseModel):
+    if not isinstance(data, GoogleWalletModel):
         return model.model_validate(data)
     if not isinstance(data, model):
         raise ValueError(
@@ -35,7 +38,7 @@ def _validate_data(model, data: dict | BaseModel):
 
 
 def _validate_data_and_convert_to_json(
-    model, data: dict | BaseModel, *, fetch_id=False
+    model: type[GoogleWalletModel], data: dict | GoogleWalletModel, *, fetch_id=False
 ) -> str | tuple[str, str]:
     """Takes a model and data, validates it and convert to a json string.
 
@@ -60,8 +63,8 @@ def _validate_data_and_convert_to_json(
 
 def create(
     name: str,
-    data: dict | BaseModel,
-) -> BaseModel:
+    data: dict | GoogleWalletModel,
+) -> GoogleWalletModel:
     """
     Creates a Google Wallet Class or Object. `C` in CRUD.
 
@@ -88,7 +91,7 @@ def create(
 def read(
     name: str,
     resource_id: str,
-) -> BaseModel:
+) -> GoogleWalletModel:
     """
     Reads a Google Wallet Class or Object. `R` in CRUD.
 
@@ -115,10 +118,10 @@ def read(
 
 def update(
     name: str,
-    data: dict | BaseModel,
+    data: dict | GoogleWalletModel,
     *,
     override_all=False,
-) -> BaseModel:
+) -> GoogleWalletModel:
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
 
@@ -133,7 +136,7 @@ def update(
     """
     raise_when_operation_not_allowed(name, "update")
     model = lookup_model(name)
-    if not isinstance(data, BaseModel) and not override_all:
+    if not isinstance(data, GoogleWalletModel) and not override_all:
         resource_id = data["id"]
         # we can not validate partial data for patch yet
         verified_json = json.dumps(data)
@@ -164,7 +167,7 @@ def update(
 def disable(
     name: str,
     resource_id: str,
-) -> BaseModel:
+) -> GoogleWalletModel:
     """
     Disables a Google Wallet Class or Object. `D` in CRUD.
     Generic Implementation of the CRUD --> (D) usually delete,
@@ -189,7 +192,7 @@ def message(
     name: str,
     resource_id: str,
     message: dict | Message,
-) -> BaseModel:
+) -> GoogleWalletModel:
     """Sends a message to a Google Wallet Class or Object.
 
     :param name:         Registered name of the model to use
@@ -224,7 +227,7 @@ def list(
     issuer_id: str | None = None,
     result_per_page: int = 0,
     next_page_token: str | None = None,
-) -> Generator[BaseModel, None, None] | str:
+) -> Generator[GoogleWalletModel, None, None] | str:
     """Lists either classes of an issuer or objects of an class.
 
     It is possible to list
@@ -307,3 +310,55 @@ def list(
                 params["token"] = pagination.nextPageToken
                 continue
         break
+
+
+def save_link(
+    resources: dict,
+    *,
+    origins: list = [],
+) -> str:
+    """
+    Creates a link to save a Google Wallet Object to the wallet on the device.
+
+    Besides the capability to save an object to the wallet, it is also able create classes on-the-fly.
+
+    :param resources:   Dictionary of resources to save.
+                        Each dictionary key is the registered name of a model.
+                        The value is either a simple python data structure using built-ins,
+                        or a Pydantic model instance matching the registered name's model.
+                        If a resource is an Object, it can be an GoolgeWalletObjectReference instance too.
+    :param origins:     List of domains to approve for JWT saving functionality.
+                        The Google Wallet API button will not render when the origins field is not defined.
+                        You could potentially get an "Load denied by X-Frame-Options" or "Refused to display"
+                        messages in the browser console when the origins field is not defined.
+    :return:            Link with JWT to save the resources to the wallet.
+    """
+    # validate resources
+    payload = {}
+    for name, objs in resources.items():
+        payload[name] = []
+        for obj in objs:
+            # first look if this is an object reference as dict
+            if (
+                isinstance(obj, dict)
+                and GoogleWalletObjectReference.model_fields.keys() == obj.keys()
+            ):
+                obj = GoogleWalletObjectReference.model_validate(obj)
+            if isinstance(obj, GoogleWalletObjectReference):
+                payload[name] = obj.model_dump(exclude_none=True)
+                continue
+
+            # otherwise it must be a registered model
+            model = lookup_model(name)
+            obj = _validate_data(model, obj)
+            payload[name] = obj.model_dump(exclude_none=True)
+    claims = {
+        "iat": "",
+        "iss": session_manager.credentials_info["client_email"],
+        "aud": "google",
+        "origins": origins,
+        "typ": "savetowallet",
+        "payload": payload,
+    }
+    signer = crypt.RSASigner.from_service_account_file(session_manager.credentials_file)
+    return f"{session_manager.save_url}/{jwt.encode(signer, claims)}"

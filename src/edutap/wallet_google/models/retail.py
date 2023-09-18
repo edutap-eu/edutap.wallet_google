@@ -1,3 +1,5 @@
+from ..modelbase import GoogleWalletClassModel
+from ..modelbase import GoogleWalletObjectModel
 from ..registry import register_model
 from .primitives import CallbackOptions
 from .primitives import GroupingInfo
@@ -32,12 +34,11 @@ from pydantic import model_validator
 
 
 @register_model("giftcardClass", can_disable=False)
-class GiftCardClass(BaseModel):
+class GiftCardClass(GoogleWalletClassModel):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
     """
 
-    id: str
     merchantName: str | None = None
     programLogo: Image | None = None
     pinLabel: str | None = None
@@ -83,19 +84,17 @@ class GiftCardClass(BaseModel):
 
 
 @register_model("giftcardObject")
-class GiftCardObject(BaseModel):
+class GiftCardObject(GoogleWalletObjectModel):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
     """
 
-    id: str
     classReference: GiftCardClass | None = None
     cardNumber: str | None = None
     pin: str | None = None
     balance: Money | None = None
     balanceUpdateTime: DateTime | None = None
     eventNumber: str | None = None
-    classId: str | None = None
     version: str | None = None
     state: State | None = None
     barcode: Barcode | None = None
@@ -118,12 +117,11 @@ class GiftCardObject(BaseModel):
 
 
 @register_model("LoyaltyClass", url_part="loyaltyClass", can_disable=False)
-class LoyaltyClass(BaseModel):
+class LoyaltyClass(GoogleWalletClassModel):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
     """
 
-    id: str
     issuerName: str | None = None
     programName: str | None = None
     programLogo: Image | None = None
@@ -221,13 +219,11 @@ class LoyaltyPoints(BaseModel):
 
 
 @register_model("LoyaltyObject", url_part="loyaltyObject")
-class LoyaltyObject(BaseModel):
+class LoyaltyObject(GoogleWalletObjectModel):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
     """
 
-    id: str
-    classId: str
     accountName: str | None = None
     accountId: str | None = None
     loyaltyPoints: LoyaltyPoints | None = None
@@ -253,12 +249,11 @@ class LoyaltyObject(BaseModel):
 
 
 @register_model("OfferClass", url_part="offerClass", can_disable=False)
-class OfferClass(BaseModel):
+class OfferClass(GoogleWalletClassModel):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass
     """
 
-    id: str
     title: str | None = None
     redemptionChannel: RedemptionChannel | None = None
     provider: str | None = None
@@ -301,13 +296,11 @@ class OfferClass(BaseModel):
 
 
 @register_model("OfferObject", url_part="offerObject")
-class OfferObject(BaseModel):
+class OfferObject(GoogleWalletObjectModel):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerobject
     """
 
-    id: str
-    classId: str
     classReference: OfferClass | None = None
     version: str | None = None
     state: State | None = None

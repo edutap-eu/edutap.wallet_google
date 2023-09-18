@@ -1,3 +1,5 @@
+from ..modelbase import GoogleWalletClassModel
+from ..modelbase import GoogleWalletObjectModel
 from ..registry import register_model
 from .primitives import CallbackOptions
 from .primitives import GroupingInfo
@@ -35,8 +37,7 @@ from pydantic import Field
 
 
 @register_model("EventTicketClass", url_part="eventTicketClass", can_disable=False)
-class EventTicketClass(BaseModel):
-    id: str
+class EventTicketClass(GoogleWalletClassModel):
     eventName: LocalizedString | None
     eventId: str | None
     logo: Image | None
@@ -99,13 +100,11 @@ class EventReservationInfo(BaseModel):
 
 
 @register_model("EventTicketObject", url_part="eventTicketObject")
-class EventTicketObject(BaseModel):
+class EventTicketObject(GoogleWalletObjectModel):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketobject
     """
 
-    id: str
-    classId: str | None
     classReference: EventTicketClass | None
     seatInfo: EventSeat | None
     reservationInfo: EventReservationInfo | None

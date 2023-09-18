@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials
 
+import json
 import os
 import threading
 
@@ -12,22 +13,37 @@ load_dotenv()
 _THREADLOCAL = threading.local()
 
 BASE_URL = "https://walletobjects.googleapis.com/walletobjects/v1"
-BATCH_URL = "https://walletobjects.googleapis.com/batch"
+SAVE_URL = "https://pay.google.com/gp/v/save"
 SCOPES = ["https://www.googleapis.com/auth/wallet_object.issuer"]
 
 
 class SessionManager:
-    def __init__(self):
-        self.base_url = os.environ.get("EDUTAP_WALLET_GOOGLE_BASE_URL", BASE_URL)
-        self.batch_url = os.environ.get("EDUTAP_WALLET_GOOGLE_BATCH_URL", BATCH_URL)
+    @property
+    def base_url(self):
+        if getattr(self, "_base_url", None) is None:
+            self._base_url = os.environ.get("EDUTAP_WALLET_GOOGLE_BASE_URL", BASE_URL)
+        return self._base_url
+
+    @property
+    def save_url(self):
+        if getattr(self, "_save_url", None) is None:
+            self._save_url = os.environ.get("EDUTAP_WALLET_GOOGLE_SAVE_URL", SAVE_URL)
+        return self._save_url
+
+    @property
+    def credentials_file(self):
+        return os.environ.get("EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE")
+
+    @property
+    def credentials_info(self):
+        if getattr(self, "_credentials_info", None) is None:
+            with open(self.credentials_file) as fp:
+                self._credentials_info = json.load(fp)
+        return self._credentials_info
 
     def _make_session(self):
-        key_file_path = os.environ.get(
-            "EDUTAP_WALLET_GOOGLE_APPLICATION_CREDENTIALS_FILE"
-        )
-
         credentials = Credentials.from_service_account_file(
-            key_file_path, scopes=SCOPES
+            self.credentials_file, scopes=SCOPES
         )
         return AuthorizedSession(credentials)
 

@@ -1,3 +1,5 @@
+from ..modelbase import GoogleWalletClassModel
+from ..modelbase import GoogleWalletObjectModel
 from ..registry import register_model
 from .primitives import CallbackOptions
 from .primitives import GroupingInfo
@@ -18,17 +20,15 @@ from .primitives.enums import State
 from .primitives.enums import ViewUnlockRequirement
 from .primitives.localized_string import LocalizedString
 from .primitives.notification import Notifications
-from pydantic import BaseModel
 from pydantic import Field
 
 
 @register_model("GenericClass", url_part="genericClass", can_disable=False)
-class GenericClass(BaseModel):
+class GenericClass(GoogleWalletClassModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericclass
     """
 
-    id: str
     classTemplateInfo: ClassTemplateInfo | None = None
     imageModulesData: list[ImageModuleData] | None = None
     textModulesData: list[TextModuleData] | None = None
@@ -46,13 +46,11 @@ class GenericClass(BaseModel):
 
 
 @register_model("GenericObject", url_part="genericObject")
-class GenericObject(BaseModel):
+class GenericObject(GoogleWalletObjectModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject
     """
 
-    id: str
-    classId: str
     genericType: GenericType = GenericType.GENERIC_TYPE_UNSPECIFIED
     cardTitle: LocalizedString
     subheader: LocalizedString | None = None
