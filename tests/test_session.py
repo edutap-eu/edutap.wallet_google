@@ -4,7 +4,7 @@ from test_registry import clean_registry  # noqa: F401
 def test_session_manager_url(clean_registry):  # noqa: F811
     from edutap.wallet_google.registry import register_model
 
-    @register_model("foo")
+    @register_model("Foo", url_part="foo")
     class Foo:
         pass
 
@@ -12,25 +12,25 @@ def test_session_manager_url(clean_registry):  # noqa: F811
 
     manager = SessionManager()
     assert (
-        manager.url("foo")
+        manager.url("Foo")
         == "https://walletobjects.googleapis.com/walletobjects/v1/foo"
     )
     assert (
-        manager.url("foo", "/bar")
+        manager.url("Foo", "/bar")
         == "https://walletobjects.googleapis.com/walletobjects/v1/foo/bar"
     )
 
-    @register_model("foo2", url_part="FooBar")
+    @register_model("Foo2", url_part="foobar")
     class Foo2:
         pass
 
     assert (
-        manager.url("foo2")
-        == "https://walletobjects.googleapis.com/walletobjects/v1/FooBar"
+        manager.url("Foo2")
+        == "https://walletobjects.googleapis.com/walletobjects/v1/foobar"
     )
     assert (
-        manager.url("foo2", "/baz")
-        == "https://walletobjects.googleapis.com/walletobjects/v1/FooBar/baz"
+        manager.url("Foo2", "/baz")
+        == "https://walletobjects.googleapis.com/walletobjects/v1/foobar/baz"
     )
 
 
@@ -39,7 +39,7 @@ def test_session_creation(monkeypatch):
     from pathlib import Path
 
     monkeypatch.setenv(
-        "EDUTAP_WALLET_GOOGLE_APPLICATION_CREDENTIALS_FILE",
+        "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE",
         str(Path(__file__).parent / "data" / "credentials_fake.json"),
     )
     manager = SessionManager()

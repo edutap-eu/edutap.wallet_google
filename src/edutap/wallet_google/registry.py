@@ -13,7 +13,7 @@ class register_model:
     def __init__(
         self,
         name: str,
-        url_part: str = None,
+        url_part: str,
         *,
         plural: str | None = None,
         resource_id: str = "id",
