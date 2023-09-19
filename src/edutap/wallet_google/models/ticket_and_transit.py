@@ -36,7 +36,12 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-@register_model("EventTicketClass", url_part="eventTicketClass", can_disable=False)
+@register_model(
+    "EventTicketClass",
+    url_part="eventTicketClass",
+    plural="eventTicketClasses",
+    can_disable=False,
+)
 class EventTicketClass(GoogleWalletClassModel):
     eventName: LocalizedString | None
     eventId: str | None

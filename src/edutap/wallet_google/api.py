@@ -5,6 +5,7 @@ from .models.primitives.enums import State
 from .models.primitives.notification import AddMessageRequest
 from .models.primitives.notification import Message
 from .registry import lookup_model
+from .registry import lookup_model_by_plural_name
 from .registry import raise_when_operation_not_allowed
 from .session import session_manager
 from collections.abc import Generator
@@ -323,7 +324,8 @@ def save_link(
     Besides the capability to save an object to the wallet, it is also able create classes on-the-fly.
 
     :param resources:   Dictionary of resources to save.
-                        Each dictionary key is the registered name of a model.
+                        Each dictionary key is the registered plural name of a model.
+                        Usually, this is the name with a lower first character and as plural.
                         The value is either a simple python data structure using built-ins,
                         or a Pydantic model instance matching the registered name's model.
                         If a resource is an Object, it can be an GoolgeWalletObjectReference instance too.
@@ -339,19 +341,16 @@ def save_link(
         payload[name] = []
         for obj in objs:
             # first look if this is an object reference as dict
-            if (
-                isinstance(obj, dict)
-                and GoogleWalletObjectReference.model_fields.keys() == obj.keys()
-            ):
+            if isinstance(obj, dict) and "id" in obj and len(obj.keys()) <= 2:
                 obj = GoogleWalletObjectReference.model_validate(obj)
             if isinstance(obj, GoogleWalletObjectReference):
-                payload[name] = obj.model_dump(exclude_none=True)
+                payload[name].append(obj.model_dump(exclude_none=True))
                 continue
 
             # otherwise it must be a registered model
-            model = lookup_model(name)
+            model = lookup_model_by_plural_name(name)
             obj = _validate_data(model, obj)
-            payload[name] = obj.model_dump(exclude_none=True)
+            payload[name].append(obj.model_dump(exclude_none=True))
     claims = {
         "iat": "",
         "iss": session_manager.credentials_info["client_email"],
@@ -361,4 +360,4 @@ def save_link(
         "payload": payload,
     }
     signer = crypt.RSASigner.from_service_account_file(session_manager.credentials_file)
-    return f"{session_manager.save_url}/{jwt.encode(signer, claims)}"
+    return f"{session_manager.save_url}/{jwt.encode(signer, claims).decode('utf-8')}"

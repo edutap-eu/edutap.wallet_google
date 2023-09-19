@@ -23,7 +23,9 @@ from .primitives.notification import Notifications
 from pydantic import Field
 
 
-@register_model("GenericClass", url_part="genericClass", can_disable=False)
+@register_model(
+    "GenericClass", url_part="genericClass", plural="genericClass", can_disable=False
+)
 class GenericClass(GoogleWalletClassModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericclass

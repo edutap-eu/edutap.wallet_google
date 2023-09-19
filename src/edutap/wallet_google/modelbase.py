@@ -27,3 +27,5 @@ class GoogleWalletObjectReference(GoogleWalletObjectModel):
     """
     Model for all Google Wallet Object references.
     """
+
+    classId: str | None = None

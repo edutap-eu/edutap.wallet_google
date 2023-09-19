@@ -33,7 +33,12 @@ from pydantic import Field
 from pydantic import model_validator
 
 
-@register_model("giftcardClass", can_disable=False)
+@register_model(
+    "GiftcardClass",
+    url_part="giftcardClass",
+    plural="giftcardClasses",
+    can_disable=False,
+)
 class GiftCardClass(GoogleWalletClassModel):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
@@ -58,7 +63,7 @@ class GiftCardClass(GoogleWalletClassModel):
     )
     homepageUri: Uri | None = None
     locations: list[LatLongPoint]
-    reviewStatus: ReviewStatus | None = None
+    reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     review: Review | None = None
     infoModuleData: InfoModuleData | None = Field(
         description="deprecated", exclude=True
@@ -73,7 +78,7 @@ class GiftCardClass(GoogleWalletClassModel):
     enableSmartTap: bool | None = None
     hexBackgroundColor: str | None = None
     localizedIssuerName: LocalizedString | None = None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = (
+    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = (
         MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
     callbackOptions: CallbackOptions | None = None
@@ -83,7 +88,7 @@ class GiftCardClass(GoogleWalletClassModel):
     )
 
 
-@register_model("giftcardObject")
+@register_model("GiftcardObject", url_part="giftcardObject")
 class GiftCardObject(GoogleWalletObjectModel):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
@@ -96,7 +101,7 @@ class GiftCardObject(GoogleWalletObjectModel):
     balanceUpdateTime: DateTime | None = None
     eventNumber: str | None = None
     version: str | None = None
-    state: State | None = None
+    state: State = State.STATE_UNSPECIFIED
     barcode: Barcode | None = None
     messages: list[Message] | None = None
     validTimeInterval: TimeInterval | None = None
@@ -116,7 +121,9 @@ class GiftCardObject(GoogleWalletObjectModel):
     passConstraints: PassConstraints | None = None
 
 
-@register_model("LoyaltyClass", url_part="loyaltyClass", can_disable=False)
+@register_model(
+    "LoyaltyClass", url_part="loyaltyClass", plural="loyaltyClasses", can_disable=False
+)
 class LoyaltyClass(GoogleWalletClassModel):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
@@ -154,7 +161,7 @@ class LoyaltyClass(GoogleWalletClassModel):
     )
     homepageUri: Uri | None = None
     locations: list[LatLongPoint] | None = None
-    reviewStatus: ReviewStatus | None = None
+    reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     review: Review | None = None
     infoModuleData: InfoModuleData | None = Field(
         description="deprecated",
@@ -174,12 +181,12 @@ class LoyaltyClass(GoogleWalletClassModel):
     )
     enableSmartTap: bool | None = False
     hexBackgroundColor: str | None = None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = (
+    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = (
         MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
     callbackOptions: CallbackOptions | None
     securityAnimation: SecurityAnimation | None = SecurityAnimation()
-    viewUnlockRequirement: ViewUnlockRequirement | None = (
+    viewUnlockRequirement: ViewUnlockRequirement = (
         ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
     )
 
@@ -224,12 +231,12 @@ class LoyaltyObject(GoogleWalletObjectModel):
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
     """
 
+    state: State = State.STATE_UNSPECIFIED
     accountName: str | None = None
     accountId: str | None = None
     loyaltyPoints: LoyaltyPoints | None = None
     linkedOfferIds: list[str] | None = None
     secondaryLoyaltyPoints: LoyaltyPoints | None = None
-    state: State | None = None
     barcode: Barcode | None = None
     messages: list[Message] | None = None
     validTimeInterval: TimeInterval | None = None
@@ -248,14 +255,18 @@ class LoyaltyObject(GoogleWalletObjectModel):
     passConstraints: PassConstraints | None = None
 
 
-@register_model("OfferClass", url_part="offerClass", can_disable=False)
+@register_model(
+    "OfferClass", url_part="offerClass", plural="offerClasses", can_disable=False
+)
 class OfferClass(GoogleWalletClassModel):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass
     """
 
     title: str | None = None
-    redemptionChannel: RedemptionChannel | None = None
+    redemptionChannel: RedemptionChannel = (
+        RedemptionChannel.REDEMPTION_CHANNEL_UNSPECIFIED
+    )
     provider: str | None = None
     titleImage: Image | None = None
     details: str | None = None
@@ -274,7 +285,7 @@ class OfferClass(GoogleWalletClassModel):
     allowMultipleUsersPerObject: bool = False
     homepageUri: Uri | None = None
     locations: list[LatLongPoint] | None = None
-    reviewStatus: ReviewStatus
+    reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     review: Review | None = None
     infoModuleData: InfoModuleData | None = None
     imageModulesData: list[ImageModuleData] | None = None
@@ -287,12 +298,14 @@ class OfferClass(GoogleWalletClassModel):
     enableSmartTap: bool = False
     hexBackgroundColor: str | None = None
     localizedIssuerName: LocalizedString | None = None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = (
-        None
+    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = (
+        MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
     callbackOptions: CallbackOptions | None = None
     securityAnimation: SecurityAnimation | None = None
-    viewUnlockRequirement: ViewUnlockRequirement | None = None
+    viewUnlockRequirement: ViewUnlockRequirement = (
+        ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
+    )
 
 
 @register_model("OfferObject", url_part="offerObject")
@@ -303,7 +316,7 @@ class OfferObject(GoogleWalletObjectModel):
 
     classReference: OfferClass | None = None
     version: str | None = None
-    state: State | None = None
+    state: State = State.STATE_UNSPECIFIED
     barcode: Barcode
     messages: list[Message] | None = None
     validTimeInterval: TimeInterval | None = None
