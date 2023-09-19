@@ -16,6 +16,7 @@ class register_model:
         url_part: str = None,
         *,
         plural: str | None = None,
+        resource_id: str = "id",
         can_create: bool = True,
         can_read: bool = True,
         can_update: bool = True,
@@ -29,6 +30,7 @@ class register_model:
         :param name:        Name of the model. Usually the same as the class name.
         :param url_part:    Part of the URL to be used for the RESTful API endpoint.
         :param plural:      Lowercase plural of the name. Defaults to url_part + 's'.
+        :param resource_id: key name to fetch resource_id from. Defaults to 'id'.
         :param can_create:  Whether it is possible to use in the 'create' API function.
                             Defaults to True.
         :param can_read:    Whether it is possible to use in the 'read' API function.
@@ -46,6 +48,7 @@ class register_model:
             "name": name,
             "url_part": url_part,
             "plural": plural or f"{url_part}s",
+            "resource_id": resource_id,
             "can_create": can_create,
             "can_read": can_read,
             "can_update": can_update,

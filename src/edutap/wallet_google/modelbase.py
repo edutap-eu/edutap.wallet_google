@@ -6,16 +6,22 @@ class GoogleWalletModel(BaseModel):
     Base model for all Google Wallet models.
     """
 
+
+class GoogleWalletWithIdModel(GoogleWalletModel):
+    """
+    Base model for all Google Wallet models.
+    """
+
     id: str
 
 
-class GoogleWalletClassModel(GoogleWalletModel):
+class GoogleWalletClassModel(GoogleWalletWithIdModel):
     """
     Base model for all Google Wallet Class models.
     """
 
 
-class GoogleWalletObjectModel(GoogleWalletModel):
+class GoogleWalletObjectModel(GoogleWalletWithIdModel):
     """
     Base model for all Google Wallet Object models.
     """
@@ -23,7 +29,7 @@ class GoogleWalletObjectModel(GoogleWalletModel):
     classId: str
 
 
-class GoogleWalletObjectReference(GoogleWalletObjectModel):
+class GoogleWalletObjectReference(GoogleWalletWithIdModel):
     """
     Model for all Google Wallet Object references.
     """

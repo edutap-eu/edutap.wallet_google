@@ -1,9 +1,19 @@
 from .enums import Action
+from .enums import Role
 from pydantic import AnyHttpUrl
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import HttpUrl
 from pydantic import Json
+
+
+class Permission(BaseModel):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/permissions#permission
+    """
+
+    emailAddress: EmailStr | None
+    role: Role | None
 
 
 class AuthenticationKey(BaseModel):
@@ -32,16 +42,6 @@ class IssuerToUserInfo(BaseModel):
     url: AnyHttpUrl | None = None
     value: Json | None = None
     signUpInfo: SignUpInfo | None = None
-
-
-class SmartTap(BaseModel):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/smarttap#resource:-smarttap
-    """
-
-    id: str
-    merchantId: str
-    infos: list[IssuerToUserInfo] | None = None
 
 
 class IssuerContactInfo(BaseModel):

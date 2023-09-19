@@ -4,6 +4,7 @@ from .models.primitives import Pagination
 from .models.primitives.enums import State
 from .models.primitives.notification import AddMessageRequest
 from .models.primitives.notification import Message
+from .registry import lookup_metadata
 from .registry import lookup_model
 from .registry import lookup_model_by_plural_name
 from .registry import raise_when_operation_not_allowed
@@ -39,7 +40,11 @@ def _validate_data(model: type[GoogleWalletModel], data: dict | GoogleWalletMode
 
 
 def _validate_data_and_convert_to_json(
-    model: type[GoogleWalletModel], data: dict | GoogleWalletModel, *, fetch_id=False
+    model: type[GoogleWalletModel],
+    data: dict | GoogleWalletModel,
+    *,
+    fetch_id=False,
+    resource_id_key="id",
 ) -> str | tuple[str, str]:
     """Takes a model and data, validates it and convert to a json string.
 
@@ -56,7 +61,7 @@ def _validate_data_and_convert_to_json(
     )
     if fetch_id:
         return (
-            verified_data.id,
+            getattr(verified_data, resource_id_key),
             verified_json,
         )
     return verified_json
@@ -136,14 +141,15 @@ def update(
     :return:             The created model based on the data returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "update")
-    model = lookup_model(name)
+    model_metadata = lookup_metadata(name)
+    model = model_metadata["model"]
     if not isinstance(data, GoogleWalletModel) and not override_all:
-        resource_id = data["id"]
+        resource_id = data[model_metadata["resource_id"]]
         # we can not validate partial data for patch yet
         verified_json = json.dumps(data)
     else:
         resource_id, verified_json = _validate_data_and_convert_to_json(
-            model, data, fetch_id=True
+            model, data, fetch_id=True, resource_id_key=model_metadata["resource_id"]
         )
     session = session_manager.session
     if override_all:
@@ -185,7 +191,11 @@ def disable(
     :return:              The created model based on the data returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "disable")
-    data = {"id": resource_id, "state": str(State.EXPIRED.value)}
+    model_metadata = lookup_metadata(name)
+    data = {
+        model_metadata["resource_id"]: resource_id,
+        "state": str(State.EXPIRED.value),
+    }
     return update(name, data)
 
 
@@ -229,12 +239,13 @@ def list(
     result_per_page: int = 0,
     next_page_token: str | None = None,
 ) -> Generator[GoogleWalletModel, None, None] | str:
-    """Lists either classes of an issuer or objects of an class.
+    """List wallet related resources.
 
     It is possible to list
     - all classes of an issuer. Parameter 'name' has to end with 'Class'.
     - all objects of a registered object type by it's classes resource id.
       Parameter 'name' has to end with 'Object'
+    - all issuers. Parameter 'name' has to be 'Issuer'. No further parameters are allowed.
 
     :param name:            Registered name to base the listing on.
     :param resource_id:     Id of the class to list objects of.
@@ -255,19 +266,21 @@ def list(
                             Restful API. When result_per_page is given, the generator will return
                             a next_page_token after the last model-instance result.
     """
+    raise_when_operation_not_allowed(name, "list")
     if resource_id and issuer_id:
         raise ValueError("resource_id and issuer_id are mutually exclusive")
 
     model = lookup_model(name)  # early, also to test if name is registered
 
     params = {}
-
+    is_pageable = False
     if name.endswith("Object"):
+        is_pageable = True
         if not resource_id:
             raise ValueError("resource_id of a class must be given to list its objects")
         params["classId"] = resource_id
-    else:
-        # a class
+    elif name.endswith("Class"):
+        is_pageable = True
         if not issuer_id:
             issuer_id = os.environ.get("EDUTAP_WALLET_GOOGLE_ISSUER_ID", None)
             if not issuer_id:
@@ -276,13 +289,14 @@ def list(
                 )
         params["issuerId"] = issuer_id
 
-    if next_page_token:
-        params["token"] = next_page_token
-    if result_per_page:
-        params["maxResults"] = result_per_page
-    else:
-        # default to 100, but this might need adjustment
-        params["maxResults"] = 100
+    if is_pageable:
+        if next_page_token:
+            params["token"] = next_page_token
+        if result_per_page:
+            params["maxResults"] = result_per_page
+        else:
+            # default to 100, but this might need adjustment
+            params["maxResults"] = 100
 
     url = session_manager.url(name)
     session = session_manager.session
@@ -301,6 +315,8 @@ def list(
             except Exception:
                 logger.error(f"Error validating record {count}:\n{record}")
                 raise
+        if not is_pageable:
+            break
         pagination = Pagination.model_validate(data["pagination"])
         if result_per_page > 0:
             if pagination.nextPageToken:
