@@ -32,6 +32,10 @@ class SmartTap(GoogleWalletWithIdModel):
     can_message=False,
 )
 class Issuer(GoogleWalletModel):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/issuer
+    """
+
     issuerId: str
     name: str
     contactInfo: IssuerContactInfo | None

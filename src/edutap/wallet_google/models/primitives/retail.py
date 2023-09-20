@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class DiscoverableProgramMerchantSignupInfo(BaseModel):
     """
-    see:
+    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#LoyaltyClass.DiscoverableProgramMerchantSigninInfo
     """
 
     signupWebsite: Uri

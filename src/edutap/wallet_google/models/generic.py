@@ -24,7 +24,7 @@ from pydantic import Field
 
 
 @register_model(
-    "GenericClass", url_part="genericClass", plural="genericClass", can_disable=False
+    "GenericClass", url_part="genericClass", plural="genericClasses", can_disable=False
 )
 class GenericClass(GoogleWalletClassModel):
     """

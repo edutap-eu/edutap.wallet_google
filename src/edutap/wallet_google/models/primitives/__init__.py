@@ -9,6 +9,10 @@ from pydantic import HttpUrl
 
 
 class Uri(BaseModel):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/Uri
+    """
+
     uri: AnyUrl | str | None = None
     description: str | None = None
     localizedDescription: LocalizedString | None = None
@@ -16,6 +20,10 @@ class Uri(BaseModel):
 
 
 class ImageUri(BaseModel):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/Image#imageuri
+    """
+
     uri: AnyUrl
     description: str | None = None
     localizedDescription: LocalizedString | None = None
@@ -31,6 +39,10 @@ class Image(BaseModel):
 
 
 class PassConstraints(BaseModel):
+    """
+    see https://developers.google.com/wallet/generic/rest/v1/PassConstraints
+    """
+
     screenshotEligibility: ScreenshotEligibility = (
         ScreenshotEligibility.SCREENSHOT_ELIGIBILITY_UNSPECIFIED
     )
@@ -73,4 +85,3 @@ class CallbackOptions(BaseModel):
     """
 
     url: HttpUrl | None = None
-    updateRequestUrl: HttpUrl | None = None  # deprecated Attribute

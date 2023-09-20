@@ -226,6 +226,10 @@ class RowLabel(CamelCaseAliasEnum):
 
 
 class ScreenshotEligibility(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/PassConstraints#screenshoteligibility
+    """
+
     SCREENSHOT_ELIGIBILITY_UNSPECIFIED = "SCREENSHOT_ELIGIBILITY_UNSPECIFIED"
     ELIGIBLE = "ELIGIBLE"
     INELIGIBLE = "INELIGIBLE"
