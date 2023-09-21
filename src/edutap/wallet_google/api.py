@@ -241,7 +241,7 @@ def listing(
     issuer_id: str | None = None,
     result_per_page: int = 0,
     next_page_token: str | None = None,
-) -> Generator[GoogleWalletModel, None, None] | str:
+) -> Generator[GoogleWalletModel|str, None, None]:
     """List wallet related resources.
 
     It is possible to list
