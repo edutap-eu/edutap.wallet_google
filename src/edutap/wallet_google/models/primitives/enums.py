@@ -16,8 +16,8 @@ class CamelCaseAliasEnum(Enum):
 
     """
 
-    def __new__(cls, value):
-        obj = object.__new__(cls)
+    def __new__(cls: type["CamelCaseAliasEnum"], value: str) -> "CamelCaseAliasEnum":
+        obj: "CamelCaseAliasEnum" = object.__new__(cls)
         parts = value.lower().split("_")
         camel = "".join(
             [(x.capitalize() if count != 0 else x) for count, x in enumerate(parts)]

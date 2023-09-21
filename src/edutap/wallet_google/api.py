@@ -16,13 +16,14 @@ from google.auth import jwt
 import json
 import logging
 import os
+import typing
 
 
 logger = logging.getLogger(__name__)
 
 
 def _validate_data(
-    model: type[GoogleWalletModel], data: dict | GoogleWalletModel
+    model: type[GoogleWalletModel], data: dict[str, typing.Any] | GoogleWalletModel
 ) -> GoogleWalletModel:
     """Takes a model and data, validates it and convert to a json string.
 
@@ -43,10 +44,10 @@ def _validate_data(
 
 def _validate_data_and_convert_to_json(
     model: type[GoogleWalletModel],
-    data: dict | GoogleWalletModel,
+    data: dict[str, typing.Any] | GoogleWalletModel,
     *,
-    fetch_id=False,
-    resource_id_key="id",
+    fetch_id: bool = False,
+    resource_id_key: str = "id",
 ) -> tuple[str, str]:
     """Takes a model and data, validates it and convert to a json string.
 
@@ -68,7 +69,7 @@ def _validate_data_and_convert_to_json(
 
 def create(
     name: str,
-    data: dict | GoogleWalletModel,
+    data: dict[str, typing.Any] | GoogleWalletModel,
 ) -> GoogleWalletModel:
     """
     Creates a Google Wallet Class or Object. `C` in CRUD.
@@ -123,9 +124,9 @@ def read(
 
 def update(
     name: str,
-    data: dict | GoogleWalletModel,
+    data: dict[str, typing.Any] | GoogleWalletModel,
     *,
-    override_all=False,
+    partial: bool = True,
 ) -> GoogleWalletModel:
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
@@ -142,7 +143,7 @@ def update(
     raise_when_operation_not_allowed(name, "update")
     model_metadata = lookup_metadata(name)
     model = model_metadata["model"]
-    if not isinstance(data, GoogleWalletModel) and not override_all:
+    if not isinstance(data, GoogleWalletModel) and partial:
         resource_id = data[model_metadata["resource_id"]]
         # we can not validate partial data for patch yet
         verified_json = json.dumps(data)
@@ -151,13 +152,13 @@ def update(
             model, data, fetch_id=True, resource_id_key=model_metadata["resource_id"]
         )
     session = session_manager.session
-    if override_all:
-        response = session.put(
+    if partial:
+        response = session.patch(
             url=session_manager.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
         )
     else:
-        response = session.patch(
+        response = session.put(
             url=session_manager.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
         )
@@ -201,7 +202,7 @@ def disable(
 def message(
     name: str,
     resource_id: str,
-    message: dict | Message,
+    message: dict[str, typing.Any] | Message,
 ) -> AddMessageRequest:
     """Sends a message to a Google Wallet Class or Object.
 
@@ -332,7 +333,7 @@ def listing(
 
 
 def save_link(
-    resources: dict,
+    resources: dict[str, typing.Any],
     *,
     origins: list[str] = [],
 ) -> str:
@@ -354,7 +355,7 @@ def save_link(
     :return:            Link with JWT to save the resources to the wallet.
     """
     # validate resources
-    payload: dict = {}
+    payload: dict[str, typing.Any] = {}
     for name, objs in resources.items():
         payload[name] = []
         for obj in objs:

@@ -4,7 +4,6 @@ from ..registry import register_model
 from .primitives import CallbackOptions
 from .primitives import GroupingInfo
 from .primitives import Image
-from .primitives import LocalizedString
 from .primitives import PassConstraints
 from .primitives import SecurityAnimation
 from .primitives import Uri
@@ -27,6 +26,7 @@ from .primitives.enums import SeatLabel
 from .primitives.enums import SectionLabel
 from .primitives.enums import State
 from .primitives.enums import ViewUnlockRequirement
+from .primitives.localized_string import LocalizedString
 from .primitives.location import EventVenue
 from .primitives.location import LatLongPoint
 from .primitives.money import Money

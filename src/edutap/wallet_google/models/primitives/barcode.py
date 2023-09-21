@@ -1,7 +1,7 @@
-from . import LocalizedString
 from .enums import BarcodeRenderEncoding
 from .enums import BarcodeType
 from .enums import TotpAlgorithm
+from .localized_string import LocalizedString
 from pydantic import BaseModel
 
 

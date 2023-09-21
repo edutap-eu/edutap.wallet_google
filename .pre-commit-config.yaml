@@ -24,7 +24,7 @@ repos:
     rev: v1.5.1
     hooks:
       - id: mypy
-        args: [--strict]
+        args: [--strict, --ignore-missing-imports, src]
         additional_dependencies: ['.[typecheck]']
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.2.5

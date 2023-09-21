@@ -4,7 +4,6 @@ from pydantic import AnyHttpUrl
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import HttpUrl
-from pydantic import Json
 
 
 class Permission(BaseModel):
@@ -40,7 +39,7 @@ class IssuerToUserInfo(BaseModel):
 
     action: Action = Action.ACTION_UNSPECIFIED
     url: AnyHttpUrl | None = None
-    value: Json | None = None
+    value: str | None = None
     signUpInfo: SignUpInfo | None = None
 
 

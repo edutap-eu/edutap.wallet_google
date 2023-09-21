@@ -19,41 +19,48 @@ SCOPES = ["https://www.googleapis.com/auth/wallet_object.issuer"]
 
 class SessionManager:
     @property
-    def base_url(self):
+    def base_url(self) -> str:
         if getattr(self, "_base_url", None) is None:
             self._base_url = os.environ.get("EDUTAP_WALLET_GOOGLE_BASE_URL", BASE_URL)
         return self._base_url
 
     @property
-    def save_url(self):
+    def save_url(self) -> str:
         if getattr(self, "_save_url", None) is None:
             self._save_url = os.environ.get("EDUTAP_WALLET_GOOGLE_SAVE_URL", SAVE_URL)
         return self._save_url
 
     @property
-    def credentials_file(self):
+    def credentials_file(self) -> str | None:
         return os.environ.get("EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE")
 
     @property
-    def credentials_info(self):
-        if getattr(self, "_credentials_info", None) is None:
-            with open(self.credentials_file) as fp:
-                self._credentials_info = json.load(fp)
+    def credentials_info(self) -> dict[str, str]:
+        if not self.credentials_file:
+            raise ValueError("EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE not set")
+        with open(self.credentials_file) as fp:
+            self._credentials_info = json.load(fp)
+        if not isinstance(self._credentials_info, dict):
+            raise ValueError(
+                "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE content is not a dict"
+            )
         return self._credentials_info
 
-    def _make_session(self):
+    def _make_session(self) -> AuthorizedSession:
+        if not self.credentials_file:
+            raise ValueError("EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE not set")
         credentials = Credentials.from_service_account_file(
             self.credentials_file, scopes=SCOPES
         )
         return AuthorizedSession(credentials)
 
     @property
-    def session(self):
+    def session(self) -> AuthorizedSession:
         if getattr(_THREADLOCAL, "session", None) is None:
             _THREADLOCAL.session = self._make_session()
-        return _THREADLOCAL.session
+        return _THREADLOCAL.session  # type: ignore
 
-    def url(self, name: str, additional_path: str = ""):
+    def url(self, name: str, additional_path: str = "") -> str:
         """
         Create the URL for the CRUD operations.
 

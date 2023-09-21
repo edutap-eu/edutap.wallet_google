@@ -108,10 +108,10 @@ def lookup_metadata(name: str) -> RegistryMetadataDict:
     return _MODEL_REGISTRY[name]
 
 
-def raise_when_operation_not_allowed(name, operation):
+def raise_when_operation_not_allowed(name: str, operation: str) -> None:
     """Verifies that the given operation is allowed for the given registered name.
 
     :raises: ValueError when the operation is not allowed.
     """
-    if not _MODEL_REGISTRY[name][f"can_{operation}"]:
+    if not _MODEL_REGISTRY[name][f"can_{operation}"]:  # type: ignore
         raise ValueError(f"Operation '{operation}' not allowed for '{name}'")
