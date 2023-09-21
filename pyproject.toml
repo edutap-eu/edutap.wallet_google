@@ -38,6 +38,10 @@ test = [
     "pytest",
     "requests-mock",
 ]
+typecheck  = [
+    "mypy",
+    "google-auth-stubs",
+]
 develop = [
     "pdbpp",
     "ipython",
@@ -55,6 +59,10 @@ minversion = "6.0"
 testpaths = [
     "tests",
 ]
+
+[tool.mypy]
+mypy_path = "./src:./tests"
+
 [tool.towncrier]
 directory = "news/"
 filename = "CHANGES.rst"

@@ -1,10 +1,10 @@
+from ...modelbase import GoogleWalletModel
 from .datetime import TimeInterval
 from .enums import MessageType
 from .localized_string import LocalizedString
-from pydantic import BaseModel
 
 
-class ExpiryNotification(BaseModel):
+class ExpiryNotification(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject#expirynotification
     """
@@ -12,7 +12,7 @@ class ExpiryNotification(BaseModel):
     enableNotification: bool = False
 
 
-class UpcomingNotification(BaseModel):
+class UpcomingNotification(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject#upcomingnotification
     """
@@ -20,7 +20,7 @@ class UpcomingNotification(BaseModel):
     enableNotification: bool = False
 
 
-class Notifications(BaseModel):
+class Notifications(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject#notifications
     """
@@ -29,7 +29,7 @@ class Notifications(BaseModel):
     upcomingNotification: UpcomingNotification | None = None
 
 
-class Message(BaseModel):
+class Message(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/Message
     """
@@ -43,7 +43,7 @@ class Message(BaseModel):
     localizedBody: LocalizedString | None = None
 
 
-class AddMessageRequest(BaseModel):
+class AddMessageRequest(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/AddMessageRequest
     """

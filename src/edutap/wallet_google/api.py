@@ -21,7 +21,9 @@ import os
 logger = logging.getLogger(__name__)
 
 
-def _validate_data(model: type[GoogleWalletModel], data: dict | GoogleWalletModel):
+def _validate_data(
+    model: type[GoogleWalletModel], data: dict | GoogleWalletModel
+) -> GoogleWalletModel:
     """Takes a model and data, validates it and convert to a json string.
 
     :param model:      Pydantic model class to use for validation.
@@ -45,26 +47,23 @@ def _validate_data_and_convert_to_json(
     *,
     fetch_id=False,
     resource_id_key="id",
-) -> str | tuple[str, str]:
+) -> tuple[str, str]:
     """Takes a model and data, validates it and convert to a json string.
 
     :param model:      Pydantic model class to use for validation.
     :param data:       Data to pass to the Google RESTful API.
                        Either a simple python data structure using built-ins,
                        or a Pydantic model instance.
-    :return:           JSON string of the data,
-                       or, when fetch_id is True a tuple of resource-id and JSON string.
+    :return:           Tuple of resource-id and JSON string.
     """
     verified_data = _validate_data(model, data)
     verified_json = verified_data.model_dump_json(
         exclude_none=True,
     )
-    if fetch_id:
-        return (
-            getattr(verified_data, resource_id_key),
-            verified_json,
-        )
-    return verified_json
+    return (
+        getattr(verified_data, resource_id_key),
+        verified_json,
+    )
 
 
 def create(
@@ -83,7 +82,7 @@ def create(
     """
     raise_when_operation_not_allowed(name, "create")
     model = lookup_model(name)
-    verified_json = _validate_data_and_convert_to_json(model, data)
+    resource_id, verified_json = _validate_data_and_convert_to_json(model, data)
     session = session_manager.session
     url = session_manager.url(name)
     response = session.post(url=url, data=verified_json.encode("utf-8"))
@@ -203,7 +202,7 @@ def message(
     name: str,
     resource_id: str,
     message: dict | Message,
-) -> GoogleWalletModel:
+) -> AddMessageRequest:
     """Sends a message to a Google Wallet Class or Object.
 
     :param name:         Registered name of the model to use
@@ -213,8 +212,11 @@ def message(
     :return:             The created AddMessageRequest object as returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "message")
-    message = _validate_data(Message, message)
-    add_message = AddMessageRequest(message=message)
+    if not isinstance(message, Message):
+        message_validated = Message.model_validate(message)
+    else:
+        message_validated = message
+    add_message = AddMessageRequest(message=message_validated)
     verified_json = add_message.model_dump_json(
         exclude_none=True,
     )
@@ -227,11 +229,11 @@ def message(
 
     if response.status_code != 200:
         raise Exception(f"Error: {response.status_code} - {response.text}")
+    message_returned = AddMessageRequest.model_validate_json(response.content)
+    return message_returned
 
-    return AddMessageRequest.model_validate_json(response.content)
 
-
-def list(
+def listing(
     name: str,
     *,
     resource_id: str | None = None,
@@ -293,10 +295,10 @@ def list(
         if next_page_token:
             params["token"] = next_page_token
         if result_per_page:
-            params["maxResults"] = result_per_page
+            params["maxResults"] = f"{result_per_page}"
         else:
             # default to 100, but this might need adjustment
-            params["maxResults"] = 100
+            params["maxResults"] = "100"
 
     url = session_manager.url(name)
     session = session_manager.session
@@ -332,7 +334,7 @@ def list(
 def save_link(
     resources: dict,
     *,
-    origins: list = [],
+    origins: list[str] = [],
 ) -> str:
     """
     Creates a link to save a Google Wallet Object to the wallet on the device.
@@ -352,7 +354,7 @@ def save_link(
     :return:            Link with JWT to save the resources to the wallet.
     """
     # validate resources
-    payload = {}
+    payload: dict = {}
     for name, objs in resources.items():
         payload[name] = []
         for obj in objs:

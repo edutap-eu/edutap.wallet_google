@@ -82,7 +82,7 @@ class GiftCardClass(GoogleWalletClassModel):
         MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
     callbackOptions: CallbackOptions | None = None
-    securityAnimation: SecurityAnimation | None = SecurityAnimation
+    securityAnimation: SecurityAnimation | None = None
     viewUnlockRequirement: ViewUnlockRequirement = (
         ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
     )

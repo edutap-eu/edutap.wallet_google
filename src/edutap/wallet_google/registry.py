@@ -1,7 +1,22 @@
 from .modelbase import GoogleWalletModel
+from typing import TypedDict
 
 
-_MODEL_REGISTRY: dict[str, dict[str:any]] = {}
+class RegistryMetadataDict(TypedDict, total=False):
+    model: type[GoogleWalletModel]
+    name: str
+    url_part: str
+    plural: str
+    resource_id: str
+    can_create: bool
+    can_read: bool
+    can_update: bool
+    can_disable: bool
+    can_list: bool
+    can_message: bool
+
+
+_MODEL_REGISTRY: dict[str, RegistryMetadataDict] = {}
 
 
 class register_model:
@@ -44,7 +59,7 @@ class register_model:
         :param can_message: Whether it is possible to use in the 'message' API function.
                             Defaults to True.
         """
-        self.metadata = {
+        self.metadata: RegistryMetadataDict = {
             "name": name,
             "url_part": url_part,
             "plural": plural or f"{url_part}s",
@@ -57,7 +72,7 @@ class register_model:
             "can_message": can_message,
         }
 
-    def __call__(self, cls: GoogleWalletModel) -> GoogleWalletModel:
+    def __call__(self, cls: type[GoogleWalletModel]) -> type[GoogleWalletModel]:
         """
         Registers the given class in the registry.
         """
@@ -69,14 +84,14 @@ class register_model:
         return cls
 
 
-def lookup_model(name: str) -> GoogleWalletModel:
+def lookup_model(name: str) -> type[GoogleWalletModel]:
     """
     Returns the model with the given name.
     """
     return _MODEL_REGISTRY[name]["model"]
 
 
-def lookup_model_by_plural_name(plural_name: str) -> GoogleWalletModel:
+def lookup_model_by_plural_name(plural_name: str) -> type[GoogleWalletModel]:
     """
     Returns the model with the given plural name.
     """
@@ -86,7 +101,7 @@ def lookup_model_by_plural_name(plural_name: str) -> GoogleWalletModel:
     raise LookupError(f"Model with plural name '{plural_name}' not found")
 
 
-def lookup_metadata(name: str) -> dict[str:any]:
+def lookup_metadata(name: str) -> RegistryMetadataDict:
     """
     Returns the metadata of the model with the given name.
     """
