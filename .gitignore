@@ -45,11 +45,3 @@ var/
 /venv/
 .installed.txt
 
-
-##
-# Add extra configuration options in .meta.toml:
-#  [gitignore]
-#  extra_lines = """
-#  _your own configuration lines_
-#  """
-##

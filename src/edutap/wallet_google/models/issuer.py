@@ -38,9 +38,9 @@ class Issuer(GoogleWalletModel):
 
     issuerId: str
     name: str
-    contactInfo: IssuerContactInfo | None
-    homepageUrl: str | None
-    smartTapMerchantData: SmartTapMerchantData | None
+    contactInfo: IssuerContactInfo | None = None
+    homepageUrl: str | None = None
+    smartTapMerchantData: SmartTapMerchantData | None = None
 
 
 @register_model(
@@ -56,5 +56,5 @@ class Permissions(GoogleWalletModel):
     see: https://developers.google.com/wallet/generic/rest/v1/permissions
     """
 
-    issuerId: str | None
-    permissions: list[Permission]
+    issuerId: str | None = None
+    permissions: list[Permission] = []
