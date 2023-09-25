@@ -1,6 +1,7 @@
 import copy
 import pytest
 
+
 @pytest.fixture
 def clean_registry():
     """Fixture to provide a clean the google_wallet model registry."""
@@ -16,8 +17,8 @@ def clean_registry():
 @pytest.fixture
 def mock_session(monkeypatch, requests_mock):
     """Fixture to provide a mock Google Wallet API session."""
-    from edutap.wallet_google.session import SessionManager
     from edutap.wallet_google.session import _THREADLOCAL
+    from edutap.wallet_google.session import SessionManager
 
     _THREADLOCAL.session = None
 
