@@ -20,12 +20,14 @@ def mock_session(monkeypatch, requests_mock):
     from edutap.wallet_google.session import _THREADLOCAL
     from edutap.wallet_google.session import SessionManager
 
+    import requests
+
     _THREADLOCAL.session = None
 
-    def mock_session():
-        return requests_mock
+    def mock_session(self):
+        return requests.Session()
 
-    monkeypatch.setattr(SessionManager, "session", property(mock_session()))
+    monkeypatch.setattr(SessionManager, "session", property(mock_session))
 
     yield requests_mock
 
