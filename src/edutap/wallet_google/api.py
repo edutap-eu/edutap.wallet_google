@@ -242,7 +242,7 @@ def listing(
     result_per_page: int = 0,
     next_page_token: str | None = None,
 ) -> Generator[GoogleWalletModel|str, None, None]:
-    """List wallet related resources.
+    """Lists wallet related resources.
 
     It is possible to list
     - all classes of an issuer. Parameter 'name' has to end with 'Class'.
