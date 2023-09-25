@@ -61,7 +61,7 @@ testpaths = [
 ]
 
 [tool.mypy]
-mypy_path = "./src:./tests"
+mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
 
 [tool.towncrier]
 directory = "news/"
