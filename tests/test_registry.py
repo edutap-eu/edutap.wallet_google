@@ -1,16 +1,4 @@
-import copy
 import pytest
-
-
-@pytest.fixture
-def clean_registry():
-    from edutap.wallet_google.registry import _MODEL_REGISTRY
-
-    OLD_MODEL_REGISTRY = copy.deepcopy(_MODEL_REGISTRY)
-    _MODEL_REGISTRY.clear()
-    yield _MODEL_REGISTRY
-    _MODEL_REGISTRY.clear()
-    _MODEL_REGISTRY.update(OLD_MODEL_REGISTRY)
 
 
 def test_decorator(clean_registry):

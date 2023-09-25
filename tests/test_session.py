@@ -1,6 +1,3 @@
-from test_registry import clean_registry  # noqa: F401
-
-
 def test_session_manager_url(clean_registry):  # noqa: F811
     from edutap.wallet_google.registry import register_model
 
