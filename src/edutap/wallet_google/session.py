@@ -2,6 +2,7 @@ from .registry import lookup_metadata
 from dotenv import load_dotenv
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials
+from requests.adapters import HTTPAdapter
 
 import json
 import os
@@ -15,6 +16,30 @@ _THREADLOCAL = threading.local()
 BASE_URL = "https://walletobjects.googleapis.com/walletobjects/v1"
 SAVE_URL = "https://pay.google.com/gp/v/save"
 SCOPES = ["https://www.googleapis.com/auth/wallet_object.issuer"]
+
+
+class HTTPRecorder(HTTPAdapter):
+
+    def send(self, request, *args, **kwargs):
+        req_record = {
+            "method": request.method,
+            "url": request.url,
+            "headers": dict(request.headers),
+            "body": json.loads(request.body.decode("utf-8")),
+        }
+        target_directory = os.environ.get("EDUTAP_WALLET_GOOGLE_RECORD_API_CALLS_DIR")
+        filename = f"{target_directory}/{request.method}-{request.url.replace('/', '_')}.REQUEST.json"
+        with open(filename, "w") as fp:
+            json.dump(req_record, fp, indent=4)
+        response = super().send(request, *args, **kwargs)
+        resp_record = {
+            "status_code": response.status_code,
+            "headers": dict(response.headers),
+            "body": response.json(),
+        }
+        with open(filename.replace("REQUEST", "RESPONSE"), "w") as fp:
+            json.dump(resp_record, fp, indent=4)
+        return response
 
 
 class SessionManager:
@@ -52,7 +77,10 @@ class SessionManager:
         credentials = Credentials.from_service_account_file(
             self.credentials_file, scopes=SCOPES
         )
-        return AuthorizedSession(credentials)
+        session = AuthorizedSession(credentials)
+        if os.environ.get("EDUTAP_WALLET_GOOGLE_RECORD_API_CALLS_DIR", None):
+            session.mount("https://", HTTPRecorder())
+        return session
 
     @property
     def session(self) -> AuthorizedSession:
