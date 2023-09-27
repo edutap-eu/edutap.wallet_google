@@ -369,10 +369,7 @@ def save_link(
             # otherwise it must be a registered model
             model = lookup_model_by_plural_name(name)
             obj = _validate_data(model, obj)
-            #the following is a workaround for the fact that the model_dump method
-            #does not serialize enums, but model_dump_json does
-            obj_json_str = obj.model_dump_json(exclude_none=True)
-            obj_json = json.loads(obj_json_str)
+            obj_json = obj.model_dump(exclude_none=True, mode="json")
             payload[name].append(obj_json)
     claims = {
         "iat": "",
