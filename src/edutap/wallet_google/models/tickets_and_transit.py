@@ -43,65 +43,65 @@ from pydantic import Field
     can_disable=False,
 )
 class EventTicketClass(GoogleWalletClassModel):
-    eventName: LocalizedString | None
-    eventId: str | None
-    logo: Image | None
-    venue: EventVenue | None
-    dateTime: EventDateTime | None
-    confirmationCodeLabel: ConfirmationCodeLabel | None
-    customConfirmationCodeLabel: LocalizedString | None
-    seatLabel: SeatLabel | None
-    customSeatLabel: LocalizedString | None
-    rowLabel: RowLabel | None
-    customRowLabel: LocalizedString | None
-    sectionLabel: SectionLabel | None
-    customSectionLabel: LocalizedString | None
-    gateLabel: GateLabel | None
-    customGateLabel: LocalizedString | None
-    finePrint: LocalizedString | None
-    classTemplateInfo: ClassTemplateInfo | None
-    version: str | None = Field(description="deprecated", exclude=True)
-    issuerName: str | None
-    messages: list[Message] | None
+    eventName: LocalizedString | None = None
+    eventId: str | None = None
+    logo: Image | None = None
+    venue: EventVenue | None = None
+    dateTime: EventDateTime | None = None
+    confirmationCodeLabel: ConfirmationCodeLabel | None = None
+    customConfirmationCodeLabel: LocalizedString | None = None
+    seatLabel: SeatLabel | None = None
+    customSeatLabel: LocalizedString | None = None
+    rowLabel: RowLabel | None = None
+    customRowLabel: LocalizedString | None = None
+    sectionLabel: SectionLabel | None = None
+    customSectionLabel: LocalizedString | None = None
+    gateLabel: GateLabel | None = None
+    customGateLabel: LocalizedString | None = None
+    finePrint: LocalizedString | None = None
+    classTemplateInfo: ClassTemplateInfo | None = None
+    version: str | None = Field(description="deprecated", exclude=True, default=None)
+    issuerName: str | None = None
+    messages: list[Message] | None = None
     allowMultipleUsersPerObject: bool = Field(
         description="deprecated", default=False, exclude=True
     )
-    homepageUri: Uri | None
-    locations: list[LatLongPoint] | None
-    reviewStatus: ReviewStatus | None
-    review: Review | None
+    homepageUri: Uri | None = None
+    locations: list[LatLongPoint] | None = None
+    reviewStatus: ReviewStatus | None = None
+    review: Review | None = None
     infoModuleData: InfoModuleData | None = Field(
-        description="deprecated", exclude=True
+        description="deprecated", exclude=True, default=None
     )
-    imageModulesData: list[ImageModuleData] | None
-    textModulesDate: list[TextModuleData] | None
-    linksModuleData: LinksModuleData | None
-    redemptionIssuers: list[str] | None
-    countryCode: str | None
-    heroImage: Image | None
-    wordMark: Image | None = Field(description="deprecated", exclude=True)
+    imageModulesData: list[ImageModuleData] | None = None
+    textModulesDate: list[TextModuleData] | None = None
+    linksModuleData: LinksModuleData | None = None
+    redemptionIssuers: list[str] | None = None
+    countryCode: str | None = None
+    heroImage: Image | None = None
+    wordMark: Image | None = Field(description="deprecated", exclude=True, default=None)
     enableSmartTap: bool = False
-    hexBackgroundColor: str | None
-    localizedIssuerName: LocalizedString | None
+    hexBackgroundColor: str | None = None
+    localizedIssuerName: LocalizedString | None = None
     multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus | None = (
         MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
-    callbackOptions: CallbackOptions | None
-    securityAnimation: SecurityAnimation | None
+    callbackOptions: CallbackOptions | None = None
+    securityAnimation: SecurityAnimation | None = None
     viewUnlockRequirement: ViewUnlockRequirement = (
         ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
     )
 
 
 class EventSeat(BaseModel):
-    seat: LocalizedString | None
-    row: LocalizedString | None
-    section: LocalizedString | None
-    gate: LocalizedString | None
+    seat: LocalizedString | None = None
+    row: LocalizedString | None = None
+    section: LocalizedString | None = None
+    gate: LocalizedString | None = None
 
 
 class EventReservationInfo(BaseModel):
-    confirmationCode: str | None
+    confirmationCode: str | None = None
 
 
 @register_model("EventTicketObject", url_part="eventTicketObject")
@@ -110,31 +110,31 @@ class EventTicketObject(GoogleWalletObjectModel):
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketobject
     """
 
-    classReference: EventTicketClass | None
-    seatInfo: EventSeat | None
-    reservationInfo: EventReservationInfo | None
-    ticketHolderName: str | None
-    ticketNumber: str | None
-    ticketType: LocalizedString | None
-    faceValue: Money | None
+    classReference: EventTicketClass | None = None
+    seatInfo: EventSeat | None = None
+    reservationInfo: EventReservationInfo | None = None
+    ticketHolderName: str | None = None
+    ticketNumber: str | None = None
+    ticketType: LocalizedString | None = None
+    faceValue: Money | None = None
     groupingInfo: GroupingInfo | None = None
-    linkedOfferIds: list[str] | None
+    linkedOfferIds: list[str] | None = None
     hexBackgroundColor: str | None = None
-    version: str | None = Field(description="deprecated", exclude=True)
+    version: str | None = Field(description="deprecated", exclude=True, default=None)
     state: State | None = None
     barcode: Barcode | None = None
-    messages: list[Message] | None
+    messages: list[Message] | None = None
     validTimeInterval: TimeInterval | None = None
-    locations: list[LatLongPoint] | None
+    locations: list[LatLongPoint] | None = None
     hasUsers: bool | None = None
     smartTapRedemptionValue: str | None = None
     hasLinkedDevice: bool | None = False
     disableExpirationNotification: bool | None = False
-    infoModuleData: InfoModuleData | None
+    infoModuleData: InfoModuleData | None = None
     imageModulesData: list[ImageModuleData] | None = None
     textModulesData: list[TextModuleData] | None = None
     linksModuleData: LinksModuleData | None = None
     appLinkData: AppLinkData | None = None
     rotatingBarcode: RotatingBarcode | None = None
     heroImage: Image | None = None
-    passConstraints: PassConstraints | None
+    passConstraints: PassConstraints | None = None
