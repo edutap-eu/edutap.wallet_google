@@ -333,7 +333,7 @@ def listing(
 
 
 def save_link(
-    resources: dict[str, typing.Any],
+    resources: dict[str, list[typing.Any]],
     *,
     origins: list[str] = [],
 ) -> str:
@@ -369,7 +369,11 @@ def save_link(
             # otherwise it must be a registered model
             model = lookup_model_by_plural_name(name)
             obj = _validate_data(model, obj)
-            payload[name].append(obj.model_dump(exclude_none=True))
+            #the following is a workaround for the fact that the model_dump method
+            #does not serialize enums, but model_dump_json does
+            obj_json_str = obj.model_dump_json(exclude_none=True)
+            obj_json = json.loads(obj_json_str)
+            payload[name].append(obj_json)
     claims = {
         "iat": "",
         "iss": session_manager.credentials_info["client_email"],
