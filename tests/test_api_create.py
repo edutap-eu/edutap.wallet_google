@@ -1,10 +1,12 @@
 def test_api_create(mock_request_response):
     from edutap.wallet_google.api import create
+    from edutap.wallet_google.models.primitives.enums import State
     from edutap.wallet_google.registry import lookup_model
     from edutap.wallet_google.session import session_manager
-    from edutap.wallet_google.models.primitives.enums import State
 
-    request_data = mock_request_response("CreateGenericObject", session_manager.url("GenericObject"), "POST")
+    request_data = mock_request_response(
+        "CreateGenericObject", session_manager.url("GenericObject"), "POST"
+    )
     result = create("GenericObject", request_data["body"])
 
     GenericObject = lookup_model("GenericObject")

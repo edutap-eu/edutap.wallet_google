@@ -104,7 +104,9 @@ class EventReservationInfo(BaseModel):
     confirmationCode: str | None = None
 
 
-@register_model("EventTicketObject", url_part="eventTicketObject", plural="eventTicketObjects")
+@register_model(
+    "EventTicketObject", url_part="eventTicketObject", plural="eventTicketObjects"
+)
 class EventTicketObject(GoogleWalletObjectModel):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketobject

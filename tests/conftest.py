@@ -4,8 +4,8 @@ import copy
 import json
 import pytest
 
-DATA_PATH = Path(__file__).parent / "data"
 
+DATA_PATH = Path(__file__).parent / "data"
 
 
 @pytest.fixture
@@ -39,17 +39,21 @@ def mock_session(monkeypatch, requests_mock):
 
     _THREADLOCAL.session = None
 
+
 @pytest.fixture
 def mock_request_response(mock_session):
     """Fixture to load a mock request response from a json file.
     Prepares a mock response and status code for a given url and method.
     """
+
     def _load_mock_request_response(name: str, url: str, method: str, code=200):
         data = {}
         for postfix in {"REQUEST", "RESPONSE"}:
-            with open(DATA_PATH / f"{name}.REQUEST.json", "r") as f:
+            with open(DATA_PATH / f"{name}.REQUEST.json") as f:
                 data[postfix.lower()] = json.load(f)
-        mock_session.register_uri(method, url, json=data["response"]["body"], status_code=code)
+        mock_session.register_uri(
+            method, url, json=data["response"]["body"], status_code=code
+        )
         return data["request"]
 
     yield _load_mock_request_response

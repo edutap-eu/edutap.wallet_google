@@ -19,7 +19,6 @@ SCOPES = ["https://www.googleapis.com/auth/wallet_object.issuer"]
 
 
 class HTTPRecorder(HTTPAdapter):
-
     def send(self, request, *args, **kwargs):
         req_record = {
             "method": request.method,
