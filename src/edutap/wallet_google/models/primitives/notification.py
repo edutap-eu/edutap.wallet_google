@@ -48,4 +48,4 @@ class AddMessageRequest(GoogleWalletModel):
     see: https://developers.google.com/wallet/tickets/events/rest/v1/AddMessageRequest
     """
 
-    message: Message
+    message: Message | None = None

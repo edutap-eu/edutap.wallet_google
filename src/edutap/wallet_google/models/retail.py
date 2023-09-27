@@ -225,7 +225,7 @@ class LoyaltyPoints(BaseModel):
     localizedLabel: LocalizedString | None = None
 
 
-@register_model("LoyaltyObject", url_part="loyaltyObject")
+@register_model("LoyaltyObject", url_part="loyaltyObject", plural="loyaltyObjects")
 class LoyaltyObject(GoogleWalletObjectModel):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
