@@ -1,0 +1,38 @@
+{
+    "status_code": 200,
+    "headers": {
+        "Content-Type": "application/json; charset=UTF-8",
+        "Vary": "Origin, X-Origin, Referer",
+        "Content-Encoding": "gzip",
+        "Date": "Mon, 25 Sep 2023 11:49:29 GMT",
+        "Server": "ESF",
+        "Cache-Control": "private",
+        "X-XSS-Protection": "0",
+        "X-Frame-Options": "SAMEORIGIN",
+        "X-Content-Type-Options": "nosniff",
+        "Alt-Svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+        "Transfer-Encoding": "chunked"
+    },
+    "body": {
+        "genericType": "genericTypeUnspecified",
+        "cardTitle": {
+            "kind": "walletobjects#localizedString",
+            "defaultValue": {
+                "kind": "walletobjects#translatedString",
+                "language": "en",
+                "value": "YCC Foobar"
+            }
+        },
+        "header": {
+            "kind": "walletobjects#localizedString",
+            "defaultValue": {
+                "kind": "walletobjects#translatedString",
+                "language": "en",
+                "value": "Heading YCC Foobar bar"
+            }
+        },
+        "id": "3388000000022141777.obj53.test.ycc.edutap",
+        "classId": "3388000000022141777.test.ycc.edutap",
+        "state": "active"
+    }
+}

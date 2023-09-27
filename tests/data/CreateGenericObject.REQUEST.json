@@ -1,0 +1,34 @@
+{
+    "method": "POST",
+    "url": "https://walletobjects.googleapis.com/walletobjects/v1/genericObject",
+    "headers": {
+        "User-Agent": "python-requests/2.31.0",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "*/*",
+        "Connection": "keep-alive",
+        "x-goog-api-client": "cred-type/sa",
+        "authorization": "Bearer TEST",
+        "x-identity-trust-boundary": "0",
+        "Content-Length": "345"
+    },
+    "body": {
+        "id": "3388000000022141777.obj53.test.ycc.edutap",
+        "classId": "3388000000022141777.test.ycc.edutap",
+        "genericType": "GENERIC_TYPE_UNSPECIFIED",
+        "cardTitle": {
+            "defaultValue": {
+                "language": "en",
+                "value": "YCC Foobar"
+            },
+            "translatedValues": []
+        },
+        "header": {
+            "defaultValue": {
+                "language": "en",
+                "value": "Heading YCC Foobar bar"
+            },
+            "translatedValues": []
+        },
+        "state": "ACTIVE"
+    }
+}
