@@ -1,0 +1,20 @@
+{
+    "method": "POST",
+    "url": "https://walletobjects.googleapis.com/walletobjects/v1/genericClass",
+    "headers": {
+        "User-Agent": "python-requests/2.31.0",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "*/*",
+        "Connection": "keep-alive",
+        "x-goog-api-client": "cred-type/sa",
+        "authorization": "Bearer TEST",
+        "x-identity-trust-boundary": "0",
+        "Content-Length": "193"
+    },
+    "body": {
+        "id": "3388000000022141777.test54.ycc.edutap",
+        "enableSmartTap": false,
+        "multipleDevicesAndHoldersAllowedStatus": "STATUS_UNSPECIFIED",
+        "viewUnlockRequirement": "VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED"
+    }
+}

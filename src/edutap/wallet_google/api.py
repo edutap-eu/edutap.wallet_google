@@ -363,7 +363,7 @@ def save_link(
             if isinstance(obj, dict) and "id" in obj and len(obj.keys()) <= 2:
                 obj = GoogleWalletObjectReference.model_validate(obj)
             if isinstance(obj, GoogleWalletObjectReference):
-                payload[name].append(obj.model_dump(exclude_none=True))
+                payload[name].append(obj.model_dump(exclude_none=True, mode="json"))
                 continue
 
             # otherwise it must be a registered model

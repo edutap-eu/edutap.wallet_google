@@ -1,0 +1,22 @@
+{
+    "status_code": 200,
+    "headers": {
+        "Content-Type": "application/json; charset=UTF-8",
+        "Vary": "Origin, X-Origin, Referer",
+        "Content-Encoding": "gzip",
+        "Date": "Thu, 28 Sep 2023 12:35:49 GMT",
+        "Server": "ESF",
+        "Cache-Control": "private",
+        "X-XSS-Protection": "0",
+        "X-Frame-Options": "SAMEORIGIN",
+        "X-Content-Type-Options": "nosniff",
+        "Alt-Svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+        "Transfer-Encoding": "chunked"
+    },
+    "body": {
+        "id": "3388000000022141777.test54.ycc.edutap",
+        "enableSmartTap": false,
+        "multipleDevicesAndHoldersAllowedStatus": "statusUnspecified",
+        "viewUnlockRequirement": "viewUnlockRequirementUnspecified"
+    }
+}
