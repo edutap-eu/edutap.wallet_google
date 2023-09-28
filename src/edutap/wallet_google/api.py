@@ -72,7 +72,7 @@ def create(
     data: dict[str, typing.Any] | GoogleWalletModel,
 ) -> GoogleWalletModel:
     """
-    Creates a Google Wallet Class or Object. `C` in CRUD.
+    Creates a Google Wallet items. `C` in CRUD.
 
     :param name:       Registered name of the model to use
     :param data:       Data to pass to the Google RESTful API.
