@@ -3,6 +3,7 @@ from pathlib import Path
 import copy
 import json
 import pytest
+import typing
 
 
 DATA_PATH = Path(__file__).parent / "data"
@@ -46,7 +47,9 @@ def mock_request_response(mock_session):
     Prepares a mock response and status code for a given url and method.
     """
 
-    def _load_mock_request_response(name: str, url: str, method: str, code=200):
+    def _load_mock_request_response(
+        name: str, url: str, method: str, code=200
+    ) -> dict[str, typing.Any]:
         data = {}
         for postfix in {"REQUEST", "RESPONSE"}:
             with open(DATA_PATH / f"{name}.REQUEST.json") as f:
@@ -54,6 +57,6 @@ def mock_request_response(mock_session):
         mock_session.register_uri(
             method, url, json=data["response"]["body"], status_code=code
         )
-        return data["request"]
+        return data
 
     yield _load_mock_request_response

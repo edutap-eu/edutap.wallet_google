@@ -1,16 +1,33 @@
-def test_api_create(mock_request_response):
+from edutap.wallet_google.models.primitives.enums import State
+
+import pytest
+
+
+testdata = [
+    (
+        "Create",
+        "GenericObject",
+        {
+            "id": "3388000000022141777.obj53.test.ycc.edutap",
+            "classId": "3388000000022141777.test.ycc.edutap",
+            "state": State.ACTIVE,
+        },
+    ),
+]
+
+
+@pytest.mark.parametrize("prefix,name,checkdata", testdata)
+def test_api_create(mock_request_response, prefix, name, checkdata):
     from edutap.wallet_google.api import create
-    from edutap.wallet_google.models.primitives.enums import State
     from edutap.wallet_google.registry import lookup_model
     from edutap.wallet_google.session import session_manager
 
     request_data = mock_request_response(
-        "CreateGenericObject", session_manager.url("GenericObject"), "POST"
+        f"{prefix}{name}", session_manager.url(name), "POST"
     )
-    result = create("GenericObject", request_data["body"])
+    result = create(name, request_data["request"]["body"])
 
-    GenericObject = lookup_model("GenericObject")
-    assert isinstance(result, GenericObject)
-    assert result.id == "3388000000022141777.obj53.test.ycc.edutap"
-    assert result.classId == "3388000000022141777.test.ycc.edutap"
-    assert result.state == State.ACTIVE
+    model = lookup_model(name)
+    assert isinstance(result, model)
+    for key, value in checkdata.items():
+        assert getattr(result, key) == value
