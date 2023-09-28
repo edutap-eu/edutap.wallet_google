@@ -129,9 +129,13 @@ class LoyaltyClass(GoogleWalletClassModel):
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
     """
 
-    issuerName: str | None = None
-    programName: str | None = None
-    programLogo: Image | None = None
+    # required:
+    issuerName: str
+    programName: str
+    programLogo: Image
+    reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
+
+    # optional
     accountNameLabel: str | None = None
     accountIdLabel: str | None = None
     rewardsTierLabel: str | None = None
@@ -148,46 +152,47 @@ class LoyaltyClass(GoogleWalletClassModel):
     localizedSecondaryRewardsTier: LocalizedString | None = None
     discoverableProgram: DiscoverableProgram | None = None
     classTemplateInfo: ClassTemplateInfo | None = None
-    version: str | None = Field(
-        description="deprecated",
-        exclude=True,
-        default=None,
-    )  # int64
     messages: list[Message] | None = None
-    allowMultipleUsersPerObject: bool = Field(
-        description="deprecated",
-        exclude=True,
-        default=True,
-    )
     homepageUri: Uri | None = None
     locations: list[LatLongPoint] | None = None
-    reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     review: Review | None = None
-    infoModuleData: InfoModuleData | None = Field(
-        description="deprecated",
-        exclude=True,
-        default=None,
-    )
     imageModulesData: list[ImageModuleData] | None = None
     textModulesData: list[TextModuleData] | None = None
     linksModuleData: LinksModuleData | None = None
     redemptionIssuers: list[str] | None = None  # string (int64 format)
     countryCode: str | None = None
     heroImage: Image | None = None
-    wordMark: Image | None = Field(
-        description="deprecated",
-        exclude=True,
-        default=None,
-    )
     enableSmartTap: bool | None = False
     hexBackgroundColor: str | None = None
     multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = (
         MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
     callbackOptions: CallbackOptions | None
-    securityAnimation: SecurityAnimation | None = SecurityAnimation()
+    securityAnimation: SecurityAnimation | None = None
     viewUnlockRequirement: ViewUnlockRequirement = (
         ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
+    )
+
+    # deprecated
+    version: str | None = Field(
+        description="deprecated",
+        exclude=True,
+        default=None,
+    )  # int64
+    allowMultipleUsersPerObject: bool = Field(
+        description="deprecated",
+        exclude=True,
+        default=True,
+    )
+    infoModuleData: InfoModuleData | None = Field(
+        description="deprecated",
+        exclude=True,
+        default=None,
+    )
+    wordMark: Image | None = Field(
+        description="deprecated",
+        exclude=True,
+        default=None,
     )
 
 
