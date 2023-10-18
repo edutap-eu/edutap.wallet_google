@@ -60,6 +60,7 @@ def _validate_data_and_convert_to_json(
     verified_data = _validate_data(model, data)
     verified_json = verified_data.model_dump_json(
         exclude_none=True,
+        # exclude_none=False,  # should be False, so it should be able to reset a value to None
     )
     return (
         getattr(verified_data, resource_id_key),
@@ -88,7 +89,11 @@ def create(
     url = session_manager.url(name)
     response = session.post(url=url, data=verified_json.encode("utf-8"))
 
-    if response.status_code != 200:
+    if response.status_code == 409:
+        raise Exception(
+            f"Wallet Object {name} {getattr(data, 'id', 'No ID')} already exists\n{response.text}"
+        )
+    elif response.status_code != 200:
         raise Exception(f"Error at {url}: {response.status_code} - {response.text}")
 
     return model.model_validate_json(response.content)
@@ -163,7 +168,9 @@ def update(
             data=verified_json.encode("utf-8"),
         )
     if response.status_code == 404:
-        raise LookupError(f"Error 404, {name} not found: - {response.text}")
+        raise LookupError(
+            f"Error 404, {name} {getattr(data, 'id', 'No ID')} not found: - {response.text}"
+        )
 
     if response.status_code != 200:
         raise Exception(f"Error: {response.status_code} - {response.text}")

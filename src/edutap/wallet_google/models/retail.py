@@ -131,8 +131,9 @@ class LoyaltyClass(GoogleWalletClassModel):
 
     # required:
     issuerName: str
-    programName: str
-    programLogo: Image
+    programName: str | None = None
+    programLogo: Image | None = None
+    wideProgramLogo: Image | None = None
     reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
 
     # optional
