@@ -251,11 +251,10 @@ def listing(
 ) -> Generator[GoogleWalletModel | str, None, None]:
     """Lists wallet related resources.
 
-    It is possible to list
-    - all classes of an issuer. Parameter 'name' has to end with 'Class'.
-    - all objects of a registered object type by it's classes resource id.
-      Parameter 'name' has to end with 'Object'
-    - all issuers. Parameter 'name' has to be 'Issuer'. No further parameters are allowed.
+    It is possible to list all classes of an issuer. Parameter 'name' has to end with 'Class',
+    all objects of a registered object type by it's classes resource id,
+    Parameter 'name' has to end with 'Object'.
+    To get all issuers, parameter 'name' has to be 'Issuer' and no further parameters are allowed.
 
     :param name:            Registered name to base the listing on.
     :param resource_id:     Id of the class to list objects of.
@@ -267,7 +266,7 @@ def listing(
                             be fetched from the environment variable EDUTAP_WALLET_GOOGLE_ISSUER_ID.
                             Mutually exclusive with resource_id.
     :param result_per_page: Number of results per page to fetch.
-                            If omitted all results will be fetched and provided by th generator.
+                            If omitted all results will be fetched and provided by the generator.
     :param next_page_token: Token to get the next page of results.
     :raises ValueError:     When input was invalid.
     :raises LookupError:    When the resource was not found (404)
