@@ -199,6 +199,7 @@ class LoyaltyClass(GoogleWalletClassModel):
 
 class LoyaltyPointsBalance(BaseModel):
     """
+    data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPointsBalance
     """
 
@@ -223,6 +224,7 @@ class LoyaltyPointsBalance(BaseModel):
 
 class LoyaltyPoints(BaseModel):
     """
+    data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPoints
     """
 
@@ -234,6 +236,7 @@ class LoyaltyPoints(BaseModel):
 @register_model("LoyaltyObject", url_part="loyaltyObject", plural="loyaltyObjects")
 class LoyaltyObject(GoogleWalletObjectModel):
     """
+    data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
     """
 
