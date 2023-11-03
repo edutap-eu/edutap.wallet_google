@@ -9,7 +9,7 @@ class GoogleWalletModel(BaseModel):
 
 class GoogleWalletWithIdModel(GoogleWalletModel):
     """
-    Base model for all Google Wallet models.
+    Base model for Google Wallet models with an identifier.
     """
 
     id: str
