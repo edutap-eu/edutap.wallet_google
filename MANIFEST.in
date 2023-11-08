@@ -1,2 +1,1 @@
-recursive-include news *.internal
-recursive-include tests *.json *.py
+recursive-include tests *.json *.py *.ini

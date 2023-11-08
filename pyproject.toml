@@ -42,6 +42,7 @@ typecheck  = [
     "mypy",
     "google-auth-stubs",
     "types-requests",
+    "pytest-stub",
 ]
 develop = [
     "pdbpp",

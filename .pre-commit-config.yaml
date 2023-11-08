@@ -25,6 +25,7 @@ repos:
       - id: mypy
         additional_dependencies:
         - "types-requests"
+        - "pytest-stub"
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.2.5
     hooks:
