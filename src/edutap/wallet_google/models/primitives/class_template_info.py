@@ -142,4 +142,5 @@ class ClassTemplateInfo(BaseModel):
     detailsTemplateOverride: DetailsTemplateOverride | None = None
     listTemplateOverride: ListTemplateOverride | None = None
 
+
 # classTemplateInfo/listTemplateOverride/listTemplateOverride/firstRowOption/fieldOption/fields[]/[fieldPath|dateFormat]
