@@ -1,6 +1,6 @@
 [project]
 name = "edutap.wallet_google"
-version = "1.0.0b0.dev0"
+version = "1.0.0b0"
 description = "Library for Google Wallet Communication"
 keywords = ["wallet", "google", "api", "pass"]
 readme = "README.md"
