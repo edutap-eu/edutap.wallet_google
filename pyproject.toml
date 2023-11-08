@@ -1,6 +1,6 @@
 [project]
 name = "edutap.wallet_google"
-version = "1.0.0a0.dev0"
+version = "1.0.0b0.dev0"
 description = "Library for Google Wallet Communication"
 keywords = ["wallet", "google", "api", "pass"]
 readme = "README.md"
@@ -16,7 +16,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries",
     "Operating System :: OS Independent",
@@ -62,45 +62,6 @@ testpaths = [
     "tests",
 ]
 
-[tool.mypy]
-mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
-
-[tool.towncrier]
-directory = "news/"
-filename = "CHANGES.rst"
-title_format = "{version} ({project_date})"
-underlines = ["-", ""]
-
-[[tool.towncrier.type]]
-directory = "breaking"
-name = "Breaking changes:"
-showcontent = true
-
-[[tool.towncrier.type]]
-directory = "feature"
-name = "New features:"
-showcontent = true
-
-[[tool.towncrier.type]]
-directory = "bugfix"
-name = "Bug fixes:"
-showcontent = true
-
-[[tool.towncrier.type]]
-directory = "internal"
-name = "Internal:"
-showcontent = true
-
-[[tool.towncrier.type]]
-directory = "documentation"
-name = "Documentation:"
-showcontent = true
-
-[[tool.towncrier.type]]
-directory = "tests"
-name = "Tests"
-showcontent = true
-
 [tool.isort]
 profile = "plone"
 
@@ -110,14 +71,13 @@ include = "src"
 
 [tool.codespell]
 ignore-words-list = "discreet,"
-skip = "*.po,"
 
 [tool.check-manifest]
 ignore = [
     ".editorconfig",
-    ".meta.toml",
     ".pre-commit-config.yaml",
     "tox.ini",
+    "mypy.ini",
     ".flake8",
     "mx.ini",
 

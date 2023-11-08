@@ -1,2 +1,1 @@
 recursive-include tests *.json *.py
-include mypy.ini
