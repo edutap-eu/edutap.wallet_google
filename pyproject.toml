@@ -9,12 +9,12 @@ authors = [
     {name = "Alexander Loechel", email = "Alexander.Loechel@verwaltung.uni-muenchen.de"},
     {name = "Jens Klein", email = "jk@kleinundpartner.at"},
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "EUPL 1.2" }
 classifiers = [
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -41,6 +41,7 @@ test = [
 typecheck  = [
     "mypy",
     "google-auth-stubs",
+    "types-requests",
 ]
 develop = [
     "pdbpp",
