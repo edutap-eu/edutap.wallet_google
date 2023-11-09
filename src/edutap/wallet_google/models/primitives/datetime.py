@@ -30,5 +30,5 @@ class TimeInterval(BaseModel):
     see: https://developers.google.com/wallet/tickets/events/rest/v1/TimeInterval
     """
 
-    start: DateTime
-    end: DateTime
+    start: DateTime | None = None
+    end: DateTime | None = None

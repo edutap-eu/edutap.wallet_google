@@ -109,7 +109,7 @@ class GiftCardObject(GoogleWalletObjectModel):
     hasUsers: bool = False
     smartTapRedemptionValue: str | None = None
     hasLinkedDevice: bool
-    disableExpirationNotification: bool
+    disableExpirationNotification: bool | None = False
     infoModuleData: InfoModuleData | None = None
     imageModulesData: list[ImageModuleData] | None = None
     textModulesData: list[TextModuleData] | None = None
@@ -253,7 +253,7 @@ class LoyaltyObject(GoogleWalletObjectModel):
     hasUsers: bool | None = None
     smartTapRedemptionValue: str | None = None
     hasLinkedDevice: bool | None = None
-    disableExpirationNotification: bool | None = None
+    disableExpirationNotification: bool | None = False
     imageModule: ImageModuleData | None = None
     imagesModuleData: list[ImageModuleData] | None = None
     textModulesData: list[TextModuleData] | None = None
@@ -333,7 +333,7 @@ class OfferObject(GoogleWalletObjectModel):
     hasUsers: bool = False
     smartTapRedemptionValue: str
     hasLinkedDevice: bool = False
-    disableExpirationNotification: bool = False
+    disableExpirationNotification: bool | None = False
     infoModuleData: InfoModuleData | None = None
     imageModulesData: list[ImageModuleData] | None = None
     textModulesData: list[TextModuleData] | None = None

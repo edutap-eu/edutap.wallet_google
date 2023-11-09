@@ -210,16 +210,18 @@ def message(
     name: str,
     resource_id: str,
     message: dict[str, typing.Any] | Message,
-) -> AddMessageRequest:
+) -> GoogleWalletModel:
     """Sends a message to a Google Wallet Class or Object.
 
     :param name:         Registered name of the model to use
     :param resource_id:  Identifier of the resource to send to
     :raises LookupError: When the resource was not found (404)
     :raises Exception:   When the response status code is not 200 or 404
-    :return:             The created AddMessageRequest object as returned by the Restful API
+    :return:             The created GoogleWalletModel object as returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "message")
+    model_metadata = lookup_metadata(name)
+    model = model_metadata["model"]
     if not isinstance(message, Message):
         message_validated = Message.model_validate(message)
     else:
@@ -237,8 +239,8 @@ def message(
 
     if response.status_code != 200:
         raise Exception(f"Error: {response.status_code} - {response.text}")
-    message_returned = AddMessageRequest.model_validate_json(response.content)
-    return message_returned
+    response_data = json.loads(response.content)
+    return model.model_validate(response_data.get("resource"))
 
 
 def listing(
