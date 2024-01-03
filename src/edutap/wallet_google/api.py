@@ -59,8 +59,9 @@ def _validate_data_and_convert_to_json(
     """
     verified_data = _validate_data(model, data)
     verified_json = verified_data.model_dump_json(
-        exclude_none=True,
-        # exclude_none=False,  # should be False, so it should be able to reset a value to None
+        # exclude_none=True,
+        by_alias=True,
+        exclude_none=False,  # should be False, so it should be able to reset a value to None
     )
     return (
         getattr(verified_data, resource_id_key),

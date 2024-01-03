@@ -204,7 +204,7 @@ class LoyaltyPointsBalance(BaseModel):
     """
 
     string: str | None = None
-    int_: int | None = Field(alias="int", default=None)
+    int_: int | None = Field(alias="int", serialization_alias="int", default=None)
     double: float | None = None
     money: Money | None = None
 
