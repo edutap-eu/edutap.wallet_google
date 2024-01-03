@@ -6,7 +6,7 @@ keywords = ["wallet", "google", "api", "pass"]
 readme = "README.md"
 authors = [
     {name = "Philipp Auersperg-Castell", email = "phil@bluedynamics.com"},
-    {name = "Alexander Loechel", email = "Alexander.Loechel@verwaltung.uni-muenchen.de"},
+    {name = "Alexander Loechel", email = "Alexander.Loechel@lmu.de"},
     {name = "Jens Klein", email = "jk@kleinundpartner.at"},
 ]
 requires-python = ">=3.10"
@@ -31,7 +31,7 @@ dependencies = [
 [project.urls]
 Source = "https://github.com/edutap-eu/edutap.wallet_google"
 Issues = "https://github.com/edutap-eu/edutap.wallet_google/issues"
-Documentation = "https://docs.edutap.eu/packages/edutap_wallet_google.html"
+Documentation = "https://docs.edutap.eu/packages/edutap_wallet_google/index.html"
 
 [project.optional-dependencies]
 test = [
@@ -66,7 +66,7 @@ testpaths = [
 profile = "plone"
 
 [tool.black]
-target-version = ["py39"]
+target-version = ["py310"]
 include = "src"
 
 [tool.codespell]
@@ -80,5 +80,4 @@ ignore = [
     "mypy.ini",
     ".flake8",
     "mx.ini",
-
 ]
