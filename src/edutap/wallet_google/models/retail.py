@@ -129,14 +129,11 @@ class LoyaltyClass(GoogleWalletClassModel):
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
     """
 
-    # required:
-    issuerName: str
+    issuerName: str | None = None
     programName: str | None = None
     programLogo: Image | None = None
     wideProgramLogo: Image | None = None
     reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
-
-    # optional
     accountNameLabel: str | None = None
     accountIdLabel: str | None = None
     rewardsTierLabel: str | None = None
