@@ -54,10 +54,11 @@ class GenericObject(GoogleWalletObjectModel):
     """
 
     genericType: GenericType = GenericType.GENERIC_TYPE_UNSPECIFIED
-    cardTitle: LocalizedString
+    cardTitle: LocalizedString | None = None
     subheader: LocalizedString | None = None
-    header: LocalizedString
+    header: LocalizedString | None = None
     logo: Image | None = None
+    wideLogo: Image | None = None
     hexBackgroundColor: str | None = None
     notifications: Notifications | None = None
     barcode: Barcode | None = None

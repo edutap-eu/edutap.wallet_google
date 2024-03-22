@@ -46,6 +46,7 @@ class EventTicketClass(GoogleWalletClassModel):
     eventName: LocalizedString | None = None
     eventId: str | None = None
     logo: Image | None = None
+    wideLogo: Image | None = None
     venue: EventVenue | None = None
     dateTime: EventDateTime | None = None
     confirmationCodeLabel: ConfirmationCodeLabel | None = None
@@ -74,7 +75,7 @@ class EventTicketClass(GoogleWalletClassModel):
         description="deprecated", exclude=True, default=None
     )
     imageModulesData: list[ImageModuleData] | None = None
-    textModulesDate: list[TextModuleData] | None = None
+    textModulesData: list[TextModuleData] | None = None
     linksModuleData: LinksModuleData | None = None
     redemptionIssuers: list[str] | None = None
     countryCode: str | None = None
