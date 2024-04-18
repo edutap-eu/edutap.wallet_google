@@ -1,10 +1,16 @@
 from pydantic import BaseModel
+from pydantic import ConfigDict
 
 
 class GoogleWalletModel(BaseModel):
     """
     Base model for all Google Wallet models.
     """
+
+    model_config = ConfigDict(
+        extra="forbid",
+        use_enum_values=True,
+    )
 
 
 class GoogleWalletWithIdModel(GoogleWalletModel):
