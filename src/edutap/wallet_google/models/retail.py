@@ -34,9 +34,9 @@ from pydantic import model_validator
 
 
 @register_model(
-    "GiftcardClass",
-    url_part="giftcardClass",
-    plural="giftcardClasses",
+    "GiftCardClass",
+    url_part="giftCardClass",
+    plural="giftCardClasses",
     can_disable=False,
 )
 class GiftCardClass(GoogleWalletClassModel):
@@ -46,6 +46,7 @@ class GiftCardClass(GoogleWalletClassModel):
 
     merchantName: str | None = None
     programLogo: Image | None = None
+    wideProgramLogo: Image | None = None
     pinLabel: str | None = None
     eventNumberLabel: str | None = None
     allowBarcodeRedemption: bool = False
@@ -62,19 +63,19 @@ class GiftCardClass(GoogleWalletClassModel):
         description="deprecated", exclude=True, default=None
     )
     homepageUri: Uri | None = None
-    locations: list[LatLongPoint]
+    locations: list[LatLongPoint] | None = None
     reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     review: Review | None = None
     infoModuleData: InfoModuleData | None = Field(
-        description="deprecated", exclude=True
+        description="deprecated", exclude=True, default=None
     )
-    imageModulesData: list[ImageModuleData]
+    imageModulesData: list[ImageModuleData] | None = None
     textModulesData: list[TextModuleData] | None = None
     linksModuleData: LinksModuleData | None = None
     redemptionIssuers: list[str] | None = None
     countryCode: str | None = None
     heroImage: Image | None = None
-    wordMark: Image | None = Field(description="deprecated", exclude=True)
+    wordMark: Image | None = Field(description="deprecated", exclude=True, default=None)
     enableSmartTap: bool | None = None
     hexBackgroundColor: str | None = None
     localizedIssuerName: LocalizedString | None = None
@@ -88,7 +89,7 @@ class GiftCardClass(GoogleWalletClassModel):
     )
 
 
-@register_model("GiftcardObject", url_part="giftcardObject")
+@register_model("GiftCardObject", url_part="giftCardObject")
 class GiftCardObject(GoogleWalletObjectModel):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
@@ -108,7 +109,7 @@ class GiftCardObject(GoogleWalletObjectModel):
     locations: list[LatLongPoint] | None = None
     hasUsers: bool = False
     smartTapRedemptionValue: str | None = None
-    hasLinkedDevice: bool
+    hasLinkedDevice: bool = False
     disableExpirationNotification: bool | None = False
     infoModuleData: InfoModuleData | None = None
     imageModulesData: list[ImageModuleData] | None = None

@@ -89,7 +89,6 @@ def create(
     session = session_manager.session
     url = session_manager.url(name)
     response = session.post(url=url, data=verified_json.encode("utf-8"))
-
     if response.status_code == 409:
         raise Exception(
             f"Wallet Object {name} {getattr(data, 'id', 'No ID')} already exists\n{response.text}"
@@ -97,6 +96,7 @@ def create(
     elif response.status_code != 200:
         raise Exception(f"Error at {url}: {response.status_code} - {response.text}")
 
+    logger.debug(f"RAW-Response: {response.content}")
     return model.model_validate_json(response.content)
 
 
@@ -123,6 +123,8 @@ def read(
 
     if response.status_code == 200:
         model = lookup_model(name)
+        logger.debug(f"RAW-Response: {response.content}")
+        # print(f"RAW-Response: {response.content}")
         return model.model_validate_json(response.content)
 
     raise Exception(f"{url} {response.status_code} - {response.text}")
@@ -176,6 +178,7 @@ def update(
     if response.status_code != 200:
         raise Exception(f"Error: {response.status_code} - {response.text}")
 
+    logger.debug(f"RAW-Response: {response.content}")
     return model.model_validate_json(response.content)
 
 
@@ -240,6 +243,7 @@ def message(
 
     if response.status_code != 200:
         raise Exception(f"Error: {response.status_code} - {response.text}")
+    logger.debug(f"RAW-Response: {response.content}")
     response_data = json.loads(response.content)
     return model.model_validate(response_data.get("resource"))
 
@@ -389,4 +393,10 @@ def save_link(
         "payload": payload,
     }
     signer = crypt.RSASigner.from_service_account_file(session_manager.credentials_file)
-    return f"{session_manager.save_url}/{jwt.encode(signer, claims).decode('utf-8')}"
+    jwt_string = jwt.encode(signer, claims).decode("utf-8")
+    logger.debug(
+        "JWT-Length: %d, is less than recommenden 1800: %s",
+        len(jwt_string),
+        len(jwt_string) <= 1800,
+    )
+    return f"{session_manager.save_url}/{jwt_string}"
