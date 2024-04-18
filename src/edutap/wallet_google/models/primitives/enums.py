@@ -23,10 +23,13 @@ class CamelCaseAliasEnum(Enum):
             [(x.capitalize() if count != 0 else x) for count, x in enumerate(parts)]
         )
         
-        # TODO: fix this so that UPPER_CASE andupperCase work
-        obj._value_ = camel
-        cls._value2member_map_[camel] = obj
-        cls._member_map_[camel] = obj
+        # create a second object with the camelcase name
+        # creating an alias only does not work out since
+        # pydantic checks for the value in the enum and not only the name
+        camel_obj= object.__new__(cls)
+        camel_obj._value_ = camel
+        cls._value2member_map_[camel] = camel_obj
+        cls._member_map_[camel] = camel_obj
         cls._member_names_.append(camel)
         return obj
 
