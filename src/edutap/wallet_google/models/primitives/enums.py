@@ -22,7 +22,12 @@ class CamelCaseAliasEnum(Enum):
         camel = "".join(
             [(x.capitalize() if count != 0 else x) for count, x in enumerate(parts)]
         )
+        
+        # TODO: fix this so that UPPER_CASE andupperCase work
+        obj._value_ = camel
         cls._value2member_map_[camel] = obj
+        cls._member_map_[camel] = obj
+        cls._member_names_.append(camel)
         return obj
 
 
