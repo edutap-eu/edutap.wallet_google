@@ -1,13 +1,38 @@
 from ..modelbase import GoogleWalletClassModel
 from ..modelbase import GoogleWalletObjectModel
+from ..modelcore import GoogleWalletModel
 from ..registry import register_model
 from .primitives.data import AppLinkData
 from .primitives.datetime import TimeInterval
 from .primitives.enums import GenericType
 from .primitives.enums import State
 from .primitives.localized_string import LocalizedString
-from .primitives.notification import Notifications
 from pydantic import Field
+
+
+class ExpiryNotification(GoogleWalletModel):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/genericobject#expirynotification
+    """
+
+    enableNotification: bool = False
+
+
+class UpcomingNotification(GoogleWalletModel):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/genericobject#upcomingnotification
+    """
+
+    enableNotification: bool = False
+
+
+class Notifications(GoogleWalletModel):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/genericobject#notifications
+    """
+
+    expiryNotification: ExpiryNotification | None = None
+    upcomingNotification: UpcomingNotification | None = None
 
 
 @register_model(
