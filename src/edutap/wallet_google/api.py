@@ -1,5 +1,5 @@
 from .modelbase import GoogleWalletModel
-from .modelbase import GoogleWalletObjectReference
+from .modelbase import GoogleWalletObjectWithClassReference
 from .models.primitives import Pagination
 from .models.primitives.enums import State
 from .models.primitives.notification import AddMessageRequest
@@ -374,8 +374,8 @@ def save_link(
         for obj in objs:
             # first look if this is an object reference as dict
             if isinstance(obj, dict) and "id" in obj and len(obj.keys()) <= 2:
-                obj = GoogleWalletObjectReference.model_validate(obj)
-            if isinstance(obj, GoogleWalletObjectReference):
+                obj = GoogleWalletObjectWithClassReference.model_validate(obj)
+            if isinstance(obj, GoogleWalletObjectWithClassReference):
                 payload[name].append(obj.model_dump(exclude_none=True, mode="json"))
                 continue
 

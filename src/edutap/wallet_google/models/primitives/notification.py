@@ -1,4 +1,4 @@
-from ...modelbase import GoogleWalletModel
+from ...modelcore import GoogleWalletModel
 from .datetime import TimeInterval
 from .enums import MessageType
 from .localized_string import LocalizedString
