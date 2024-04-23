@@ -61,18 +61,21 @@ class SessionManager:
 
     @property
     def credentials_file(self) -> Path | None:
-        if os.environ.get("EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE"):
-            path = Path(
-                Path(os.environ.get("CREDENTIAL_PATH", "."))
-                / Path(
-                    os.environ.get(
-                        "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE", "credential_file.json"
+        if getattr(self, "_credentials_file", None) is None:
+            self._credentials_file = None
+            if os.environ.get("EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE"):
+                path = Path(
+                    Path(os.environ.get("CREDENTIAL_PATH", "."))
+                    / Path(
+                        os.environ.get(
+                            "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE",
+                            "credential_file.json",
+                        )
                     )
                 )
-            )
-            if path.exists():
-                return path
-        return None
+                if path.exists():
+                    self._credentials_file = path
+        return self._credentials_file
 
     @property
     def credentials_info(self) -> dict[str, str]:
