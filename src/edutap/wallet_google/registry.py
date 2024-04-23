@@ -1,4 +1,4 @@
-from .modelbase import GoogleWalletModel
+from .modelcore import GoogleWalletModel
 from typing import TypedDict
 
 

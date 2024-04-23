@@ -1,4 +1,3 @@
-from .modelcore import GoogleWalletModel
 from .modelcore import GoogleWalletWithIdModel
 from .models.primitives import CallbackOptions
 from .models.primitives import GroupingInfo
@@ -14,7 +13,8 @@ from .models.primitives.data import LinksModuleData
 from .models.primitives.data import TextModuleData
 from .models.primitives.enums import MultipleDevicesAndHoldersAllowedStatus
 from .models.primitives.enums import ViewUnlockRequirement
-from .models.primitives.notification import Message
+from .models.primitives.message import Message
+from pydantic import BaseModel
 from pydantic import Field
 
 
@@ -120,7 +120,7 @@ class GoogleWalletObjectModel(GoogleWalletWithIdModel):
     rotatingBarcode: RotatingBarcode | None = None
 
 
-class GoogleWalletObjectWithClassReference(GoogleWalletObjectModel):
+class GoogleWalletObjectWithClassReference(BaseModel):
     """
     Model for all Google Wallet Object with a Class references.
     """
@@ -128,7 +128,7 @@ class GoogleWalletObjectWithClassReference(GoogleWalletObjectModel):
     classReference: GoogleWalletClassModel | None = None
 
 
-class GoogleWalletMessageable(GoogleWalletModel):
+class GoogleWalletMessageable:
     """
     Model for Google Wallet Classes or Objects that can retrieve Messages
     """
@@ -136,7 +136,7 @@ class GoogleWalletMessageable(GoogleWalletModel):
     messages: list[Message] | None = None
 
 
-class GoogleWalletStyleable(GoogleWalletModel):
+class GoogleWalletStyleable:
     """
     Model for Google Wallet Classes or Objects that can be styled
     """

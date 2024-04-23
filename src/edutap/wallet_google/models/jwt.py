@@ -1,6 +1,6 @@
 from ..modelbase import GoogleWalletClassModel
-from ..modelbase import GoogleWalletModel
 from ..modelbase import GoogleWalletObjectModel
+from ..modelcore import GoogleWalletModel
 from ..registry import register_model
 
 # from . import generic

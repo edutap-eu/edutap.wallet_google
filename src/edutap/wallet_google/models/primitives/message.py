@@ -3,14 +3,21 @@ from ...modelcore import GoogleWalletWithIdModel
 from .datetime import TimeInterval
 from .enums import MessageType
 from .localized_string import LocalizedString
+from pydantic import Field
 
 
-class Message(GoogleWalletModel, GoogleWalletWithIdModel):
+class Message(
+    GoogleWalletWithIdModel,
+):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/Message
     """
 
-    # id: str | None = None
+    kind: str | None = Field(
+        description="deprecated",
+        exclude=True,
+        default="walletobjects#walletObjectMessage",
+    )
     messageType: MessageType = MessageType.MESSAGE_TYPE_UNSPECIFIED
     displayInterval: TimeInterval | None = None
     header: str | None = None

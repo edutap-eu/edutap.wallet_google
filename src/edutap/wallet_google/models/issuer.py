@@ -1,5 +1,5 @@
-from ..modelbase import GoogleWalletModel
-from ..modelbase import GoogleWalletWithIdModel
+from ..modelcore import GoogleWalletModel
+from ..modelcore import GoogleWalletWithIdModel
 from ..registry import register_model
 from .primitives.smarttap import IssuerContactInfo
 from .primitives.smarttap import IssuerToUserInfo

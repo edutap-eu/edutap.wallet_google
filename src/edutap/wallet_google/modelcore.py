@@ -15,10 +15,18 @@ class GoogleWalletModel(BaseModel):
     )
 
 
-class GoogleWalletWithIdModel(GoogleWalletModel):
+class GoogleWalletWithKindModel(GoogleWalletModel):
+    """
+    Base model for Google Wallet models with an deprecated kind identifier.
+    """
+
+    kind: str | None = Field(description="deprecated", exclude=True, default=None)
+
+
+class GoogleWalletWithIdModel(GoogleWalletWithKindModel):
     """
     Base model for Google Wallet models with an identifier.
     """
 
-    kind: str | None = Field(description="deprecated", exclude=True, default=None)
+    # kind: str | None = Field(description="deprecated", exclude=True, default=None)
     id: str

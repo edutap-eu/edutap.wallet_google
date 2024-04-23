@@ -3,12 +3,13 @@ from ..modelbase import GoogleWalletMessageable
 from ..modelbase import GoogleWalletObjectModel
 from ..modelbase import GoogleWalletObjectWithClassReference
 from ..modelbase import GoogleWalletStyleable
+from ..modelcore import GoogleWalletWithKindModel
 from ..registry import register_model
 from .primitives import Uri
 from .primitives.data import AppLinkData
-from .primitives.datetime import EventDateTime
 from .primitives.datetime import TimeInterval
 from .primitives.enums import ConfirmationCodeLabel
+from .primitives.enums import DoorsOpenLabel
 from .primitives.enums import GateLabel
 from .primitives.enums import ReviewStatus
 from .primitives.enums import RowLabel
@@ -16,12 +17,44 @@ from .primitives.enums import SeatLabel
 from .primitives.enums import SectionLabel
 from .primitives.enums import State
 from .primitives.localized_string import LocalizedString
-from .primitives.location import EventVenue
 from .primitives.location import LatLongPoint
 from .primitives.money import Money
 from .primitives.review import Review
 from pydantic import BaseModel
 from pydantic import Field
+
+import datetime
+
+
+class EventVenue(GoogleWalletWithKindModel):
+    """
+    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventvenue
+    """
+
+    kind: str | None = Field(
+        description="deprecated",
+        exclude=True,
+        default="walletobjects#eventDateTime",
+    )
+    name: LocalizedString | None = None
+    address: LocalizedString | None = None
+
+
+class EventDateTime(GoogleWalletWithKindModel):
+    """
+    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventdatetime
+    """
+
+    kind: str | None = Field(
+        description="deprecated",
+        exclude=True,
+        default="walletobjects#eventDateTime",
+    )
+    doorsOpen: datetime.datetime | None = None
+    start: datetime.datetime | None = None
+    end: datetime.datetime | None = None
+    doorsOpenLabel: DoorsOpenLabel | None = None
+    customDoorsOpenLabel: LocalizedString | None = None
 
 
 @register_model(
@@ -31,8 +64,17 @@ from pydantic import Field
     can_disable=False,
 )
 class EventTicketClass(GoogleWalletClassModel, GoogleWalletMessageable):
+    """
+    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass
+    """
+
+    kind: str | None = Field(
+        description="deprecated",
+        exclude=True,
+        default="walletobjects#eventTicketClass",
+    )
     eventName: LocalizedString | None = None
-    eventId: str | None = None
+    eventId: str | None = Field(default=None, max_length=64)
     venue: EventVenue | None = None
     dateTime: EventDateTime | None = None
     confirmationCodeLabel: ConfirmationCodeLabel | None = None
@@ -68,7 +110,9 @@ class EventReservationInfo(BaseModel):
 
 
 @register_model(
-    "EventTicketObject", url_part="eventTicketObject", plural="eventTicketObjects"
+    "EventTicketObject",
+    url_part="eventTicketObject",
+    plural="eventTicketObjects",
 )
 class EventTicketObject(
     GoogleWalletObjectModel,
