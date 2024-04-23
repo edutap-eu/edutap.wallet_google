@@ -44,6 +44,16 @@ class Action(CamelCaseAliasEnum):
     SIGN_UP = "SIGN_UP"
 
 
+class ActivationState(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#state
+    """
+
+    UNKNOWN_STATE = "UNKNOWN_STATE"
+    NOT_ACTIVATED = "NOT_ACTIVATED"
+    ACTIVATED = "ACTIVATED"
+
+
 class AnimationType(CamelCaseAliasEnum):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/SecurityAnimation#animationtype
@@ -82,6 +92,17 @@ class BarcodeType(CamelCaseAliasEnum):
     TEXT_ONLY = "TEXT_ONLY"
 
 
+class ConcessionCategory(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#concessioncategory
+    """
+
+    CONCESSION_CATEGORY_UNSPECIFIED = "CONCESSION_CATEGORY_UNSPECIFIED"
+    ADULT = "ADULT"
+    CHILD = "CHILD"
+    SENIOR = "SENIOR"
+
+
 class ConfirmationCodeLabel(CamelCaseAliasEnum):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#confirmationcodelabel
@@ -111,6 +132,17 @@ class DoorsOpenLabel(CamelCaseAliasEnum):
     DOORS_OPEN_LABEL_UNSPECIFIED = "DOORS_OPEN_LABEL_UNSPECIFIED"
     DOORS_OPEN = "DOORS_OPEN"
     GATES_OPEN = "GATES_OPEN"
+
+
+class FareClass(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#fareclass
+    """
+
+    FARE_CLASS_UNSPECIFIED = "FARE_CLASS_UNSPECIFIED"
+    ECONOMY = "ECONOMY"
+    FIRST = "FIRST"
+    BUSINESS = "BUSINESS"
 
 
 class GateLabel(CamelCaseAliasEnum):
@@ -176,6 +208,16 @@ class NfcConstraint(CamelCaseAliasEnum):
     NFC_CONSTRAINT_UNSPECIFIED = "NFC_CONSTRAINT_UNSPECIFIED"
     BLOCK_PAYMENT = "BLOCK_PAYMENT"
     BLOCK_CLOSED_LOOP_TRANSIT = "BLOCK_CLOSED_LOOP_TRANSIT"
+
+
+class PassengerType(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#passengertype
+    """
+
+    PASSENGER_TYPE_UNSPECIFIED = "PASSENGER_TYPE_UNSPECIFIED"
+    SINGLE_PASSENGER = "SINGLE_PASSENGER"
+    MULTIPLE_PASSENGERS = "MULTIPLE_PASSENGERS"
 
 
 class PredefinedItem(CamelCaseAliasEnum):
@@ -307,6 +349,17 @@ class RetailState(CamelCaseAliasEnum):
     DISABLED = "DISABLED"
 
 
+class TicketStatus(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketstatus
+    """
+
+    TICKET_STATUS_UNSPECIFIED = "TICKET_STATUS_UNSPECIFIED"
+    USED = "USED"
+    REFUNDED = "REFUNDED"
+    EXCHANGED = "EXCHANGED"
+
+
 class TotpAlgorithm(CamelCaseAliasEnum):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode#totpalgorithm
@@ -314,6 +367,19 @@ class TotpAlgorithm(CamelCaseAliasEnum):
 
     TOTP_ALGORITHM_UNSPECIFIED = "TOTP_ALGORITHM_UNSPECIFIED"
     TOTP_SHA1 = "TOTP_SHA1"
+
+
+class TransitType(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitclass#transittype
+    """
+
+    TRANSIT_TYPE_UNSPECIFIED = "TRANSIT_TYPE_UNSPECIFIED"
+    BUS = "BUS"
+    RAIL = "RAIL"
+    TRAM = "TRAM"
+    FERRY = "FERRY"
+    OTHER = "OTHER"
 
 
 class TransitOption(CamelCaseAliasEnum):
@@ -325,6 +391,16 @@ class TransitOption(CamelCaseAliasEnum):
     ORIGIN_AND_DESTINATION_NAMES = "ORIGIN_AND_DESTINATION_NAMES"
     ORIGIN_AND_DESTINATION_CODES = "ORIGIN_AND_DESTINATION_CODES"
     ORIGIN_NAME = "ORIGIN_NAME"
+
+
+class TripType(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#triptype
+    """
+
+    TRIP_TYPE_UNSPECIFIED = "TRIP_TYPE_UNSPECIFIED"
+    ROUND_TRIP = "ROUND_TRIP"
+    ONE_WAY = "ONE_WAY"
 
 
 class ViewUnlockRequirement(CamelCaseAliasEnum):

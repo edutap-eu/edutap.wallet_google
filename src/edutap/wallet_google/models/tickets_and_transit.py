@@ -3,11 +3,13 @@ from ..modelbase import GoogleWalletMessageable
 from ..modelbase import GoogleWalletObjectModel
 from ..modelbase import GoogleWalletObjectWithClassReference
 from ..modelbase import GoogleWalletStyleable
+from ..modelcore import GoogleWalletModel
 from ..modelcore import GoogleWalletWithKindModel
 from ..registry import register_model
 from .primitives import Uri
 from .primitives.data import AppLinkData
 from .primitives.datetime import TimeInterval
+from .primitives.enums import ActivationState
 from .primitives.enums import ConfirmationCodeLabel
 from .primitives.enums import DoorsOpenLabel
 from .primitives.enums import GateLabel
@@ -16,6 +18,7 @@ from .primitives.enums import RowLabel
 from .primitives.enums import SeatLabel
 from .primitives.enums import SectionLabel
 from .primitives.enums import State
+from .primitives.enums import TransitType
 from .primitives.localized_string import LocalizedString
 from .primitives.location import LatLongPoint
 from .primitives.money import Money
@@ -145,3 +148,81 @@ class EventTicketObject(
     hasLinkedDevice: bool | None = False
     disableExpirationNotification: bool | None = False
     appLinkData: AppLinkData | None = None
+
+
+class ActivationOptions(GoogleWalletModel):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitclass#activationoptions
+    """
+
+    activationUrl: str | None = None
+    allowReactivation: bool = False
+
+
+class ActivationStatus(GoogleWalletModel):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#activationstatus
+    """
+
+    state: ActivationState = ActivationState.UNKNOWN_STATE
+
+
+class TicketRestrictions(GoogleWalletModel):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketrestrictions
+    """
+
+    routeRestrictions: LocalizedString | None = None
+    routeRestrictionsDetails: LocalizedString | None = None
+    timeRestrictions: LocalizedString | None = None
+    otherRestrictions: LocalizedString | None = None
+
+
+class TicketCost(GoogleWalletModel):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketcost
+    """
+
+    faceValue: Money | None = None
+    purchasePrice: Money | None = None
+    discountMessage: LocalizedString | None = None
+
+
+class PurchaseDetails(GoogleWalletModel):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#purchasedetails
+    """
+
+    purchaseReceiptNumber: str | None = None
+    purchaseDateTime: str | None = None
+    accountId: str | None = None
+    confirmationCode: str | None = None
+    ticketCost: TicketCost | None = None
+
+
+@register_model(
+    "TransitClass",
+    url_part="transitClass",
+    plural="transitClasses",
+)
+class TransitClass(GoogleWalletClassModel):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitclass
+    """
+
+    transitOperatorName: LocalizedString | None = None
+    transitType: TransitType = TransitType.TRANSIT_TYPE_UNSPECIFIED
+
+
+@register_model(
+    "TransitObject",
+    url_part="transitObject",
+    plural="transitObjects",
+)
+class TransitObject(GoogleWalletObjectModel):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/transitobject
+    """
+
+    ticketNumber: str | None = None
+    passengerNames: str | None | None
