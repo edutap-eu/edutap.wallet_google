@@ -33,7 +33,18 @@ class CamelCaseAliasEnum(Enum):
         cls._member_names_.append(camel)
         return obj
 
-
+    def __eq__(self, other: Enum) -> bool:
+        """Allow comparison with the camelcase value.
+        take into account that UPPER_CASE and camelCase are equal
+        """
+        if self.value == other.value:
+            return True
+        else:
+            v1 = self.value.lower().replace("_", "")
+            v2 = other.value.lower().replace("_", "")
+            return v1 == v2
+        
+    
 class Action(CamelCaseAliasEnum):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/smarttap#action
