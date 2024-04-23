@@ -25,8 +25,8 @@ from .primitives.enums import State
 from .primitives.enums import ViewUnlockRequirement
 from .primitives.localized_string import LocalizedString
 from .primitives.location import LatLongPoint
+from .primitives.message import Message
 from .primitives.money import Money
-from .primitives.notification import Message
 from .primitives.retail import DiscoverableProgram
 from .primitives.review import Review
 from pydantic import BaseModel

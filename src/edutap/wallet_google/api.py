@@ -376,13 +376,19 @@ def save_link(
             if isinstance(obj, dict) and "id" in obj and len(obj.keys()) <= 2:
                 obj = GoogleWalletObjectWithClassReference.model_validate(obj)
             if isinstance(obj, GoogleWalletObjectWithClassReference):
-                payload[name].append(obj.model_dump(exclude_none=True, mode="json"))
+                payload[name].append(
+                    obj.model_dump_json(
+                        exclude_none=True,
+                        exclude_unset=True,
+                        exclude_defaults=True,
+                    )
+                )
                 continue
 
             # otherwise it must be a registered model
             model = lookup_model_by_plural_name(name)
             obj = _validate_data(model, obj)
-            obj_json = obj.model_dump(exclude_none=True, mode="json")
+            obj_json = obj.model_dump_json(exclude_none=True)
             payload[name].append(obj_json)
     claims = {
         "iat": "",
@@ -394,9 +400,9 @@ def save_link(
     }
     signer = crypt.RSASigner.from_service_account_file(session_manager.credentials_file)
     jwt_string = jwt.encode(signer, claims).decode("utf-8")
-    logger.debug(
-        "JWT-Length: %d, is less than recommenden 1800: %s",
+    logger.warning(
+        "JWT-Length: %d, is larger than recommenden 1800: %s",
         len(jwt_string),
-        len(jwt_string) <= 1800,
+        len(jwt_string) >= 1800,
     )
     return f"{session_manager.save_url}/{jwt_string}"

@@ -57,6 +57,17 @@ class EventDateTime(GoogleWalletWithKindModel):
     customDoorsOpenLabel: LocalizedString | None = None
 
 
+class EventSeat(BaseModel):
+    seat: LocalizedString | None = None
+    row: LocalizedString | None = None
+    section: LocalizedString | None = None
+    gate: LocalizedString | None = None
+
+
+class EventReservationInfo(BaseModel):
+    confirmationCode: str | None = None
+
+
 @register_model(
     "EventTicketClass",
     url_part="eventTicketClass",
@@ -96,17 +107,6 @@ class EventTicketClass(GoogleWalletClassModel, GoogleWalletMessageable):
     reviewStatus: ReviewStatus | None = None
     review: Review | None = None
     countryCode: str | None = None
-
-
-class EventSeat(BaseModel):
-    seat: LocalizedString | None = None
-    row: LocalizedString | None = None
-    section: LocalizedString | None = None
-    gate: LocalizedString | None = None
-
-
-class EventReservationInfo(BaseModel):
-    confirmationCode: str | None = None
 
 
 @register_model(
