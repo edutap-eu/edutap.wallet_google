@@ -2,6 +2,7 @@ from .registry import lookup_metadata
 from dotenv import load_dotenv
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials
+from pathlib import Path
 from requests.adapters import HTTPAdapter
 
 import json
@@ -59,8 +60,19 @@ class SessionManager:
         return self._save_url
 
     @property
-    def credentials_file(self) -> str | None:
-        return os.environ.get("EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE")
+    def credentials_file(self) -> Path | None:
+        if os.environ.get("EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE"):
+            path = Path(
+                Path(os.environ.get("CREDENTIAL_PATH", "."))
+                / Path(
+                    os.environ.get(
+                        "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE", "credential_file.json"
+                    )
+                )
+            )
+            if path.exists():
+                return path
+        return None
 
     @property
     def credentials_info(self) -> dict[str, str]:
