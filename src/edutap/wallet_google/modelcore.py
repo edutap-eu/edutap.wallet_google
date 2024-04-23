@@ -11,7 +11,7 @@ class GoogleWalletModel(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
         # extra="ignore",
-        use_enum_values=True,
+        # use_enum_values=True,
     )
 
 

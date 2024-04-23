@@ -35,9 +35,11 @@ def test_session_creation(monkeypatch):
     from edutap.wallet_google.session import SessionManager
     from pathlib import Path
 
+    monkeypatch.setenv("CREDENTIAL_PATH", str(Path(__file__).parent / "data"))
+
     monkeypatch.setenv(
         "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE",
-        str(Path(__file__).parent / "data" / "credentials_fake.json"),
+        "credentials_fake.json",
     )
     manager = SessionManager()
     session = manager.session

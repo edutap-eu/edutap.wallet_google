@@ -1,12 +1,13 @@
 from ..modelbase import GoogleWalletClassModel
 from ..modelbase import GoogleWalletMessageable
 from ..modelbase import GoogleWalletObjectModel
+from ..modelbase import GoogleWalletObjectWithClassReference
+from ..modelbase import GoogleWalletStyleableClass
+from ..modelbase import GoogleWalletStyleableObject
 from ..registry import register_model
-from .primitives import CallbackOptions
 from .primitives import GroupingInfo
 from .primitives import Image
 from .primitives import PassConstraints
-from .primitives import SecurityAnimation
 from .primitives import Uri
 from .primitives.barcode import Barcode
 from .primitives.barcode import RotatingBarcode
@@ -18,11 +19,9 @@ from .primitives.data import LinksModuleData
 from .primitives.data import TextModuleData
 from .primitives.datetime import DateTime
 from .primitives.datetime import TimeInterval
-from .primitives.enums import MultipleDevicesAndHoldersAllowedStatus
 from .primitives.enums import RedemptionChannel
 from .primitives.enums import ReviewStatus
 from .primitives.enums import State
-from .primitives.enums import ViewUnlockRequirement
 from .primitives.localized_string import LocalizedString
 from .primitives.location import LatLongPoint
 from .primitives.message import Message
@@ -40,7 +39,9 @@ from pydantic import model_validator
     plural="giftCardClasses",
     can_disable=False,
 )
-class GiftCardClass(GoogleWalletClassModel, GoogleWalletMessageable):
+class GiftCardClass(
+    GoogleWalletClassModel, GoogleWalletMessageable, GoogleWalletStyleableClass
+):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
     """
@@ -67,7 +68,9 @@ class GiftCardClass(GoogleWalletClassModel, GoogleWalletMessageable):
 
 
 @register_model("GiftCardObject", url_part="giftCardObject")
-class GiftCardObject(GoogleWalletObjectModel, GoogleWalletMessageable):
+class GiftCardObject(
+    GoogleWalletObjectModel, GoogleWalletMessageable, GoogleWalletStyleableObject
+):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
     """
@@ -92,7 +95,9 @@ class GiftCardObject(GoogleWalletObjectModel, GoogleWalletMessageable):
 @register_model(
     "LoyaltyClass", url_part="loyaltyClass", plural="loyaltyClasses", can_disable=False
 )
-class LoyaltyClass(GoogleWalletClassModel, GoogleWalletMessageable):
+class LoyaltyClass(
+    GoogleWalletClassModel, GoogleWalletMessageable, GoogleWalletStyleableClass
+):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
     """
@@ -103,7 +108,7 @@ class LoyaltyClass(GoogleWalletClassModel, GoogleWalletMessageable):
     logo: Image | None = Field(
         alias="programLogo", serialization_alias="programLogo", default=None
     )
-    wideProgramLogo: Image | None = Field(
+    wideLogo: Image | None = Field(
         alias="wideProgramLogo", serialization_alias="wideProgramLogo", default=None
     )
 
@@ -188,12 +193,13 @@ class LoyaltyPoints(BaseModel):
 
 
 @register_model("LoyaltyObject", url_part="loyaltyObject", plural="loyaltyObjects")
-class LoyaltyObject(GoogleWalletObjectModel):
+class LoyaltyObject(GoogleWalletObjectModel, GoogleWalletObjectWithClassReference):
     """
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
     """
 
+    classReference: LoyaltyClass | None = None
     state: State = State.STATE_UNSPECIFIED
     accountName: str | None = None
     accountId: str | None = None
@@ -256,19 +262,10 @@ class OfferClass(GoogleWalletClassModel):
     linksModuleData: LinksModuleData | None = None
     redemptionIssuers: list[str] | None = None
     countryCode: str | None = None
-    heroImage: Image | None = None
     wordMark: Image | None = None
     enableSmartTap: bool = False
     hexBackgroundColor: str | None = None
     localizedIssuerName: LocalizedString | None = None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = (
-        MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
-    )
-    callbackOptions: CallbackOptions | None = None
-    securityAnimation: SecurityAnimation | None = None
-    viewUnlockRequirement: ViewUnlockRequirement = (
-        ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
-    )
 
 
 @register_model("OfferObject", url_part="offerObject")

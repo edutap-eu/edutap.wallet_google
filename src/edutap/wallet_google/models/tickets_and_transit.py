@@ -2,7 +2,8 @@ from ..modelbase import GoogleWalletClassModel
 from ..modelbase import GoogleWalletMessageable
 from ..modelbase import GoogleWalletObjectModel
 from ..modelbase import GoogleWalletObjectWithClassReference
-from ..modelbase import GoogleWalletStyleable
+from ..modelbase import GoogleWalletStyleableClass
+from ..modelbase import GoogleWalletStyleableObject
 from ..modelcore import GoogleWalletModel
 from ..modelcore import GoogleWalletWithKindModel
 from ..registry import register_model
@@ -77,7 +78,11 @@ class EventReservationInfo(BaseModel):
     plural="eventTicketClasses",
     can_disable=False,
 )
-class EventTicketClass(GoogleWalletClassModel, GoogleWalletMessageable):
+class EventTicketClass(
+    GoogleWalletClassModel,
+    GoogleWalletMessageable,
+    GoogleWalletStyleableClass,
+):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass
     """
@@ -121,7 +126,7 @@ class EventTicketObject(
     GoogleWalletObjectModel,
     GoogleWalletObjectWithClassReference,
     GoogleWalletMessageable,
-    GoogleWalletStyleable,
+    GoogleWalletStyleableObject,
 ):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketobject

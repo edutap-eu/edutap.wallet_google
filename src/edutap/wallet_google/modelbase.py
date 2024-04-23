@@ -75,6 +75,7 @@ class GoogleWalletObjectModel(GoogleWalletWithIdModel):
     """
 
     classId: str
+    version: str | None = Field(description="deprecated", exclude=True, default=None)
 
     groupingInfo: GroupingInfo | None = None
 
@@ -115,9 +116,21 @@ class GoogleWalletMessageable:
     messages: list[Message] | None = None
 
 
-class GoogleWalletStyleable:
+class GoogleWalletStyleableClass:
     """
-    Model for Google Wallet Classes or Objects that can be styled
+    Model for Google Wallet Classes that can be styled
+    """
+
+    # Design Options
+    hexBackgroundColor: str | None = None
+    logo: Image | None = None
+    wideLogo: Image | None = None
+    heroImage: Image | None = None
+
+
+class GoogleWalletStyleableObject:
+    """
+    Model for Google Wallet Objects that can be styled
     """
 
     # Design Options
