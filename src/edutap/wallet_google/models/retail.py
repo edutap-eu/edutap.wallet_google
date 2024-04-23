@@ -206,7 +206,6 @@ class LoyaltyObject(GoogleWalletObjectModel, GoogleWalletObjectWithClassReferenc
     loyaltyPoints: LoyaltyPoints | None = None
     linkedOfferIds: list[str] | None = None
     secondaryLoyaltyPoints: LoyaltyPoints | None = None
-    barcode: Barcode | None = None
     messages: list[Message] | None = None
     validTimeInterval: TimeInterval | None = None
     locations: list[LatLongPoint] | None = None
@@ -218,8 +217,6 @@ class LoyaltyObject(GoogleWalletObjectModel, GoogleWalletObjectWithClassReferenc
     imagesModuleData: list[ImageModuleData] | None = None
     textModulesData: list[TextModuleData] | None = None
     appLinkData: AppLinkData | None = None
-    rotatingBarcode: RotatingBarcode | None = None
-    heroImage: Image | None = None
     groupingInfo: GroupingInfo | None = None
     passConstraints: PassConstraints | None = None
 

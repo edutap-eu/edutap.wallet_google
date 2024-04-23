@@ -145,6 +145,20 @@ class FareClass(CamelCaseAliasEnum):
     BUSINESS = "BUSINESS"
 
 
+class FlightStatus(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightstatus
+    """
+
+    FLIGHT_STATUS_UNSPECIFIED = "FLIGHT_STATUS_UNSPECIFIED"
+    SCHEDULED = "SCHEDULED"
+    ACTIVE = "ACTIVE"
+    LANDED = "LANDED"
+    CANCELLED = "CANCELLED"
+    REDIRECTED = "REDIRECTED"
+    DIVERTED = "DIVERTED"
+
+
 class GateLabel(CamelCaseAliasEnum):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#gatelabel
