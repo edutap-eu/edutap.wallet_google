@@ -92,6 +92,17 @@ class BarcodeType(CamelCaseAliasEnum):
     TEXT_ONLY = "TEXT_ONLY"
 
 
+class BoardingPolicy(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#boardingpolicy
+    """
+
+    BOARDING_POLICY_UNSPECIFIED = "BOARDING_POLICY_UNSPECIFIED"
+    ZONE_BASED = "ZONE_BASED"
+    GROUP_BASED = "GROUP_BASED"
+    BOARDING_POLICY_OTHER = "BOARDING_POLICY_OTHER"
+
+
 class ConcessionCategory(CamelCaseAliasEnum):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#concessioncategory
@@ -298,6 +309,18 @@ class ScreenshotEligibility(CamelCaseAliasEnum):
     SCREENSHOT_ELIGIBILITY_UNSPECIFIED = "SCREENSHOT_ELIGIBILITY_UNSPECIFIED"
     ELIGIBLE = "ELIGIBLE"
     INELIGIBLE = "INELIGIBLE"
+
+
+class SeatClassPolicy(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#seatclasspolicy
+    """
+
+    SEAT_CLASS_POLICY_UNSPECIFIED = "SEAT_CLASS_POLICY_UNSPECIFIED"
+    CABIN_BASED = "CABIN_BASED"
+    CLASS_BASED = "CLASS_BASED"
+    TIER_BASED = "TIER_BASED"
+    SEAT_CLASS_POLICY_OTHER = "SEAT_CLASS_POLICY_OTHER"
 
 
 class SeatLabel(CamelCaseAliasEnum):

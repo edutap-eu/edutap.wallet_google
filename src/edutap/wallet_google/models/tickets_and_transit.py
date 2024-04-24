@@ -12,6 +12,7 @@ from .primitives import Uri
 from .primitives.data import AppLinkData
 from .primitives.datetime import TimeInterval
 from .primitives.enums import ActivationState
+from .primitives.enums import BoardingPolicy
 from .primitives.enums import ConcessionCategory
 from .primitives.enums import ConfirmationCodeLabel
 from .primitives.enums import DoorsOpenLabel
@@ -21,6 +22,7 @@ from .primitives.enums import GateLabel
 from .primitives.enums import PassengerType
 from .primitives.enums import ReviewStatus
 from .primitives.enums import RowLabel
+from .primitives.enums import SeatClassPolicy
 from .primitives.enums import SeatLabel
 from .primitives.enums import SectionLabel
 from .primitives.enums import State
@@ -124,10 +126,12 @@ class EventTicketClass(
     gateLabel: GateLabel | None = None
     customGateLabel: LocalizedString | None = None
     finePrint: LocalizedString | None = None
-    version: str | None = Field(description="deprecated", exclude=True, default=None)
-    issuerName: str | None = None
-    localizedIssuerName: LocalizedString | None = None
-    homepageUri: Uri | None = None
+    version: str | None = Field(
+        description="deprecated", deprecated=True, exclude=True, default=None
+    )
+    # issuerName: str | None = None
+    # localizedIssuerName: LocalizedString | None = None
+    # homepageUri: Uri | None = None
     locations: list[LatLongPoint] | None = None
     reviewStatus: ReviewStatus | None = None
     review: Review | None = None
@@ -378,14 +382,34 @@ class FlightHeader(GoogleWalletModel):
 
 class AirportInfo(GoogleWalletModel):
     """
-    see:
+    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#airportinfo
     """
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#airportInfo",
+    )
+    airportIataCode: str | None = Field(max_length=3, default=None)
+    terminal: str | None = None
+    gate: str | None = None
+    airportNameOverride: LocalizedString | None = None
 
 
 class BoardingAndSeatingPolicy(GoogleWalletModel):
     """
     see:
     """
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#boardingAndSeatingPolicy",
+    )
+    boardingPolicy: BoardingPolicy = BoardingPolicy.BOARDING_POLICY_UNSPECIFIED
+    seatClassPolicy: SeatClassPolicy = SeatClassPolicy.SEAT_CLASS_POLICY_UNSPECIFIED
 
 
 @register_model(

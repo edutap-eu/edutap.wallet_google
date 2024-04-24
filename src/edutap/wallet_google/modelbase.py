@@ -75,7 +75,9 @@ class GoogleWalletObjectModel(GoogleWalletWithIdModel):
     """
 
     classId: str
-    version: str | None = Field(description="deprecated", exclude=True, default=None)
+    version: str | None = Field(
+        description="deprecated", deprecated=True, exclude=True, default=None
+    )
 
     groupingInfo: GroupingInfo | None = None
 
@@ -85,6 +87,7 @@ class GoogleWalletObjectModel(GoogleWalletWithIdModel):
     linksModuleData: LinksModuleData | None = None
     infoModuleData: InfoModuleData | None = Field(
         description="deprecated",
+        deprecated=True,
         exclude=True,
         default=None,
     )
