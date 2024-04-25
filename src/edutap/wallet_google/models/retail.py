@@ -1,9 +1,9 @@
 from ..modelbase import GoogleWalletClassModel
-from ..modelbase import GoogleWalletMessageable
+from ..modelbase import GoogleWalletMessageableMixin
 from ..modelbase import GoogleWalletObjectModel
-from ..modelbase import GoogleWalletObjectWithClassReference
-from ..modelbase import GoogleWalletStyleableClass
-from ..modelbase import GoogleWalletStyleableObject
+from ..modelbase import GoogleWalletObjectWithClassReferenceMixin
+from ..modelbase import GoogleWalletStyleableClassMixin
+from ..modelbase import GoogleWalletStyleableObjectMixin
 from ..registry import register_model
 from .primitives import GroupingInfo
 from .primitives import Image
@@ -40,7 +40,9 @@ from pydantic import model_validator
     can_disable=False,
 )
 class GiftCardClass(
-    GoogleWalletClassModel, GoogleWalletMessageable, GoogleWalletStyleableClass
+    GoogleWalletClassModel,
+    GoogleWalletMessageableMixin,
+    GoogleWalletStyleableClassMixin,
 ):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
@@ -69,7 +71,9 @@ class GiftCardClass(
 
 @register_model("GiftCardObject", url_part="giftCardObject")
 class GiftCardObject(
-    GoogleWalletObjectModel, GoogleWalletMessageable, GoogleWalletStyleableObject
+    GoogleWalletObjectModel,
+    GoogleWalletMessageableMixin,
+    GoogleWalletStyleableObjectMixin,
 ):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
@@ -96,7 +100,9 @@ class GiftCardObject(
     "LoyaltyClass", url_part="loyaltyClass", plural="loyaltyClasses", can_disable=False
 )
 class LoyaltyClass(
-    GoogleWalletClassModel, GoogleWalletMessageable, GoogleWalletStyleableClass
+    GoogleWalletClassModel,
+    GoogleWalletMessageableMixin,
+    GoogleWalletStyleableClassMixin,
 ):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
@@ -193,7 +199,7 @@ class LoyaltyPoints(BaseModel):
 
 
 @register_model("LoyaltyObject", url_part="loyaltyObject", plural="loyaltyObjects")
-class LoyaltyObject(GoogleWalletObjectModel, GoogleWalletObjectWithClassReference):
+class LoyaltyObject(GoogleWalletObjectModel, GoogleWalletObjectWithClassReferenceMixin):
     """
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject

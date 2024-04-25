@@ -1,11 +1,11 @@
 from ..modelbase import GoogleWalletClassModel
-from ..modelbase import GoogleWalletMessageable
+from ..modelbase import GoogleWalletMessageableMixin
 from ..modelbase import GoogleWalletObjectModel
-from ..modelbase import GoogleWalletObjectWithClassReference
-from ..modelbase import GoogleWalletStyleableClass
-from ..modelbase import GoogleWalletStyleableObject
+from ..modelbase import GoogleWalletObjectWithClassReferenceMixin
+from ..modelbase import GoogleWalletStyleableClassMixin
+from ..modelbase import GoogleWalletStyleableObjectMixin
 from ..modelcore import GoogleWalletModel
-from ..modelcore import GoogleWalletWithKindModel
+from ..modelcore import GoogleWalletWithKindMixin
 from ..registry import register_model
 from .primitives import Image
 from .primitives import Uri
@@ -49,7 +49,7 @@ class TicketAndTransitClassBaseModel(GoogleWalletClassModel):
     homepageUri: Uri | None = None
 
 
-class EventVenue(GoogleWalletWithKindModel):
+class EventVenue(GoogleWalletWithKindMixin):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventvenue
     """
@@ -63,7 +63,7 @@ class EventVenue(GoogleWalletWithKindModel):
     address: LocalizedString | None = None
 
 
-class EventDateTime(GoogleWalletWithKindModel):
+class EventDateTime(GoogleWalletWithKindMixin):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventdatetime
     """
@@ -99,8 +99,8 @@ class EventReservationInfo(BaseModel):
 )
 class EventTicketClass(
     TicketAndTransitClassBaseModel,
-    GoogleWalletMessageable,
-    GoogleWalletStyleableClass,
+    GoogleWalletMessageableMixin,
+    GoogleWalletStyleableClassMixin,
 ):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass
@@ -145,9 +145,9 @@ class EventTicketClass(
 )
 class EventTicketObject(
     GoogleWalletObjectModel,
-    GoogleWalletObjectWithClassReference,
-    GoogleWalletMessageable,
-    GoogleWalletStyleableObject,
+    GoogleWalletObjectWithClassReferenceMixin,
+    GoogleWalletMessageableMixin,
+    GoogleWalletStyleableObjectMixin,
 ):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketobject
@@ -272,7 +272,7 @@ class DeviceContext(GoogleWalletModel):
     url_part="transitClass",
     plural="transitClasses",
 )
-class TransitClass(GoogleWalletClassModel, GoogleWalletStyleableClass):
+class TransitClass(GoogleWalletClassModel, GoogleWalletStyleableClassMixin):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitclass
     """
@@ -311,7 +311,7 @@ class TransitClass(GoogleWalletClassModel, GoogleWalletStyleableClass):
     url_part="transitObject",
     plural="transitObjects",
 )
-class TransitObject(GoogleWalletObjectModel, GoogleWalletStyleableObject):
+class TransitObject(GoogleWalletObjectModel, GoogleWalletStyleableObjectMixin):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject
     """
@@ -417,7 +417,7 @@ class BoardingAndSeatingPolicy(GoogleWalletModel):
     url_part="flightClass",
     plural="flightClasses",
 )
-class FlightClass(GoogleWalletClassModel, GoogleWalletStyleableClass):
+class FlightClass(GoogleWalletClassModel, GoogleWalletStyleableClassMixin):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass
     """
@@ -446,7 +446,7 @@ class FlightClass(GoogleWalletClassModel, GoogleWalletStyleableClass):
     url_part="flightObject",
     plural="flightObjects",
 )
-class FlightObject(GoogleWalletObjectModel, GoogleWalletStyleableObject):
+class FlightObject(GoogleWalletObjectModel, GoogleWalletStyleableObjectMixin):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightobject
     """

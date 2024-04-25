@@ -103,7 +103,7 @@ class GoogleWalletObjectModel(GoogleWalletWithIdModel):
     rotatingBarcode: RotatingBarcode | None = None
 
 
-class GoogleWalletObjectWithClassReference(BaseModel):
+class GoogleWalletObjectWithClassReferenceMixin(BaseModel):
     """
     Model for all Google Wallet Object with a Class references.
     """
@@ -111,7 +111,7 @@ class GoogleWalletObjectWithClassReference(BaseModel):
     classReference: GoogleWalletClassModel | None = None
 
 
-class GoogleWalletMessageable:
+class GoogleWalletMessageableMixin:
     """
     Model for Google Wallet Classes or Objects that can retrieve Messages
     """
@@ -119,7 +119,7 @@ class GoogleWalletMessageable:
     messages: list[Message] | None = None
 
 
-class GoogleWalletStyleableClass:
+class GoogleWalletStyleableClassMixin:
     """
     Model for Google Wallet Classes that can be styled
     """
@@ -131,7 +131,7 @@ class GoogleWalletStyleableClass:
     heroImage: Image | None = None
 
 
-class GoogleWalletStyleableObject:
+class GoogleWalletStyleableObjectMixin:
     """
     Model for Google Wallet Objects that can be styled
     """
