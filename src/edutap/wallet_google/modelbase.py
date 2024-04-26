@@ -1,3 +1,4 @@
+from .modelcore import GoogleWalletModel
 from .modelcore import GoogleWalletWithIdModel
 from .models.primitives import CallbackOptions
 from .models.primitives import GroupingInfo
@@ -14,13 +15,12 @@ from .models.primitives.data import TextModuleData
 from .models.primitives.enums import MultipleDevicesAndHoldersAllowedStatus
 from .models.primitives.enums import ViewUnlockRequirement
 from .models.primitives.message import Message
-from pydantic import BaseModel
 from pydantic import Field
 
 
 class GoogleWalletClassModel(GoogleWalletWithIdModel):
     """
-    Base model for all Google Wallet Class models.
+    BaseModel for all Google Wallet Class Models.
     """
 
     # Templating and Visual Data
@@ -30,6 +30,7 @@ class GoogleWalletClassModel(GoogleWalletWithIdModel):
     linksModuleData: LinksModuleData | None = None
     infoModuleData: InfoModuleData | None = Field(
         description="deprecated",
+        deprecated=True,
         exclude=True,
         default=None,
     )
@@ -50,6 +51,7 @@ class GoogleWalletClassModel(GoogleWalletWithIdModel):
     )
     allowMultipleUsersPerObject: bool | None = Field(
         description="deprecated",
+        deprecated=True,
         exclude=True,
         default=None,
     )
@@ -64,6 +66,7 @@ class GoogleWalletClassModel(GoogleWalletWithIdModel):
     # heroImage: Image | None = None
     wordMark: Image | None = Field(
         description="deprecated",
+        deprecated=True,
         exclude=True,
         default=None,
     )
@@ -103,9 +106,9 @@ class GoogleWalletObjectModel(GoogleWalletWithIdModel):
     rotatingBarcode: RotatingBarcode | None = None
 
 
-class GoogleWalletObjectWithClassReferenceMixin(BaseModel):
+class GoogleWalletObjectWithClassReferenceMixin(GoogleWalletModel):
     """
-    Model for all Google Wallet Object with a Class references.
+    Mixin for all Google Wallet Object with a classReferences attribute, that reflects the whole class data.
     """
 
     classReference: GoogleWalletClassModel | None = None
@@ -113,7 +116,7 @@ class GoogleWalletObjectWithClassReferenceMixin(BaseModel):
 
 class GoogleWalletMessageableMixin:
     """
-    Model for Google Wallet Classes or Objects that can retrieve Messages
+    Mixin for Google Wallet Classes or Objects that can retrieve Messages
     """
 
     messages: list[Message] | None = None
@@ -121,7 +124,7 @@ class GoogleWalletMessageableMixin:
 
 class GoogleWalletStyleableClassMixin:
     """
-    Model for Google Wallet Classes that can be styled
+    Mixin for Google Wallet Classes that can be styled.
     """
 
     # Design Options
@@ -133,7 +136,10 @@ class GoogleWalletStyleableClassMixin:
 
 class GoogleWalletStyleableObjectMixin:
     """
-    Model for Google Wallet Objects that can be styled
+    Mixin for Google Wallet Objects that can be styled.
+
+    TODO: Check if really all Objects that can be styled have all four attributes and also with this name.
+          Potential Override necessary for programLogo, ...
     """
 
     # Design Options

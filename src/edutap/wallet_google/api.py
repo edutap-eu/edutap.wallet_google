@@ -377,7 +377,10 @@ def save_link(
                 obj = GoogleWalletObjectWithClassReferenceMixin.model_validate(obj)
             if isinstance(obj, GoogleWalletObjectWithClassReferenceMixin):
                 payload[name].append(
-                    obj.model_dump_json(
+                    obj.model_dump(
+                        # explicitly set to model_dump(mode="json") instead of model_dump_json due to problems
+                        # reported by jensens
+                        mode="json",
                         exclude_none=True,
                         exclude_unset=True,
                         exclude_defaults=True,
@@ -388,7 +391,14 @@ def save_link(
             # otherwise it must be a registered model
             model = lookup_model_by_plural_name(name)
             obj = _validate_data(model, obj)
-            obj_json = obj.model_dump_json(exclude_none=True)
+            obj_json = obj.model_dump(
+                # explicitly set to model_dump(mode="json") instead of model_dump_json due to problems
+                # reported by jensens
+                mode="json",
+                exclude_none=True,
+                exclude_unset=True,
+                exclude_defaults=True,
+            )
             payload[name].append(obj_json)
     claims = {
         "iat": "",

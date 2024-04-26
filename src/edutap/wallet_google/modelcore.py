@@ -5,7 +5,10 @@ from pydantic import Field
 
 class GoogleWalletModel(BaseModel):
     """
-    Base model for all Google Wallet models.
+    Base Model for all Google Wallet Models.
+
+    Sets a model_config for all Google Wallet Models that enforce that all attributes must be explicitly modeled, and trying to set an unknown attribute would raise an Exception.
+    This Follows the Zen of Python (PEP 20) --> Explicit is better than implicit.
     """
 
     model_config = ConfigDict(
@@ -17,16 +20,21 @@ class GoogleWalletModel(BaseModel):
 
 class GoogleWalletWithKindMixin(GoogleWalletModel):
     """
-    Base model for Google Wallet models with an deprecated kind identifier.
+    Mixin Class for Google Wallet Models with an deprecated kind identifier.
+    Explicit kind value should be provided by the inheriting concret class.
     """
 
-    kind: str | None = Field(description="deprecated", exclude=True, default=None)
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default=None,
+    )
 
 
 class GoogleWalletWithIdModel(GoogleWalletWithKindMixin):
     """
-    Base model for Google Wallet models with an identifier.
+    Model for Google Wallet models with an identifier.
     """
 
-    # kind: str | None = Field(description="deprecated", exclude=True, default=None)
     id: str
