@@ -4,6 +4,8 @@ from ..modelbase import GoogleWalletObjectModel
 from ..modelbase import GoogleWalletObjectWithClassReferenceMixin
 from ..modelbase import GoogleWalletStyleableClassMixin
 from ..modelbase import GoogleWalletStyleableObjectMixin
+from ..modelcore import GoogleWalletWithIdModel
+from ..modelcore import GoogleWalletWithKindMixin
 from ..registry import register_model
 from .primitives import GroupingInfo
 from .primitives import Image
@@ -72,6 +74,8 @@ class GiftCardClass(
 @register_model("GiftCardObject", url_part="giftCardObject")
 class GiftCardObject(
     GoogleWalletObjectModel,
+    GoogleWalletWithIdModel,
+    GoogleWalletWithKindMixin,
     GoogleWalletMessageableMixin,
     GoogleWalletStyleableObjectMixin,
 ):
@@ -142,21 +146,25 @@ class LoyaltyClass(
     # deprecated
     version: str | None = Field(
         description="deprecated",
+        deprecated=True,
         exclude=True,
         default=None,
     )  # int64
     allowMultipleUsersPerObject: bool = Field(
         description="deprecated",
+        deprecated=True,
         exclude=True,
         default=True,
     )
     infoModuleData: InfoModuleData | None = Field(
         description="deprecated",
+        deprecated=True,
         exclude=True,
         default=None,
     )
     wordMark: Image | None = Field(
         description="deprecated",
+        deprecated=True,
         exclude=True,
         default=None,
     )

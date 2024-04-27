@@ -18,7 +18,7 @@ class GoogleWalletModel(BaseModel):
     )
 
 
-class GoogleWalletWithKindMixin(GoogleWalletModel):
+class GoogleWalletWithKindMixin(BaseModel):
     """
     Mixin Class for Google Wallet Models with an deprecated kind identifier.
     Explicit kind value should be provided by the inheriting concret class.
@@ -32,7 +32,7 @@ class GoogleWalletWithKindMixin(GoogleWalletModel):
     )
 
 
-class GoogleWalletWithIdModel(GoogleWalletWithKindMixin):
+class GoogleWalletWithIdModel(BaseModel):
     """
     Model for Google Wallet models with an identifier.
     """

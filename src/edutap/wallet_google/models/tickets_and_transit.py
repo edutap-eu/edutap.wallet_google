@@ -33,7 +33,6 @@ from .primitives.localized_string import LocalizedString
 from .primitives.location import LatLongPoint
 from .primitives.money import Money
 from .primitives.review import Review
-from pydantic import BaseModel
 from pydantic import Field
 
 import datetime
@@ -49,13 +48,14 @@ class TicketAndTransitClassBaseModel(GoogleWalletClassModel):
     homepageUri: Uri | None = None
 
 
-class EventVenue(GoogleWalletWithKindMixin):
+class EventVenue(GoogleWalletModel, GoogleWalletWithKindMixin):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventvenue
     """
 
     kind: str | None = Field(
         description="deprecated",
+        deprecated=True,
         exclude=True,
         default="walletobjects#eventDateTime",
     )
@@ -63,13 +63,14 @@ class EventVenue(GoogleWalletWithKindMixin):
     address: LocalizedString | None = None
 
 
-class EventDateTime(GoogleWalletWithKindMixin):
+class EventDateTime(GoogleWalletModel, GoogleWalletWithKindMixin):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventdatetime
     """
 
     kind: str | None = Field(
         description="deprecated",
+        deprecated=True,
         exclude=True,
         default="walletobjects#eventDateTime",
     )
@@ -80,14 +81,34 @@ class EventDateTime(GoogleWalletWithKindMixin):
     customDoorsOpenLabel: LocalizedString | None = None
 
 
-class EventSeat(BaseModel):
+class EventSeat(GoogleWalletModel, GoogleWalletWithKindMixin):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/eventticketobject#eventseat
+    """
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#eventSeat",
+    )
     seat: LocalizedString | None = None
     row: LocalizedString | None = None
     section: LocalizedString | None = None
     gate: LocalizedString | None = None
 
 
-class EventReservationInfo(BaseModel):
+class EventReservationInfo(GoogleWalletModel, GoogleWalletWithKindMixin):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/eventticketobject#eventreservationinfo
+    """
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#eventReservationInfo",
+    )
     confirmationCode: str | None = None
 
 
