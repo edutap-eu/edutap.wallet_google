@@ -4,6 +4,7 @@ from ..modelbase import GoogleWalletObjectModel
 from ..modelbase import GoogleWalletObjectWithClassReferenceMixin
 from ..modelbase import GoogleWalletStyleableClassMixin
 from ..modelbase import GoogleWalletStyleableObjectMixin
+from ..modelcore import GoogleWalletModel
 from ..modelcore import GoogleWalletWithIdModel
 from ..modelcore import GoogleWalletWithKindMixin
 from ..registry import register_model
@@ -30,7 +31,6 @@ from .primitives.message import Message
 from .primitives.money import Money
 from .primitives.retail import DiscoverableProgram
 from .primitives.review import Review
-from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
 
@@ -105,6 +105,7 @@ class GiftCardObject(
 )
 class LoyaltyClass(
     GoogleWalletClassModel,
+    GoogleWalletWithKindMixin,
     GoogleWalletMessageableMixin,
     GoogleWalletStyleableClassMixin,
 ):
@@ -170,7 +171,10 @@ class LoyaltyClass(
     )
 
 
-class LoyaltyPointsBalance(BaseModel):
+class LoyaltyPointsBalance(
+    GoogleWalletModel,
+    GoogleWalletWithKindMixin,
+):
     """
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPointsBalance
@@ -195,7 +199,10 @@ class LoyaltyPointsBalance(BaseModel):
         return self
 
 
-class LoyaltyPoints(BaseModel):
+class LoyaltyPoints(
+    GoogleWalletModel,
+    GoogleWalletWithKindMixin,
+):
     """
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPoints
@@ -207,7 +214,11 @@ class LoyaltyPoints(BaseModel):
 
 
 @register_model("LoyaltyObject", url_part="loyaltyObject", plural="loyaltyObjects")
-class LoyaltyObject(GoogleWalletObjectModel, GoogleWalletObjectWithClassReferenceMixin):
+class LoyaltyObject(
+    GoogleWalletObjectModel,
+    GoogleWalletWithKindMixin,
+    GoogleWalletObjectWithClassReferenceMixin,
+):
     """
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject

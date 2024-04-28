@@ -1,4 +1,5 @@
 from ..modelbase import GoogleWalletClassModel
+from ..modelbase import GoogleWalletMessageableMixin
 from ..modelbase import GoogleWalletObjectModel
 from ..modelbase import GoogleWalletStyleableClassMixin
 from ..modelbase import GoogleWalletStyleableObjectMixin
@@ -40,14 +41,22 @@ class Notifications(GoogleWalletModel):
 @register_model(
     "GenericClass", url_part="genericClass", plural="genericClasses", can_disable=False
 )
-class GenericClass(GoogleWalletClassModel, GoogleWalletStyleableClassMixin):
+class GenericClass(
+    GoogleWalletClassModel,
+    GoogleWalletStyleableClassMixin,
+    GoogleWalletMessageableMixin,
+):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericclass
     """
 
 
 @register_model("GenericObject", url_part="genericObject")
-class GenericObject(GoogleWalletObjectModel, GoogleWalletStyleableObjectMixin):
+class GenericObject(
+    GoogleWalletObjectModel,
+    GoogleWalletStyleableObjectMixin,
+    GoogleWalletMessageableMixin,
+):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject
     """

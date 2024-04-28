@@ -106,7 +106,9 @@ class GoogleWalletObjectModel(GoogleWalletWithIdModel):
     rotatingBarcode: RotatingBarcode | None = None
 
 
-class GoogleWalletObjectWithClassReferenceMixin(GoogleWalletModel):
+class GoogleWalletObjectWithClassReferenceMixin(
+    GoogleWalletModel, GoogleWalletWithIdModel
+):
     """
     Mixin for all Google Wallet Object with a classReferences attribute, that reflects the whole class data.
     """
