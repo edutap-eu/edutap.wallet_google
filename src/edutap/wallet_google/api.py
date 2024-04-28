@@ -170,6 +170,8 @@ def update(
             url=session_manager.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
         )
+    logger.debug(verified_json.encode("utf-8"))
+    # print(verified_json.encode("utf-8"))
     if response.status_code == 404:
         raise LookupError(
             f"Error 404, {name} {getattr(data, 'id', 'No ID')} not found: - {response.text}"
