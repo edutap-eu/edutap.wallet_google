@@ -413,7 +413,7 @@ def save_link(
     signer = crypt.RSASigner.from_service_account_file(session_manager.credentials_file)
     jwt_string = jwt.encode(signer, claims).decode("utf-8")
     logger.warning(
-        "JWT-Length: %d, is larger than recommenden 1800: %s",
+        "JWT-Length: %d, is larger than recommended 1800 bytes: %s",
         len(jwt_string),
         len(jwt_string) >= 1800,
     )
