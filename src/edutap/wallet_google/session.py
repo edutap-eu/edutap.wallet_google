@@ -64,13 +64,10 @@ class SessionManager:
         if getattr(self, "_credentials_file", None) is None:
             self._credentials_file = None
             if os.environ.get("EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE"):
-                path = Path(
-                    Path(os.environ.get("CREDENTIAL_PATH", "."))
-                    / Path(
-                        os.environ.get(
-                            "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE",
-                            "credential_file.json",
-                        )
+                path = Path(os.environ.get("CREDENTIAL_PATH", ".")) / Path(
+                    os.environ.get(
+                        "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE",
+                        "credential_file.json",
                     )
                 )
                 if path.exists():
