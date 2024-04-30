@@ -22,7 +22,7 @@ def test_base_settings():
 
 
 @pytest.mark.skipif(
-    os.environ.get("CI", False),
+    os.environ.get("CI", False) == "true" or os.environ.get("CI", False) is True,
     reason="should not be run on CI as it helps to find out settings locally",
 )
 def test_local_settings():
