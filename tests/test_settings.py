@@ -1,8 +1,10 @@
 from edutap.wallet_google.session import GoogleWalletSettings
 from pprint import pprint
 
+import pytest
 
-def test_settings():
+
+def test_base_settings():
     settings = GoogleWalletSettings()
     print("Test Settings - Dump Settings Values:")
     # print(settings.model_dump())
@@ -16,5 +18,14 @@ def test_settings():
     assert [str(s) for s in settings.scopes] == [
         "https://www.googleapis.com/auth/wallet_object.issuer"
     ]
+
+
+@pytest.mark.skip("should only be run locally")
+def test_local_settings():
+    settings = GoogleWalletSettings()
+    print("Test Settings - Dump Settings Values:")
+    # print(settings.model_dump())
+    pprint(settings.model_dump(), indent=2, sort_dicts=True)
+
     assert settings.issuer_id is not None
     assert settings.credentials_file.exists()
