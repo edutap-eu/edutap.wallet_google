@@ -11,6 +11,8 @@ def test_settings():
         == "https://walletobjects.googleapis.com/walletobjects/v1"
     )
     assert str(settings.save_url) == "https://pay.google.com/gp/v/save"
-    assert settings.scopes == ["https://www.googleapis.com/auth/wallet_object.issuer"]
-    assert settings.issuer_id
-    assert settings.credentials_file
+    assert [str(s) for s in settings.scopes] == [
+        "https://www.googleapis.com/auth/wallet_object.issuer"
+    ]
+    assert settings.issuer_id is not None
+    assert settings.credentials_file.exists()

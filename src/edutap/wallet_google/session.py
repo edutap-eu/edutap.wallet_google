@@ -11,7 +11,6 @@ from pydantic_settings import SettingsConfigDict
 from requests.adapters import HTTPAdapter
 
 import json
-import os
 import threading
 
 
@@ -29,30 +28,36 @@ class GoogleWalletSettings(BaseSettings):
     """Settings for Google Wallet Preferences."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
+        # env_file=".env",
+        # env_file_encoding="utf-8",
         env_prefix="EDUTAP_WALLET_GOOGLE_",
         case_sensitive=False,
         # extra="ignore",
         extra="allow",
     )
 
-    record_api_calls_dir: Path | None = None
+    record_api_calls_dir: Path | None = ROOT_DIR / "tests" / "data"
     base_url: HttpUrl = HttpUrl("https://walletobjects.googleapis.com/walletobjects/v1")
     save_url: HttpUrl = HttpUrl("https://pay.google.com/gp/v/save")
     scopes: list[HttpUrl] = [
         HttpUrl("https://www.googleapis.com/auth/wallet_object.issuer")
     ]
 
-    credentials_path: Path = ROOT_DIR
+    # credentials_dir: Path = Field(alias="EDUTAP_WALLET_PATH_CREDENTIAL_DIR", default=ROOT_DIR)
 
-    credentials_file: str = "credentials.json"
+    # credentials_file: str = "credentials.json"
+    credentials_file: Path = ROOT_DIR / "credentials.json"
+
     issuer_account_email: EmailStr | None = None
-    issuer_id: str | None = Field(min_length=19, max_length=20)
+    issuer_id: str | None = Field(min_length=19, max_length=20, default=None)
 
 
 class HTTPRecorder(HTTPAdapter):
     """Record the HTTP requests and responses to a file."""
+
+    def __init__(self, settings: GoogleWalletSettings):
+        super().__init__()
+        self.settings = settings
 
     def send(self, request, *args, **kwargs):
         req_record = {
@@ -61,7 +66,11 @@ class HTTPRecorder(HTTPAdapter):
             "headers": dict(request.headers),
             "body": json.loads(request.body.decode("utf-8")),
         }
-        target_directory = os.environ.get("EDUTAP_WALLET_GOOGLE_RECORD_API_CALLS_DIR")
+        target_directory = (
+            self.settings.record_api_calls_dir
+        )  # os.environ.get("EDUTAP_WALLET_GOOGLE_RECORD_API_CALLS_DIR")
+        if target_directory.is_dir() and not target_directory.exists():
+            target_directory
         filename = f"{target_directory}/{request.method}-{request.url.replace('/', '_')}.REQUEST.json"
         with open(filename, "w") as fp:
             json.dump(req_record, fp, indent=4)
@@ -78,6 +87,9 @@ class HTTPRecorder(HTTPAdapter):
 
 class SessionManager:
     """Manages the session to the Google Wallet API and provides helper methods."""
+
+    def __init__(self):
+        self.settings = GoogleWalletSettings()
 
     @property
     def base_url(self) -> str:
@@ -97,9 +109,8 @@ class SessionManager:
     def credentials_file(self) -> Path | None:
         if getattr(self, "_credentials_file", None) is None:
             self._credentials_file = None
-            path = self.settings.credentials_path / self.settings.credentials_file
-            if path.exists():
-                self._credentials_file = path
+            if self.settings.credentials_file.exists():
+                self._credentials_file = self.settings.credentials_file
             # if os.environ.get("EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE"):
             #     path = Path(os.environ.get("CREDENTIAL_PATH", ".")) / Path(
             #         os.environ.get(
@@ -124,15 +135,19 @@ class SessionManager:
         return self._credentials_info
 
     def _make_session(self) -> AuthorizedSession:
-        self.settings = GoogleWalletSettings()
+        # self.settings = GoogleWalletSettings()
         if not self.credentials_file:
             raise ValueError("EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE not set")
         credentials = Credentials.from_service_account_file(
-            self.credentials_file, scopes=SCOPES
+            str(self.credentials_file), scopes=SCOPES
         )
         session = AuthorizedSession(credentials)
-        if os.environ.get("EDUTAP_WALLET_GOOGLE_RECORD_API_CALLS_DIR", None):
-            session.mount("https://", HTTPRecorder())
+        if (
+            self.settings.record_api_calls_dir is not None
+            and self.settings.credentials_file.exists()
+        ):
+            # if os.environ.get("EDUTAP_WALLET_GOOGLE_RECORD_API_CALLS_DIR", None):
+            session.mount("https://", HTTPRecorder(settings=self.settings))
         return session
 
     @property
