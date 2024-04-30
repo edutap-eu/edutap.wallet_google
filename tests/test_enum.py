@@ -12,6 +12,8 @@ def test_action_enum():
 
     assert Action("ACTION_UNSPECIFIED") == Action.ACTION_UNSPECIFIED
     assert Action("actionUnspecified") == Action.ACTION_UNSPECIFIED
+    
+    assert Action("S2AP") != Action.ACTION_UNSPECIFIED
 
     assert Action("S2AP") == Action.S2AP
     assert Action("s2ap") == Action.S2AP
