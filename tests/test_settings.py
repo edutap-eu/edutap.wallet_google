@@ -1,10 +1,12 @@
 from edutap.wallet_google.session import GoogleWalletSettings
-from pprint import pprint as print
+from pprint import pprint
 
 
 def test_settings():
     settings = GoogleWalletSettings()
-    print(settings.__dict__)
+    print("Test Settings - Dump Settings Values:")
+    # print(settings.model_dump())
+    pprint(settings.model_dump(), indent=2, sort_dicts=True)
 
     assert (
         str(settings.base_url)

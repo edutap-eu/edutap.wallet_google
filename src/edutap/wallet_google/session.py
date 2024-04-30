@@ -28,28 +28,25 @@ class GoogleWalletSettings(BaseSettings):
     """Settings for Google Wallet Preferences."""
 
     model_config = SettingsConfigDict(
-        # env_file=".env",
-        # env_file_encoding="utf-8",
         env_prefix="EDUTAP_WALLET_GOOGLE_",
         case_sensitive=False,
-        # extra="ignore",
-        extra="allow",
+        extra="ignore",
+        # extra="allow",
     )
 
-    record_api_calls_dir: Path | None = ROOT_DIR / "tests" / "data"
+    record_api_calls_dir: Path | None = None  # ROOT_DIR / "tests" / "data"
     base_url: HttpUrl = HttpUrl("https://walletobjects.googleapis.com/walletobjects/v1")
     save_url: HttpUrl = HttpUrl("https://pay.google.com/gp/v/save")
     scopes: list[HttpUrl] = [
         HttpUrl("https://www.googleapis.com/auth/wallet_object.issuer")
     ]
 
-    # credentials_dir: Path = Field(alias="EDUTAP_WALLET_PATH_CREDENTIAL_DIR", default=ROOT_DIR)
-
-    # credentials_file: str = "credentials.json"
     credentials_file: Path = ROOT_DIR / "credentials.json"
-
     issuer_account_email: EmailStr | None = None
     issuer_id: str | None = Field(min_length=19, max_length=20, default=None)
+
+    callback_url: HttpUrl | None = None
+    callback_update_url: HttpUrl | None = None
 
 
 class HTTPRecorder(HTTPAdapter):

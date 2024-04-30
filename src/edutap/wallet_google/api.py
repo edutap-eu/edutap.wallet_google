@@ -1,4 +1,7 @@
+from .modelbase import GoogleWalletClassModel
+from .modelbase import GoogleWalletObjectModel
 from .modelbase import GoogleWalletObjectWithClassReferenceMixin
+from .modelbase import GoogleWalletWithIdModel
 from .modelcore import GoogleWalletModel
 from .models.primitives import Pagination
 from .models.primitives.enums import State
@@ -33,7 +36,7 @@ def _validate_data(
                        or a Pydantic model instance.
     :return:           data as an instance of the given model
     """
-    if not isinstance(data, GoogleWalletModel):
+    if not isinstance(data, (GoogleWalletModel, GoogleWalletWithIdModel)):
         return model.model_validate(data)
     if not isinstance(data, model):
         raise ValueError(
@@ -151,7 +154,18 @@ def update(
     raise_when_operation_not_allowed(name, "update")
     model_metadata = lookup_metadata(name)
     model = model_metadata["model"]
-    if not isinstance(data, GoogleWalletModel) and partial:
+    if (
+        not isinstance(
+            data,
+            (
+                GoogleWalletModel,
+                GoogleWalletWithIdModel,
+                GoogleWalletClassModel,
+                GoogleWalletObjectModel,
+            ),
+        )
+        and partial
+    ):
         resource_id = data[model_metadata["resource_id"]]
         # we can not validate partial data for patch yet
         verified_json = json.dumps(data)
