@@ -26,6 +26,8 @@ def test_base_settings():
     reason="should not be run on CI as it helps to find out settings locally",
 )
 def test_local_settings():
+    env = os.environ
+    pprint(env)
     settings = GoogleWalletSettings()
     print("Test Settings - Dump Settings Values:")
     # print(settings.model_dump())
