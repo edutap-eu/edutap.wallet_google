@@ -18,7 +18,7 @@ from .models.primitives.message import Message
 from pydantic import Field
 
 
-class GoogleWalletClassModel(GoogleWalletWithIdModel):
+class GoogleWalletClassModel(GoogleWalletModel, GoogleWalletWithIdModel):
     """
     BaseModel for all Google Wallet Class Models.
     """
@@ -72,7 +72,7 @@ class GoogleWalletClassModel(GoogleWalletWithIdModel):
     )
 
 
-class GoogleWalletObjectModel(GoogleWalletWithIdModel):
+class GoogleWalletObjectModel(GoogleWalletModel, GoogleWalletWithIdModel):
     """
     Base model for all Google Wallet Object models.
     """

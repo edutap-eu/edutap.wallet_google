@@ -16,7 +16,7 @@ from .primitives.smarttap import SmartTapMerchantData
     can_list=False,
     can_message=False,
 )
-class SmartTap(GoogleWalletWithIdModel):
+class SmartTap(GoogleWalletModel, GoogleWalletWithIdModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/smarttap#resource:-smarttap
     """

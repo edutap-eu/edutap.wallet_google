@@ -99,7 +99,7 @@ def create(
     elif response.status_code != 200:
         raise Exception(f"Error at {url}: {response.status_code} - {response.text}")
 
-    logger.debug(f"RAW-Response: {response.content}")
+    logger.debug(f"RAW-Response: {response.content!r}")
     return model.model_validate_json(response.content)
 
 
@@ -126,7 +126,7 @@ def read(
 
     if response.status_code == 200:
         model = lookup_model(name)
-        logger.debug(f"RAW-Response: {response.content}")
+        logger.debug(f"RAW-Response: {response.content!r}")
         # print(f"RAW-Response: {response.content}")
         return model.model_validate_json(response.content)
 
@@ -185,7 +185,6 @@ def update(
             data=verified_json.encode("utf-8"),
         )
     logger.debug(verified_json.encode("utf-8"))
-    # print(verified_json.encode("utf-8"))
     if response.status_code == 404:
         raise LookupError(
             f"Error 404, {name} {getattr(data, 'id', 'No ID')} not found: - {response.text}"
@@ -194,7 +193,7 @@ def update(
     if response.status_code != 200:
         raise Exception(f"Error: {response.status_code} - {response.text}")
 
-    logger.debug(f"RAW-Response: {response.content}")
+    logger.debug(f"RAW-Response: {response.content!r}")
     return model.model_validate_json(response.content)
 
 
@@ -259,7 +258,7 @@ def message(
 
     if response.status_code != 200:
         raise Exception(f"Error: {response.status_code} - {response.text}")
-    logger.debug(f"RAW-Response: {response.content}")
+    logger.debug(f"RAW-Response: {response.content!r}")
     response_data = json.loads(response.content)
     return model.model_validate(response_data.get("resource"))
 
@@ -426,9 +425,10 @@ def save_link(
     }
     signer = crypt.RSASigner.from_service_account_file(session_manager.credentials_file)
     jwt_string = jwt.encode(signer, claims).decode("utf-8")
-    logger.warning(
-        "JWT-Length: %d, is larger than recommended 1800 bytes: %s",
-        len(jwt_string),
-        len(jwt_string) >= 1800,
-    )
+    if len(jwt_string) >= 1800:
+        logger.debug(
+            "JWT-Length: %d, is larger than recommended 1800 bytes: %s",
+            len(jwt_string),
+            len(jwt_string) >= 1800,
+        )
     return f"{session_manager.save_url}/{jwt_string}"
