@@ -1,8 +1,8 @@
 from edutap.wallet_google.session import GoogleWalletSettings
+from edutap.wallet_google.session import ROOT_DIR
 from pprint import pprint
 
 import os
-import pytest
 
 
 def test_base_settings():
@@ -21,17 +21,26 @@ def test_base_settings():
     ]
 
 
-@pytest.mark.skipif(
-    os.environ.get("CI", False) == "true" or os.environ.get("CI", False) is True,
-    reason="should not be run on CI as it helps to find out settings locally",
-)
-def test_local_settings():
+def test_local_settings(monkeypatch):
     env = os.environ
     pprint(env)
+
+    if env.get("CI"):
+        monkeypatch.setenv(
+            "EDUTAP_WALLET_GOOGLE_ISSUER_ID",
+            "1234567890123456789",
+        )
+        monkeypatch.setenv(
+            "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE",
+            ROOT_DIR / "tests" / "data" / "credentials_fake.json",
+        )
+
     settings = GoogleWalletSettings()
     print("Test Settings - Dump Settings Values:")
     # print(settings.model_dump())
     pprint(settings.model_dump(), indent=2, sort_dicts=True)
 
     assert settings.issuer_id is not None
+    if env.get("CI"):
+        assert settings.issuer_id == "1234567890123456789"
     assert settings.credentials_file.exists()
