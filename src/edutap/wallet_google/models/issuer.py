@@ -1,5 +1,5 @@
-from ..modelbase import GoogleWalletModel
-from ..modelbase import GoogleWalletWithIdModel
+from ..modelcore import GoogleWalletModel
+from ..modelcore import GoogleWalletWithIdModel
 from ..registry import register_model
 from .primitives.smarttap import IssuerContactInfo
 from .primitives.smarttap import IssuerToUserInfo
@@ -16,7 +16,7 @@ from .primitives.smarttap import SmartTapMerchantData
     can_list=False,
     can_message=False,
 )
-class SmartTap(GoogleWalletWithIdModel):
+class SmartTap(GoogleWalletModel, GoogleWalletWithIdModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/smarttap#resource:-smarttap
     """

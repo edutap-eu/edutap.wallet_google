@@ -23,6 +23,8 @@ classifiers = [
 ]
 dependencies = [
     "pydantic[email,dotenv]>=2.0",
+    "pydantic-settings",
+    # "email-validator",
     "python-dotenv",
     "google-auth",
     "google-cloud-storage",
