@@ -43,12 +43,20 @@ from pydantic import model_validator
 )
 class GiftCardClass(
     GoogleWalletClassModel,
+    GoogleWalletWithKindMixin,
     GoogleWalletMessageableMixin,
     GoogleWalletStyleableClassMixin,
 ):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
     """
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#giftCardClass",
+    )
 
     merchantName: str | None = None
     programLogo: Image | None = None
@@ -83,6 +91,13 @@ class GiftCardObject(
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
     """
 
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#giftCardObject",
+    )
+
     classReference: GiftCardClass | None = None
     cardNumber: str | None = None
     pin: str | None = None
@@ -112,6 +127,13 @@ class LoyaltyClass(
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
     """
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#loyaltyClass",
+    )
 
     issuerName: str | None = None
     programName: str | None = None
@@ -180,6 +202,13 @@ class LoyaltyPointsBalance(
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPointsBalance
     """
 
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#loyaltyPointsBalance",
+    )
+
     string: str | None = None
     int_: int | None = Field(alias="int", serialization_alias="int", default=None)
     double: float | None = None
@@ -208,6 +237,13 @@ class LoyaltyPoints(
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPoints
     """
 
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#loyaltyPoints",
+    )
+
     label: str | None = None
     balance: LoyaltyPointsBalance | None = None
     localizedLabel: LocalizedString | None = None
@@ -223,6 +259,13 @@ class LoyaltyObject(
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
     """
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#loyaltyObject",
+    )
 
     classReference: LoyaltyClass | None = None
     state: State = State.STATE_UNSPECIFIED
@@ -249,10 +292,20 @@ class LoyaltyObject(
 @register_model(
     "OfferClass", url_part="offerClass", plural="offerClasses", can_disable=False
 )
-class OfferClass(GoogleWalletClassModel):
+class OfferClass(
+    GoogleWalletClassModel,
+    GoogleWalletWithKindMixin,
+):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass
     """
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#offerClass",
+    )
 
     title: str | None = None
     redemptionChannel: RedemptionChannel = (
@@ -291,12 +344,23 @@ class OfferClass(GoogleWalletClassModel):
 
 
 @register_model("OfferObject", url_part="offerObject")
-class OfferObject(GoogleWalletObjectModel):
+class OfferObject(
+    GoogleWalletObjectModel,
+    GoogleWalletWithKindMixin,
+):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerobject
     """
 
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#offerClass",
+    )
+
     classReference: OfferClass | None = None
+
     version: str | None = None
     state: State = State.STATE_UNSPECIFIED
     barcode: Barcode

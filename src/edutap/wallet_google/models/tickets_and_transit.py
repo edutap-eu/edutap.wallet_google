@@ -155,7 +155,7 @@ class EventTicketClass(
     )
     # issuerName: str | None = None
     # localizedIssuerName: LocalizedString | None = None
-    # homepageUri: Uri | None = None
+    homepageUri: Uri | None = None
     locations: list[LatLongPoint] | None = None
     reviewStatus: ReviewStatus | None = None
     review: Review | None = None
