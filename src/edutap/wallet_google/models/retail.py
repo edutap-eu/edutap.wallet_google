@@ -43,6 +43,7 @@ from pydantic import model_validator
 )
 class GiftCardClass(
     GoogleWalletClassModel,
+    GoogleWalletWithIdModel,
     GoogleWalletWithKindMixin,
     GoogleWalletMessageableMixin,
     GoogleWalletStyleableClassMixin,
@@ -120,6 +121,7 @@ class GiftCardObject(
 )
 class LoyaltyClass(
     GoogleWalletClassModel,
+    GoogleWalletWithIdModel,
     GoogleWalletWithKindMixin,
     GoogleWalletMessageableMixin,
     GoogleWalletStyleableClassMixin,
