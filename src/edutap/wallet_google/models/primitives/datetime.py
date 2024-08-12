@@ -1,11 +1,11 @@
-from .enums import DoorsOpenLabel
-from .localized_string import LocalizedString
-from pydantic import BaseModel
+from ...modelcore import GoogleWalletModel
+from ...modelcore import GoogleWalletWithKindMixin
+from pydantic import Field
 
 import datetime
 
 
-class DateTime(BaseModel):
+class DateTime(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/DateTime
     """
@@ -13,22 +13,17 @@ class DateTime(BaseModel):
     date: datetime.datetime
 
 
-class EventDateTime(BaseModel):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventdatetime
-    """
-
-    doorsOpen: datetime.datetime | None = None
-    start: datetime.datetime | None = None
-    end: datetime.datetime | None = None
-    doorsOpenLabel: DoorsOpenLabel | None = None
-    customDoorsOpenLabel: LocalizedString | None = None
-
-
-class TimeInterval(BaseModel):
+class TimeInterval(GoogleWalletModel, GoogleWalletWithKindMixin):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/TimeInterval
     """
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#timeInterval",
+    )
 
     start: DateTime | None = None
     end: DateTime | None = None
