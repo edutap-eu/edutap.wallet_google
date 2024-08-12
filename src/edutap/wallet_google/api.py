@@ -91,7 +91,12 @@ def create(
     resource_id, verified_json = _validate_data_and_convert_to_json(model, data)
     session = session_manager.session
     url = session_manager.url(name)
-    response = session.post(url=url, json=verified_json)
+    headers = {"Content-Type": "application/json"}
+    response = session.post(
+        url=url,
+        data=verified_json.encode("utf-8"),
+        headers=headers,
+    )
     if response.status_code == 409:
         raise Exception(
             f"Wallet Object {name} {getattr(data, 'id', 'No ID')} already exists\n{response.text}"
@@ -177,12 +182,12 @@ def update(
     if partial:
         response = session.patch(
             url=session_manager.url(name, f"/{resource_id}"),
-            json=verified_json,
+            data=verified_json.encode("utf-8"),
         )
     else:
         response = session.put(
             url=session_manager.url(name, f"/{resource_id}"),
-            json=verified_json,
+            data=verified_json.encode("utf-8"),
         )
     logger.debug(verified_json.encode("utf-8"))
     if response.status_code == 404:
@@ -251,7 +256,7 @@ def message(
     )
     session = session_manager.session
     url = session_manager.url(name, f"/{resource_id}/addMessage")
-    response = session.post(url=url, json=verified_json)
+    response = session.post(url=url, data=verified_json.encode("utf-8"))
 
     if response.status_code == 404:
         raise LookupError(f"Error 404, {name} not found: - {response.text}")
