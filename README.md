@@ -19,7 +19,7 @@ It contains:
 
 ## Documentation
 
-Read the [complete `edutap.wallet_google` documentation](https://docs.edutap.eu/packages/edutap_wallet_google.html) to get started.
+Read the [complete `edutap.wallet_google` documentation](https://docs.edutap.eu/packages/edutap_wallet_google/index.html) to get started.
 
 ## Source Code
 
