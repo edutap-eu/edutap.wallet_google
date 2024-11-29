@@ -1,7 +1,5 @@
 from .bases import GoogleWalletModel
 from .primitives.message import Message
-from pydantic import BaseModel
-from pydantic import Field
 
 
 class AddMessageRequest(GoogleWalletModel):

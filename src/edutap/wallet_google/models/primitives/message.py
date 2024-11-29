@@ -5,9 +5,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-class Message(
-    BaseModel,
-):
+class Message(BaseModel):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/Message
     """

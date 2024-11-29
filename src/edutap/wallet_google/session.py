@@ -11,7 +11,6 @@ from requests.adapters import HTTPAdapter
 
 import json
 import threading
-import warnings
 
 
 _THREADLOCAL = threading.local()

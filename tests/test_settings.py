@@ -1,8 +1,5 @@
 from edutap.wallet_google.session import GoogleWalletSettings
 from edutap.wallet_google.session import ROOT_DIR
-from pprint import pprint
-
-import os
 
 
 def test_base_settings():
@@ -19,8 +16,6 @@ def test_base_settings():
 
 
 def test_local_settings(monkeypatch):
-    env = os.environ
-
     monkeypatch.setenv(
         "EDUTAP_WALLET_GOOGLE_ISSUER_ID",
         "1234567890123456789",
