@@ -1,11 +1,11 @@
-from ..modelbase import GoogleWalletClassModel
-from ..modelbase import GoogleWalletObjectModel
-from ..modelcore import GoogleWalletModel
 from ..registry import register_model
 
 # from . import generic
 from . import retail
 from . import tickets_and_transit
+from .bases import GoogleWalletClassModel
+from .bases import GoogleWalletModel
+from .bases import GoogleWalletObjectModel
 
 
 @register_model(

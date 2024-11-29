@@ -1,6 +1,6 @@
-from .modelbase import GoogleWalletClassModel
-from .modelbase import GoogleWalletObjectModel
-from .modelcore import GoogleWalletModel
+from .models.bases import GoogleWalletClassModel
+from .models.bases import GoogleWalletModel
+from .models.bases import GoogleWalletObjectModel
 from typing import TypedDict
 
 

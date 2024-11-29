@@ -1,13 +1,12 @@
-from ..modelbase import GoogleWalletClassModel
-from ..modelbase import GoogleWalletMessageableMixin
-from ..modelbase import GoogleWalletObjectModel
-from ..modelbase import GoogleWalletObjectWithClassReferenceMixin
-from ..modelbase import GoogleWalletStyleableClassMixin
-from ..modelbase import GoogleWalletStyleableObjectMixin
-from ..modelcore import GoogleWalletModel
-from ..modelcore import GoogleWalletWithIdModel
-from ..modelcore import GoogleWalletWithKindMixin
 from ..registry import register_model
+from .bases import GoogleWalletClassModel
+from .bases import GoogleWalletCommonLogosMixin
+from .bases import GoogleWalletMessageableMixin
+from .bases import GoogleWalletModel
+from .bases import GoogleWalletObjectModel
+from .bases import GoogleWalletObjectWithClassReferenceMixin
+from .bases import GoogleWalletStyleableMixin
+from .bases import GoogleWalletWithIdModel
 from .primitives import Image
 from .primitives import Uri
 from .primitives.data import AppLinkData
@@ -35,6 +34,7 @@ from .primitives.location import LatLongPoint
 from .primitives.money import Money
 from .primitives.review import Review
 from pydantic import Field
+from pydantic import model_validator
 
 import datetime
 
@@ -49,10 +49,13 @@ class TicketAndTransitClassBaseModel(GoogleWalletClassModel, GoogleWalletWithIdM
     homepageUri: Uri | None = None
 
 
-class EventVenue(GoogleWalletModel, GoogleWalletWithKindMixin):
+class EventVenue(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventvenue
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
 
     kind: str | None = Field(
         description="deprecated",
@@ -64,10 +67,13 @@ class EventVenue(GoogleWalletModel, GoogleWalletWithKindMixin):
     address: LocalizedString | None = None
 
 
-class EventDateTime(GoogleWalletModel, GoogleWalletWithKindMixin):
+class EventDateTime(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventdatetime
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
 
     kind: str | None = Field(
         description="deprecated",
@@ -82,10 +88,13 @@ class EventDateTime(GoogleWalletModel, GoogleWalletWithKindMixin):
     customDoorsOpenLabel: LocalizedString | None = None
 
 
-class EventSeat(GoogleWalletModel, GoogleWalletWithKindMixin):
+class EventSeat(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/eventticketobject#eventseat
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
 
     kind: str | None = Field(
         description="deprecated",
@@ -99,7 +108,7 @@ class EventSeat(GoogleWalletModel, GoogleWalletWithKindMixin):
     gate: LocalizedString | None = None
 
 
-class EventReservationInfo(GoogleWalletModel, GoogleWalletWithKindMixin):
+class EventReservationInfo(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/eventticketobject#eventreservationinfo
     """
@@ -121,13 +130,17 @@ class EventReservationInfo(GoogleWalletModel, GoogleWalletWithKindMixin):
 )
 class EventTicketClass(
     TicketAndTransitClassBaseModel,
-    GoogleWalletWithKindMixin,
     GoogleWalletMessageableMixin,
-    GoogleWalletStyleableClassMixin,
+    GoogleWalletStyleableMixin,
+    GoogleWalletCommonLogosMixin,
 ):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # Most deprecated are skipped.
+    # last check: 2024-11-29
 
     kind: str | None = Field(
         description="deprecated",
@@ -150,16 +163,31 @@ class EventTicketClass(
     gateLabel: GateLabel | None = None
     customGateLabel: LocalizedString | None = None
     finePrint: LocalizedString | None = None
-    version: str | None = Field(
-        description="deprecated", deprecated=True, exclude=True, default=None
-    )
-    # issuerName: str | None = None
-    # localizedIssuerName: LocalizedString | None = None
-    homepageUri: Uri | None = None
-    locations: list[LatLongPoint] | None = None
+    # inherited classTemplateInfo
+    # inherited id
+    # inherited issuerName
+    # inherited messages
+    # inherited homepageUri
+    locations: list[LatLongPoint] | None = Field(default=None, deprecated=True)
     reviewStatus: ReviewStatus | None = None
     review: Review | None = None
+    # inherited infoModuleData
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    # inherited redemptionIssuers
     countryCode: str | None = None
+    # inherited heroImage
+    # inherited enableSmartTap
+    # inherited hexBackgroundColor
+    # inherited localizedIssuerName
+    # inherited multipleDevicesAndHoldersAllowedStatus
+    # inherited callbackOptions
+    # inherited securityAnimation
+    # inherited viewUnlockRequirement
+    # inherited wideLogo
+    appLinkData: AppLinkData | None = None
+    # TODO valueAddedModuleData
 
 
 @register_model(
@@ -169,14 +197,18 @@ class EventTicketClass(
 )
 class EventTicketObject(
     GoogleWalletObjectModel,
-    GoogleWalletWithKindMixin,
     GoogleWalletObjectWithClassReferenceMixin,
     GoogleWalletMessageableMixin,
-    GoogleWalletStyleableObjectMixin,
+    GoogleWalletStyleableMixin,
+    GoogleWalletCommonLogosMixin,
 ):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketobject
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # Most deprecated are skipped.
+    # last check: 2024-11-29
 
     kind: str | None = Field(
         description="deprecated",
@@ -190,21 +222,44 @@ class EventTicketObject(
     ticketNumber: str | None = None
     ticketType: LocalizedString | None = None
     faceValue: Money | None = None
+    # inherited groupingInfo
     linkedOfferIds: list[str] | None = None
+    # inherited hexBackgroundColor
+    # inherited id
+    # inherited classId
     version: str | None = Field(description="deprecated", exclude=True, default=None)
     state: State | None = None
+    # inherited barcode
+    # inherited messages
     validTimeInterval: TimeInterval | None = None
-    locations: list[LatLongPoint] | None = None
+    locations: list[LatLongPoint] | None = Field(
+        description="deprecated", exclude=True, default=None
+    )
     hasUsers: bool | None = None
+    # inherited smartTapRedemptionValue
     hasLinkedDevice: bool | None = False
     disableExpirationNotification: bool | None = False
+    # inherited infoModuleData
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
     appLinkData: AppLinkData | None = None
+    # inherited rotatingBarcode
+    # inhertied heroImage
+    # inherited passConstraints
+    # TODO: saveRestrictions
+    # TODO: linkedObjectIds
+    # TODO: notifyPreference
+    # TODO: valueAddedModuleData
 
 
 class ActivationOptions(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitclass#activationoptions
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
 
     activationUrl: str | None = None
     allowReactivation: bool = False
@@ -215,6 +270,9 @@ class ActivationStatus(GoogleWalletModel):
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#activationstatus
     """
 
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
+
     state: ActivationState = ActivationState.UNKNOWN_STATE
 
 
@@ -222,6 +280,9 @@ class TicketRestrictions(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketrestrictions
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
 
     routeRestrictions: LocalizedString | None = None
     routeRestrictionsDetails: LocalizedString | None = None
@@ -234,6 +295,9 @@ class TicketCost(GoogleWalletModel):
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketcost
     """
 
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
+
     faceValue: Money | None = None
     purchasePrice: Money | None = None
     discountMessage: LocalizedString | None = None
@@ -243,6 +307,9 @@ class TicketSeat(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketseat
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
 
     fareClass: FareClass = FareClass.FARE_CLASS_UNSPECIFIED
     customFareClass: LocalizedString | None = None
@@ -255,6 +322,9 @@ class TicketLeg(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketleg
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
 
     originStationCod: str | None = None
     originName: LocalizedString | None = None
@@ -271,11 +341,30 @@ class TicketLeg(GoogleWalletModel):
     transitOperatorName: LocalizedString | None = None
     transitTerminusName: LocalizedString | None = None
 
+    @model_validator(mode="after")
+    def check_one_of(self) -> "TicketLeg":
+        if self.ticketSeat is None and self.ticketSeats is None:
+            return self
+        if (
+            self.ticketSeat is not None
+            and self.ticketSeats
+            and len(self.ticketSeats) > 0
+        ):
+            raise ValueError("Only one of ticketSeat or ticketSeats must be set")
+        if self.ticketSeats and len(self.ticketSeats) == 1:
+            raise ValueError(
+                "If only one seat is to be specified then use the ticketSeat field instead."
+            )
+        return self
+
 
 class PurchaseDetails(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#purchasedetails
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
 
     purchaseReceiptNumber: str | None = None
     purchaseDateTime: str | None = None
@@ -289,6 +378,9 @@ class DeviceContext(GoogleWalletModel):
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#devicecontext
     """
 
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
+
     deviceToken: str | None = None
 
 
@@ -297,12 +389,18 @@ class DeviceContext(GoogleWalletModel):
     url_part="transitClass",
     plural="transitClasses",
 )
-class TransitClass(GoogleWalletClassModel, GoogleWalletStyleableClassMixin):
+class TransitClass(
+    GoogleWalletClassModel,
+    GoogleWalletMessageableMixin,
+    GoogleWalletStyleableMixin,
+    GoogleWalletCommonLogosMixin,
+):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitclass
     """
 
     transitOperatorName: LocalizedString | None = None
+    # inherited logo
     transitType: TransitType = TransitType.TRANSIT_TYPE_UNSPECIFIED
     watermark: Image | None = None
     languageOverride: str | None = None
@@ -325,10 +423,32 @@ class TransitClass(GoogleWalletClassModel, GoogleWalletStyleableClassMixin):
     customFareClassLabel: LocalizedString | None = None
     customConcessionCategoryLabel: LocalizedString | None = None
     customFareNameLabel: LocalizedString | None = None
+    # inherited classTemplateInfo
     enableSingleLegItinerary: bool = False
+    # inherited id
     issuerName: str | None = None
+    # inherited messages
+    homepageUri: Uri | None = None
+    reviewStatus: ReviewStatus | None = None
+    review: Review | None = None
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    # inhertied redemptionIssuers
+    countryCode: str | None = None
+    # inherited heroImage
+    # inherited enableSmartTap
+    # inherited hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
+    # inherited multipleDevicesAndHoldersAllowedStatus
+    # inherited callbackOptions
+    # inherited securityAnimation
     activationOptions: ActivationOptions | None = None
+    # inherited viewUnlockRequirement
+    # inherited wideLogo
+    # TODO notifyPreference
+    appLinkData: AppLinkData | None = None
+    # TODO valueAddedModuleData
 
 
 @register_model(
@@ -336,10 +456,19 @@ class TransitClass(GoogleWalletClassModel, GoogleWalletStyleableClassMixin):
     url_part="transitObject",
     plural="transitObjects",
 )
-class TransitObject(GoogleWalletObjectModel, GoogleWalletStyleableObjectMixin):
+class TransitObject(
+    GoogleWalletObjectModel,
+    GoogleWalletMessageableMixin,
+    GoogleWalletStyleableMixin,
+    GoogleWalletCommonLogosMixin,
+):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # Most deprecated are skipped.
+    # last check: 2024-11-29
 
     classReference: TransitClass | None = None
     ticketNumber: str | None = None
@@ -356,16 +485,43 @@ class TransitObject(GoogleWalletObjectModel, GoogleWalletStyleableObjectMixin):
     purchaseDetails: PurchaseDetails | None = None
     ticketLeg: TicketLeg | None = None
     ticketLegs: list[TicketLeg] | None = None
+    # TODO: validator: If more than one leg is to be specified then use the ticketLegs field instead.
+    #                  Both ticketLeg and ticketLegs may not be set.
     tripType: TripType = TripType.TRIP_TYPE_UNSPECIFIED
+    # inherited id
+    # inherited classId
+    state: State = State.STATE_UNSPECIFIED
+    # inherited barcode
+    # inherited messages
     validTimeInterval: TimeInterval | None = None
+    hasUsers: bool | None = None
+    # inherited smartTapRedemptionValue
+    hasLinkedDevice: bool | None = False
+    disableExpirationNotification: bool | None = False
+    # inherited infoModuleData
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    appLinkData: AppLinkData | None = None
     activationStatus: ActivationStatus | None = None
+    # inherited rotatingBarcode
     deviceContext: DeviceContext | None = None
+    # inherited heroImage
+    # inherited groupingInfo
+    # inhertied passConstraints
+    # TODO saveRestrictions
+    # TODO linkedObjectIds
+    # TODO notifyPreference
+    # TODO valueAddedModuleData
 
 
 class FlightCarrier(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightcarrier
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
 
     kind: str | None = Field(
         description="deprecated",
@@ -382,7 +538,7 @@ class FlightCarrier(GoogleWalletModel):
         default=None,
     )
     airlineName: LocalizedString | None = None
-    arilineLogo: Image | None = None
+    airlineLogo: Image | None = None
     airlineAllianceLogo: Image | None = None
     wideAirlineLogo: Image | None = None
 
@@ -392,6 +548,9 @@ class FlightHeader(GoogleWalletModel):
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightheader
     """
 
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
+
     kind: str | None = Field(
         description="deprecated",
         deprecated=True,
@@ -399,8 +558,8 @@ class FlightHeader(GoogleWalletModel):
         default="walletobjects#flightHeader",
     )
     carrier: FlightCarrier | None = None
-    operatingCarrier: FlightCarrier | None = None
     flightNumber: str | None = None
+    operatingCarrier: FlightCarrier | None = None
     operatingFlightNumber: str | None = None
     flightNumberDisplayOverride: str | None = None
 
@@ -424,8 +583,11 @@ class AirportInfo(GoogleWalletModel):
 
 class BoardingAndSeatingPolicy(GoogleWalletModel):
     """
-    see:
+    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#boardingandseatingpolicy
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
 
     kind: str | None = Field(
         description="deprecated",
@@ -442,11 +604,19 @@ class BoardingAndSeatingPolicy(GoogleWalletModel):
     url_part="flightClass",
     plural="flightClasses",
 )
-class FlightClass(GoogleWalletClassModel, GoogleWalletStyleableClassMixin):
+class FlightClass(
+    GoogleWalletClassModel,
+    GoogleWalletStyleableMixin,
+    GoogleWalletMessageableMixin,
+    GoogleWalletCommonLogosMixin,
+):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass
     """
 
+    # Attribute order as in Google's documentation to make future updates easier!
+    # Most deprecated are skipped.
+    # last check: 2024-11-29
     kind: str | None = Field(
         description="deprecated",
         exclude=True,
@@ -463,7 +633,31 @@ class FlightClass(GoogleWalletClassModel, GoogleWalletStyleableClassMixin):
     flightStatus: FlightStatus = FlightStatus.FLIGHT_STATUS_UNSPECIFIED
     boardingAndSeatingPolicy: BoardingAndSeatingPolicy | None = None
     localGateClosingDateTime: str | None = Field(default=None)
+    # inherited classTemplateInfo
     languageOverride: str | None = None
+    # inherited id
+    issuerName: str | None = None
+    # inherited messages
+    # inherited homepageUri
+    reviewStatus: ReviewStatus | None = None
+    review: Review | None = None
+    # inherited infoModuleData
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    # inherited redemptionIssuers
+    countryCode: str | None = None
+    # inherited heroImage
+    # inherited enableSmartTap
+    # inherited hexBackgroundColor
+    localizedIssuerName: LocalizedString | None = None
+    # inherited multipleDevicesAndHoldersAllowedStatus
+    # inherited callbackOptions
+    # inherited securityAnimation
+    # inherited viewUnlockRequirement
+    # TODO notifyPreference
+    appLinkData: AppLinkData | None = None
+    # TODO valueAddedModuleData
 
 
 @register_model(
@@ -471,7 +665,7 @@ class FlightClass(GoogleWalletClassModel, GoogleWalletStyleableClassMixin):
     url_part="flightObject",
     plural="flightObjects",
 )
-class FlightObject(GoogleWalletObjectModel, GoogleWalletStyleableObjectMixin):
+class FlightObject(GoogleWalletObjectModel, GoogleWalletStyleableMixin):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightobject
     """
@@ -482,3 +676,31 @@ class FlightObject(GoogleWalletObjectModel, GoogleWalletStyleableObjectMixin):
         default="walletobjects#flightObject",
     )
     classReference: FlightClass | None = None
+    passengerName: str | None = None
+    # TODO boardingAndSeatingInfo
+    # TODO reservationInfo
+    securityProgramLogo: Image | None = None
+    # inherited hexBackgroundColor
+    # inherited id
+    # inherited classId
+    state: State = State.STATE_UNSPECIFIED
+    # inherited barcode
+    # inherited messages
+    validTimeInterval: TimeInterval | None = None
+    hasUsers: bool | None = None
+    # inherited smartTapRedemptionValue
+    hasLinkedDevice: bool | None = False
+    disableExpirationNotification: bool | None = False
+    # inherited infoModuleData
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    appLinkData: AppLinkData | None = None
+    # inherited rotatingBarcode
+    heroImage: Image | None = None
+    # inherited groupingInfo
+    # inhertied passConstraints
+    # TODO saveRestrictions
+    # TODO linkedObjectIds
+    # TODO notifyPreference
+    # TODO valueAddedModuleData

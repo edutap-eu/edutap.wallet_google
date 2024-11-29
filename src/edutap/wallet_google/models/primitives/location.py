@@ -1,8 +1,8 @@
-from ...modelcore import GoogleWalletWithKindMixin
+from pydantic import BaseModel
 from pydantic import Field
 
 
-class LatLongPoint(GoogleWalletWithKindMixin):
+class LatLongPoint(BaseModel):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/LatLongPoint
     """

@@ -7,9 +7,6 @@ import os
 
 def test_base_settings():
     settings = GoogleWalletSettings()
-    print("Test Settings - Dump Settings Values:")
-    # print(settings.model_dump())
-    pprint(settings.model_dump(), indent=2, sort_dicts=True)
 
     assert (
         str(settings.base_url)
@@ -23,24 +20,17 @@ def test_base_settings():
 
 def test_local_settings(monkeypatch):
     env = os.environ
-    pprint(env)
 
-    if env.get("CI"):
-        monkeypatch.setenv(
-            "EDUTAP_WALLET_GOOGLE_ISSUER_ID",
-            "1234567890123456789",
-        )
-        monkeypatch.setenv(
-            "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE",
-            ROOT_DIR / "tests" / "data" / "credentials_fake.json",
-        )
+    monkeypatch.setenv(
+        "EDUTAP_WALLET_GOOGLE_ISSUER_ID",
+        "1234567890123456789",
+    )
+    monkeypatch.setenv(
+        "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE",
+        str(ROOT_DIR / "tests" / "data" / "credentials_fake.json"),
+    )
 
     settings = GoogleWalletSettings()
-    print("Test Settings - Dump Settings Values:")
-    # print(settings.model_dump())
-    pprint(settings.model_dump(), indent=2, sort_dicts=True)
 
-    assert settings.issuer_id is not None
-    if env.get("CI"):
-        assert settings.issuer_id == "1234567890123456789"
+    assert settings.issuer_id == "1234567890123456789"
     assert settings.credentials_file.exists()

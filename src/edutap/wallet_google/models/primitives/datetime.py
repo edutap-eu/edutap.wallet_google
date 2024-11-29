@@ -1,11 +1,10 @@
-from ...modelcore import GoogleWalletModel
-from ...modelcore import GoogleWalletWithKindMixin
+from pydantic import BaseModel
 from pydantic import Field
 
 import datetime
 
 
-class DateTime(GoogleWalletModel):
+class DateTime(BaseModel):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/DateTime
     """
@@ -13,7 +12,7 @@ class DateTime(GoogleWalletModel):
     date: datetime.datetime
 
 
-class TimeInterval(GoogleWalletModel, GoogleWalletWithKindMixin):
+class TimeInterval(BaseModel):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/TimeInterval
     """

@@ -1,12 +1,12 @@
-from .modelbase import GoogleWalletClassModel
-from .modelbase import GoogleWalletObjectModel
-from .modelbase import GoogleWalletObjectWithClassReferenceMixin
-from .modelbase import GoogleWalletWithIdModel
-from .modelcore import GoogleWalletModel
+from .models.bases import GoogleWalletClassModel
+from .models.bases import GoogleWalletModel
+from .models.bases import GoogleWalletObjectModel
+from .models.bases import GoogleWalletObjectWithClassReferenceMixin
+from .models.bases import GoogleWalletWithIdModel
+from .models.message import AddMessageRequest
+from .models.message import Message
 from .models.primitives import Pagination
 from .models.primitives.enums import State
-from .models.primitives.message import AddMessageRequest
-from .models.primitives.message import Message
 from .registry import lookup_metadata
 from .registry import lookup_model
 from .registry import lookup_model_by_plural_name
@@ -428,7 +428,9 @@ def save_link(
         "typ": "savetowallet",
         "payload": payload,
     }
-    signer = crypt.RSASigner.from_service_account_file(session_manager.credentials_file)
+    signer = crypt.RSASigner.from_service_account_file(
+        session_manager.settings.credentials_file
+    )
     jwt_string = jwt.encode(signer, claims).decode("utf-8")
     if len(jwt_string) >= 1800:
         logger.debug(
@@ -436,4 +438,4 @@ def save_link(
             len(jwt_string),
             len(jwt_string) >= 1800,
         )
-    return f"{session_manager.save_url}/{jwt_string}"
+    return f"{session_manager.settings.save_url}/{jwt_string}"

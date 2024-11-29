@@ -1,21 +1,44 @@
-from .modelcore import GoogleWalletModel
-from .modelcore import GoogleWalletWithIdModel
-from .models.primitives import CallbackOptions
-from .models.primitives import GroupingInfo
-from .models.primitives import Image
-from .models.primitives import PassConstraints
-from .models.primitives import SecurityAnimation
-from .models.primitives.barcode import Barcode
-from .models.primitives.barcode import RotatingBarcode
-from .models.primitives.class_template_info import ClassTemplateInfo
-from .models.primitives.data import ImageModuleData
-from .models.primitives.data import InfoModuleData
-from .models.primitives.data import LinksModuleData
-from .models.primitives.data import TextModuleData
-from .models.primitives.enums import MultipleDevicesAndHoldersAllowedStatus
-from .models.primitives.enums import ViewUnlockRequirement
-from .models.primitives.message import Message
+from .primitives import CallbackOptions
+from .primitives import GroupingInfo
+from .primitives import Image
+from .primitives import PassConstraints
+from .primitives import SecurityAnimation
+from .primitives.barcode import Barcode
+from .primitives.barcode import RotatingBarcode
+from .primitives.class_template_info import ClassTemplateInfo
+from .primitives.data import ImageModuleData
+from .primitives.data import InfoModuleData
+from .primitives.data import LinksModuleData
+from .primitives.data import TextModuleData
+from .primitives.enums import MultipleDevicesAndHoldersAllowedStatus
+from .primitives.enums import ViewUnlockRequirement
+from .primitives.message import Message
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
+
+
+class GoogleWalletModel(BaseModel):
+    """
+    Base Model for all Google Wallet Models.
+
+    Sets a model_config for all Google Wallet Models that enforce that all attributes must be explicitly modeled, and trying to set an unknown attribute would raise an Exception.
+    This Follows the Zen of Python (PEP 20) --> Explicit is better than implicit.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+        # extra="ignore",
+        # use_enum_values=True,
+    )
+
+
+class GoogleWalletWithIdModel(BaseModel):
+    """
+    Model for Google Wallet models with an identifier.
+    """
+
+    id: str
 
 
 class GoogleWalletClassModel(GoogleWalletModel, GoogleWalletWithIdModel):
@@ -59,11 +82,6 @@ class GoogleWalletClassModel(GoogleWalletModel, GoogleWalletWithIdModel):
         MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
     )
 
-    # Design Options
-    # hexBackgroundColor: str | None = None
-    # logo: Image | None = None
-    # wideLogo: Image | None = None
-    # heroImage: Image | None = None
     wordMark: Image | None = Field(
         description="deprecated",
         deprecated=True,
@@ -124,28 +142,21 @@ class GoogleWalletMessageableMixin:
     messages: list[Message] | None = None
 
 
-class GoogleWalletStyleableClassMixin:
+class GoogleWalletStyleableMixin:
     """
-    Mixin for Google Wallet Classes that can be styled.
+    Mixin for Google Wallet Classes/Objects that can be styled.
     """
 
-    # Design Options
     hexBackgroundColor: str | None = None
-    logo: Image | None = None
-    wideLogo: Image | None = None
-    heroImage: Image | None = None
 
 
-class GoogleWalletStyleableObjectMixin:
+class GoogleWalletCommonLogosMixin:
     """
-    Mixin for Google Wallet Objects that can be styled.
+    Mixin for Google Wallet Classes/Objects with a common logo.
 
-    TODO: Check if really all Objects that can be styled have all four attributes and also with this name.
-          Potential Override necessary for programLogo, ...
+    Do not use/alias this mixin for Google Wallet Classes, as they have a different logo attribute.
     """
 
-    # Design Options
-    hexBackgroundColor: str | None = None
     logo: Image | None = None
     wideLogo: Image | None = None
     heroImage: Image | None = None
