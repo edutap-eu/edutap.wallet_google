@@ -380,7 +380,7 @@ def save_link(
                         Usually, this is the name with a lower first character and as plural.
                         The value is either a simple python data structure using built-ins,
                         or a Pydantic model instance matching the registered name's model.
-                        If a resource is an Object, it can be an GoolgeWalletObjectReference instance too.
+                        If a resource is an Object, it can be an GoogleWalletObjectReference instance too.
     :param origins:     List of domains to approve for JWT saving functionality.
                         The Google Wallet API button will not render when the origins field is not defined.
                         You could potentially get an "Load denied by X-Frame-Options" or "Refused to display"

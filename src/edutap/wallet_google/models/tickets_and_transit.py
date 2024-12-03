@@ -1,16 +1,12 @@
 from ..registry import register_model
 from .bases import GoogleWalletClassModel
 from .bases import GoogleWalletCommonLogosMixin
-from .bases import GoogleWalletMessageableMixin
 from .bases import GoogleWalletModel
 from .bases import GoogleWalletObjectModel
 from .bases import GoogleWalletObjectWithClassReferenceMixin
 from .bases import GoogleWalletStyleableMixin
-from .bases import GoogleWalletWithIdModel
 from .primitives import Image
 from .primitives import Uri
-from .primitives.data import AppLinkData
-from .primitives.datetime import TimeInterval
 from .primitives.enums import ActivationState
 from .primitives.enums import BoardingPolicy
 from .primitives.enums import ConcessionCategory
@@ -19,13 +15,13 @@ from .primitives.enums import DoorsOpenLabel
 from .primitives.enums import FareClass
 from .primitives.enums import FlightStatus
 from .primitives.enums import GateLabel
+from .primitives.enums import NotificationSettingsForUpdates
 from .primitives.enums import PassengerType
 from .primitives.enums import ReviewStatus
 from .primitives.enums import RowLabel
 from .primitives.enums import SeatClassPolicy
 from .primitives.enums import SeatLabel
 from .primitives.enums import SectionLabel
-from .primitives.enums import State
 from .primitives.enums import TicketStatus
 from .primitives.enums import TransitType
 from .primitives.enums import TripType
@@ -37,16 +33,6 @@ from pydantic import Field
 from pydantic import model_validator
 
 import datetime
-
-
-class TicketAndTransitClassBaseModel(GoogleWalletClassModel, GoogleWalletWithIdModel):
-    """
-    Common Fields for Classes in this Module
-    """
-
-    issuerName: str | None = None
-    localizedIssuerName: LocalizedString | None = None
-    homepageUri: Uri | None = None
 
 
 class EventVenue(GoogleWalletModel):
@@ -129,8 +115,7 @@ class EventReservationInfo(GoogleWalletModel):
     can_disable=False,
 )
 class EventTicketClass(
-    TicketAndTransitClassBaseModel,
-    GoogleWalletMessageableMixin,
+    GoogleWalletClassModel,
     GoogleWalletStyleableMixin,
     GoogleWalletCommonLogosMixin,
 ):
@@ -165,9 +150,9 @@ class EventTicketClass(
     finePrint: LocalizedString | None = None
     # inherited classTemplateInfo
     # inherited id
-    # inherited issuerName
+    issuerName: str | None = None
     # inherited messages
-    # inherited homepageUri
+    homepageUri: Uri | None = None
     locations: list[LatLongPoint] | None = Field(default=None, deprecated=True)
     reviewStatus: ReviewStatus | None = None
     review: Review | None = None
@@ -180,14 +165,17 @@ class EventTicketClass(
     # inherited heroImage
     # inherited enableSmartTap
     # inherited hexBackgroundColor
-    # inherited localizedIssuerName
+    localizedIssuerName: LocalizedString | None = None
     # inherited multipleDevicesAndHoldersAllowedStatus
     # inherited callbackOptions
     # inherited securityAnimation
     # inherited viewUnlockRequirement
     # inherited wideLogo
-    appLinkData: AppLinkData | None = None
-    # TODO valueAddedModuleData
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited appLinkData
+    # inherited valueAddedModuleData
 
 
 @register_model(
@@ -198,7 +186,6 @@ class EventTicketClass(
 class EventTicketObject(
     GoogleWalletObjectModel,
     GoogleWalletObjectWithClassReferenceMixin,
-    GoogleWalletMessageableMixin,
     GoogleWalletStyleableMixin,
     GoogleWalletCommonLogosMixin,
 ):
@@ -228,14 +215,14 @@ class EventTicketObject(
     # inherited id
     # inherited classId
     version: str | None = Field(description="deprecated", exclude=True, default=None)
-    state: State | None = None
+    # inherited state
     # inherited barcode
     # inherited messages
-    validTimeInterval: TimeInterval | None = None
+    # inherited validTimeInterval
     locations: list[LatLongPoint] | None = Field(
         description="deprecated", exclude=True, default=None
     )
-    hasUsers: bool | None = None
+    # inherited hasUsers
     # inherited smartTapRedemptionValue
     hasLinkedDevice: bool | None = False
     disableExpirationNotification: bool | None = False
@@ -243,14 +230,16 @@ class EventTicketObject(
     # inherited imageModulesData
     # inherited textModulesData
     # inherited linksModuleData
-    appLinkData: AppLinkData | None = None
+    # inherited appLinkData
     # inherited rotatingBarcode
     # inhertied heroImage
     # inherited passConstraints
-    # TODO: saveRestrictions
-    # TODO: linkedObjectIds
-    # TODO: notifyPreference
-    # TODO: valueAddedModuleData
+    # inherited saveRestrictions
+    # inherited linkedObjectIds
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited valueAddedModuleData
 
 
 class ActivationOptions(GoogleWalletModel):
@@ -391,7 +380,6 @@ class DeviceContext(GoogleWalletModel):
 )
 class TransitClass(
     GoogleWalletClassModel,
-    GoogleWalletMessageableMixin,
     GoogleWalletStyleableMixin,
     GoogleWalletCommonLogosMixin,
 ):
@@ -446,9 +434,11 @@ class TransitClass(
     activationOptions: ActivationOptions | None = None
     # inherited viewUnlockRequirement
     # inherited wideLogo
-    # TODO notifyPreference
-    appLinkData: AppLinkData | None = None
-    # TODO valueAddedModuleData
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited appLinkData
+    # inherited valueAddedModuleData
 
 
 @register_model(
@@ -458,7 +448,6 @@ class TransitClass(
 )
 class TransitObject(
     GoogleWalletObjectModel,
-    GoogleWalletMessageableMixin,
     GoogleWalletStyleableMixin,
     GoogleWalletCommonLogosMixin,
 ):
@@ -490,11 +479,11 @@ class TransitObject(
     tripType: TripType = TripType.TRIP_TYPE_UNSPECIFIED
     # inherited id
     # inherited classId
-    state: State = State.STATE_UNSPECIFIED
+    # inherited state
     # inherited barcode
     # inherited messages
-    validTimeInterval: TimeInterval | None = None
-    hasUsers: bool | None = None
+    # inherited validTimeInterval
+    # inherited hasUsers
     # inherited smartTapRedemptionValue
     hasLinkedDevice: bool | None = False
     disableExpirationNotification: bool | None = False
@@ -502,17 +491,19 @@ class TransitObject(
     # inherited imageModulesData
     # inherited textModulesData
     # inherited linksModuleData
-    appLinkData: AppLinkData | None = None
+    # inherited appLinkData
     activationStatus: ActivationStatus | None = None
     # inherited rotatingBarcode
     deviceContext: DeviceContext | None = None
     # inherited heroImage
     # inherited groupingInfo
     # inhertied passConstraints
-    # TODO saveRestrictions
-    # TODO linkedObjectIds
-    # TODO notifyPreference
-    # TODO valueAddedModuleData
+    # inherited saveRestrictions
+    # inherited linkedObjectIds
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited valueAddedModuleData
 
 
 class FlightCarrier(GoogleWalletModel):
@@ -607,7 +598,6 @@ class BoardingAndSeatingPolicy(GoogleWalletModel):
 class FlightClass(
     GoogleWalletClassModel,
     GoogleWalletStyleableMixin,
-    GoogleWalletMessageableMixin,
     GoogleWalletCommonLogosMixin,
 ):
     """
@@ -655,9 +645,11 @@ class FlightClass(
     # inherited callbackOptions
     # inherited securityAnimation
     # inherited viewUnlockRequirement
-    # TODO notifyPreference
-    appLinkData: AppLinkData | None = None
-    # TODO valueAddedModuleData
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited appLinkData
+    # inherited valueAddedModuleData
 
 
 @register_model(
@@ -670,6 +662,8 @@ class FlightObject(GoogleWalletObjectModel, GoogleWalletStyleableMixin):
     see: https://developers.google.com/wallet/reference/rest/v1/flightobject
     """
 
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
     kind: str | None = Field(
         description="deprecated",
         exclude=True,
@@ -683,11 +677,11 @@ class FlightObject(GoogleWalletObjectModel, GoogleWalletStyleableMixin):
     # inherited hexBackgroundColor
     # inherited id
     # inherited classId
-    state: State = State.STATE_UNSPECIFIED
+    # inherited state
     # inherited barcode
     # inherited messages
-    validTimeInterval: TimeInterval | None = None
-    hasUsers: bool | None = None
+    # inherited validTimeInterval
+    # inherited hasUsers
     # inherited smartTapRedemptionValue
     hasLinkedDevice: bool | None = False
     disableExpirationNotification: bool | None = False
@@ -695,12 +689,14 @@ class FlightObject(GoogleWalletObjectModel, GoogleWalletStyleableMixin):
     # inherited imageModulesData
     # inherited textModulesData
     # inherited linksModuleData
-    appLinkData: AppLinkData | None = None
+    # inherited appLinkData
     # inherited rotatingBarcode
     heroImage: Image | None = None
     # inherited groupingInfo
     # inhertied passConstraints
-    # TODO saveRestrictions
-    # TODO linkedObjectIds
-    # TODO notifyPreference
-    # TODO valueAddedModuleData
+    # inherited saveRestrictions
+    # inherited linkedObjectIds
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited valueAddedModuleData

@@ -1,17 +1,12 @@
 from ..registry import register_model
 from .bases import GoogleWalletClassModel
 from .bases import GoogleWalletCommonLogosMixin
-from .bases import GoogleWalletMessageableMixin
 from .bases import GoogleWalletModel
 from .bases import GoogleWalletObjectModel
 from .bases import GoogleWalletStyleableMixin
 from .primitives import GroupingInfo
-from .primitives.data import AppLinkData
-from .primitives.datetime import TimeInterval
 from .primitives.enums import GenericType
-from .primitives.enums import State
 from .primitives.localized_string import LocalizedString
-from pydantic import Field
 
 
 class ExpiryNotification(GoogleWalletModel):
@@ -48,16 +43,20 @@ class Notifications(GoogleWalletModel):
 @register_model(
     "GenericClass", url_part="genericClass", plural="genericClasses", can_disable=False
 )
-class GenericClass(
-    GoogleWalletClassModel,
-    GoogleWalletMessageableMixin,
-):
+class GenericClass(GoogleWalletClassModel):
     """
+    The GenericClass is the implicitly the base class for all other Wallet Class models.
+    The Google documentation does not mention this fact.
+    This might change in future updates, do not depend on this assumption!
+
+    For now, technically, here are no extra attributes defined!
+    In code the GoogleWalletClassModel is the base class.
+
     see: https://developers.google.com/wallet/generic/rest/v1/genericclass
     """
 
     # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
+    # last check: 2024-12-02
 
     # inherited id
     # inherited classTemplateInfo
@@ -72,8 +71,8 @@ class GenericClass(
     # inherited callbackOptions
     # inherited viewUnlockRequirement
     # inherited messages
-    # TODO appLinkData
-    # TODO valueAddedModuleData
+    # inherited appLinkData
+    # inherited valueAddedModuleData
 
 
 @register_model("GenericObject", url_part="genericObject")
@@ -81,9 +80,10 @@ class GenericObject(
     GoogleWalletObjectModel,
     GoogleWalletStyleableMixin,
     GoogleWalletCommonLogosMixin,
-    GoogleWalletMessageableMixin,
 ):
     """
+    The GenericObject is a specific object and does not act as the base for other wallet objects!
+
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject
     """
 
@@ -95,25 +95,25 @@ class GenericObject(
     subheader: LocalizedString | None = None
     header: LocalizedString | None = None
     # inherited logo
-    # inhertied hexBackgroundColor
+    # inherited hexBackgroundColor
     notifications: Notifications | None = None
     # inherited id
     # inherited classId
     # inherited barcode
     # inherited heroImage
-    validTimeInterval: TimeInterval | None = None
+    # inherited validTimeInterval
     # inherited imageModulesData
     # inherited textModulesData
     # inherited linksModuleData
-    appLinkData: AppLinkData | None = None
+    # inherited appLinkData
     groupingInfo: GroupingInfo | None = None
     # inherited smartTapRedemptionValue
     # inherited rotatingBarcode
-    state: State = Field(default=State.STATE_UNSPECIFIED)
-    hasUsers: bool | None = None
+    # inherited state
+    # inherited hasUsers
     # inherited messages
     # inherited passConstraints
     # inherited wideLogo
-    # TODO saveRestrictions
-    # TODO linkedObjectIds
-    # TODO valueAddedModuleData
+    # inherited saveRestrictions
+    # inherited linkedObjectIds
+    # inherited valueAddedModuleData

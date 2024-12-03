@@ -85,3 +85,11 @@ class CallbackOptions(BaseModel):
     """
 
     url: HttpUrl | None = None
+
+
+class SaveRestrictions(BaseModel):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/SaveRestrictions
+    """
+
+    restrictToEmailSha256: str | None = None

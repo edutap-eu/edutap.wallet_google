@@ -240,12 +240,23 @@ class MultipleDevicesAndHoldersAllowedStatus(CamelCaseAliasEnum):
 
 class NfcConstraint(CamelCaseAliasEnum):
     """
-    see:
+    see: https://developers.google.com/wallet/reference/rest/v1/PassConstraints#NfcConstraint
     """
 
     NFC_CONSTRAINT_UNSPECIFIED = "NFC_CONSTRAINT_UNSPECIFIED"
     BLOCK_PAYMENT = "BLOCK_PAYMENT"
     BLOCK_CLOSED_LOOP_TRANSIT = "BLOCK_CLOSED_LOOP_TRANSIT"
+
+
+class NotificationSettingsForUpdates(CamelCaseAliasEnum):
+    """
+    see https://developers.google.com/wallet/reference/rest/v1/NotificationSettingsForUpdates
+    """
+
+    NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED = (
+        "NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED"
+    )
+    NOTIFY_ON_UPDATE = "NOTIFY_ON_UPDATE"
 
 
 class PassengerType(CamelCaseAliasEnum):

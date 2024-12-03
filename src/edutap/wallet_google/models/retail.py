@@ -1,22 +1,18 @@
 from ..registry import register_model
 from .bases import GoogleWalletClassModel
-from .bases import GoogleWalletMessageableMixin
 from .bases import GoogleWalletModel
 from .bases import GoogleWalletObjectModel
 from .bases import GoogleWalletObjectWithClassReferenceMixin
 from .bases import GoogleWalletStyleableMixin
-from .bases import GoogleWalletWithIdModel
 from .primitives import GroupingInfo
 from .primitives import Image
 from .primitives import PassConstraints
 from .primitives import Uri
-from .primitives.data import AppLinkData
 from .primitives.data import ImageModuleData
 from .primitives.datetime import DateTime
-from .primitives.datetime import TimeInterval
+from .primitives.enums import NotificationSettingsForUpdates
 from .primitives.enums import RedemptionChannel
 from .primitives.enums import ReviewStatus
-from .primitives.enums import State
 from .primitives.localized_string import LocalizedString
 from .primitives.location import LatLongPoint
 from .primitives.money import Money
@@ -34,8 +30,6 @@ from pydantic import model_validator
 )
 class GiftCardClass(
     GoogleWalletClassModel,
-    GoogleWalletWithIdModel,
-    GoogleWalletMessageableMixin,
     GoogleWalletStyleableMixin,
 ):
     """
@@ -84,16 +78,17 @@ class GiftCardClass(
     # inherited securityAnimation
     # inherited viewUnlockRequirement
     wideProgramLogo: Image | None = None
-    # TODO notifyPreference
-    appLinkData: AppLinkData | None = None
-    # TODO valueAddedModuleData
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited appLinkData
+    # inherited valueAddedModuleData
 
 
 @register_model("GiftCardObject", url_part="giftCardObject")
 class GiftCardObject(
     GoogleWalletObjectModel,
-    GoogleWalletWithIdModel,
-    GoogleWalletMessageableMixin,
+    GoogleWalletObjectWithClassReferenceMixin,
 ):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
@@ -118,12 +113,12 @@ class GiftCardObject(
     eventNumber: str | None = None
     # inherited id
     # inherited version
-    state: State = State.STATE_UNSPECIFIED
+    # inherited state
     # inherited barcode
     # inherited messages
-    validTimeInterval: TimeInterval | None = None
+    # inherited validTimeInterval
     locations: list[LatLongPoint] | None = None
-    hasUsers: bool = False
+    # inherited hasUsers
     # inherited smartTapRedemptionValue
     hasLinkedDevice: bool = False
     disableExpirationNotification: bool | None = False
@@ -131,15 +126,17 @@ class GiftCardObject(
     # inherited imageModulesData
     # inherited textModulesData
     # inherited linksModuleData
-    appLinkData: AppLinkData | None = None
+    # inherited appLinkData
     # inherited rotatingBarcode
     heroImage: Image | None = None
     # inherited groupingInfo
     # inherited passConstraints
-    # TODO: saveRestrictions
-    # TODO: linkedObjectIds
-    # TODO: notifyPreference
-    # TODO: valueAddedModuleData
+    # inherited saveRestrictions
+    # inherited linkedObjectIds
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited valueAddedModuleData
 
 
 @register_model(
@@ -147,8 +144,6 @@ class GiftCardObject(
 )
 class LoyaltyClass(
     GoogleWalletClassModel,
-    GoogleWalletWithIdModel,
-    GoogleWalletMessageableMixin,
     GoogleWalletStyleableMixin,
 ):
     """
@@ -207,8 +202,10 @@ class LoyaltyClass(
     # inherited securityAnimation
     # inherited viewUnlockRequirement
     wideProgramLogo: Image | None = None
-    # TODO notifyPreference
-    # TODO valueAddedModuleData
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited valueAddedModuleData
 
 
 class LoyaltyPointsBalance(
@@ -262,7 +259,6 @@ class LoyaltyPoints(
 @register_model("LoyaltyObject", url_part="loyaltyObject", plural="loyaltyObjects")
 class LoyaltyObject(
     GoogleWalletObjectModel,
-    GoogleWalletMessageableMixin,
     GoogleWalletObjectWithClassReferenceMixin,
 ):
     """
@@ -290,11 +286,11 @@ class LoyaltyObject(
     # inherited id
     # inherited classId
     # inherited messages
-    state: State = State.STATE_UNSPECIFIED
+    # inherited state
     # inherited barcode
     # inherited messages
-    validTimeInterval: TimeInterval | None = None
-    hasUsers: bool | None = None
+    # inherited validTimeInterval
+    # inherited hasUsers
     # inherited smartTapRedemptionValue
     hasLinkedDevice: bool | None = None
     disableExpirationNotification: bool | None = False
@@ -303,15 +299,17 @@ class LoyaltyObject(
     # inherited imageModulesData
     # inherited textModulesData
     # inherited linksModuleData
-    appLinkData: AppLinkData | None = None
+    # inherited appLinkData
     # inherited rotatingBarcode
     heroImage: Image | None = None
     # inherited groupingInfo
     # inhertied passConstraints
-    # TODO saveRestrictions
-    # TODO linkedObjectIds
-    # TODO notifyPreference
-    # TODO valueAddedModuleData
+    # inherited saveRestrictions
+    # inherited linkedObjectIds
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited valueAddedModuleData
 
 
 @register_model(
@@ -319,7 +317,6 @@ class LoyaltyObject(
 )
 class OfferClass(
     GoogleWalletClassModel,
-    GoogleWalletMessageableMixin,
     GoogleWalletStyleableMixin,
 ):
     """
@@ -374,15 +371,17 @@ class OfferClass(
     # inherited securityAnimation
     # inherited viewUnlockRequirement
     wideTitleImage: Image | None = None
-    # TODO notifyPreference
-    appLinkData: AppLinkData | None = None
-    # TODO valueAddedModuleData
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited appLinkData
+    # inherited valueAddedModuleData
 
 
 @register_model("OfferObject", url_part="offerObject")
 class OfferObject(
     GoogleWalletObjectModel,
-    GoogleWalletMessageableMixin,
+    GoogleWalletObjectWithClassReferenceMixin,
     GoogleWalletStyleableMixin,
 ):
     """
@@ -403,12 +402,12 @@ class OfferObject(
     classReference: OfferClass | None = None
     # inherited id
     # inherited classId
-    state: State = State.STATE_UNSPECIFIED
+    # inherited state
     # inherited barcode
     # inertied messages
-    validTimeInterval: TimeInterval | None = None
+    # inherited validTimeInterval
     locations: list[LatLongPoint] | None = None
-    hasUsers: bool = False
+    # inherited hasUsers
     # inherited smartTapRedemptionValue
     hasLinkedDevice: bool = False
     disableExpirationNotification: bool | None = False
@@ -416,12 +415,14 @@ class OfferObject(
     # inherited imageModulesData
     # inherited textModulesData
     # inherited linksModuleData
-    appLinkData: AppLinkData | None = None
+    # inherited appLinkData
     # inherited rotatingBarcode
     heroImage: Image | None = None
     groupingInfo: GroupingInfo | None = None
     passConstraints: PassConstraints | None = None
-    # TODO saveRestrictions
-    # TODO linkedObjectIds
-    # TODO notifyPreference
-    # TODO valueAddedModuleData
+    # inherited saveRestrictions
+    # inherited linkedObjectIds
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited valueAddedModuleData
