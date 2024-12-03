@@ -18,7 +18,6 @@ from google.auth import jwt
 
 import json
 import logging
-import os
 import typing
 
 
@@ -318,7 +317,7 @@ def listing(
     elif name.endswith("Class"):
         is_pageable = True
         if not issuer_id:
-            issuer_id = os.environ.get("EDUTAP_WALLET_GOOGLE_ISSUER_ID", None)
+            issuer_id = session_manager.settings.issuer_id
             if not issuer_id:
                 raise ValueError(
                     "'issuer_id' must be passed as keyword argument or set in environment"
