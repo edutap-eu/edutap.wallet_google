@@ -22,8 +22,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pydantic[email,dotenv]>=2.0",
-    "python-dotenv",
+    "pydantic[email]>=2.0",
+    "pydantic-settings",
     "google-auth",
     "google-cloud-storage",
   ]
@@ -37,6 +37,7 @@ Documentation = "https://docs.edutap.eu/packages/edutap_wallet_google/index.html
 test = [
     "pytest",
     "requests-mock",
+    "tox",
 ]
 typecheck  = [
     "mypy",

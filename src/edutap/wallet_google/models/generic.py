@@ -1,26 +1,43 @@
-from ..modelbase import GoogleWalletClassModel
-from ..modelbase import GoogleWalletObjectModel
 from ..registry import register_model
-from .primitives import CallbackOptions
+from .bases import GoogleWalletClassModel
+from .bases import GoogleWalletCommonLogosMixin
+from .bases import GoogleWalletModel
+from .bases import GoogleWalletObjectModel
+from .bases import GoogleWalletStyleableMixin
 from .primitives import GroupingInfo
-from .primitives import Image
-from .primitives import PassConstraints
-from .primitives import SecurityAnimation
-from .primitives.barcode import Barcode
-from .primitives.barcode import RotatingBarcode
-from .primitives.class_template_info import ClassTemplateInfo
-from .primitives.data import AppLinkData
-from .primitives.data import ImageModuleData
-from .primitives.data import LinksModuleData
-from .primitives.data import TextModuleData
-from .primitives.datetime import TimeInterval
 from .primitives.enums import GenericType
-from .primitives.enums import MultipleDevicesAndHoldersAllowedStatus
-from .primitives.enums import State
-from .primitives.enums import ViewUnlockRequirement
 from .primitives.localized_string import LocalizedString
-from .primitives.notification import Notifications
-from pydantic import Field
+
+
+class ExpiryNotification(GoogleWalletModel):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/genericobject#expirynotification
+    """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
+
+    enableNotification: bool = False
+
+
+class UpcomingNotification(GoogleWalletModel):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/genericobject#upcomingnotification
+    """
+
+    enableNotification: bool = False
+
+
+class Notifications(GoogleWalletModel):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/genericobject#notifications
+    """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
+
+    expiryNotification: ExpiryNotification | None = None
+    upcomingNotification: UpcomingNotification | None = None
 
 
 @register_model(
@@ -28,49 +45,75 @@ from pydantic import Field
 )
 class GenericClass(GoogleWalletClassModel):
     """
+    The GenericClass is the implicitly the base class for all other Wallet Class models.
+    The Google documentation does not mention this fact.
+    This might change in future updates, do not depend on this assumption!
+
+    For now, technically, here are no extra attributes defined!
+    In code the GoogleWalletClassModel is the base class.
+
     see: https://developers.google.com/wallet/generic/rest/v1/genericclass
     """
 
-    classTemplateInfo: ClassTemplateInfo | None = None
-    imageModulesData: list[ImageModuleData] | None = None
-    textModulesData: list[TextModuleData] | None = None
-    linksModuleData: LinksModuleData | None = None
-    enableSmartTap: bool = False
-    redemptionIssuers: list[str] | None = None
-    securityAnimation: SecurityAnimation | None = None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = (
-        Field(default=MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED)
-    )
-    callbackOptions: CallbackOptions | None = None
-    viewUnlockRequirement: ViewUnlockRequirement = Field(
-        default=ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
-    )
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-12-02
+
+    # inherited id
+    # inherited classTemplateInfo
+    # inherited infoModuleData
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    # inherited enableSmartTap
+    # inherited redemptionIssuers
+    # inherited securityAnimation
+    # inherited multipleDevicesAndHoldersAllowedStatus
+    # inherited callbackOptions
+    # inherited viewUnlockRequirement
+    # inherited messages
+    # inherited appLinkData
+    # inherited valueAddedModuleData
 
 
 @register_model("GenericObject", url_part="genericObject")
-class GenericObject(GoogleWalletObjectModel):
+class GenericObject(
+    GoogleWalletObjectModel,
+    GoogleWalletStyleableMixin,
+    GoogleWalletCommonLogosMixin,
+):
     """
+    The GenericObject is a specific object and does not act as the base for other wallet objects!
+
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
 
     genericType: GenericType = GenericType.GENERIC_TYPE_UNSPECIFIED
     cardTitle: LocalizedString | None = None
     subheader: LocalizedString | None = None
     header: LocalizedString | None = None
-    logo: Image | None = None
-    wideLogo: Image | None = None
-    hexBackgroundColor: str | None = None
+    # inherited logo
+    # inherited hexBackgroundColor
     notifications: Notifications | None = None
-    barcode: Barcode | None = None
-    heroImage: Image | None = None
-    validTimeInterval: TimeInterval | None = None
-    imageModulesData: list[ImageModuleData] | None = None
-    textModulesData: list[TextModuleData] | None = None
-    linksModuleData: LinksModuleData | None = None
-    appLinkData: AppLinkData | None = None
+    # inherited id
+    # inherited classId
+    # inherited barcode
+    # inherited heroImage
+    # inherited validTimeInterval
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    # inherited appLinkData
     groupingInfo: GroupingInfo | None = None
-    smartTapRedemptionValue: str | None = None
-    rotatingBarcode: RotatingBarcode | None = None
-    state: State = Field(default=State.STATE_UNSPECIFIED)
-    hasUsers: bool | None = None
-    passConstraints: PassConstraints | None = None
+    # inherited smartTapRedemptionValue
+    # inherited rotatingBarcode
+    # inherited state
+    # inherited hasUsers
+    # inherited messages
+    # inherited passConstraints
+    # inherited wideLogo
+    # inherited saveRestrictions
+    # inherited linkedObjectIds
+    # inherited valueAddedModuleData

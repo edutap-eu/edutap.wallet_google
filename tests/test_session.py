@@ -1,3 +1,7 @@
+from edutap.wallet_google.session import ROOT_DIR
+from pydantic import HttpUrl
+
+
 def test_session_manager_url(clean_registry):  # noqa: F811
     from edutap.wallet_google.registry import register_model
 
@@ -33,18 +37,17 @@ def test_session_manager_url(clean_registry):  # noqa: F811
 
 def test_session_creation(monkeypatch):
     from edutap.wallet_google.session import SessionManager
-    from pathlib import Path
 
     monkeypatch.setenv(
         "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE",
-        str(Path(__file__).parent / "data" / "credentials_fake.json"),
+        str(ROOT_DIR / "tests" / "data" / "credentials_fake.json"),
     )
     manager = SessionManager()
     session = manager.session
     assert session is not None
-    assert session.credentials is not None
+    assert manager.settings.credentials_file is not None
     assert session.credentials.scopes == [
-        "https://www.googleapis.com/auth/wallet_object.issuer"
+        HttpUrl("https://www.googleapis.com/auth/wallet_object.issuer")
     ]
 
     from edutap.wallet_google.session import _THREADLOCAL

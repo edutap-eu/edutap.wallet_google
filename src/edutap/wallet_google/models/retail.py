@@ -1,34 +1,23 @@
-from ..modelbase import GoogleWalletClassModel
-from ..modelbase import GoogleWalletObjectModel
 from ..registry import register_model
-from .primitives import CallbackOptions
+from .bases import GoogleWalletClassModel
+from .bases import GoogleWalletModel
+from .bases import GoogleWalletObjectModel
+from .bases import GoogleWalletObjectWithClassReferenceMixin
+from .bases import GoogleWalletStyleableMixin
 from .primitives import GroupingInfo
 from .primitives import Image
 from .primitives import PassConstraints
-from .primitives import SecurityAnimation
 from .primitives import Uri
-from .primitives.barcode import Barcode
-from .primitives.barcode import RotatingBarcode
-from .primitives.class_template_info import ClassTemplateInfo
-from .primitives.data import AppLinkData
 from .primitives.data import ImageModuleData
-from .primitives.data import InfoModuleData
-from .primitives.data import LinksModuleData
-from .primitives.data import TextModuleData
 from .primitives.datetime import DateTime
-from .primitives.datetime import TimeInterval
-from .primitives.enums import MultipleDevicesAndHoldersAllowedStatus
+from .primitives.enums import NotificationSettingsForUpdates
 from .primitives.enums import RedemptionChannel
 from .primitives.enums import ReviewStatus
-from .primitives.enums import State
-from .primitives.enums import ViewUnlockRequirement
 from .primitives.localized_string import LocalizedString
 from .primitives.location import LatLongPoint
 from .primitives.money import Money
-from .primitives.notification import Message
 from .primitives.retail import DiscoverableProgram
 from .primitives.review import Review
-from pydantic import BaseModel
 from pydantic import Field
 from pydantic import model_validator
 
@@ -39,14 +28,26 @@ from pydantic import model_validator
     plural="giftCardClasses",
     can_disable=False,
 )
-class GiftCardClass(GoogleWalletClassModel):
+class GiftCardClass(
+    GoogleWalletClassModel,
+    GoogleWalletStyleableMixin,
+):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
     """
 
+    # Attribute order as in Google's documentation to make future updates easier!
+    # Most deprecated are skipped.
+    # last check: 2024-11-29
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#giftCardClass",
+    )
     merchantName: str | None = None
     programLogo: Image | None = None
-    wideProgramLogo: Image | None = None
     pinLabel: str | None = None
     eventNumberLabel: str | None = None
     allowBarcodeRedemption: bool = False
@@ -55,45 +56,54 @@ class GiftCardClass(GoogleWalletClassModel):
     localizedEventNumberLabel: LocalizedString | None = None
     cardNumberLabel: str | None = None
     localizedCardNumberLabel: LocalizedString | None = None
-    classTemplateInfo: ClassTemplateInfo | None = None
+    # inherited classTemplateInfo
+    # inherited id
     version: str | None = Field(description="deprecated", exclude=True, default=None)
     issuerName: str
-    messages: list[Message] | None = None
-    allowMultipleUsersPerObject: bool | None = Field(
-        description="deprecated", exclude=True, default=None
-    )
+    # inherited messages
     homepageUri: Uri | None = None
-    locations: list[LatLongPoint] | None = None
     reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     review: Review | None = None
-    infoModuleData: InfoModuleData | None = Field(
-        description="deprecated", exclude=True, default=None
-    )
-    imageModulesData: list[ImageModuleData] | None = None
-    textModulesData: list[TextModuleData] | None = None
-    linksModuleData: LinksModuleData | None = None
-    redemptionIssuers: list[str] | None = None
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    # inherited redemptionIssuers
     countryCode: str | None = None
     heroImage: Image | None = None
-    wordMark: Image | None = Field(description="deprecated", exclude=True, default=None)
-    enableSmartTap: bool | None = None
-    hexBackgroundColor: str | None = None
+    # inherited enableSmartTap
+    # inherited hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = (
-        MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
+    # inherited multipleDevicesAndHoldersAllowedStatus
+    # inherited callbackOptions
+    # inherited securityAnimation
+    # inherited viewUnlockRequirement
+    wideProgramLogo: Image | None = None
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    callbackOptions: CallbackOptions | None = None
-    securityAnimation: SecurityAnimation | None = None
-    viewUnlockRequirement: ViewUnlockRequirement = (
-        ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
-    )
+    # inherited appLinkData
+    # inherited valueAddedModuleData
 
 
 @register_model("GiftCardObject", url_part="giftCardObject")
-class GiftCardObject(GoogleWalletObjectModel):
+class GiftCardObject(
+    GoogleWalletObjectModel,
+    GoogleWalletObjectWithClassReferenceMixin,
+):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # Most deprecated are skipped.
+    # last check: 2024-11-29
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#giftCardObject",
+    )
 
     classReference: GiftCardClass | None = None
     cardNumber: str | None = None
@@ -101,105 +111,114 @@ class GiftCardObject(GoogleWalletObjectModel):
     balance: Money | None = None
     balanceUpdateTime: DateTime | None = None
     eventNumber: str | None = None
-    version: str | None = None
-    state: State = State.STATE_UNSPECIFIED
-    barcode: Barcode | None = None
-    messages: list[Message] | None = None
-    validTimeInterval: TimeInterval | None = None
+    # inherited id
+    # inherited version
+    # inherited state
+    # inherited barcode
+    # inherited messages
+    # inherited validTimeInterval
     locations: list[LatLongPoint] | None = None
-    hasUsers: bool = False
-    smartTapRedemptionValue: str | None = None
+    # inherited hasUsers
+    # inherited smartTapRedemptionValue
     hasLinkedDevice: bool = False
     disableExpirationNotification: bool | None = False
-    infoModuleData: InfoModuleData | None = None
-    imageModulesData: list[ImageModuleData] | None = None
-    textModulesData: list[TextModuleData] | None = None
-    linksModuleData: LinksModuleData | None = None
-    appLinkData: AppLinkData | None = None
-    rotatingBarcode: RotatingBarcode | None = None
+    # inherited infoModuleData
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    # inherited appLinkData
+    # inherited rotatingBarcode
     heroImage: Image | None = None
-    groupingInfo: GroupingInfo | None = None
-    passConstraints: PassConstraints | None = None
+    # inherited groupingInfo
+    # inherited passConstraints
+    # inherited saveRestrictions
+    # inherited linkedObjectIds
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited valueAddedModuleData
 
 
 @register_model(
     "LoyaltyClass", url_part="loyaltyClass", plural="loyaltyClasses", can_disable=False
 )
-class LoyaltyClass(GoogleWalletClassModel):
+class LoyaltyClass(
+    GoogleWalletClassModel,
+    GoogleWalletStyleableMixin,
+):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
     """
 
-    issuerName: str | None = None
+    # Attribute order as in Google's documentation to make future updates easier!
+    # Most deprecated are skipped.
+    # last check: 2024-11-29
+
+    # deprecated
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#loyaltyClass",
+    )
+
     programName: str | None = None
     programLogo: Image | None = None
-    wideProgramLogo: Image | None = None
-    reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     accountNameLabel: str | None = None
     accountIdLabel: str | None = None
     rewardsTierLabel: str | None = None
     rewardsTier: str | None = None
-    secondaryRewardsTierLabel: str | None = None
-    secondaryRewardsTier: str | None = None
-    localizedIssuerName: LocalizedString | None = None
     localizedProgramName: LocalizedString | None = None
     localizedAccountNameLabel: LocalizedString | None = None
     localizedAccountIdLabel: LocalizedString | None = None
     localizedRewardsTierLabel: LocalizedString | None = None
     localizedRewardsTier: LocalizedString | None = None
+    secondaryRewardsTierLabel: str | None = None
     localizedSecondaryRewardsTierLabel: LocalizedString | None = None
+    secondaryRewardsTier: str | None = None
     localizedSecondaryRewardsTier: LocalizedString | None = None
     discoverableProgram: DiscoverableProgram | None = None
-    classTemplateInfo: ClassTemplateInfo | None = None
-    messages: list[Message] | None = None
+    # inherited classTemplateInfo
+    # inherited id
+    issuerName: str | None = None
+    # inherited messages
     homepageUri: Uri | None = None
     locations: list[LatLongPoint] | None = None
     review: Review | None = None
-    imageModulesData: list[ImageModuleData] | None = None
-    textModulesData: list[TextModuleData] | None = None
-    linksModuleData: LinksModuleData | None = None
-    redemptionIssuers: list[str] | None = None  # string (int64 format)
+    reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
+    # inherited infoModuleData
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    # inherited redemptionIssuers
     countryCode: str | None = None
     heroImage: Image | None = None
-    enableSmartTap: bool | None = False
-    hexBackgroundColor: str | None = None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = (
-        MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
+    # inherited wordMark
+    # inherited enableSmartTap
+    # inherited hexBackgroundColor
+    localizedIssuerName: LocalizedString | None = None
+    # inherited multipleDevicesAndHoldersAllowedStatus
+    # inherited callbackOptions
+    # inherited securityAnimation
+    # inherited viewUnlockRequirement
+    wideProgramLogo: Image | None = None
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    callbackOptions: CallbackOptions | None
-    securityAnimation: SecurityAnimation | None = None
-    viewUnlockRequirement: ViewUnlockRequirement = (
-        ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
-    )
-
-    # deprecated
-    version: str | None = Field(
-        description="deprecated",
-        exclude=True,
-        default=None,
-    )  # int64
-    allowMultipleUsersPerObject: bool = Field(
-        description="deprecated",
-        exclude=True,
-        default=True,
-    )
-    infoModuleData: InfoModuleData | None = Field(
-        description="deprecated",
-        exclude=True,
-        default=None,
-    )
-    wordMark: Image | None = Field(
-        description="deprecated",
-        exclude=True,
-        default=None,
-    )
+    # inherited valueAddedModuleData
 
 
-class LoyaltyPointsBalance(BaseModel):
+class LoyaltyPointsBalance(
+    GoogleWalletModel,
+):
     """
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPointsBalance
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # Most deprecated are skipped.
+    # last check: 2024-11-29
 
     string: str | None = None
     int_: int | None = Field(alias="int", serialization_alias="int", default=None)
@@ -220,11 +239,17 @@ class LoyaltyPointsBalance(BaseModel):
         return self
 
 
-class LoyaltyPoints(BaseModel):
+class LoyaltyPoints(
+    GoogleWalletModel,
+):
     """
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPoints
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # Most deprecated are skipped.
+    # last check: 2024-11-29
 
     label: str | None = None
     balance: LoyaltyPointsBalance | None = None
@@ -232,43 +257,82 @@ class LoyaltyPoints(BaseModel):
 
 
 @register_model("LoyaltyObject", url_part="loyaltyObject", plural="loyaltyObjects")
-class LoyaltyObject(GoogleWalletObjectModel):
+class LoyaltyObject(
+    GoogleWalletObjectModel,
+    GoogleWalletObjectWithClassReferenceMixin,
+):
     """
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
     """
 
-    state: State = State.STATE_UNSPECIFIED
+    # Attribute order as in Google's documentation to make future updates easier!
+    # Most deprecated are skipped.
+    # last check: 2024-11-29
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#loyaltyObject",
+    )
+
+    classReference: LoyaltyClass | None = None
     accountName: str | None = None
     accountId: str | None = None
     loyaltyPoints: LoyaltyPoints | None = None
     linkedOfferIds: list[str] | None = None
     secondaryLoyaltyPoints: LoyaltyPoints | None = None
-    barcode: Barcode | None = None
-    messages: list[Message] | None = None
-    validTimeInterval: TimeInterval | None = None
-    locations: list[LatLongPoint] | None = None
-    hasUsers: bool | None = None
-    smartTapRedemptionValue: str | None = None
+    # inherited id
+    # inherited classId
+    # inherited messages
+    # inherited state
+    # inherited barcode
+    # inherited messages
+    # inherited validTimeInterval
+    # inherited hasUsers
+    # inherited smartTapRedemptionValue
     hasLinkedDevice: bool | None = None
     disableExpirationNotification: bool | None = False
     imageModule: ImageModuleData | None = None
-    imagesModuleData: list[ImageModuleData] | None = None
-    textModulesData: list[TextModuleData] | None = None
-    appLinkData: AppLinkData | None = None
-    rotatingBarcode: RotatingBarcode | None = None
+    # inherited infoModuleData
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    # inherited appLinkData
+    # inherited rotatingBarcode
     heroImage: Image | None = None
-    groupingInfo: GroupingInfo | None = None
-    passConstraints: PassConstraints | None = None
+    # inherited groupingInfo
+    # inhertied passConstraints
+    # inherited saveRestrictions
+    # inherited linkedObjectIds
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited valueAddedModuleData
 
 
 @register_model(
     "OfferClass", url_part="offerClass", plural="offerClasses", can_disable=False
 )
-class OfferClass(GoogleWalletClassModel):
+class OfferClass(
+    GoogleWalletClassModel,
+    GoogleWalletStyleableMixin,
+):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # Most deprecated are skipped.
+    # last check: 2024-11-29
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#offerClass",
+    )
 
     title: str | None = None
     redemptionChannel: RedemptionChannel = (
@@ -285,59 +349,80 @@ class OfferClass(GoogleWalletClassModel):
     localizedFinePrint: LocalizedString | None = None
     shortTitle: str | None = None
     localizedShortTitle: LocalizedString | None = None
-    classTemplateInfo: ClassTemplateInfo | None = None
-    version: str | None = None
+    # inherited classTemplateInfo
+    # inherited id
     issuerName: str | None = None
-    messages: list[Message] | None = None
-    allowMultipleUsersPerObject: bool = False
+    # inherited messages
     homepageUri: Uri | None = None
-    locations: list[LatLongPoint] | None = None
     reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     review: Review | None = None
-    infoModuleData: InfoModuleData | None = None
-    imageModulesData: list[ImageModuleData] | None = None
-    textModulesData: list[TextModuleData] | None = None
-    linksModuleData: LinksModuleData | None = None
-    redemptionIssuers: list[str] | None = None
+    # inherited infoModuleData
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    # inherited redemptionIssuers
     countryCode: str | None = None
     heroImage: Image | None = None
-    wordMark: Image | None = None
-    enableSmartTap: bool = False
-    hexBackgroundColor: str | None = None
+    # inherited enableSmartTap
+    # inherited hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = (
-        MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
+    # inherited multipleDevicesAndHoldersAllowedStatus
+    # inherited callbackOptions
+    # inherited securityAnimation
+    # inherited viewUnlockRequirement
+    wideTitleImage: Image | None = None
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    callbackOptions: CallbackOptions | None = None
-    securityAnimation: SecurityAnimation | None = None
-    viewUnlockRequirement: ViewUnlockRequirement = (
-        ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
-    )
+    # inherited appLinkData
+    # inherited valueAddedModuleData
 
 
 @register_model("OfferObject", url_part="offerObject")
-class OfferObject(GoogleWalletObjectModel):
+class OfferObject(
+    GoogleWalletObjectModel,
+    GoogleWalletObjectWithClassReferenceMixin,
+    GoogleWalletStyleableMixin,
+):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerobject
     """
 
+    # Attribute order as in Google's documentation to make future updates easier!
+    # Most deprecated are skipped.
+    # last check: 2024-11-29
+
+    kind: str | None = Field(
+        description="deprecated",
+        deprecated=True,
+        exclude=True,
+        default="walletobjects#offerClass",
+    )
+
     classReference: OfferClass | None = None
-    version: str | None = None
-    state: State = State.STATE_UNSPECIFIED
-    barcode: Barcode
-    messages: list[Message] | None = None
-    validTimeInterval: TimeInterval | None = None
+    # inherited id
+    # inherited classId
+    # inherited state
+    # inherited barcode
+    # inertied messages
+    # inherited validTimeInterval
     locations: list[LatLongPoint] | None = None
-    hasUsers: bool = False
-    smartTapRedemptionValue: str
+    # inherited hasUsers
+    # inherited smartTapRedemptionValue
     hasLinkedDevice: bool = False
     disableExpirationNotification: bool | None = False
-    infoModuleData: InfoModuleData | None = None
-    imageModulesData: list[ImageModuleData] | None = None
-    textModulesData: list[TextModuleData] | None = None
-    linksModuleData: LinksModuleData | None = None
-    appLinkData: AppLinkData | None = None
-    rotatingBarcode: RotatingBarcode | None = None
+    # inherited infoModuleData
+    # inherited imageModulesData
+    # inherited textModulesData
+    # inherited linksModuleData
+    # inherited appLinkData
+    # inherited rotatingBarcode
     heroImage: Image | None = None
     groupingInfo: GroupingInfo | None = None
     passConstraints: PassConstraints | None = None
+    # inherited saveRestrictions
+    # inherited linkedObjectIds
+    notifyPreference: NotificationSettingsForUpdates = (
+        NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
+    )
+    # inherited valueAddedModuleData

@@ -1,4 +1,3 @@
-from .localized_string import LocalizedString
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -8,14 +7,10 @@ class LatLongPoint(BaseModel):
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/LatLongPoint
     """
 
+    kind: str | None = Field(
+        description="deprecated",
+        exclude=True,
+        default="walletobjects#latLongPoint",
+    )
     latitude: float = Field(ge=-90.0, le=90.0)
     longitude: float = Field(ge=-180.0, le=180.0)
-
-
-class EventVenue(BaseModel):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventvenue
-    """
-
-    name: LocalizedString | None = None
-    address: LocalizedString | None = None

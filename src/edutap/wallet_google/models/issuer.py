@@ -1,6 +1,7 @@
-from ..modelbase import GoogleWalletModel
-from ..modelbase import GoogleWalletWithIdModel
 from ..registry import register_model
+from .bases import GoogleWalletModel
+from .bases import GoogleWalletWithIdModel
+from .primitives import CallbackOptions
 from .primitives.smarttap import IssuerContactInfo
 from .primitives.smarttap import IssuerToUserInfo
 from .primitives.smarttap import Permission
@@ -16,11 +17,15 @@ from .primitives.smarttap import SmartTapMerchantData
     can_list=False,
     can_message=False,
 )
-class SmartTap(GoogleWalletWithIdModel):
+class SmartTap(GoogleWalletModel, GoogleWalletWithIdModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/smarttap#resource:-smarttap
     """
 
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
+
+    # inherited id
     merchantId: str
     infos: list[IssuerToUserInfo] | None = None
 
@@ -36,11 +41,15 @@ class Issuer(GoogleWalletModel):
     see: https://developers.google.com/wallet/generic/rest/v1/issuer
     """
 
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
+
     issuerId: str
     name: str
     contactInfo: IssuerContactInfo | None = None
     homepageUrl: str | None = None
     smartTapMerchantData: SmartTapMerchantData | None = None
+    callbackOptions: CallbackOptions | None = None
 
 
 @register_model(
@@ -55,6 +64,9 @@ class Permissions(GoogleWalletModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/permissions
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
 
     issuerId: str | None = None
     permissions: list[Permission] = []

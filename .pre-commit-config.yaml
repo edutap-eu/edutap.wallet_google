@@ -23,9 +23,14 @@ repos:
     rev: v1.5.1
     hooks:
       - id: mypy
+        verbose: true
+        args: ['--explicit-package-bases']
         additional_dependencies:
         - "types-requests"
         - "pytest-stub"
+        - "google-auth-stubs"
+        - "pydantic"
+        - "pydantic_settings"
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.2.5
     hooks:

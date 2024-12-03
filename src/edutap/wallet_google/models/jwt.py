@@ -1,11 +1,11 @@
-from ..modelbase import GoogleWalletClassModel
-from ..modelbase import GoogleWalletModel
-from ..modelbase import GoogleWalletObjectModel
 from ..registry import register_model
 
 # from . import generic
 from . import retail
 from . import tickets_and_transit
+from .bases import GoogleWalletClassModel
+from .bases import GoogleWalletModel
+from .bases import GoogleWalletObjectModel
 
 
 @register_model(
@@ -19,7 +19,8 @@ from . import tickets_and_transit
 )
 class JwtResource(GoogleWalletModel):
     """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/jwt
+    see: https://developers.google.com/wallet/reference/rest/v1/jwt
+         https://developers.google.com/wallet/tickets/events/rest/v1/jwt
          https://developers.google.com/wallet/generic/web/javascript-button#google-pay-api-for-passes-jwt
     """
 
@@ -28,7 +29,8 @@ class JwtResource(GoogleWalletModel):
 
 class Resources(GoogleWalletModel):
     """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert#resources
+    see: https://developers.google.com/wallet/reference/rest/v1/jwt/insert
+         https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert#resources
     """
 
     # the documentation says nothing about GenericClass/Object here

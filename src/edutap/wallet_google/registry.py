@@ -1,4 +1,6 @@
-from .modelbase import GoogleWalletModel
+from .models.bases import GoogleWalletClassModel
+from .models.bases import GoogleWalletModel
+from .models.bases import GoogleWalletObjectModel
 from typing import TypedDict
 
 
@@ -72,7 +74,10 @@ class register_model:
             "can_message": can_message,
         }
 
-    def __call__(self, cls: type[GoogleWalletModel]) -> type[GoogleWalletModel]:
+    def __call__(
+        self,
+        cls: type[GoogleWalletModel | GoogleWalletClassModel | GoogleWalletObjectModel],
+    ) -> type[GoogleWalletModel | GoogleWalletClassModel | GoogleWalletObjectModel]:
         """
         Registers the given class in the registry.
         """

@@ -1,9 +1,12 @@
-from .modelbase import GoogleWalletModel
-from .modelbase import GoogleWalletObjectReference
+from .models.bases import GoogleWalletClassModel
+from .models.bases import GoogleWalletModel
+from .models.bases import GoogleWalletObjectModel
+from .models.bases import GoogleWalletObjectWithClassReferenceMixin
+from .models.bases import GoogleWalletWithIdModel
+from .models.message import AddMessageRequest
+from .models.message import Message
 from .models.primitives import Pagination
 from .models.primitives.enums import State
-from .models.primitives.notification import AddMessageRequest
-from .models.primitives.notification import Message
 from .registry import lookup_metadata
 from .registry import lookup_model
 from .registry import lookup_model_by_plural_name
@@ -15,7 +18,6 @@ from google.auth import jwt
 
 import json
 import logging
-import os
 import typing
 
 
@@ -33,7 +35,7 @@ def _validate_data(
                        or a Pydantic model instance.
     :return:           data as an instance of the given model
     """
-    if not isinstance(data, GoogleWalletModel):
+    if not isinstance(data, (GoogleWalletModel, GoogleWalletWithIdModel)):
         return model.model_validate(data)
     if not isinstance(data, model):
         raise ValueError(
@@ -88,7 +90,12 @@ def create(
     resource_id, verified_json = _validate_data_and_convert_to_json(model, data)
     session = session_manager.session
     url = session_manager.url(name)
-    response = session.post(url=url, data=verified_json.encode("utf-8"))
+    headers = {"Content-Type": "application/json"}
+    response = session.post(
+        url=url,
+        data=verified_json.encode("utf-8"),
+        headers=headers,
+    )
     if response.status_code == 409:
         raise Exception(
             f"Wallet Object {name} {getattr(data, 'id', 'No ID')} already exists\n{response.text}"
@@ -96,7 +103,7 @@ def create(
     elif response.status_code != 200:
         raise Exception(f"Error at {url}: {response.status_code} - {response.text}")
 
-    logger.debug(f"RAW-Response: {response.content}")
+    logger.debug(f"RAW-Response: {response.content!r}")
     return model.model_validate_json(response.content)
 
 
@@ -123,7 +130,7 @@ def read(
 
     if response.status_code == 200:
         model = lookup_model(name)
-        logger.debug(f"RAW-Response: {response.content}")
+        logger.debug(f"RAW-Response: {response.content!r}")
         # print(f"RAW-Response: {response.content}")
         return model.model_validate_json(response.content)
 
@@ -151,7 +158,18 @@ def update(
     raise_when_operation_not_allowed(name, "update")
     model_metadata = lookup_metadata(name)
     model = model_metadata["model"]
-    if not isinstance(data, GoogleWalletModel) and partial:
+    if (
+        not isinstance(
+            data,
+            (
+                GoogleWalletModel,
+                GoogleWalletWithIdModel,
+                GoogleWalletClassModel,
+                GoogleWalletObjectModel,
+            ),
+        )
+        and partial
+    ):
         resource_id = data[model_metadata["resource_id"]]
         # we can not validate partial data for patch yet
         verified_json = json.dumps(data)
@@ -170,6 +188,7 @@ def update(
             url=session_manager.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
         )
+    logger.debug(verified_json.encode("utf-8"))
     if response.status_code == 404:
         raise LookupError(
             f"Error 404, {name} {getattr(data, 'id', 'No ID')} not found: - {response.text}"
@@ -178,7 +197,7 @@ def update(
     if response.status_code != 200:
         raise Exception(f"Error: {response.status_code} - {response.text}")
 
-    logger.debug(f"RAW-Response: {response.content}")
+    logger.debug(f"RAW-Response: {response.content!r}")
     return model.model_validate_json(response.content)
 
 
@@ -243,7 +262,7 @@ def message(
 
     if response.status_code != 200:
         raise Exception(f"Error: {response.status_code} - {response.text}")
-    logger.debug(f"RAW-Response: {response.content}")
+    logger.debug(f"RAW-Response: {response.content!r}")
     response_data = json.loads(response.content)
     return model.model_validate(response_data.get("resource"))
 
@@ -298,7 +317,7 @@ def listing(
     elif name.endswith("Class"):
         is_pageable = True
         if not issuer_id:
-            issuer_id = os.environ.get("EDUTAP_WALLET_GOOGLE_ISSUER_ID", None)
+            issuer_id = session_manager.settings.issuer_id
             if not issuer_id:
                 raise ValueError(
                     "'issuer_id' must be passed as keyword argument or set in environment"
@@ -360,7 +379,7 @@ def save_link(
                         Usually, this is the name with a lower first character and as plural.
                         The value is either a simple python data structure using built-ins,
                         or a Pydantic model instance matching the registered name's model.
-                        If a resource is an Object, it can be an GoolgeWalletObjectReference instance too.
+                        If a resource is an Object, it can be an GoogleWalletObjectReference instance too.
     :param origins:     List of domains to approve for JWT saving functionality.
                         The Google Wallet API button will not render when the origins field is not defined.
                         You could potentially get an "Load denied by X-Frame-Options" or "Refused to display"
@@ -374,15 +393,31 @@ def save_link(
         for obj in objs:
             # first look if this is an object reference as dict
             if isinstance(obj, dict) and "id" in obj and len(obj.keys()) <= 2:
-                obj = GoogleWalletObjectReference.model_validate(obj)
-            if isinstance(obj, GoogleWalletObjectReference):
-                payload[name].append(obj.model_dump(exclude_none=True, mode="json"))
+                obj = GoogleWalletObjectWithClassReferenceMixin.model_validate(obj)
+            if isinstance(obj, GoogleWalletObjectWithClassReferenceMixin):
+                payload[name].append(
+                    obj.model_dump(
+                        # explicitly set to model_dump(mode="json") instead of model_dump_json due to problems
+                        # reported by jensens
+                        mode="json",
+                        exclude_none=True,
+                        exclude_unset=True,
+                        exclude_defaults=True,
+                    )
+                )
                 continue
 
             # otherwise it must be a registered model
             model = lookup_model_by_plural_name(name)
             obj = _validate_data(model, obj)
-            obj_json = obj.model_dump(exclude_none=True, mode="json")
+            obj_json = obj.model_dump(
+                # explicitly set to model_dump(mode="json") instead of model_dump_json due to problems
+                # reported by jensens
+                mode="json",
+                exclude_none=True,
+                exclude_unset=True,
+                exclude_defaults=True,
+            )
             payload[name].append(obj_json)
     claims = {
         "iat": "",
@@ -392,11 +427,14 @@ def save_link(
         "typ": "savetowallet",
         "payload": payload,
     }
-    signer = crypt.RSASigner.from_service_account_file(session_manager.credentials_file)
-    jwt_string = jwt.encode(signer, claims).decode("utf-8")
-    logger.debug(
-        "JWT-Length: %d, is less than recommenden 1800: %s",
-        len(jwt_string),
-        len(jwt_string) <= 1800,
+    signer = crypt.RSASigner.from_service_account_file(
+        session_manager.settings.credentials_file
     )
-    return f"{session_manager.save_url}/{jwt_string}"
+    jwt_string = jwt.encode(signer, claims).decode("utf-8")
+    if len(jwt_string) >= 1800:
+        logger.debug(
+            "JWT-Length: %d, is larger than recommended 1800 bytes: %s",
+            len(jwt_string),
+            len(jwt_string) >= 1800,
+        )
+    return f"{session_manager.settings.save_url}/{jwt_string}"

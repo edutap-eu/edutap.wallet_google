@@ -27,8 +27,18 @@ The sources are in a GIT DVCS with its main branches at the [GitHub `edutap-eu` 
 
 We'd be happy to see many issue reports, forks and pull requests to make the package even better.
 
+## Credits
+
+This project was initiated and initially financed by [LMU München](https://www.lmu.de).
+
+Contributors:
+
+- Alexander Loechel (LMU)
+- Philipp Auersperg-Castell (BlueDynamics Alliance)
+- Jens Klein (BlueDynamics Alliance)
+
 ## License
 
-The code is copyrighted by eduTAP - EUGLOH Working Package - Campus Life.
+The code is copyrighted by eduTAP - EUGLOH Working Package - Campus Life and contributors.
 
 It is licensed under the [EUROPEAN UNION PUBLIC LICENCE v. 1.2](https://opensource.org/license/eupl-1-2/), a free and OpenSource software license.
