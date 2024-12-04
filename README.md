@@ -1,5 +1,15 @@
 # edutap.wallet_google
 
+<p style="text-align:center;">
+
+![PyPI - Version](https://img.shields.io/pypi/v/edutap.wallet_google?logo=python)
+[![CI Tests](https://github.com/edutap-eu/edutap.wallet_google/actions/workflows/ci.yaml/badge.svg)](https://github.com/edutap-eu/edutap.wallet_google/actions/workflows/ci.yaml)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/edutap-eu/edutap.wallet_google/main.svg)](https://results.pre-commit.ci/latest/github/edutap-eu/edutap.wallet_google/main)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+![GitHub Repo stars](https://img.shields.io/github/stars/edutap-eu/edutap.wallet_google)
+
+</p>
+
 This package provides a Python API to interact with the Google Wallet Restful API
 
 It contains:
