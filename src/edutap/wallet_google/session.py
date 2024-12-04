@@ -42,7 +42,7 @@ class GoogleWalletSettings(BaseSettings):
     record_api_calls_dir: Path | None = None  # ROOT_DIR / "tests" / "data"
     base_url: HttpUrl = HttpUrl(BASE_URL)
     save_url: HttpUrl = HttpUrl(SAVE_URL)
-    scopes: list[HttpUrl] = [HttpUrl(SCOPE)]
+    scopes: list[str] = [SCOPE]
 
     credentials_file: Path = ROOT_DIR / "credentials.json"
     issuer_account_email: EmailStr | None = None
