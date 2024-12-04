@@ -18,6 +18,7 @@ class CamelCaseAliasEnum(Enum):
 
     def __new__(cls: type["CamelCaseAliasEnum"], value: str) -> "CamelCaseAliasEnum":
         obj: "CamelCaseAliasEnum" = object.__new__(cls)
+        obj._name_ = f"{cls.__name__} snake case literal"
         parts = value.lower().split("_")
         camel = "".join(
             [(x.capitalize() if count != 0 else x) for count, x in enumerate(parts)]
@@ -28,6 +29,7 @@ class CamelCaseAliasEnum(Enum):
         # pydantic checks for the value in the enum and not only the name
         camel_obj = object.__new__(cls)
         camel_obj._value_ = camel
+        camel_obj._name_ = f"{cls.__name__} camel case alias"
         cls._value2member_map_[camel] = camel_obj
         cls._member_map_[camel] = camel_obj
         cls._member_names_.append(camel)
