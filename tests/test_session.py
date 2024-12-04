@@ -47,7 +47,7 @@ def test_session_creation(monkeypatch):
     assert session is not None
     assert manager.settings.credentials_file is not None
     assert session.credentials.scopes == [
-        HttpUrl("https://www.googleapis.com/auth/wallet_object.issuer")
+        "https://www.googleapis.com/auth/wallet_object.issuer",
     ]
 
     from edutap.wallet_google.session import _THREADLOCAL
