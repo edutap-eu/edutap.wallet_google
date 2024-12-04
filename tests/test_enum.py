@@ -7,8 +7,11 @@ def test_camel_case_alias_enum():
     assert TestFoo("fooBarBaz") == TestFoo.FOO_BAR_BAZ
 
     # test for https://github.com/edutap-eu/edutap.wallet_google/issues/12
-    assert repr(TestFoo("fooBarBaz")) == "<TestFoo.TestFoo camel case alias: 'fooBarBaz'>"
+    assert (
+        repr(TestFoo("fooBarBaz")) == "<TestFoo.TestFoo camel case alias: 'fooBarBaz'>"
+    )
     assert repr(TestFoo("FOO_BAR_BAZ")) == "<TestFoo.FOO_BAR_BAZ: 'FOO_BAR_BAZ'>"
+
 
 def test_action_enum():
     from edutap.wallet_google.models.primitives.enums import Action
@@ -23,4 +26,3 @@ def test_action_enum():
 
     assert Action("SIGN_UP") == Action.SIGN_UP
     assert Action("signUp") == Action.SIGN_UP
-
