@@ -10,8 +10,14 @@ authors = [
     {name = "Jens Klein", email = "jk@kleinundpartner.at"},
 ]
 requires-python = ">=3.10"
-license = "EUPL 1.2"
-license-files = ["LICENSE"]
+license = { text = "EUPL 1.2" }
+# TODO for PEP 639 https://peps.python.org/pep-0639
+# -> when implemented in PyPI, twine, pyroma, etc.
+# add license-expression = EUPL-1.2
+# add license-file = LICENSE
+# remove license field
+# remove License classifier
+
 classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
