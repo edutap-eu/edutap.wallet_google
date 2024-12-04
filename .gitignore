@@ -36,14 +36,6 @@ parts/
 pyvenv.cfg
 var/
 
-# mxdev
-/instance/
-/.make-sentinels/
-/*-mxdev.txt
-/reports/
-/sources/
-/venv/
-.installed.txt
-
-/.env
-/*.json
+# local testing related
+.env
+keys/

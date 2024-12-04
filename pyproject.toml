@@ -62,6 +62,9 @@ minversion = "6.0"
 testpaths = [
     "tests",
 ]
+markers = [
+    "integration: Test are running against the real Google Wallet API, needs account configuration. (deselect with '-m \"not integration\"')",
+]
 
 [tool.isort]
 profile = "plone"
