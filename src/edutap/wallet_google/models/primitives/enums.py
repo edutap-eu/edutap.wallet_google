@@ -3,7 +3,7 @@ from enum import Enum
 
 class CamelCaseAliasEnum(Enum):
     """Add an value alias in camelcase to the enum,
-    given the value in snakecase.
+    given the value in snake-case.
 
     example: a enum like
 
@@ -40,10 +40,9 @@ class CamelCaseAliasEnum(Enum):
         if isinstance(other, Enum):
             if self.value == other.value:
                 return True
-            else:
-                v1 = self.value.lower().replace("_", "")
-                v2 = other.value.lower().replace("_", "")
-                return v1 == v2
+            v1 = self.value.lower().replace("_", "")
+            v2 = other.value.lower().replace("_", "")
+            return v1 == v2
         return False
 
 
