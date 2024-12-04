@@ -6,6 +6,8 @@ def test_camel_case_alias_enum():
 
     assert TestFoo("fooBarBaz") == TestFoo.FOO_BAR_BAZ
 
+    # this fails because the CamelCaseAliasEnum does not work with pydantic repr.
+    # assert repr(TestFoo("fooBarBaz")) == "<TestFoo.FOO_BAR_BAZ: 'FOO_BAR_BAZ'>"
 
 def test_action_enum():
     from edutap.wallet_google.models.primitives.enums import Action
@@ -20,3 +22,4 @@ def test_action_enum():
 
     assert Action("SIGN_UP") == Action.SIGN_UP
     assert Action("signUp") == Action.SIGN_UP
+
