@@ -1,8 +1,19 @@
 ci:
     autofix_prs: false
     autoupdate_schedule: monthly
-
+    skip: [check-manifest, pyroma]
 repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+    - id: check-ast
+    - id: check-json
+    - id: check-toml
+    - id: debug-statements
+    - id: check-case-conflict
+    - id: check-docstring-first
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
 -   repo: https://github.com/asottile/pyupgrade
     rev: v3.19.0
     hooks:
@@ -38,12 +49,10 @@ repos:
           - tomli
 -   repo: https://github.com/mgedmin/check-manifest
     rev: "0.50"
-    additional_dependencies: [hatchling]
     hooks:
     -   id: check-manifest
 -   repo: https://github.com/regebro/pyroma
     rev: "4.2"
-    additional_dependencies: [hatchling]
     hooks:
     -   id: pyroma
 -   repo: https://github.com/mgedmin/check-python-versions
