@@ -17,7 +17,7 @@ from .primitives.smarttap import SmartTapMerchantData
     can_list=False,
     can_message=False,
 )
-class SmartTap(GoogleWalletModel, GoogleWalletWithIdModel):
+class SmartTap(GoogleWalletWithIdModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/smarttap#resource:-smarttap
     """
@@ -25,7 +25,7 @@ class SmartTap(GoogleWalletModel, GoogleWalletWithIdModel):
     # Attribute order as in Google's documentation to make future updates easier!
     # last check: 2024-11-29
 
-    # inherited id
+    # inherits id
     merchantId: str
     infos: list[IssuerToUserInfo] | None = None
 

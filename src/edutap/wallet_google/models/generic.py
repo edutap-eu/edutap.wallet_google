@@ -58,21 +58,21 @@ class GenericClass(GoogleWalletClassModel):
     # Attribute order as in Google's documentation to make future updates easier!
     # last check: 2024-12-02
 
-    # inherited id
-    # inherited classTemplateInfo
-    # inherited infoModuleData
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited enableSmartTap
-    # inherited redemptionIssuers
-    # inherited securityAnimation
-    # inherited multipleDevicesAndHoldersAllowedStatus
-    # inherited callbackOptions
-    # inherited viewUnlockRequirement
-    # inherited messages
-    # inherited appLinkData
-    # inherited valueAddedModuleData
+    # inherits id
+    # inherits classTemplateInfo
+    # inherits infoModuleData
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits enableSmartTap
+    # inherits redemptionIssuers
+    # inherits securityAnimation
+    # inherits multipleDevicesAndHoldersAllowedStatus
+    # inherits callbackOptions
+    # inherits viewUnlockRequirement
+    # inherits messages
+    # inherits appLinkData
+    # inherits valueAddedModuleData
 
 
 @register_model("GenericObject", url_part="genericObject")
@@ -94,26 +94,26 @@ class GenericObject(
     cardTitle: LocalizedString | None = None
     subheader: LocalizedString | None = None
     header: LocalizedString | None = None
-    # inherited logo
-    # inherited hexBackgroundColor
+    # inherits logo
+    # inherits hexBackgroundColor
     notifications: Notifications | None = None
-    # inherited id
-    # inherited classId
-    # inherited barcode
-    # inherited heroImage
-    # inherited validTimeInterval
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited appLinkData
+    # inherits id
+    # inherits classId
+    # inherits barcode
+    # inherits heroImage
+    # inherits validTimeInterval
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits appLinkData
     groupingInfo: GroupingInfo | None = None
-    # inherited smartTapRedemptionValue
-    # inherited rotatingBarcode
-    # inherited state
-    # inherited hasUsers
-    # inherited messages
-    # inherited passConstraints
-    # inherited wideLogo
-    # inherited saveRestrictions
-    # inherited linkedObjectIds
-    # inherited valueAddedModuleData
+    # inherits smartTapRedemptionValue
+    # inherits rotatingBarcode
+    # inherits state
+    # inherits hasUsers
+    # inherits messages
+    # inherits passConstraints
+    # inherits wideLogo
+    # inherits saveRestrictions
+    # inherits linkedObjectIds
+    # inherits valueAddedModuleData

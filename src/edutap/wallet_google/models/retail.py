@@ -2,7 +2,6 @@ from ..registry import register_model
 from .bases import GoogleWalletClassModel
 from .bases import GoogleWalletModel
 from .bases import GoogleWalletObjectModel
-from .bases import GoogleWalletObjectWithClassReferenceMixin
 from .bases import GoogleWalletStyleableMixin
 from .primitives import GroupingInfo
 from .primitives import Image
@@ -56,40 +55,37 @@ class GiftCardClass(
     localizedEventNumberLabel: LocalizedString | None = None
     cardNumberLabel: str | None = None
     localizedCardNumberLabel: LocalizedString | None = None
-    # inherited classTemplateInfo
-    # inherited id
+    # inherits classTemplateInfo
+    # inherits id
     version: str | None = Field(description="deprecated", exclude=True, default=None)
     issuerName: str
-    # inherited messages
+    # inherits messages
     homepageUri: Uri | None = None
     reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     review: Review | None = None
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited redemptionIssuers
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits redemptionIssuers
     countryCode: str | None = None
     heroImage: Image | None = None
-    # inherited enableSmartTap
-    # inherited hexBackgroundColor
+    # inherits enableSmartTap
+    # inherits hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
-    # inherited multipleDevicesAndHoldersAllowedStatus
-    # inherited callbackOptions
-    # inherited securityAnimation
-    # inherited viewUnlockRequirement
+    # inherits multipleDevicesAndHoldersAllowedStatus
+    # inherits callbackOptions
+    # inherits securityAnimation
+    # inherits viewUnlockRequirement
     wideProgramLogo: Image | None = None
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    # inherited appLinkData
-    # inherited valueAddedModuleData
+    # inherits appLinkData
+    # inherits valueAddedModuleData
 
 
 @register_model("GiftCardObject", url_part="giftCardObject")
-class GiftCardObject(
-    GoogleWalletObjectModel,
-    GoogleWalletObjectWithClassReferenceMixin,
-):
+class GiftCardObject(GoogleWalletObjectModel):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
     """
@@ -111,32 +107,32 @@ class GiftCardObject(
     balance: Money | None = None
     balanceUpdateTime: DateTime | None = None
     eventNumber: str | None = None
-    # inherited id
-    # inherited version
-    # inherited state
-    # inherited barcode
-    # inherited messages
-    # inherited validTimeInterval
+    # inherits id
+    # inherits version
+    # inherits state
+    # inherits barcode
+    # inherits messages
+    # inherits validTimeInterval
     locations: list[LatLongPoint] | None = None
-    # inherited hasUsers
-    # inherited smartTapRedemptionValue
+    # inherits hasUsers
+    # inherits smartTapRedemptionValue
     hasLinkedDevice: bool = False
     disableExpirationNotification: bool | None = False
-    # inherited infoModuleData
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited appLinkData
-    # inherited rotatingBarcode
+    # inherits infoModuleData
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits appLinkData
+    # inherits rotatingBarcode
     heroImage: Image | None = None
-    # inherited groupingInfo
-    # inherited passConstraints
-    # inherited saveRestrictions
-    # inherited linkedObjectIds
+    # inherits groupingInfo
+    # inherits passConstraints
+    # inherits saveRestrictions
+    # inherits linkedObjectIds
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    # inherited valueAddedModuleData
+    # inherits valueAddedModuleData
 
 
 @register_model(
@@ -178,34 +174,34 @@ class LoyaltyClass(
     secondaryRewardsTier: str | None = None
     localizedSecondaryRewardsTier: LocalizedString | None = None
     discoverableProgram: DiscoverableProgram | None = None
-    # inherited classTemplateInfo
-    # inherited id
+    # inherits classTemplateInfo
+    # inherits id
     issuerName: str | None = None
-    # inherited messages
+    # inherits messages
     homepageUri: Uri | None = None
     locations: list[LatLongPoint] | None = None
     review: Review | None = None
     reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
-    # inherited infoModuleData
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited redemptionIssuers
+    # inherits infoModuleData
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits redemptionIssuers
     countryCode: str | None = None
     heroImage: Image | None = None
-    # inherited wordMark
-    # inherited enableSmartTap
-    # inherited hexBackgroundColor
+    # inherits wordMark
+    # inherits enableSmartTap
+    # inherits hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
-    # inherited multipleDevicesAndHoldersAllowedStatus
-    # inherited callbackOptions
-    # inherited securityAnimation
-    # inherited viewUnlockRequirement
+    # inherits multipleDevicesAndHoldersAllowedStatus
+    # inherits callbackOptions
+    # inherits securityAnimation
+    # inherits viewUnlockRequirement
     wideProgramLogo: Image | None = None
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    # inherited valueAddedModuleData
+    # inherits valueAddedModuleData
 
 
 class LoyaltyPointsBalance(
@@ -257,10 +253,7 @@ class LoyaltyPoints(
 
 
 @register_model("LoyaltyObject", url_part="loyaltyObject", plural="loyaltyObjects")
-class LoyaltyObject(
-    GoogleWalletObjectModel,
-    GoogleWalletObjectWithClassReferenceMixin,
-):
+class LoyaltyObject(GoogleWalletObjectModel):
     """
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
@@ -283,33 +276,33 @@ class LoyaltyObject(
     loyaltyPoints: LoyaltyPoints | None = None
     linkedOfferIds: list[str] | None = None
     secondaryLoyaltyPoints: LoyaltyPoints | None = None
-    # inherited id
-    # inherited classId
-    # inherited messages
-    # inherited state
-    # inherited barcode
-    # inherited messages
-    # inherited validTimeInterval
-    # inherited hasUsers
-    # inherited smartTapRedemptionValue
+    # inherits id
+    # inherits classId
+    # inherits messages
+    # inherits state
+    # inherits barcode
+    # inherits messages
+    # inherits validTimeInterval
+    # inherits hasUsers
+    # inherits smartTapRedemptionValue
     hasLinkedDevice: bool | None = None
     disableExpirationNotification: bool | None = False
     imageModule: ImageModuleData | None = None
-    # inherited infoModuleData
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited appLinkData
-    # inherited rotatingBarcode
+    # inherits infoModuleData
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits appLinkData
+    # inherits rotatingBarcode
     heroImage: Image | None = None
-    # inherited groupingInfo
-    # inhertied passConstraints
-    # inherited saveRestrictions
-    # inherited linkedObjectIds
+    # inherits groupingInfo
+    # inherits passConstraints
+    # inherits saveRestrictions
+    # inherits linkedObjectIds
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    # inherited valueAddedModuleData
+    # inherits valueAddedModuleData
 
 
 @register_model(
@@ -349,41 +342,37 @@ class OfferClass(
     localizedFinePrint: LocalizedString | None = None
     shortTitle: str | None = None
     localizedShortTitle: LocalizedString | None = None
-    # inherited classTemplateInfo
-    # inherited id
+    # inherits classTemplateInfo
+    # inherits id
     issuerName: str | None = None
-    # inherited messages
+    # inherits messages
     homepageUri: Uri | None = None
     reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     review: Review | None = None
-    # inherited infoModuleData
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited redemptionIssuers
+    # inherits infoModuleData
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits redemptionIssuers
     countryCode: str | None = None
     heroImage: Image | None = None
-    # inherited enableSmartTap
-    # inherited hexBackgroundColor
+    # inherits enableSmartTap
+    # inherits hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
-    # inherited multipleDevicesAndHoldersAllowedStatus
-    # inherited callbackOptions
-    # inherited securityAnimation
-    # inherited viewUnlockRequirement
+    # inherits multipleDevicesAndHoldersAllowedStatus
+    # inherits callbackOptions
+    # inherits securityAnimation
+    # inherits viewUnlockRequirement
     wideTitleImage: Image | None = None
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    # inherited appLinkData
-    # inherited valueAddedModuleData
+    # inherits appLinkData
+    # inherits valueAddedModuleData
 
 
 @register_model("OfferObject", url_part="offerObject")
-class OfferObject(
-    GoogleWalletObjectModel,
-    GoogleWalletObjectWithClassReferenceMixin,
-    GoogleWalletStyleableMixin,
-):
+class OfferObject(GoogleWalletObjectModel, GoogleWalletStyleableMixin):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerobject
     """
@@ -400,29 +389,29 @@ class OfferObject(
     )
 
     classReference: OfferClass | None = None
-    # inherited id
-    # inherited classId
-    # inherited state
-    # inherited barcode
+    # inherits id
+    # inherits classId
+    # inherits state
+    # inherits barcode
     # inertied messages
-    # inherited validTimeInterval
+    # inherits validTimeInterval
     locations: list[LatLongPoint] | None = None
-    # inherited hasUsers
-    # inherited smartTapRedemptionValue
+    # inherits hasUsers
+    # inherits smartTapRedemptionValue
     hasLinkedDevice: bool = False
     disableExpirationNotification: bool | None = False
-    # inherited infoModuleData
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited appLinkData
-    # inherited rotatingBarcode
+    # inherits infoModuleData
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits appLinkData
+    # inherits rotatingBarcode
     heroImage: Image | None = None
     groupingInfo: GroupingInfo | None = None
     passConstraints: PassConstraints | None = None
-    # inherited saveRestrictions
-    # inherited linkedObjectIds
+    # inherits saveRestrictions
+    # inherits linkedObjectIds
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    # inherited valueAddedModuleData
+    # inherits valueAddedModuleData

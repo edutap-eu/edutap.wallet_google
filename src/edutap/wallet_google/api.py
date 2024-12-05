@@ -1,8 +1,5 @@
-from .models.bases import GoogleWalletClassModel
 from .models.bases import GoogleWalletModel
-from .models.bases import GoogleWalletObjectModel
-from .models.bases import GoogleWalletObjectWithClassReferenceMixin
-from .models.bases import GoogleWalletWithIdModel
+from .models.bases import GoogleWalletObjectWithClassReference
 from .models.message import AddMessageRequest
 from .models.message import Message
 from .models.primitives import Pagination
@@ -35,7 +32,7 @@ def _validate_data(
                        or a Pydantic model instance.
     :return:           data as an instance of the given model
     """
-    if not isinstance(data, (GoogleWalletModel, GoogleWalletWithIdModel)):
+    if not isinstance(data, (GoogleWalletModel)):
         return model.model_validate(data)
     if not isinstance(data, model):
         raise ValueError(
@@ -158,18 +155,7 @@ def update(
     raise_when_operation_not_allowed(name, "update")
     model_metadata = lookup_metadata(name)
     model = model_metadata["model"]
-    if (
-        not isinstance(
-            data,
-            (
-                GoogleWalletModel,
-                GoogleWalletWithIdModel,
-                GoogleWalletClassModel,
-                GoogleWalletObjectModel,
-            ),
-        )
-        and partial
-    ):
+    if not isinstance(data, GoogleWalletModel) and partial:
         resource_id = data[model_metadata["resource_id"]]
         # we can not validate partial data for patch yet
         verified_json = json.dumps(data)
@@ -365,7 +351,7 @@ def listing(
 
 
 def save_link(
-    resources: dict[str, list[typing.Any]],
+    resources: dict[str, list[GoogleWalletModel | dict]],
     *,
     origins: list[str] = [],
 ) -> str:
@@ -391,25 +377,20 @@ def save_link(
     for name, objs in resources.items():
         payload[name] = []
         for obj in objs:
-            # first look if this is an object reference as dict
-            if isinstance(obj, dict) and "id" in obj and len(obj.keys()) <= 2:
-                obj = GoogleWalletObjectWithClassReferenceMixin.model_validate(obj)
-            if isinstance(obj, GoogleWalletObjectWithClassReferenceMixin):
-                payload[name].append(
-                    obj.model_dump(
-                        # explicitly set to model_dump(mode="json") instead of model_dump_json due to problems
-                        # reported by jensens
-                        mode="json",
-                        exclude_none=True,
-                        exclude_unset=True,
-                        exclude_defaults=True,
-                    )
-                )
-                continue
 
-            # otherwise it must be a registered model
-            model = lookup_model_by_plural_name(name)
-            obj = _validate_data(model, obj)
+            # first look if this is a reference to an existing wallet object passed as dict
+            if isinstance(obj, dict) and (
+                ("id" in obj and len(obj.keys()) == 1)
+                or ("id" in obj and "classReference" in obj and len(obj.keys()) == 2)
+            ):
+                obj = GoogleWalletObjectWithClassReference.model_validate(obj)
+
+            # if it is not a reference, it must be a full wallet object model
+            if not isinstance(obj, GoogleWalletObjectWithClassReference):
+                model = lookup_model_by_plural_name(name)
+                obj = _validate_data(model, obj)
+
+            # dump the model to json
             obj_json = obj.model_dump(
                 # explicitly set to model_dump(mode="json") instead of model_dump_json due to problems
                 # reported by jensens
@@ -418,7 +399,9 @@ def save_link(
                 exclude_unset=True,
                 exclude_defaults=True,
             )
+            # append to the current payload section
             payload[name].append(obj_json)
+
     claims = {
         "iat": "",
         "iss": session_manager.credentials_info["client_email"],

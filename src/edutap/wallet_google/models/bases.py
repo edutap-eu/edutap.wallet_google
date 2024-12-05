@@ -37,7 +37,7 @@ class GoogleWalletModel(BaseModel):
     )
 
 
-class GoogleWalletWithIdModel(BaseModel):
+class GoogleWalletWithIdModel(GoogleWalletModel):
     """
     Model for Google Wallet models with an identifier.
     """
@@ -45,7 +45,7 @@ class GoogleWalletWithIdModel(BaseModel):
     id: str
 
 
-class GoogleWalletClassModel(GoogleWalletModel, GoogleWalletWithIdModel):
+class GoogleWalletClassModel(GoogleWalletWithIdModel):
     """
     BaseModel for all Google Wallet Class Models.
 
@@ -59,7 +59,7 @@ class GoogleWalletClassModel(GoogleWalletModel, GoogleWalletWithIdModel):
     # Attribute order as in Google's documentation to make future updates easier!
     # last check: 2024-12-02
 
-    # inherited id
+    # inherits id
     classTemplateInfo: ClassTemplateInfo | None = None
     imageModulesData: list[ImageModuleData] | None = None
     textModulesData: list[TextModuleData] | None = None
@@ -85,7 +85,7 @@ class GoogleWalletClassModel(GoogleWalletModel, GoogleWalletWithIdModel):
     valueAddedModuleData: ValueAddedModuleData | None = None
 
 
-class GoogleWalletObjectModel(GoogleWalletModel, GoogleWalletWithIdModel):
+class GoogleWalletObjectModel(GoogleWalletWithIdModel):
     """
     Base model for all Google Wallet Object models.
 
@@ -94,6 +94,7 @@ class GoogleWalletObjectModel(GoogleWalletModel, GoogleWalletWithIdModel):
     It is just a base model with all attributes all Google Wallet Objects models have in common.
     """
 
+    # inherits id
     classId: str
     version: str | None = Field(
         description="deprecated", deprecated=True, exclude=True, default=None
@@ -132,12 +133,10 @@ class GoogleWalletObjectModel(GoogleWalletModel, GoogleWalletWithIdModel):
     validTimeInterval: TimeInterval | None = None
 
 
-class GoogleWalletObjectWithClassReferenceMixin(
-    GoogleWalletModel, GoogleWalletWithIdModel
-):
+class GoogleWalletObjectWithClassReference(GoogleWalletWithIdModel):
     """
     Mixin for all Google Wallet Object with a classReferences attribute, that reflects the whole class data.
-    This mixin class is used as an identifier for the registry.
+    This class is used to create the save_link only, never inherit from it.
     """
 
     classReference: GoogleWalletClassModel | None = None

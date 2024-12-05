@@ -3,7 +3,6 @@ from .bases import GoogleWalletClassModel
 from .bases import GoogleWalletCommonLogosMixin
 from .bases import GoogleWalletModel
 from .bases import GoogleWalletObjectModel
-from .bases import GoogleWalletObjectWithClassReferenceMixin
 from .bases import GoogleWalletStyleableMixin
 from .primitives import Image
 from .primitives import Uri
@@ -148,34 +147,34 @@ class EventTicketClass(
     gateLabel: GateLabel | None = None
     customGateLabel: LocalizedString | None = None
     finePrint: LocalizedString | None = None
-    # inherited classTemplateInfo
-    # inherited id
+    # inherits classTemplateInfo
+    # inherits id
     issuerName: str | None = None
-    # inherited messages
+    # inherits messages
     homepageUri: Uri | None = None
     locations: list[LatLongPoint] | None = Field(default=None, deprecated=True)
     reviewStatus: ReviewStatus | None = None
     review: Review | None = None
-    # inherited infoModuleData
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited redemptionIssuers
+    # inherits infoModuleData
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits redemptionIssuers
     countryCode: str | None = None
-    # inherited heroImage
-    # inherited enableSmartTap
-    # inherited hexBackgroundColor
+    # inherits heroImage
+    # inherits enableSmartTap
+    # inherits hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
-    # inherited multipleDevicesAndHoldersAllowedStatus
-    # inherited callbackOptions
-    # inherited securityAnimation
-    # inherited viewUnlockRequirement
-    # inherited wideLogo
+    # inherits multipleDevicesAndHoldersAllowedStatus
+    # inherits callbackOptions
+    # inherits securityAnimation
+    # inherits viewUnlockRequirement
+    # inherits wideLogo
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    # inherited appLinkData
-    # inherited valueAddedModuleData
+    # inherits appLinkData
+    # inherits valueAddedModuleData
 
 
 @register_model(
@@ -185,7 +184,6 @@ class EventTicketClass(
 )
 class EventTicketObject(
     GoogleWalletObjectModel,
-    GoogleWalletObjectWithClassReferenceMixin,
     GoogleWalletStyleableMixin,
     GoogleWalletCommonLogosMixin,
 ):
@@ -209,37 +207,37 @@ class EventTicketObject(
     ticketNumber: str | None = None
     ticketType: LocalizedString | None = None
     faceValue: Money | None = None
-    # inherited groupingInfo
+    # inherits groupingInfo
     linkedOfferIds: list[str] | None = None
-    # inherited hexBackgroundColor
-    # inherited id
-    # inherited classId
+    # inherits hexBackgroundColor
+    # inherits id
+    # inherits classId
     version: str | None = Field(description="deprecated", exclude=True, default=None)
-    # inherited state
-    # inherited barcode
-    # inherited messages
-    # inherited validTimeInterval
+    # inherits state
+    # inherits barcode
+    # inherits messages
+    # inherits validTimeInterval
     locations: list[LatLongPoint] | None = Field(
         description="deprecated", exclude=True, default=None
     )
-    # inherited hasUsers
-    # inherited smartTapRedemptionValue
+    # inherits hasUsers
+    # inherits smartTapRedemptionValue
     hasLinkedDevice: bool | None = False
     disableExpirationNotification: bool | None = False
-    # inherited infoModuleData
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited appLinkData
-    # inherited rotatingBarcode
-    # inhertied heroImage
-    # inherited passConstraints
-    # inherited saveRestrictions
-    # inherited linkedObjectIds
+    # inherits infoModuleData
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits appLinkData
+    # inherits rotatingBarcode
+    # inherits heroImage
+    # inherits passConstraints
+    # inherits saveRestrictions
+    # inherits linkedObjectIds
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    # inherited valueAddedModuleData
+    # inherits valueAddedModuleData
 
 
 class ActivationOptions(GoogleWalletModel):
@@ -388,7 +386,7 @@ class TransitClass(
     """
 
     transitOperatorName: LocalizedString | None = None
-    # inherited logo
+    # inherits logo
     transitType: TransitType = TransitType.TRANSIT_TYPE_UNSPECIFIED
     watermark: Image | None = None
     languageOverride: str | None = None
@@ -411,34 +409,34 @@ class TransitClass(
     customFareClassLabel: LocalizedString | None = None
     customConcessionCategoryLabel: LocalizedString | None = None
     customFareNameLabel: LocalizedString | None = None
-    # inherited classTemplateInfo
+    # inherits classTemplateInfo
     enableSingleLegItinerary: bool = False
-    # inherited id
+    # inherits id
     issuerName: str | None = None
-    # inherited messages
+    # inherits messages
     homepageUri: Uri | None = None
     reviewStatus: ReviewStatus | None = None
     review: Review | None = None
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inhertied redemptionIssuers
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits redemptionIssuers
     countryCode: str | None = None
-    # inherited heroImage
-    # inherited enableSmartTap
-    # inherited hexBackgroundColor
+    # inherits heroImage
+    # inherits enableSmartTap
+    # inherits hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
-    # inherited multipleDevicesAndHoldersAllowedStatus
-    # inherited callbackOptions
-    # inherited securityAnimation
+    # inherits multipleDevicesAndHoldersAllowedStatus
+    # inherits callbackOptions
+    # inherits securityAnimation
     activationOptions: ActivationOptions | None = None
-    # inherited viewUnlockRequirement
-    # inherited wideLogo
+    # inherits viewUnlockRequirement
+    # inherits wideLogo
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    # inherited appLinkData
-    # inherited valueAddedModuleData
+    # inherits appLinkData
+    # inherits valueAddedModuleData
 
 
 @register_model(
@@ -477,33 +475,33 @@ class TransitObject(
     # TODO: validator: If more than one leg is to be specified then use the ticketLegs field instead.
     #                  Both ticketLeg and ticketLegs may not be set.
     tripType: TripType = TripType.TRIP_TYPE_UNSPECIFIED
-    # inherited id
-    # inherited classId
-    # inherited state
-    # inherited barcode
-    # inherited messages
-    # inherited validTimeInterval
-    # inherited hasUsers
-    # inherited smartTapRedemptionValue
+    # inherits id
+    # inherits classId
+    # inherits state
+    # inherits barcode
+    # inherits messages
+    # inherits validTimeInterval
+    # inherits hasUsers
+    # inherits smartTapRedemptionValue
     hasLinkedDevice: bool | None = False
     disableExpirationNotification: bool | None = False
-    # inherited infoModuleData
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited appLinkData
+    # inherits infoModuleData
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits appLinkData
     activationStatus: ActivationStatus | None = None
-    # inherited rotatingBarcode
+    # inherits rotatingBarcode
     deviceContext: DeviceContext | None = None
-    # inherited heroImage
-    # inherited groupingInfo
-    # inhertied passConstraints
-    # inherited saveRestrictions
-    # inherited linkedObjectIds
+    # inherits heroImage
+    # inherits groupingInfo
+    # inherits passConstraints
+    # inherits saveRestrictions
+    # inherits linkedObjectIds
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    # inherited valueAddedModuleData
+    # inherits valueAddedModuleData
 
 
 class FlightCarrier(GoogleWalletModel):
@@ -623,33 +621,33 @@ class FlightClass(
     flightStatus: FlightStatus = FlightStatus.FLIGHT_STATUS_UNSPECIFIED
     boardingAndSeatingPolicy: BoardingAndSeatingPolicy | None = None
     localGateClosingDateTime: str | None = Field(default=None)
-    # inherited classTemplateInfo
+    # inherits classTemplateInfo
     languageOverride: str | None = None
-    # inherited id
+    # inherits id
     issuerName: str | None = None
-    # inherited messages
-    # inherited homepageUri
+    # inherits messages
+    # inherits homepageUri
     reviewStatus: ReviewStatus | None = None
     review: Review | None = None
-    # inherited infoModuleData
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited redemptionIssuers
+    # inherits infoModuleData
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits redemptionIssuers
     countryCode: str | None = None
-    # inherited heroImage
-    # inherited enableSmartTap
-    # inherited hexBackgroundColor
+    # inherits heroImage
+    # inherits enableSmartTap
+    # inherits hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
-    # inherited multipleDevicesAndHoldersAllowedStatus
-    # inherited callbackOptions
-    # inherited securityAnimation
-    # inherited viewUnlockRequirement
+    # inherits multipleDevicesAndHoldersAllowedStatus
+    # inherits callbackOptions
+    # inherits securityAnimation
+    # inherits viewUnlockRequirement
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    # inherited appLinkData
-    # inherited valueAddedModuleData
+    # inherits appLinkData
+    # inherits valueAddedModuleData
 
 
 @register_model(
@@ -674,29 +672,29 @@ class FlightObject(GoogleWalletObjectModel, GoogleWalletStyleableMixin):
     # TODO boardingAndSeatingInfo
     # TODO reservationInfo
     securityProgramLogo: Image | None = None
-    # inherited hexBackgroundColor
-    # inherited id
-    # inherited classId
-    # inherited state
-    # inherited barcode
-    # inherited messages
-    # inherited validTimeInterval
-    # inherited hasUsers
-    # inherited smartTapRedemptionValue
+    # inherits hexBackgroundColor
+    # inherits id
+    # inherits classId
+    # inherits state
+    # inherits barcode
+    # inherits messages
+    # inherits validTimeInterval
+    # inherits hasUsers
+    # inherits smartTapRedemptionValue
     hasLinkedDevice: bool | None = False
     disableExpirationNotification: bool | None = False
-    # inherited infoModuleData
-    # inherited imageModulesData
-    # inherited textModulesData
-    # inherited linksModuleData
-    # inherited appLinkData
-    # inherited rotatingBarcode
+    # inherits infoModuleData
+    # inherits imageModulesData
+    # inherits textModulesData
+    # inherits linksModuleData
+    # inherits appLinkData
+    # inherits rotatingBarcode
     heroImage: Image | None = None
-    # inherited groupingInfo
-    # inhertied passConstraints
-    # inherited saveRestrictions
-    # inherited linkedObjectIds
+    # inherits groupingInfo
+    # inherits passConstraints
+    # inherits saveRestrictions
+    # inherits linkedObjectIds
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
-    # inherited valueAddedModuleData
+    # inherits valueAddedModuleData

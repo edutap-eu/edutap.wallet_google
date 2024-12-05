@@ -49,8 +49,8 @@ def test_class_creation(class_type, class_data):
     from edutap.wallet_google.api import create
     from edutap.wallet_google.api import session_manager
 
-    class_data[
-        "id"
-    ] = f"{session_manager.settings.issuer_id}.{uuid.uuid4()}.test.wallet_google.edutap"
+    class_data["id"] = (
+        f"{session_manager.settings.issuer_id}.{uuid.uuid4()}.test.wallet_google.edutap"
+    )
     result = create(class_type, class_data)
     assert result is not None
