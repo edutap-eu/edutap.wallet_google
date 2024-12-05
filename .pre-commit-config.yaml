@@ -38,14 +38,14 @@ repos:
           - tomli
 -   repo: https://github.com/mgedmin/check-manifest
     rev: "0.50"
+    additional_dependencies: [hatchling]
     hooks:
     -   id: check-manifest
-    -   additional_dependencies: [hatchling]
 -   repo: https://github.com/regebro/pyroma
     rev: "4.2"
+    additional_dependencies: [hatchling]
     hooks:
     -   id: pyroma
-    -   additional_dependencies: [hatchling]
 -   repo: https://github.com/mgedmin/check-python-versions
     rev: "0.22.1"
     hooks:
