@@ -45,7 +45,7 @@ def _validate_data_and_convert_to_json(
     model: type[GoogleWalletModel],
     data: dict[str, typing.Any] | GoogleWalletModel,
     *,
-    fetch_id: bool = False,
+    existing: bool = False,
     resource_id_key: str = "id",
 ) -> tuple[str, str]:
     """Takes a model and data, validates it and convert to a json string.
@@ -54,18 +54,18 @@ def _validate_data_and_convert_to_json(
     :param data:       Data to pass to the Google RESTful API.
                        Either a simple python data structure using built-ins,
                        or a Pydantic model instance.
+    :param existing:   If True, the data is expected to be an existing object (i.e. on update).
     :return:           Tuple of resource-id and JSON string.
     """
     verified_data = _validate_data(model, data)
     verified_json = verified_data.model_dump_json(
-        # exclude_none=True,
+        exclude_none=not existing,  # exclude None values when we create something new
+        exclude_unset=True,  # exclude unset values - this are values not set explicitly by the code
         by_alias=True,
-        exclude_none=False,  # should be False, so it should be able to reset a value to None
     )
-    return (
-        getattr(verified_data, resource_id_key),
-        verified_json,
-    )
+    identifier = getattr(verified_data, resource_id_key)
+    # nice to have: if existing: check if this is a valid identifier using read
+    return (identifier, verified_json)
 
 
 def create(
@@ -128,7 +128,6 @@ def read(
     if response.status_code == 200:
         model = lookup_model(name)
         logger.debug(f"RAW-Response: {response.content!r}")
-        # print(f"RAW-Response: {response.content}")
         return model.model_validate_json(response.content)
 
     raise Exception(f"{url} {response.status_code} - {response.text}")
@@ -161,7 +160,7 @@ def update(
         verified_json = json.dumps(data)
     else:
         resource_id, verified_json = _validate_data_and_convert_to_json(
-            model, data, fetch_id=True, resource_id_key=model_metadata["resource_id"]
+            model, data, existing=True, resource_id_key=model_metadata["resource_id"]
         )
     session = session_manager.session
     if partial:
@@ -395,9 +394,9 @@ def save_link(
                 # explicitly set to model_dump(mode="json") instead of model_dump_json due to problems
                 # reported by jensens
                 mode="json",
-                exclude_none=True,
-                exclude_unset=True,
-                exclude_defaults=True,
+                exclude_none=True,  # exclude None values - here we create something new, no updates.
+                exclude_unset=True,  # exclude unset values - this are values not set explicitly by the code
+                by_alias=True,
             )
             # append to the current payload section
             payload[name].append(obj_json)
