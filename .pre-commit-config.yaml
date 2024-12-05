@@ -40,10 +40,12 @@ repos:
     rev: "0.50"
     hooks:
     -   id: check-manifest
+    -   additional_dependencies: [hatchling]
 -   repo: https://github.com/regebro/pyroma
     rev: "4.2"
     hooks:
     -   id: pyroma
+    -   additional_dependencies: [hatchling]
 -   repo: https://github.com/mgedmin/check-python-versions
     rev: "0.22.1"
     hooks:
