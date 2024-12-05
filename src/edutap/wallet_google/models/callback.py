@@ -21,6 +21,13 @@ class IntermediateSigningKey(GoogleWalletModel):
     signatures: list[str]
 
 
+class SignedMessage(GoogleWalletModel):
+    classId: str
+    objectId: str
+    expTimeMillis: int
+    eventType: EventType
+
+
 class CallbackData(GoogleWalletModel):
     signature: str
     intermediateSigningKey: IntermediateSigningKey
@@ -28,10 +35,3 @@ class CallbackData(GoogleWalletModel):
     signedMessage: (
         SignedMessage | str
     )  # google sends this as a string, but we want to parse it as a SignedMessage
-
-
-class SignedMessage(GoogleWalletModel):
-    classId: str
-    objectId: str
-    expTimeMillis: int
-    eventType: enums.EventType
