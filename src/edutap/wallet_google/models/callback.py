@@ -35,3 +35,21 @@ class CallbackData(GoogleWalletModel):
     signedMessage: (
         SignedMessage | str
     )  # google sends this as a string, but we want to parse it as a SignedMessage
+
+
+class RootSigningPublicKey(GoogleWalletModel):
+    """
+    see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys
+    """
+
+    keyValue: str
+    protocolVersion: str
+    keyExpiration: str | None = None
+
+
+class RootSigningPublicKeys(GoogleWalletModel):
+    """
+    see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys
+    """
+
+    keys: list[RootSigningPublicKey]

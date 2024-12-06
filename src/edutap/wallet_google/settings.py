@@ -1,9 +1,13 @@
+from .models.callback import RootSigningPublicKeys
 from pathlib import Path
 from pydantic import EmailStr
 from pydantic import Field
 from pydantic import HttpUrl
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
+from typing import Literal
+
+import requests
 
 
 ENV_PREFIX = "EDUTAP_WALLET_GOOGLE_"
@@ -11,6 +15,17 @@ ROOT_DIR = Path(__file__).parent.parent.parent.parent.resolve()
 BASE_URL = "https://walletobjects.googleapis.com/walletobjects/v1"
 SAVE_URL = "https://pay.google.com/gp/v/save"
 SCOPE = "https://www.googleapis.com/auth/wallet_object.issuer"
+GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL = {
+    # see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys
+    "testing": {
+        "url": "https://payments.developers.google.com/paymentmethodtoken/test/keys.json",
+        "value": None,
+    },
+    "production": {
+        "url": "https://payments.developers.google.com/paymentmethodtoken/keys.json",
+        "value": None,
+    },
+}
 
 
 class GoogleWalletSettings(BaseSettings):
@@ -41,3 +56,22 @@ class GoogleWalletSettings(BaseSettings):
 
     callback_url: HttpUrl | None = None
     callback_update_url: HttpUrl | None = None
+
+    environment: Literal["production", "testing"] = "testing"
+
+    google_root_signing_public_keys: RootSigningPublicKeys | None = None
+
+    def __init__(self):
+        super().__init__()
+        if GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[self.environment]["value"] is None:
+            resp = requests.get(
+                GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[self.environment]["url"]
+            )
+            resp.raise_for_status()
+            self.google_root_signing_public_keys = (
+                RootSigningPublicKeys.model_validate_json(resp.text)
+            )
+        else:
+            self.google_root_signing_public_keys = GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[
+                self.environment
+            ]["value"]
