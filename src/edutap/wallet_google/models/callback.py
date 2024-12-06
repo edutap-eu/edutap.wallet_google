@@ -8,7 +8,7 @@ from .primitives.enums import CamelCaseAliasEnum
 
 class EventType(CamelCaseAliasEnum):
     SAVE = "SAVE"
-    DELETE = "DELETE"
+    DEL = "DEL"
 
 
 class SignedKey(GoogleWalletModel):

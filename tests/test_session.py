@@ -1,4 +1,4 @@
-from edutap.wallet_google.session import ROOT_DIR
+from edutap.wallet_google.settings import ROOT_DIR
 
 
 def test_session_manager_url(clean_registry):  # noqa: F811

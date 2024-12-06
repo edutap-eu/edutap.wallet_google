@@ -30,10 +30,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pydantic[email]>=2.0",
-    "pydantic-settings",
+    "cryptography",
     "google-auth",
-    "google-cloud-storage",
+    "pydantic-settings",
+    "pydantic[email]>=2.0",
   ]
 
 [project.urls]
@@ -48,10 +48,11 @@ test = [
     "tox",
 ]
 typecheck  = [
-    "mypy",
     "google-auth-stubs",
-    "types-requests",
+    "mypy",
     "pytest-stub",
+    "types-cryptography",
+    "types-requests",
 ]
 develop = [
     "pdbpp",
@@ -74,12 +75,23 @@ markers = [
     "integration: Test are running against the real Google Wallet API, needs account configuration. (deselect with '-m \"not integration\"')",
 ]
 
+[tool.mypy]
+mypy_path = "./src:./tests"
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = [
+    "cryptography.*",
+]
+ignore_missing_imports = true
+
 [tool.isort]
 profile = "plone"
+src_paths = ["src", "tests"]
 
 [tool.black]
 target-version = ["py310"]
-include = "src"
+include = "src,tests"
 
 [tool.codespell]
 ignore-words-list = "discreet,"
