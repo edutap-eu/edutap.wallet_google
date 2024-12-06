@@ -403,7 +403,7 @@ def save_link(
 
     claims = {
         "iat": "",
-        "iss": session_manager.credentials_info["client_email"],
+        "iss": session_manager.settings.credentials_info["client_email"],
         "aud": "google",
         "origins": origins,
         "typ": "savetowallet",

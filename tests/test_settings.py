@@ -1,5 +1,5 @@
-from edutap.wallet_google.session import GoogleWalletSettings
-from edutap.wallet_google.session import ROOT_DIR
+from edutap.wallet_google.settings import GoogleWalletSettings
+from edutap.wallet_google.settings import ROOT_DIR
 
 
 def test_base_settings():
