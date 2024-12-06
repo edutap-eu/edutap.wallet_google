@@ -5,8 +5,10 @@ from pydantic import Field
 from pydantic import HttpUrl
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
+from typing import Any
 from typing import Literal
 
+import json
 import requests
 
 
@@ -17,15 +19,10 @@ SAVE_URL = "https://pay.google.com/gp/v/save"
 SCOPE = "https://www.googleapis.com/auth/wallet_object.issuer"
 GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL = {
     # see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys
-    "testing": {
-        "url": "https://payments.developers.google.com/paymentmethodtoken/test/keys.json",
-        "value": None,
-    },
-    "production": {
-        "url": "https://payments.developers.google.com/paymentmethodtoken/keys.json",
-        "value": None,
-    },
+    "testing": "https://payments.developers.google.com/paymentmethodtoken/test/keys.json",
+    "production": "https://payments.developers.google.com/paymentmethodtoken/keys.json",
 }
+GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE: dict[str, RootSigningPublicKeys] = {}
 
 
 class GoogleWalletSettings(BaseSettings):
@@ -59,19 +56,33 @@ class GoogleWalletSettings(BaseSettings):
 
     environment: Literal["production", "testing"] = "testing"
 
-    google_root_signing_public_keys: RootSigningPublicKeys | None = None
+    @property
+    def google_root_signing_public_keys(self) -> RootSigningPublicKeys:
+        """
+        Fetch Googles root signing keys once for the configured environment and return them or the cached value.
+        """
+        if (
+            GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(self.environment, None)
+            is not None
+        ):
+            return GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[self.environment]
+        # fetch once
+        resp = requests.get(GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[self.environment])
+        resp.raise_for_status()
+        return RootSigningPublicKeys.model_validate_json(resp.text)
 
-    def __init__(self):
-        super().__init__()
-        if GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[self.environment]["value"] is None:
-            resp = requests.get(
-                GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[self.environment]["url"]
+    @property
+    def credentials_info(self) -> dict[str, str]:
+        if credentials_info := getattr(self, "_credentials_info"):
+            return credentials_info
+        if not self.credentials_file.exists():
+            raise ValueError(
+                f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.credentials_file} does not exist."
             )
-            resp.raise_for_status()
-            self.google_root_signing_public_keys = (
-                RootSigningPublicKeys.model_validate_json(resp.text)
+        with open(self.credentials_file) as fp:
+            self._credentials_info: dict[str, Any] = json.load(fp)
+        if not isinstance(self._credentials_info, dict):
+            raise ValueError(
+                f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.credentials_file} content is not a dict"
             )
-        else:
-            self.google_root_signing_public_keys = GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[
-                self.environment
-            ]["value"]
+        return self._credentials_info

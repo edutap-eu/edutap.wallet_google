@@ -51,20 +51,6 @@ class SessionManager:
     def __init__(self):
         self.settings = GoogleWalletSettings()
 
-    @property
-    def credentials_info(self) -> dict[str, str]:
-        if not self.settings.credentials_file.exists:
-            raise ValueError(
-                f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.settings.credentials_file} does not exist."
-            )
-        with open(self.settings.credentials_file) as fp:
-            self._credentials_info = json.load(fp)
-        if not isinstance(self._credentials_info, dict):
-            raise ValueError(
-                f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.settings.credentials_file} content is not a dict"
-            )
-        return self._credentials_info
-
     def _make_session(self) -> AuthorizedSession:
         if not self.settings.credentials_file.exists:
             raise ValueError(
