@@ -5,7 +5,6 @@ from pydantic import Field
 from pydantic import HttpUrl
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
-from typing import Any
 from typing import Literal
 
 import json
@@ -49,14 +48,14 @@ class GoogleWalletSettings(BaseSettings):
 
     credentials_file: Path = ROOT_DIR / "credentials.json"
     issuer_account_email: EmailStr | None = None
-    issuer_id: str | None = Field(min_length=19, max_length=20, default=None)
+    issuer_id: str = Field(min_length=19, max_length=20, default="")
 
     callback_url: HttpUrl | None = None
     callback_update_url: HttpUrl | None = None
 
     environment: Literal["production", "testing"] = "testing"
 
-    cached_credentials_info: dict[str, Any] | None = Field(default=None, hidden=True)
+    cached_credentials_info: dict[str, str] = {}
 
     @property
     def google_root_signing_public_keys(self) -> RootSigningPublicKeys:
