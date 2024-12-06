@@ -56,6 +56,8 @@ class GoogleWalletSettings(BaseSettings):
 
     environment: Literal["production", "testing"] = "testing"
 
+    cached_credentials_info: dict[str, Any] | None = Field(default=None, hidden=True)
+
     @property
     def google_root_signing_public_keys(self) -> RootSigningPublicKeys:
         """
@@ -73,16 +75,16 @@ class GoogleWalletSettings(BaseSettings):
 
     @property
     def credentials_info(self) -> dict[str, str]:
-        if credentials_info := getattr(self, "_credentials_info"):
+        if credentials_info := self.cached_credentials_info:
             return credentials_info
         if not self.credentials_file.exists():
             raise ValueError(
                 f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.credentials_file} does not exist."
             )
         with open(self.credentials_file) as fp:
-            self._credentials_info: dict[str, Any] = json.load(fp)
-        if not isinstance(self._credentials_info, dict):
+            self.cached_credentials_info = json.load(fp)
+        if not isinstance(self.cached_credentials_info, dict):
             raise ValueError(
                 f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.credentials_file} content is not a dict"
             )
-        return self._credentials_info
+        return self.cached_credentials_info

@@ -11,7 +11,7 @@ def verify_signature(data: CallbackData) -> bool:
     settings = GoogleWalletSettings()
     decryptor = GooglePayTokenDecryptor(
         settings.google_root_signing_public_keys.dict()["keys"],
-        settings.credentials_info["issuer_id"],
+        settings.issuer_id,
         settings.credentials_info["private_key"],
     )
     try:
