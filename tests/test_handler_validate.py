@@ -1,5 +1,7 @@
-from edutap.wallet_google.handlers.validate import verify_signature
+from edutap.wallet_google._vendor.google_pay_token_decryption import GooglePayError
 from edutap.wallet_google.models.callback import CallbackData
+
+import pytest
 
 
 callbackdata_for_test_failure = {
@@ -18,6 +20,9 @@ callbackdata_for_test_failure = {
 }
 
 
-def test_handler_validate_valid():
+def test_handler_validate_invalid():
+    from edutap.wallet_google.handlers.validate import verified_signed_message
+
     data = CallbackData.model_validate(callbackdata_for_test_failure)
-    assert verify_signature(data) is False
+    with pytest.raises(GooglePayError):
+        verified_signed_message(data)
