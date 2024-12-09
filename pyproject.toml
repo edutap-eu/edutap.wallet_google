@@ -30,10 +30,11 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pydantic[email]>=2.0",
-    "pydantic-settings",
+    "cryptography",
+    "fastapi",
     "google-auth",
-    "google-cloud-storage",
+    "pydantic-settings",
+    "pydantic[email]>=2.0",
   ]
 
 [project.urls]
