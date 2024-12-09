@@ -1,6 +1,5 @@
 from ..models.callback import CallbackData
 from .validate import verified_signed_message
-from fastapi import HTTPException
 from fastapi import Request
 from fastapi import router
 from fastapi.logger import logger
