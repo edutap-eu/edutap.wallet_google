@@ -1,8 +1,11 @@
 from pathlib import Path
 
 import copy
+import datetime
 import json
+import os
 import pytest
+import socket
 import typing
 
 
@@ -60,3 +63,15 @@ def mock_request_response(mock_session):
         return data
 
     yield _load_mock_request_response
+
+
+@pytest.fixture
+def integration_test_id():
+    prefix = os.environ.get(
+        "EDUTAP_WALLET_GOOGLE_INTEGRATION_TEST_PREFIX",
+        socket.gethostname()
+    )
+    timestamp = datetime.datetime.now(
+        datetime.timezone.utc
+    ).strftime("%Y-%m-%d_%H-%M-%S_%f")
+    yield f"{prefix}.{timestamp}"

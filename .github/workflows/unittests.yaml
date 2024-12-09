@@ -1,4 +1,4 @@
-name: CI Tests
+name: Unit Tests
 
 on:
   - push
@@ -23,4 +23,4 @@ jobs:
       - name: Install dependencies
         run: uv tool install --with "tox-uv,tox-gh-actions" tox
       - name: Test with tox
-        run: tox
+        run: tox -- -m "not integration"

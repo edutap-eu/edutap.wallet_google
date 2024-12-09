@@ -1,0 +1,32 @@
+name: Integration Tests
+
+on:
+  - push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: Integration-Tests
+      url: https://pypi.org/edutap-eu/edutap.wallet_google/
+    if: github.ref_name == github.event.repository.default_branch
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: '3.13'
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+      - name: Install dependencies
+        run: uv tool install --with "tox-uv,tox-gh-actions" tox
+      - name: Test with tox
+        env:
+          EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE: /tmp/edutap-wallet-google-credentials.json
+          EDUTAP_WALLET_GOOGLE_ISSUER_ID: ${{ secrets.ISSUER_ID }}
+          EDUTAP_WALLET_GOOGLE_INTEGRATION_TEST_PREFIX: ${{ github.run_id }}
+
+        run: |
+          echo "${{ secrets.SERVICE_ACCOUNT_JSON }}" > $EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE
+          tox -- -m integration
