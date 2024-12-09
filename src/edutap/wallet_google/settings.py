@@ -41,14 +41,14 @@ class GoogleWalletSettings(BaseSettings):
         extra="ignore",
     )
 
-    record_api_calls_dir: Path | None = None  # ROOT_DIR / "tests" / "data"
+    record_api_calls_dir: Path | None = None
     base_url: HttpUrl = HttpUrl(BASE_URL)
     save_url: HttpUrl = HttpUrl(SAVE_URL)
     scopes: list[str] = [SCOPE]
 
     credentials_file: Path = ROOT_DIR / "credentials.json"
     issuer_account_email: EmailStr | None = None
-    issuer_id: str = Field(min_length=19, max_length=20, default=19*" ")
+    issuer_id: str = Field(min_length=19, max_length=20)
 
     callback_url: HttpUrl | None = None
     callback_update_url: HttpUrl | None = None
