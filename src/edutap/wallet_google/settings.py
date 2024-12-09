@@ -48,7 +48,7 @@ class GoogleWalletSettings(BaseSettings):
 
     credentials_file: Path = ROOT_DIR / "credentials.json"
     issuer_account_email: EmailStr | None = None
-    issuer_id: str = Field(min_length=19, max_length=20)
+    issuer_id: str = Field(min_length=19, max_length=20, default="")
 
     callback_url: HttpUrl | None = None
     callback_update_url: HttpUrl | None = None
