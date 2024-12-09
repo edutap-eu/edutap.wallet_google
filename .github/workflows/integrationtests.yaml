@@ -28,5 +28,6 @@ jobs:
           EDUTAP_WALLET_GOOGLE_INTEGRATION_TEST_PREFIX: ${{ github.run_id }}
 
         run: |
+          echo "$EDUTAP_WALLET_GOOGLE_ISSUER_ID"
           echo "${{ secrets.SERVICE_ACCOUNT_JSON }}" > $EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE
           tox -- -m integration
