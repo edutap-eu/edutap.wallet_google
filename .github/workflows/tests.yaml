@@ -23,9 +23,10 @@ jobs:
       - name: Install dependencies
         run: uv tool install --with "tox-uv,tox-gh-actions" tox
       - name: Test with tox
-      run: tox -- -m "not integration"
-        cp tests/data/credentials_fake.json credentials.json
-        echo "EDUTAP_WALLET_GOOGLE_ISSUER_ID=1234567890123456789" > .env
+        run: |
+          cp tests/data/credentials_fake.json credentials.json
+          echo "EDUTAP_WALLET_GOOGLE_ISSUER_ID=1234567890123456789" > .env
+          tox -- -m "not integration"
   integration-tests:
     needs: unit-tests
     if: github.ref_name == github.event.repository.default_branch
