@@ -41,6 +41,7 @@ repos:
         - "google-auth-stubs"
         - "pydantic"
         - "pydantic_settings"
+        - "fastapi"
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.3.0
     hooks:

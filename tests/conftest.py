@@ -68,10 +68,9 @@ def mock_request_response(mock_session):
 @pytest.fixture
 def integration_test_id():
     prefix = os.environ.get(
-        "EDUTAP_WALLET_GOOGLE_INTEGRATION_TEST_PREFIX",
-        socket.gethostname()
+        "EDUTAP_WALLET_GOOGLE_INTEGRATION_TEST_PREFIX", socket.gethostname()
     )
-    timestamp = datetime.datetime.now(
-        datetime.timezone.utc
-    ).strftime("%Y-%m-%d_%H-%M-%S_%f")
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime(
+        "%Y-%m-%d_%H-%M-%S_%f"
+    )
     yield f"{prefix}.{timestamp}"

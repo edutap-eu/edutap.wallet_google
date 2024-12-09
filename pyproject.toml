@@ -42,7 +42,7 @@ Issues = "https://github.com/edutap-eu/edutap.wallet_google/issues"
 Documentation = "https://docs.edutap.eu/packages/edutap_wallet_google/index.html"
 
 [project.optional-dependencies]
-callback = [
+callbacks = [
     "fastapi",
 ]
 test = [
