@@ -23,10 +23,10 @@ jobs:
         run: uv tool install --with "tox-uv,tox-gh-actions" tox
       - name: Test with tox
         env:
-          EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE: edutap-wallet-google-credentials.json
+          EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE: /tmp/edutap-wallet-google-credentials.json
           EDUTAP_WALLET_GOOGLE_ISSUER_ID: ${{ secrets.ISSUER_ID }}
           EDUTAP_WALLET_GOOGLE_INTEGRATION_TEST_PREFIX: ${{ github.run_id }}
 
         run: |
-          echo "${{ secrets.SERVICE_ACCOUNT_JSON }}"
+          echo "${{ secrets.SERVICE_ACCOUNT_JSON }}" > $EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE
           tox -m integration
