@@ -24,7 +24,7 @@ jobs:
       - name: Test with tox
         env:
           EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE: /tmp/edutap-wallet-google-credentials.json
-          EDUTAP_WALLET_GOOGLE_ISSUER_ID: "${{ secrets.ISSUER_ID }}"
+          EDUTAP_WALLET_GOOGLE_ISSUER_ID: "3388000000022289039"
           EDUTAP_WALLET_GOOGLE_INTEGRATION_TEST_PREFIX: ${{ github.run_id }}
 
         run: |
