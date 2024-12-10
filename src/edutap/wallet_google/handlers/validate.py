@@ -4,12 +4,12 @@ from ..models.callback import SignedMessage
 from ..settings import GoogleWalletSettings
 
 
-def _raw_private_key(inkey: str) -> str:
+def _raw_private_key(in_key: str) -> str:
     """
     Returns the raw private key.
     """
     result = ""
-    for line in inkey.splitlines():
+    for line in in_key.splitlines():
         if "BEGIN PRIVATE KEY" in line:
             continue
         if "END PRIVATE KEY" in line:
