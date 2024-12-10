@@ -30,7 +30,7 @@ def _validate_data(
     :param data:       Data to pass to the Google RESTful API.
                        Either a simple python data structure using built-ins,
                        or a Pydantic model instance.
-    :return:           data as an instance of the given model
+    :return:           data as an instance of the given model.
     """
     if not isinstance(data, (GoogleWalletModel)):
         return model.model_validate(data)
