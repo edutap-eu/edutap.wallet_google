@@ -14,9 +14,6 @@ _THREADLOCAL = threading.local()
 class HTTPRecorder(HTTPAdapter):
     """Record the HTTP requests and responses to a file."""
 
-    def __init__(self, settings: GoogleWalletSettings):
-        super().__init__()
-
     @property
     def settings(self) -> GoogleWalletSettings:
         settings = getattr(self, "_settings", None)
@@ -54,8 +51,12 @@ class SessionManager:
     Sessions here are thread safe.
     """
 
-    def __init__(self):
-        self.settings = GoogleWalletSettings()
+    @property
+    def settings(self) -> GoogleWalletSettings:
+        settings = getattr(self, "_settings", None)
+        if settings is None:
+            self._settings = GoogleWalletSettings()
+        return self._settings
 
     def _make_session(self) -> AuthorizedSession:
         if not self.settings.credentials_file.exists:
