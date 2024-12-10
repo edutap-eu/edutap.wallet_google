@@ -113,7 +113,7 @@ def read(
 
     :param name:               Registered name of the model to use
     :param resource_id:        Identifier of the resource to read from the Google RESTful API
-    :raises LookupError:       When the resource was not found (404)
+    :raises LookupError:       When the resource was not found (404).
     :raises Exception:         When the response status code is not 200 or 404.
     :return:                   the created model based on the data returned by the Restful API
     """
