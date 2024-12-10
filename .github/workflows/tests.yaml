@@ -41,10 +41,10 @@ jobs:
         uses: tj-actions/changed-files@v45
         with:
           files: |
-            src/edutap/wallet_google/models/**.py
+            src/edutap/wallet_google/models/**
             src/edutap/wallet_google/api.py
       - name: Install the latest version of uv
-        if: steps.changed-models-or-api.outputs.test_any_changed == 'true'
+        if: steps.changed-models-or-api.outputs.any_changed == 'true'
         uses: astral-sh/setup-uv@v4
         with:
           python-version: '3.13'
