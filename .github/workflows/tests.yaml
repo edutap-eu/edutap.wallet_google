@@ -52,10 +52,10 @@ jobs:
           cache-dependency-glob: |
             pyproject.toml
       - name: Install dependencies
-        if: steps.changed-models-or-api.outputs.test_any_changed == 'true'
+        if: steps.changed-models-or-api.outputs.any_changed == 'true'
         run: uv tool install --with "tox-uv,tox-gh-actions" tox
       - name: Test with tox
-        if: steps.changed-models-or-api.outputs.test_any_changed == 'true'
+        if: steps.changed-models-or-api.outputs.any_changed == 'true'
         run: |
           echo "${{ secrets.SERVICE_ACCOUNT_JSON }}" > /tmp/edutap-wallet-google-credentials.json
           echo "EDUTAP_WALLET_GOOGLE_ISSUER_ID=${{ secrets.ISSUER_ID }}" > .env
