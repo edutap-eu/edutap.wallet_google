@@ -16,7 +16,13 @@ class HTTPRecorder(HTTPAdapter):
 
     def __init__(self, settings: GoogleWalletSettings):
         super().__init__()
-        self.settings = settings
+
+    @property
+    def settings(self) -> GoogleWalletSettings:
+        settings = getattr(self, "_settings", None)
+        if settings is None:
+            self._settings = GoogleWalletSettings()
+        return self._settings
 
     def send(self, request, *args, **kwargs):
         req_record = {
