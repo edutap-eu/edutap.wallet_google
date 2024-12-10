@@ -10,6 +10,9 @@ class Barcode(BaseModel):
     see: https://developers.google.com/wallet/generic/rest/v1/Barcode
     """
 
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-11-29
+
     type: BarcodeType = BarcodeType.BARCODE_TYPE_UNSPECIFIED
     renderEncoding: BarcodeRenderEncoding = (
         BarcodeRenderEncoding.RENDER_ENCODING_UNSPECIFIED
