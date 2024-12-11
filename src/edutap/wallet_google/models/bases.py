@@ -1,29 +1,9 @@
-from .primitives import CallbackOptions
-from .primitives import GroupingInfo
-from .primitives import Image
-from .primitives import PassConstraints
-from .primitives import SaveRestrictions
-from .primitives import SecurityAnimation
-from .primitives.barcode import Barcode
-from .primitives.barcode import RotatingBarcode
-from .primitives.class_template_info import ClassTemplateInfo
-from .primitives.data import AppLinkData
-from .primitives.data import ImageModuleData
-from .primitives.data import InfoModuleData
-from .primitives.data import LinksModuleData
-from .primitives.data import TextModuleData
-from .primitives.datetime import TimeInterval
-from .primitives.enums import MultipleDevicesAndHoldersAllowedStatus
-from .primitives.enums import State
-from .primitives.enums import ViewUnlockRequirement
-from .primitives.message import Message
-from .primitives.moduledata import ValueAddedModuleData
+from enum import Enum
 from pydantic import BaseModel
 from pydantic import ConfigDict
-from pydantic import Field
 
 
-class GoogleWalletModel(BaseModel):
+class Model(BaseModel):
     """
     Base Model for all Google Wallet Models.
 
@@ -37,7 +17,7 @@ class GoogleWalletModel(BaseModel):
     )
 
 
-class GoogleWalletWithIdModel(GoogleWalletModel):
+class WithIdModel(Model):
     """
     Model for Google Wallet models with an identifier.
     """
@@ -45,118 +25,48 @@ class GoogleWalletWithIdModel(GoogleWalletModel):
     id: str
 
 
-class GoogleWalletClassModel(GoogleWalletWithIdModel):
-    """
-    BaseModel for all Google Wallet Class Models.
+class CamelCaseAliasEnum(Enum):
+    """Add an value alias in camelcase to the enum,
+    given the value in snake-case.
 
-    Even if not documented explicitly by Google, the GenericClass acts as
-    the base-class for all Google Wallet Classes. So this here is the GenericClass.
-    To keep the inheritance chain semantically clean, there is a registered GenericClass
-    inheriting from here without any added attributes in the module `generic.py`.
-    see https://developers.google.com/wallet/generic/rest/v1/genericclass
-    """
+    example: a enum like
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-12-02
+    class FooExample(CamelCaseAliasEnum):
+        FOO_BAR_BAZ = "FOO_BAR_BAZ"
 
-    # inherits id
-    classTemplateInfo: ClassTemplateInfo | None = None
-    imageModulesData: list[ImageModuleData] | None = None
-    textModulesData: list[TextModuleData] | None = None
-    linksModuleData: LinksModuleData | None = None
-    infoModuleData: InfoModuleData | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default=None,
-    )
-    enableSmartTap: bool | None = None
-    redemptionIssuers: list[str] | None = None  # string (int64 format)
-    securityAnimation: SecurityAnimation | None = None
-    multipleDevicesAndHoldersAllowedStatus: MultipleDevicesAndHoldersAllowedStatus = (
-        MultipleDevicesAndHoldersAllowedStatus.STATUS_UNSPECIFIED
-    )
-    callbackOptions: CallbackOptions | None = None
-    viewUnlockRequirement: ViewUnlockRequirement = (
-        ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED
-    )
-    messages: list[Message] | None = None
-    appLinkData: AppLinkData | None = None
-    valueAddedModuleData: ValueAddedModuleData | None = None
+    can be looked up like this:
 
+    FooExample("fooBarBaz")
 
-class GoogleWalletObjectModel(GoogleWalletWithIdModel):
-    """
-    Base model for all Google Wallet Object models.
-
-    Opposed to the GoogleWalletClassModel, this class does not represent the GenericObject.
-    So, it does not act as a base model for all other wallet object types.
-    It is just a base model with all attributes all Google Wallet Objects models have in common.
     """
 
-    # inherits id
-    classId: str
-    version: str | None = Field(
-        description="deprecated", deprecated=True, exclude=True, default=None
-    )
+    def __new__(cls: type["CamelCaseAliasEnum"], value: str) -> "CamelCaseAliasEnum":
+        obj: "CamelCaseAliasEnum" = object.__new__(cls)
+        obj._name_ = f"{cls.__name__} snake case literal"
+        parts = value.lower().split("_")
+        camel = "".join(
+            [(x.capitalize() if count != 0 else x) for count, x in enumerate(parts)]
+        )
 
-    # Templating and Visual Data
-    imageModulesData: list[ImageModuleData] | None = None
-    textModulesData: list[TextModuleData] | None = None
-    linksModuleData: LinksModuleData | None = None
-    infoModuleData: InfoModuleData | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default=None,
-    )
+        # create a second object with the camelcase name
+        # creating an alias only does not work out since
+        # pydantic checks for the value in the enum and not only the name
+        camel_obj = object.__new__(cls)
+        camel_obj._value_ = camel
+        camel_obj._name_ = f"{cls.__name__} camel case alias"
+        cls._value2member_map_[camel] = camel_obj
+        cls._member_map_[camel] = camel_obj
+        cls._member_names_.append(camel)
+        return obj
 
-    # Security Options
-    passConstraints: PassConstraints | None = None
-
-    # Smart Tap Option
-    smartTapRedemptionValue: str | None = None
-
-    # Barcode Options
-    barcode: Barcode | None = None
-    rotatingBarcode: RotatingBarcode | None = None
-
-    # other general
-    groupingInfo: GroupingInfo | None = None
-    saveRestrictions: SaveRestrictions | None = None
-    linkedObjectIds: list[str] | None = None
-    valueAddedModuleData: ValueAddedModuleData | None = None
-    messages: list[Message] | None = None
-    appLinkData: AppLinkData | None = None
-    state: State = Field(default=State.STATE_UNSPECIFIED)
-    hasUsers: bool | None = None
-    validTimeInterval: TimeInterval | None = None
-
-
-class GoogleWalletObjectWithClassReference(GoogleWalletWithIdModel):
-    """
-    Mixin for all Google Wallet Object with a classReferences attribute, that reflects the whole class data.
-    This class is used to create the save_link only, never inherit from it.
-    """
-
-    classReference: GoogleWalletClassModel | None = None
-
-
-class GoogleWalletStyleableMixin:
-    """
-    Mixin for Google Wallet Classes/Objects that can be styled.
-    """
-
-    hexBackgroundColor: str | None = None
-
-
-class GoogleWalletCommonLogosMixin:
-    """
-    Mixin for Google Wallet Classes/Objects with a common logo.
-
-    Do not use/alias this mixin for Google Wallet Classes, as they have a different logo attribute.
-    """
-
-    logo: Image | None = None
-    wideLogo: Image | None = None
-    heroImage: Image | None = None
+    def __eq__(self, other: object | Enum) -> bool:
+        """Allow comparison with the camelcase value.
+        take into account that UPPER_CASE and camelCase are equal
+        """
+        if isinstance(other, Enum):
+            if self.value == other.value:
+                return True
+            v1 = self.value.lower().replace("_", "")
+            v2 = other.value.lower().replace("_", "")
+            return v1 == v2
+        return False

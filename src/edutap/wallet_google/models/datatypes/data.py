@@ -1,5 +1,5 @@
-from . import Image
-from . import Uri
+from .general import Image
+from .general import Uri
 from .localized_string import LocalizedString
 from pydantic import BaseModel
 from pydantic import Field

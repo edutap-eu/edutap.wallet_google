@@ -1,11 +1,11 @@
 from ..registry import register_model
-from .bases import GoogleWalletModel
-from .bases import GoogleWalletWithIdModel
-from .primitives import CallbackOptions
-from .primitives.smarttap import IssuerContactInfo
-from .primitives.smarttap import IssuerToUserInfo
-from .primitives.smarttap import Permission
-from .primitives.smarttap import SmartTapMerchantData
+from .bases import Model
+from .bases import WithIdModel
+from .datatypes.general import CallbackOptions
+from .datatypes.smarttap import IssuerContactInfo
+from .datatypes.smarttap import IssuerToUserInfo
+from .datatypes.smarttap import Permission
+from .datatypes.smarttap import SmartTapMerchantData
 
 
 @register_model(
@@ -17,7 +17,7 @@ from .primitives.smarttap import SmartTapMerchantData
     can_list=False,
     can_message=False,
 )
-class SmartTap(GoogleWalletWithIdModel):
+class SmartTap(WithIdModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/smarttap#resource:-smarttap
     """
@@ -36,7 +36,7 @@ class SmartTap(GoogleWalletWithIdModel):
     resource_id="issuerId",
     can_message=False,
 )
-class Issuer(GoogleWalletModel):
+class Issuer(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/issuer
     """
@@ -60,7 +60,7 @@ class Issuer(GoogleWalletModel):
     can_list=False,
     can_message=False,
 )
-class Permissions(GoogleWalletModel):
+class Permissions(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/permissions
     """

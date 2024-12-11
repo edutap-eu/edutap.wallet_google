@@ -1,9 +1,9 @@
-from .models.bases import GoogleWalletModel
-from .models.bases import GoogleWalletObjectWithClassReference
+from .models.bases import Model
+from .models.datatypes.enums import State
+from .models.datatypes.general import Pagination
 from .models.message import AddMessageRequest
 from .models.message import Message
-from .models.primitives import Pagination
-from .models.primitives.enums import State
+from .models.passes.bases import ObjectWithClassReference
 from .registry import lookup_metadata
 from .registry import lookup_model
 from .registry import lookup_model_by_plural_name
@@ -21,9 +21,7 @@ import typing
 logger = logging.getLogger(__name__)
 
 
-def _validate_data(
-    model: type[GoogleWalletModel], data: dict[str, typing.Any] | GoogleWalletModel
-) -> GoogleWalletModel:
+def _validate_data(model: type[Model], data: dict[str, typing.Any] | Model) -> Model:
     """Takes a model and data, validates it and convert to a json string.
 
     :param model:      Pydantic model class to use for validation.
@@ -32,7 +30,7 @@ def _validate_data(
                        or a Pydantic model instance.
     :return:           data as an instance of the given model.
     """
-    if not isinstance(data, (GoogleWalletModel)):
+    if not isinstance(data, (Model)):
         return model.model_validate(data)
     if not isinstance(data, model):
         raise ValueError(
@@ -42,8 +40,8 @@ def _validate_data(
 
 
 def _validate_data_and_convert_to_json(
-    model: type[GoogleWalletModel],
-    data: dict[str, typing.Any] | GoogleWalletModel,
+    model: type[Model],
+    data: dict[str, typing.Any] | Model,
     *,
     existing: bool = False,
     resource_id_key: str = "id",
@@ -70,8 +68,8 @@ def _validate_data_and_convert_to_json(
 
 def create(
     name: str,
-    data: dict[str, typing.Any] | GoogleWalletModel,
-) -> GoogleWalletModel:
+    data: dict[str, typing.Any] | Model,
+) -> Model:
     """
     Creates a Google Wallet items. `C` in CRUD.
 
@@ -107,7 +105,7 @@ def create(
 def read(
     name: str,
     resource_id: str,
-) -> GoogleWalletModel:
+) -> Model:
     """
     Reads a Google Wallet Class or Object. `R` in CRUD.
 
@@ -135,10 +133,10 @@ def read(
 
 def update(
     name: str,
-    data: dict[str, typing.Any] | GoogleWalletModel,
+    data: dict[str, typing.Any] | Model,
     *,
     partial: bool = True,
-) -> GoogleWalletModel:
+) -> Model:
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
 
@@ -154,7 +152,7 @@ def update(
     raise_when_operation_not_allowed(name, "update")
     model_metadata = lookup_metadata(name)
     model = model_metadata["model"]
-    if not isinstance(data, GoogleWalletModel) and partial:
+    if not isinstance(data, Model) and partial:
         resource_id = data[model_metadata["resource_id"]]
         # we can not validate partial data for patch yet
         verified_json = json.dumps(data)
@@ -189,7 +187,7 @@ def update(
 def disable(
     name: str,
     resource_id: str,
-) -> GoogleWalletModel:
+) -> Model:
     """
     Disables a Google Wallet Class or Object. `D` in CRUD.
     Generic Implementation of the CRUD --> (D) usually delete,
@@ -218,14 +216,14 @@ def message(
     name: str,
     resource_id: str,
     message: dict[str, typing.Any] | Message,
-) -> GoogleWalletModel:
+) -> Model:
     """Sends a message to a Google Wallet Class or Object.
 
     :param name:         Registered name of the model to use
     :param resource_id:  Identifier of the resource to send to
     :raises LookupError: When the resource was not found (404)
     :raises Exception:   When the response status code is not 200 or 404
-    :return:             The created GoogleWalletModel object as returned by the Restful API
+    :return:             The created Model object as returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "message")
     model_metadata = lookup_metadata(name)
@@ -259,7 +257,7 @@ def listing(
     issuer_id: str | None = None,
     result_per_page: int = 0,
     next_page_token: str | None = None,
-) -> Generator[GoogleWalletModel | str, None, None]:
+) -> Generator[Model | str, None, None]:
     """Lists wallet related resources.
 
     It is possible to list all classes of an issuer. Parameter 'name' has to end with 'Class',
@@ -350,7 +348,7 @@ def listing(
 
 
 def save_link(
-    resources: dict[str, list[GoogleWalletModel | dict]],
+    resources: dict[str, list[Model | dict]],
     *,
     origins: list[str] = [],
 ) -> str:
@@ -364,7 +362,7 @@ def save_link(
                         Usually, this is the name with a lower first character and as plural.
                         The value is either a simple python data structure using built-ins,
                         or a Pydantic model instance matching the registered name's model.
-                        If a resource is an Object, it can be an GoogleWalletObjectReference instance too.
+                        If a resource is an Object, it can be an ObjectReference instance too.
     :param origins:     List of domains to approve for JWT saving functionality.
                         The Google Wallet API button will not render when the origins field is not defined.
                         You could potentially get an "Load denied by X-Frame-Options" or "Refused to display"
@@ -382,10 +380,10 @@ def save_link(
                 ("id" in obj and len(obj.keys()) == 1)
                 or ("id" in obj and "classReference" in obj and len(obj.keys()) == 2)
             ):
-                obj = GoogleWalletObjectWithClassReference.model_validate(obj)
+                obj = ObjectWithClassReference.model_validate(obj)
 
             # if it is not a reference, it must be a full wallet object model
-            if not isinstance(obj, GoogleWalletObjectWithClassReference):
+            if not isinstance(obj, ObjectWithClassReference):
                 model = lookup_model_by_plural_name(name)
                 obj = _validate_data(model, obj)
 

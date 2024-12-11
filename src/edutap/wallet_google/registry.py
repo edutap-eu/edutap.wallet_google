@@ -1,11 +1,11 @@
-from .models.bases import GoogleWalletClassModel
-from .models.bases import GoogleWalletModel
-from .models.bases import GoogleWalletObjectModel
+from .models.bases import Model
+from .models.passes.bases import ClassModel
+from .models.passes.bases import ObjectModel
 from typing import TypedDict
 
 
 class RegistryMetadataDict(TypedDict, total=False):
-    model: type[GoogleWalletModel]
+    model: type[Model]
     name: str
     url_part: str
     plural: str
@@ -23,7 +23,7 @@ _MODEL_REGISTRY: dict[str, RegistryMetadataDict] = {}
 
 class register_model:
     """
-    Registers a Pydantic model based on GoogleWalletModel in a registry.
+    Registers a Pydantic model based on Model in a registry.
     To be used as a decorator.
     """
 
@@ -42,7 +42,7 @@ class register_model:
         can_message: bool = True,
     ):
         """
-        Prepares the registration of a GoogleWalletModel or its subclasses.
+        Prepares the registration of a Model or its subclasses.
 
         :param name:        Name of the model. Usually the same as the class name.
         :param url_part:    Part of the URL to be used for the RESTful API endpoint.
@@ -76,8 +76,8 @@ class register_model:
 
     def __call__(
         self,
-        cls: type[GoogleWalletModel | GoogleWalletClassModel | GoogleWalletObjectModel],
-    ) -> type[GoogleWalletModel | GoogleWalletClassModel | GoogleWalletObjectModel]:
+        cls: type[Model | ClassModel | ObjectModel],
+    ) -> type[Model | ClassModel | ObjectModel]:
         """
         Registers the given class in the registry.
         """
@@ -89,14 +89,14 @@ class register_model:
         return cls
 
 
-def lookup_model(name: str) -> type[GoogleWalletModel]:
+def lookup_model(name: str) -> type[Model]:
     """
     Returns the model with the given name.
     """
     return _MODEL_REGISTRY[name]["model"]
 
 
-def lookup_model_by_plural_name(plural_name: str) -> type[GoogleWalletModel]:
+def lookup_model_by_plural_name(plural_name: str) -> type[Model]:
     """
     Returns the model with the given plural name.
     """

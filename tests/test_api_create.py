@@ -1,4 +1,4 @@
-from edutap.wallet_google.models.primitives import enums
+from edutap.wallet_google.models.datatypes import enums
 
 import pytest
 

@@ -1,6 +1,6 @@
-from . import Uri
 from .enums import SharedDataType
 from .enums import State
+from .general import Uri
 from pydantic import BaseModel
 
 

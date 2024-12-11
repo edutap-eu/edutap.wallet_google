@@ -1,5 +1,5 @@
-from . import Image
 from .datetime import TimeInterval
+from .general import Image
 from .localized_string import LocalizedString
 from pydantic import BaseModel
 

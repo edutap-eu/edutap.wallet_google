@@ -1,24 +1,23 @@
-from ..registry import register_model
-from .bases import GoogleWalletClassModel
-from .bases import GoogleWalletModel
-from .bases import GoogleWalletObjectModel
-from .bases import GoogleWalletStyleableMixin
-from .primitives import GroupingInfo
-from .primitives import Image
-from .primitives import PassConstraints
-from .primitives import Uri
-from .primitives.data import ImageModuleData
-from .primitives.datetime import DateTime
-from .primitives.enums import NotificationSettingsForUpdates
-from .primitives.enums import RedemptionChannel
-from .primitives.enums import ReviewStatus
-from .primitives.localized_string import LocalizedString
-from .primitives.location import LatLongPoint
-from .primitives.money import Money
-from .primitives.retail import DiscoverableProgram
-from .primitives.review import Review
+from ...registry import register_model
+from ..datatypes.data import ImageModuleData
+from ..datatypes.datetime import DateTime
+from ..datatypes.enums import NotificationSettingsForUpdates
+from ..datatypes.enums import RedemptionChannel
+from ..datatypes.enums import ReviewStatus
+from ..datatypes.general import GroupingInfo
+from ..datatypes.general import Image
+from ..datatypes.general import PassConstraints
+from ..datatypes.general import Uri
+from ..datatypes.localized_string import LocalizedString
+from ..datatypes.location import LatLongPoint
+from ..datatypes.loyalty import LoyaltyPoints
+from ..datatypes.money import Money
+from ..datatypes.retail import DiscoverableProgram
+from ..datatypes.review import Review
+from .bases import ClassModel
+from .bases import ObjectModel
+from .bases import StyleableMixin
 from pydantic import Field
-from pydantic import model_validator
 
 
 @register_model(
@@ -27,10 +26,7 @@ from pydantic import model_validator
     plural="giftCardClasses",
     can_disable=False,
 )
-class GiftCardClass(
-    GoogleWalletClassModel,
-    GoogleWalletStyleableMixin,
-):
+class GiftCardClass(ClassModel, StyleableMixin):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
     """
@@ -85,7 +81,7 @@ class GiftCardClass(
 
 
 @register_model("GiftCardObject", url_part="giftCardObject")
-class GiftCardObject(GoogleWalletObjectModel):
+class GiftCardObject(ObjectModel):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
     """
@@ -138,10 +134,7 @@ class GiftCardObject(GoogleWalletObjectModel):
 @register_model(
     "LoyaltyClass", url_part="loyaltyClass", plural="loyaltyClasses", can_disable=False
 )
-class LoyaltyClass(
-    GoogleWalletClassModel,
-    GoogleWalletStyleableMixin,
-):
+class LoyaltyClass(ClassModel, StyleableMixin):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
     """
@@ -204,56 +197,8 @@ class LoyaltyClass(
     # inherits valueAddedModuleData
 
 
-class LoyaltyPointsBalance(
-    GoogleWalletModel,
-):
-    """
-    data-type,
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPointsBalance
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
-
-    string: str | None = None
-    int_: int | None = Field(alias="int", serialization_alias="int", default=None)
-    double: float | None = None
-    money: Money | None = None
-
-    @model_validator(mode="after")
-    def check_one_of(self) -> "LoyaltyPointsBalance":
-        given_values = [
-            val
-            for val in (self.string, self.int_, self.double, self.money)
-            if val is not None
-        ]
-        if len(given_values) == 0:
-            raise ValueError("One of string, int, double, or money must be set")
-        if len(given_values) > 1:
-            raise ValueError("Only one of string, int, double, or money must be set")
-        return self
-
-
-class LoyaltyPoints(
-    GoogleWalletModel,
-):
-    """
-    data-type,
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPoints
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
-
-    label: str | None = None
-    balance: LoyaltyPointsBalance | None = None
-    localizedLabel: LocalizedString | None = None
-
-
 @register_model("LoyaltyObject", url_part="loyaltyObject", plural="loyaltyObjects")
-class LoyaltyObject(GoogleWalletObjectModel):
+class LoyaltyObject(ObjectModel):
     """
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
@@ -308,10 +253,7 @@ class LoyaltyObject(GoogleWalletObjectModel):
 @register_model(
     "OfferClass", url_part="offerClass", plural="offerClasses", can_disable=False
 )
-class OfferClass(
-    GoogleWalletClassModel,
-    GoogleWalletStyleableMixin,
-):
+class OfferClass(ClassModel, StyleableMixin):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass
     """
@@ -372,7 +314,7 @@ class OfferClass(
 
 
 @register_model("OfferObject", url_part="offerObject")
-class OfferObject(GoogleWalletObjectModel, GoogleWalletStyleableMixin):
+class OfferObject(ObjectModel, StyleableMixin):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerobject
     """

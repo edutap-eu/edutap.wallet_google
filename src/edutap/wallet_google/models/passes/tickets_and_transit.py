@@ -1,40 +1,40 @@
-from ..registry import register_model
-from .bases import GoogleWalletClassModel
-from .bases import GoogleWalletCommonLogosMixin
-from .bases import GoogleWalletModel
-from .bases import GoogleWalletObjectModel
-from .bases import GoogleWalletStyleableMixin
-from .primitives import Image
-from .primitives import Uri
-from .primitives.enums import ActivationState
-from .primitives.enums import BoardingPolicy
-from .primitives.enums import ConcessionCategory
-from .primitives.enums import ConfirmationCodeLabel
-from .primitives.enums import DoorsOpenLabel
-from .primitives.enums import FareClass
-from .primitives.enums import FlightStatus
-from .primitives.enums import GateLabel
-from .primitives.enums import NotificationSettingsForUpdates
-from .primitives.enums import PassengerType
-from .primitives.enums import ReviewStatus
-from .primitives.enums import RowLabel
-from .primitives.enums import SeatClassPolicy
-from .primitives.enums import SeatLabel
-from .primitives.enums import SectionLabel
-from .primitives.enums import TicketStatus
-from .primitives.enums import TransitType
-from .primitives.enums import TripType
-from .primitives.localized_string import LocalizedString
-from .primitives.location import LatLongPoint
-from .primitives.money import Money
-from .primitives.review import Review
+from ...registry import register_model
+from ..bases import Model
+from ..datatypes.enums import ActivationState
+from ..datatypes.enums import BoardingPolicy
+from ..datatypes.enums import ConcessionCategory
+from ..datatypes.enums import ConfirmationCodeLabel
+from ..datatypes.enums import DoorsOpenLabel
+from ..datatypes.enums import FareClass
+from ..datatypes.enums import FlightStatus
+from ..datatypes.enums import GateLabel
+from ..datatypes.enums import NotificationSettingsForUpdates
+from ..datatypes.enums import PassengerType
+from ..datatypes.enums import ReviewStatus
+from ..datatypes.enums import RowLabel
+from ..datatypes.enums import SeatClassPolicy
+from ..datatypes.enums import SeatLabel
+from ..datatypes.enums import SectionLabel
+from ..datatypes.enums import TicketStatus
+from ..datatypes.enums import TransitType
+from ..datatypes.enums import TripType
+from ..datatypes.general import Image
+from ..datatypes.general import Uri
+from ..datatypes.localized_string import LocalizedString
+from ..datatypes.location import LatLongPoint
+from ..datatypes.money import Money
+from ..datatypes.review import Review
+from .bases import ClassModel
+from .bases import CommonLogosMixin
+from .bases import ObjectModel
+from .bases import StyleableMixin
 from pydantic import Field
 from pydantic import model_validator
 
 import datetime
 
 
-class EventVenue(GoogleWalletModel):
+class EventVenue(Model):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventvenue
     """
@@ -52,7 +52,7 @@ class EventVenue(GoogleWalletModel):
     address: LocalizedString | None = None
 
 
-class EventDateTime(GoogleWalletModel):
+class EventDateTime(Model):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventdatetime
     """
@@ -73,7 +73,7 @@ class EventDateTime(GoogleWalletModel):
     customDoorsOpenLabel: LocalizedString | None = None
 
 
-class EventSeat(GoogleWalletModel):
+class EventSeat(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/eventticketobject#eventseat
     """
@@ -93,7 +93,7 @@ class EventSeat(GoogleWalletModel):
     gate: LocalizedString | None = None
 
 
-class EventReservationInfo(GoogleWalletModel):
+class EventReservationInfo(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/eventticketobject#eventreservationinfo
     """
@@ -113,11 +113,7 @@ class EventReservationInfo(GoogleWalletModel):
     plural="eventTicketClasses",
     can_disable=False,
 )
-class EventTicketClass(
-    GoogleWalletClassModel,
-    GoogleWalletStyleableMixin,
-    GoogleWalletCommonLogosMixin,
-):
+class EventTicketClass(ClassModel, StyleableMixin, CommonLogosMixin):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass
     """
@@ -183,9 +179,9 @@ class EventTicketClass(
     plural="eventTicketObjects",
 )
 class EventTicketObject(
-    GoogleWalletObjectModel,
-    GoogleWalletStyleableMixin,
-    GoogleWalletCommonLogosMixin,
+    ObjectModel,
+    StyleableMixin,
+    CommonLogosMixin,
 ):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketobject
@@ -240,7 +236,7 @@ class EventTicketObject(
     # inherits valueAddedModuleData
 
 
-class ActivationOptions(GoogleWalletModel):
+class ActivationOptions(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitclass#activationoptions
     """
@@ -252,7 +248,7 @@ class ActivationOptions(GoogleWalletModel):
     allowReactivation: bool = False
 
 
-class ActivationStatus(GoogleWalletModel):
+class ActivationStatus(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#activationstatus
     """
@@ -263,7 +259,7 @@ class ActivationStatus(GoogleWalletModel):
     state: ActivationState = ActivationState.UNKNOWN_STATE
 
 
-class TicketRestrictions(GoogleWalletModel):
+class TicketRestrictions(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketrestrictions
     """
@@ -277,7 +273,7 @@ class TicketRestrictions(GoogleWalletModel):
     otherRestrictions: LocalizedString | None = None
 
 
-class TicketCost(GoogleWalletModel):
+class TicketCost(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketcost
     """
@@ -290,7 +286,7 @@ class TicketCost(GoogleWalletModel):
     discountMessage: LocalizedString | None = None
 
 
-class TicketSeat(GoogleWalletModel):
+class TicketSeat(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketseat
     """
@@ -305,7 +301,7 @@ class TicketSeat(GoogleWalletModel):
     seatAssignment: LocalizedString | None = None
 
 
-class TicketLeg(GoogleWalletModel):
+class TicketLeg(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketleg
     """
@@ -345,7 +341,7 @@ class TicketLeg(GoogleWalletModel):
         return self
 
 
-class PurchaseDetails(GoogleWalletModel):
+class PurchaseDetails(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#purchasedetails
     """
@@ -360,7 +356,7 @@ class PurchaseDetails(GoogleWalletModel):
     ticketCost: TicketCost | None = None
 
 
-class DeviceContext(GoogleWalletModel):
+class DeviceContext(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#devicecontext
     """
@@ -377,9 +373,9 @@ class DeviceContext(GoogleWalletModel):
     plural="transitClasses",
 )
 class TransitClass(
-    GoogleWalletClassModel,
-    GoogleWalletStyleableMixin,
-    GoogleWalletCommonLogosMixin,
+    ClassModel,
+    StyleableMixin,
+    CommonLogosMixin,
 ):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitclass
@@ -445,9 +441,9 @@ class TransitClass(
     plural="transitObjects",
 )
 class TransitObject(
-    GoogleWalletObjectModel,
-    GoogleWalletStyleableMixin,
-    GoogleWalletCommonLogosMixin,
+    ObjectModel,
+    StyleableMixin,
+    CommonLogosMixin,
 ):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject
@@ -504,7 +500,7 @@ class TransitObject(
     # inherits valueAddedModuleData
 
 
-class FlightCarrier(GoogleWalletModel):
+class FlightCarrier(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightcarrier
     """
@@ -532,7 +528,7 @@ class FlightCarrier(GoogleWalletModel):
     wideAirlineLogo: Image | None = None
 
 
-class FlightHeader(GoogleWalletModel):
+class FlightHeader(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightheader
     """
@@ -553,7 +549,7 @@ class FlightHeader(GoogleWalletModel):
     flightNumberDisplayOverride: str | None = None
 
 
-class AirportInfo(GoogleWalletModel):
+class AirportInfo(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#airportinfo
     """
@@ -570,7 +566,7 @@ class AirportInfo(GoogleWalletModel):
     airportNameOverride: LocalizedString | None = None
 
 
-class BoardingAndSeatingPolicy(GoogleWalletModel):
+class BoardingAndSeatingPolicy(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#boardingandseatingpolicy
     """
@@ -593,11 +589,7 @@ class BoardingAndSeatingPolicy(GoogleWalletModel):
     url_part="flightClass",
     plural="flightClasses",
 )
-class FlightClass(
-    GoogleWalletClassModel,
-    GoogleWalletStyleableMixin,
-    GoogleWalletCommonLogosMixin,
-):
+class FlightClass(ClassModel, StyleableMixin, CommonLogosMixin):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass
     """
@@ -655,7 +647,7 @@ class FlightClass(
     url_part="flightObject",
     plural="flightObjects",
 )
-class FlightObject(GoogleWalletObjectModel, GoogleWalletStyleableMixin):
+class FlightObject(ObjectModel, StyleableMixin):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightobject
     """
