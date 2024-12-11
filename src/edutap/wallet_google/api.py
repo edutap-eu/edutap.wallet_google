@@ -184,34 +184,6 @@ def update(
     return model.model_validate_json(response.content)
 
 
-def disable(
-    name: str,
-    resource_id: str,
-) -> Model:
-    """
-    Disables a Google Wallet Class or Object. `D` in CRUD.
-    Generic Implementation of the CRUD --> (D) usually delete,
-    but here disable since delete is not supported at Google Wallets.
-
-    Technically, there is no disable method in the Google Wallet API,
-     but a state can be set to expired to indicate disabled objects -
-     which is done here.
-
-    :param name:          Registered name of the model to use
-    :param resource_id:   Identifier of the resource to read from the Google RESTful API
-    :raises LookupError:  When the resource was not found (404)
-    :raises Exception:    When the response status code is not 200 or 404
-    :return:              The created model based on the data returned by the Restful API
-    """
-    raise_when_operation_not_allowed(name, "disable")
-    model_metadata = lookup_metadata(name)
-    data = {
-        model_metadata["resource_id"]: resource_id,
-        "state": str(State.EXPIRED.value),
-    }
-    return update(name, data)
-
-
 def message(
     name: str,
     resource_id: str,
