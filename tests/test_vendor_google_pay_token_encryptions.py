@@ -1,3 +1,9 @@
+"""
+This module was vendored from https://github.com/yoyowallet/google-pay-token-decryption
+Copyright is by its original authors at Yoyo Wallet <dev@yoyowallet.com>
+It is under the MIT License, as found here https://github.com/yoyowallet/google-pay-token-decryption/blob/5cd006da9687171c1e35b55507b671c6e4eb513d/pyproject.toml#L8
+"""
+
 from contextlib import contextmanager
 from edutap.wallet_google._vendor.google_pay_token_decryption import (
     check_expiration_date_is_valid,
