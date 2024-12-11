@@ -1,6 +1,4 @@
-from typing import BinaryIO
-
-import io
+from edutap.wallet_google.models.handlers import ImageData
 
 
 class TestImageProvider:
@@ -8,8 +6,8 @@ class TestImageProvider:
     Implementation of edutap.wallet_google.protocols.ImageProvider
     """
 
-    async def image_by_id(self, image_id: str) -> BinaryIO:
-        return io.BytesIO()
+    async def image_by_id(self, image_id: str) -> ImageData:
+        return ImageData(mimetype="image/jpeg", data=b"")
 
 
 class TestCallbackHandler:

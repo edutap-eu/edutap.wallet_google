@@ -28,6 +28,11 @@ class SignedMessage(Model):
     eventType: EventType
 
 
+class ImageData(Model):
+    mimetype: str
+    data: bytes
+
+
 class CallbackData(Model):
     signature: str
     intermediateSigningKey: IntermediateSigningKey
