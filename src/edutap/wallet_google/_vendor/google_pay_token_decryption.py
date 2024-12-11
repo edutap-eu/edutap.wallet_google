@@ -6,19 +6,19 @@ It is under the MIT License, as found here https://github.com/yoyowallet/google-
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.datatypes.asymmetric.ec import ECDH
-from cryptography.hazmat.datatypes.asymmetric.ec import ECDSA
-from cryptography.hazmat.datatypes.asymmetric.ec import EllipticCurvePrivateKey
-from cryptography.hazmat.datatypes.asymmetric.ec import EllipticCurvePublicKey
-from cryptography.hazmat.datatypes.asymmetric.ec import SECP256R1
-from cryptography.hazmat.datatypes.ciphers import algorithms
-from cryptography.hazmat.datatypes.ciphers import Cipher
-from cryptography.hazmat.datatypes.ciphers import modes
-from cryptography.hazmat.datatypes.generic import hashes
-from cryptography.hazmat.datatypes.generic import hmac
-from cryptography.hazmat.datatypes.kdf.hkdf import HKDF
-from cryptography.hazmat.datatypes.serialization import load_der_private_key
-from cryptography.hazmat.datatypes.serialization import load_der_public_key
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import hmac
+from cryptography.hazmat.primitives.asymmetric.ec import ECDH
+from cryptography.hazmat.primitives.asymmetric.ec import ECDSA
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
+from cryptography.hazmat.primitives.asymmetric.ec import SECP256R1
+from cryptography.hazmat.primitives.ciphers import algorithms
+from cryptography.hazmat.primitives.ciphers import Cipher
+from cryptography.hazmat.primitives.ciphers import modes
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives.serialization import load_der_private_key
+from cryptography.hazmat.primitives.serialization import load_der_public_key
 from json.decoder import JSONDecodeError
 from typing import cast
 
