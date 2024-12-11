@@ -6,6 +6,7 @@ from typing import TypedDict
 
 class RegistryMetadataDict(TypedDict, total=False):
     """TypedDict for the metadata of a registered model."""
+
     model: type[Model]
     name: str
     url_part: str
