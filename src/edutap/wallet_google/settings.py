@@ -24,7 +24,7 @@ GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL = {
 GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE: dict[str, RootSigningPublicKeys] = {}
 
 
-class GoogleWalletSettings(BaseSettings):
+class Settings(BaseSettings):
     """Settings for Google Wallet Preferences.
 
     For more on how these settings work follow https://docs.pydantic.dev/latest/concepts/pydantic_settings/

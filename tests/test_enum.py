@@ -1,5 +1,5 @@
 def test_camel_case_alias_enum():
-    from edutap.wallet_google.models.primitives.enums import CamelCaseAliasEnum
+    from edutap.wallet_google.models.bases import CamelCaseAliasEnum
 
     class TestFoo(CamelCaseAliasEnum):
         FOO_BAR_BAZ = "FOO_BAR_BAZ"
@@ -14,7 +14,7 @@ def test_camel_case_alias_enum():
 
 
 def test_action_enum():
-    from edutap.wallet_google.models.primitives.enums import Action
+    from edutap.wallet_google.models.datatypes.enums import Action
 
     assert Action("ACTION_UNSPECIFIED") == Action.ACTION_UNSPECIFIED
     assert Action("actionUnspecified") == Action.ACTION_UNSPECIFIED

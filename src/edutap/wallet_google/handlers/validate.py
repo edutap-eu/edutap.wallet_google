@@ -1,7 +1,7 @@
 from .._vendor.google_pay_token_decryption import GooglePayTokenDecryptor
 from ..models.callback import CallbackData
 from ..models.callback import SignedMessage
-from ..settings import GoogleWalletSettings
+from ..settings import Settings
 
 
 def _raw_private_key(in_key: str) -> str:
@@ -23,7 +23,7 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
     Verifies the signature of the callback data.
     and returns the parsed SignedMessage
     """
-    settings = GoogleWalletSettings()
+    settings = Settings()
     decryptor = GooglePayTokenDecryptor(
         settings.google_root_signing_public_keys.dict()["keys"],
         settings.issuer_id,

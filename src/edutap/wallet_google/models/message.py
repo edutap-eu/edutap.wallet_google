@@ -1,8 +1,8 @@
-from .bases import GoogleWalletModel
-from .primitives.message import Message
+from .bases import Model
+from .datatypes.message import Message
 
 
-class AddMessageRequest(GoogleWalletModel):
+class AddMessageRequest(Model):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/AddMessageRequest
     """

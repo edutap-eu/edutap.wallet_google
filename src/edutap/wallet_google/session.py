@@ -1,5 +1,5 @@
 from .registry import lookup_metadata
-from .settings import GoogleWalletSettings
+from .settings import Settings
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials
 from requests.adapters import HTTPAdapter
@@ -15,10 +15,10 @@ class HTTPRecorder(HTTPAdapter):
     """Record the HTTP requests and responses to a file."""
 
     @property
-    def settings(self) -> GoogleWalletSettings:
+    def settings(self) -> Settings:
         settings = getattr(self, "_settings", None)
         if settings is None:
-            self._settings = GoogleWalletSettings()
+            self._settings = Settings()
         return self._settings
 
     def send(self, request, *args, **kwargs):
@@ -52,14 +52,14 @@ class SessionManager:
     """
 
     @property
-    def settings(self) -> GoogleWalletSettings:
+    def settings(self) -> Settings:
         settings = getattr(self, "_settings", None)
         if settings is None:
-            self._settings = GoogleWalletSettings()
+            self._settings = Settings()
         return self._settings
 
     def _make_session(self) -> AuthorizedSession:
-        if not self.settings.credentials_file.exists:
+        if not self.settings.credentials_file.is_file():
             raise ValueError(
                 f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.settings.credentials_file} does not exist."
             )
@@ -67,11 +67,8 @@ class SessionManager:
             str(self.settings.credentials_file), scopes=self.settings.scopes
         )
         session = AuthorizedSession(credentials)
-        if (
-            self.settings.record_api_calls_dir is not None
-            and self.settings.credentials_file.exists()
-        ):
-            session.mount("https://", HTTPRecorder(settings=self.settings))
+        if self.settings.record_api_calls_dir is not None:
+            session.mount("https://", HTTPRecorder())
         return session
 
     @property

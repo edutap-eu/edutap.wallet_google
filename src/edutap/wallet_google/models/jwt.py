@@ -1,11 +1,8 @@
 from ..registry import register_model
-
-# from . import generic
-from . import retail
-from . import tickets_and_transit
-from .bases import GoogleWalletClassModel
-from .bases import GoogleWalletModel
-from .bases import GoogleWalletObjectModel
+from .bases import Model
+from .passes import generic
+from .passes import retail
+from .passes import tickets_and_transit
 
 
 @register_model(
@@ -17,44 +14,51 @@ from .bases import GoogleWalletObjectModel
     can_list=False,
     can_message=False,
 )
-class JwtResource(GoogleWalletModel):
+class JwtResource(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/jwt
          https://developers.google.com/wallet/tickets/events/rest/v1/jwt
          https://developers.google.com/wallet/generic/web/javascript-button#google-pay-api-for-passes-jwt
     """
 
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-12-11
+
     jwt: str
 
 
-class Resources(GoogleWalletModel):
+class Resources(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/jwt/insert
          https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert#resources
     """
 
-    # the documentation says nothing about GenericClass/Object here
-    # those are probably missing from the documentation, needs verification
-    # genericClasses: list[generic.GenericClass] | None = None
-    # genericObjects: list[generic.GenericObject] | None = None
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-12-11
+
     eventTicketClasses: list[tickets_and_transit.EventTicketClass] | None = None
     eventTicketObjects: list[tickets_and_transit.EventTicketObject] | None = None
-    flightClasses: list[GoogleWalletClassModel] | None = None
-    flightObjects: list[GoogleWalletObjectModel] | None = None
+    flightClasses: list[tickets_and_transit.FlightClass] | None = None
+    flightObjects: list[tickets_and_transit.FlightObject] | None = None
     giftCardClasses: list[retail.GiftCardClass] | None = None
     giftCardObjects: list[retail.GiftCardObject] | None = None
     loyaltyClasses: list[retail.LoyaltyClass] | None = None
     loyaltyObjects: list[retail.LoyaltyObject] | None = None
     offerClasses: list[retail.OfferClass] | None = None
     offerObjects: list[retail.OfferObject] | None = None
-    transitClasses: list[GoogleWalletClassModel] | None = None
-    transitObjects: list[GoogleWalletObjectModel] | None = None
+    transitClasses: list[tickets_and_transit.TransitClass] | None = None
+    transitObjects: list[tickets_and_transit.TransitObject] | None = None
+    genericClasses: list[generic.GenericClass] | None = None
+    genericObjects: list[generic.GenericObject] | None = None
 
 
-class JwtResponse(GoogleWalletModel):
+class JwtResponse(Model):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert
     """
+
+    # Attribute order as in Google's documentation to make future updates easier!
+    # last check: 2024-12-11
 
     saveUri: str
     resources: Resources

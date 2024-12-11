@@ -25,8 +25,8 @@ class ImageUri(BaseModel):
     """
 
     uri: AnyUrl
-    description: str | None = None
-    localizedDescription: LocalizedString | None = None
+    description: str | None = Field(deprecated=True, default=None)
+    localizedDescription: LocalizedString | None = Field(deprecated=True, default=None)
 
 
 class Image(BaseModel):

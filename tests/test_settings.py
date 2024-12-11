@@ -1,9 +1,9 @@
-from edutap.wallet_google.settings import GoogleWalletSettings
 from edutap.wallet_google.settings import ROOT_DIR
+from edutap.wallet_google.settings import Settings
 
 
 def test_base_settings():
-    settings = GoogleWalletSettings()
+    settings = Settings()
 
     assert (
         str(settings.base_url)
@@ -25,7 +25,7 @@ def test_local_settings(monkeypatch):
         str(ROOT_DIR / "tests" / "data" / "credentials_fake.json"),
     )
 
-    settings = GoogleWalletSettings()
+    settings = Settings()
 
     assert settings.issuer_id == "1234567890123456789"
     assert settings.credentials_file.exists()
