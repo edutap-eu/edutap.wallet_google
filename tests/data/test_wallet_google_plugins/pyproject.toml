@@ -1,0 +1,7 @@
+[project]
+name = "test_wallet_google_plugins"
+version = "1.0"
+
+[project.entry-points.'edutap.wallet_google.plugins']
+ImageProvider = 'plugins:TestImageProvider'
+CallbackHandler = 'plugins:TestCallbackHandler'

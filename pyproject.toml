@@ -46,6 +46,7 @@ callbacks = [
     "fastapi",
 ]
 test = [
+    "pytest-asyncio",
     "pytest",
     "requests-mock",
     "tox",
