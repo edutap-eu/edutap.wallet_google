@@ -2,7 +2,7 @@ from .models.bases import Model
 from .models.datatypes.general import Pagination
 from .models.datatypes.message import Message
 from .models.misc import AddMessageRequest
-from .models.passes.bases import ObjectWithClassReference
+from .models.misc import ObjectWithClassReference
 from .registry import lookup_metadata
 from .registry import lookup_model
 from .registry import lookup_model_by_plural_name

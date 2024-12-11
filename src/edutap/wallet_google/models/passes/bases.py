@@ -110,15 +110,6 @@ class ObjectModel(WithIdModel):
     validTimeInterval: TimeInterval | None = None
 
 
-class ObjectWithClassReference(WithIdModel):
-    """
-    Mixin for all Google Wallet Object with a classReferences attribute, that reflects the whole class data.
-    This class is used to create the save_link only, never inherit from it.
-    """
-
-    classReference: ClassModel | None = None
-
-
 class StyleableMixin:
     """
     Mixin for Google Wallet Classes/Objects that can be styled.
