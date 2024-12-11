@@ -1,110 +1,41 @@
 from ...registry import register_model
-from ..bases import Model
-from ..datatypes.enums import ActivationState
-from ..datatypes.enums import BoardingPolicy
 from ..datatypes.enums import ConcessionCategory
 from ..datatypes.enums import ConfirmationCodeLabel
-from ..datatypes.enums import DoorsOpenLabel
-from ..datatypes.enums import FareClass
 from ..datatypes.enums import FlightStatus
 from ..datatypes.enums import GateLabel
 from ..datatypes.enums import NotificationSettingsForUpdates
 from ..datatypes.enums import PassengerType
 from ..datatypes.enums import ReviewStatus
 from ..datatypes.enums import RowLabel
-from ..datatypes.enums import SeatClassPolicy
 from ..datatypes.enums import SeatLabel
 from ..datatypes.enums import SectionLabel
 from ..datatypes.enums import TicketStatus
 from ..datatypes.enums import TransitType
 from ..datatypes.enums import TripType
+from ..datatypes.event import EventDateTime
+from ..datatypes.event import EventReservationInfo
+from ..datatypes.event import EventSeat
+from ..datatypes.event import EventVenue
+from ..datatypes.flight import AirportInfo
+from ..datatypes.flight import BoardingAndSeatingPolicy
+from ..datatypes.flight import FlightHeader
 from ..datatypes.general import Image
 from ..datatypes.general import Uri
 from ..datatypes.localized_string import LocalizedString
 from ..datatypes.location import LatLongPoint
 from ..datatypes.money import Money
 from ..datatypes.review import Review
+from ..datatypes.transit import ActivationOptions
+from ..datatypes.transit import ActivationStatus
+from ..datatypes.transit import DeviceContext
+from ..datatypes.transit import PurchaseDetails
+from ..datatypes.transit import TicketLeg
+from ..datatypes.transit import TicketRestrictions
 from .bases import ClassModel
 from .bases import CommonLogosMixin
 from .bases import ObjectModel
 from .bases import StyleableMixin
 from pydantic import Field
-from pydantic import model_validator
-
-import datetime
-
-
-class EventVenue(Model):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventvenue
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#eventDateTime",
-    )
-    name: LocalizedString | None = None
-    address: LocalizedString | None = None
-
-
-class EventDateTime(Model):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventdatetime
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#eventDateTime",
-    )
-    doorsOpen: datetime.datetime | None = None
-    start: datetime.datetime | None = None
-    end: datetime.datetime | None = None
-    doorsOpenLabel: DoorsOpenLabel | None = None
-    customDoorsOpenLabel: LocalizedString | None = None
-
-
-class EventSeat(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/eventticketobject#eventseat
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#eventSeat",
-    )
-    seat: LocalizedString | None = None
-    row: LocalizedString | None = None
-    section: LocalizedString | None = None
-    gate: LocalizedString | None = None
-
-
-class EventReservationInfo(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/eventticketobject#eventreservationinfo
-    """
-
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#eventReservationInfo",
-    )
-    confirmationCode: str | None = None
 
 
 @register_model(
@@ -234,137 +165,6 @@ class EventTicketObject(
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
     # inherits valueAddedModuleData
-
-
-class ActivationOptions(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitclass#activationoptions
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    activationUrl: str | None = None
-    allowReactivation: bool = False
-
-
-class ActivationStatus(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#activationstatus
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    state: ActivationState = ActivationState.UNKNOWN_STATE
-
-
-class TicketRestrictions(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketrestrictions
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    routeRestrictions: LocalizedString | None = None
-    routeRestrictionsDetails: LocalizedString | None = None
-    timeRestrictions: LocalizedString | None = None
-    otherRestrictions: LocalizedString | None = None
-
-
-class TicketCost(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketcost
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    faceValue: Money | None = None
-    purchasePrice: Money | None = None
-    discountMessage: LocalizedString | None = None
-
-
-class TicketSeat(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketseat
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    fareClass: FareClass = FareClass.FARE_CLASS_UNSPECIFIED
-    customFareClass: LocalizedString | None = None
-    coach: str | None = None
-    seat: str | None = None
-    seatAssignment: LocalizedString | None = None
-
-
-class TicketLeg(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketleg
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    originStationCod: str | None = None
-    originName: LocalizedString | None = None
-    destinationStationCode: str | None = None
-    destinationName: LocalizedString | None = None
-    departureDateTime: str | None = None
-    arrivalDateTime: str | None = None
-    fareName: LocalizedString | None = None
-    carriage: str | None = None
-    platform: str | None = None
-    zone: str | None = None
-    ticketSeat: TicketSeat | None = None
-    ticketSeats: list[TicketSeat] | None = None
-    transitOperatorName: LocalizedString | None = None
-    transitTerminusName: LocalizedString | None = None
-
-    @model_validator(mode="after")
-    def check_one_of(self) -> "TicketLeg":
-        if self.ticketSeat is None and self.ticketSeats is None:
-            return self
-        if (
-            self.ticketSeat is not None
-            and self.ticketSeats
-            and len(self.ticketSeats) > 0
-        ):
-            raise ValueError("Only one of ticketSeat or ticketSeats must be set")
-        if self.ticketSeats and len(self.ticketSeats) == 1:
-            raise ValueError(
-                "If only one seat is to be specified then use the ticketSeat field instead."
-            )
-        return self
-
-
-class PurchaseDetails(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#purchasedetails
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    purchaseReceiptNumber: str | None = None
-    purchaseDateTime: str | None = None
-    accountId: str | None = None
-    confirmationCode: str | None = None
-    ticketCost: TicketCost | None = None
-
-
-class DeviceContext(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#devicecontext
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    deviceToken: str | None = None
 
 
 @register_model(
@@ -498,90 +298,6 @@ class TransitObject(
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
     # inherits valueAddedModuleData
-
-
-class FlightCarrier(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightcarrier
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#flightCarrier",
-    )
-    carrierIataCode: str | None = Field(
-        max_length=2,
-        default=None,
-    )
-    carrierIcaoCode: str | None = Field(
-        max_length=3,
-        default=None,
-    )
-    airlineName: LocalizedString | None = None
-    airlineLogo: Image | None = None
-    airlineAllianceLogo: Image | None = None
-    wideAirlineLogo: Image | None = None
-
-
-class FlightHeader(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightheader
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#flightHeader",
-    )
-    carrier: FlightCarrier | None = None
-    flightNumber: str | None = None
-    operatingCarrier: FlightCarrier | None = None
-    operatingFlightNumber: str | None = None
-    flightNumberDisplayOverride: str | None = None
-
-
-class AirportInfo(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#airportinfo
-    """
-
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#airportInfo",
-    )
-    airportIataCode: str | None = Field(max_length=3, default=None)
-    terminal: str | None = None
-    gate: str | None = None
-    airportNameOverride: LocalizedString | None = None
-
-
-class BoardingAndSeatingPolicy(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#boardingandseatingpolicy
-    """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#boardingAndSeatingPolicy",
-    )
-    boardingPolicy: BoardingPolicy = BoardingPolicy.BOARDING_POLICY_UNSPECIFIED
-    seatClassPolicy: SeatClassPolicy = SeatClassPolicy.SEAT_CLASS_POLICY_UNSPECIFIED
 
 
 @register_model(
