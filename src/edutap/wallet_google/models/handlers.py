@@ -6,6 +6,17 @@ from .bases import Model
 from .datatypes.enums import CamelCaseAliasEnum
 
 
+# image fetching from data provider
+
+
+class ImageData(Model):
+    mimetype: str
+    data: bytes
+
+
+#  Callback
+
+
 class EventType(CamelCaseAliasEnum):
     SAVE = "SAVE"
     DEL = "DEL"
@@ -28,18 +39,14 @@ class SignedMessage(Model):
     eventType: EventType
 
 
-class ImageData(Model):
-    mimetype: str
-    data: bytes
-
-
 class CallbackData(Model):
     signature: str
     intermediateSigningKey: IntermediateSigningKey
     protocolVersion: str
-    signedMessage: (
-        SignedMessage | str
-    )  # google sends this as a string, but we want to parse it as a SignedMessage
+    signedMessage: str  # Google sends this as a string, this get verified and the returned as a SignedMessage
+
+
+# keys for callback data validation
 
 
 class RootSigningPublicKey(Model):
