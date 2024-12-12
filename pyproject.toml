@@ -104,6 +104,5 @@ ignore = [
     ".editorconfig",
     ".pre-commit-config.yaml",
     "tox.ini",
-    "mypy.ini",
     ".flake8",
 ]
