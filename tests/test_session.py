@@ -1,7 +1,9 @@
 from edutap.wallet_google.settings import ROOT_DIR
 
 
-def test_session_manager_url(clean_registry):  # noqa: F811
+def test_session_manager_url(
+    clean_registry_by_name, clean_registry_by_model
+):  # noqa: F811
     from edutap.wallet_google.registry import register_model
 
     @register_model("Foo", url_part="foo")

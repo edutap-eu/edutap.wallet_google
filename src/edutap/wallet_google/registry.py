@@ -1,6 +1,4 @@
 from .models.bases import Model
-from .models.passes.bases import ClassModel
-from .models.passes.bases import ObjectModel
 from typing import TypedDict
 
 
@@ -20,7 +18,8 @@ class RegistryMetadataDict(TypedDict, total=False):
     can_message: bool
 
 
-_MODEL_REGISTRY: dict[str, RegistryMetadataDict] = {}
+_MODEL_REGISTRY_BY_NAME: dict[str, RegistryMetadataDict] = {}
+_MODEL_REGISTRY_BY_MODEL: dict[type[Model], RegistryMetadataDict] = {}
 
 
 class register_model:
@@ -78,16 +77,17 @@ class register_model:
 
     def __call__(
         self,
-        cls: type[Model | ClassModel | ObjectModel],
-    ) -> type[Model | ClassModel | ObjectModel]:
+        cls: type[Model],
+    ) -> type[Model]:
         """
         Registers the given class in the registry.
         """
         name = self.metadata["name"]
-        if name in _MODEL_REGISTRY:
+        if name in _MODEL_REGISTRY_BY_NAME:
             raise ValueError(f"Duplicate registration of '{name}'")
         self.metadata["model"] = cls
-        _MODEL_REGISTRY[name] = self.metadata
+        _MODEL_REGISTRY_BY_NAME[name] = self.metadata
+        _MODEL_REGISTRY_BY_MODEL[cls] = self.metadata
         return cls
 
 
@@ -95,24 +95,31 @@ def lookup_model(name: str) -> type[Model]:
     """
     Returns the model with the given name.
     """
-    return _MODEL_REGISTRY[name]["model"]
+    return _MODEL_REGISTRY_BY_NAME[name]["model"]
 
 
 def lookup_model_by_plural_name(plural_name: str) -> type[Model]:
     """
     Returns the model with the given plural name.
     """
-    for model in _MODEL_REGISTRY.values():
+    for model in _MODEL_REGISTRY_BY_NAME.values():
         if model["plural"] == plural_name:
             return model["model"]
     raise LookupError(f"Model with plural name '{plural_name}' not found")
 
 
-def lookup_metadata(name: str) -> RegistryMetadataDict:
+def lookup_metadata_by_name(name: str) -> RegistryMetadataDict:
     """
     Returns the metadata of the model with the given name.
     """
-    return _MODEL_REGISTRY[name]
+    return _MODEL_REGISTRY_BY_NAME[name]
+
+
+def lookup_metadata_by_model_instance(model: Model) -> RegistryMetadataDict:
+    """
+    Returns the registry metadata by a given instacne of a model
+    """
+    return _MODEL_REGISTRY_BY_MODEL[type(model)]
 
 
 def raise_when_operation_not_allowed(name: str, operation: str) -> None:
@@ -120,5 +127,5 @@ def raise_when_operation_not_allowed(name: str, operation: str) -> None:
 
     :raises: ValueError when the operation is not allowed.
     """
-    if not _MODEL_REGISTRY[name][f"can_{operation}"]:  # type: ignore
+    if not _MODEL_REGISTRY_BY_NAME[name][f"can_{operation}"]:  # type: ignore
         raise ValueError(f"Operation '{operation}' not allowed for '{name}'")

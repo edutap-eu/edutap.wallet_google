@@ -1,14 +1,14 @@
 import pytest
 
 
-def test_decorator(clean_registry):
+def test_decorator(clean_registry_by_name, clean_registry_by_model):
     from edutap.wallet_google.registry import register_model
 
     @register_model("Foo", url_part="foo")
     class Foo:
         pass
 
-    assert clean_registry["Foo"] == {
+    expected = {
         "can_create": True,
         "can_disable": True,
         "can_list": True,
@@ -21,6 +21,8 @@ def test_decorator(clean_registry):
         "resource_id": "id",
         "url_part": "foo",
     }
+    assert clean_registry_by_name["Foo"] == expected
+    assert clean_registry_by_model[Foo] == expected
 
     with pytest.raises(ValueError):
 
@@ -42,7 +44,7 @@ def test_decorator(clean_registry):
     class Bar:
         pass
 
-    assert clean_registry["Bar"] == {
+    expected = {
         "can_create": False,
         "can_disable": False,
         "can_list": False,
@@ -55,9 +57,11 @@ def test_decorator(clean_registry):
         "resource_id": "id",
         "url_part": "baar",
     }
+    assert clean_registry_by_name["Bar"] == expected
+    assert clean_registry_by_model[Bar] == expected
 
 
-def test_lookup_model(clean_registry):
+def test_lookup_model(clean_registry_by_name, clean_registry_by_model):
     from edutap.wallet_google.registry import register_model
 
     @register_model("Foo", url_part="foo")
@@ -72,16 +76,16 @@ def test_lookup_model(clean_registry):
         lookup_model("Bar")
 
 
-def test_lookup_metadata(clean_registry):
+def test_lookup_metadata_by_name(clean_registry_by_name, clean_registry_by_model):
     from edutap.wallet_google.registry import register_model
 
     @register_model("Foo", url_part="foo")
     class Foo:
         pass
 
-    from edutap.wallet_google.registry import lookup_metadata
+    from edutap.wallet_google.registry import lookup_metadata_by_name
 
-    assert lookup_metadata("Foo") == {
+    assert lookup_metadata_by_name("Foo") == {
         "plural": "foos",
         "resource_id": "id",
         "can_create": True,
@@ -96,10 +100,48 @@ def test_lookup_metadata(clean_registry):
     }
 
     with pytest.raises(KeyError):
-        lookup_metadata("Bar")
+        lookup_metadata_by_name("Bar")
 
 
-def test_raise_when_operation_not_allowed(clean_registry):
+def test_lookup_metadata_by_model_instance(
+    clean_registry_by_name, clean_registry_by_model
+):
+    from edutap.wallet_google.registry import register_model
+
+    @register_model("Foo", url_part="foo")
+    class Foo:
+        pass
+
+    foo = Foo()
+
+    from edutap.wallet_google.registry import lookup_metadata_by_model_instance
+
+    assert lookup_metadata_by_model_instance(foo) == {
+        "plural": "foos",
+        "resource_id": "id",
+        "can_create": True,
+        "can_disable": True,
+        "can_list": True,
+        "can_message": True,
+        "can_read": True,
+        "can_update": True,
+        "model": Foo,
+        "name": "Foo",
+        "url_part": "foo",
+    }
+
+    class Bar:
+        pass
+
+    bar = Bar()
+
+    with pytest.raises(KeyError):
+        lookup_metadata_by_model_instance(bar)
+
+
+def test_raise_when_operation_not_allowed(
+    clean_registry_by_name, clean_registry_by_model
+):
     from edutap.wallet_google.registry import register_model
 
     @register_model("foo", url_part="foo", can_message=False)

@@ -3,7 +3,7 @@ from .models.datatypes.general import Pagination
 from .models.datatypes.message import Message
 from .models.misc import AddMessageRequest
 from .models.misc import ObjectWithClassReference
-from .registry import lookup_metadata
+from .registry import lookup_metadata_by_name
 from .registry import lookup_model
 from .registry import lookup_model_by_plural_name
 from .registry import raise_when_operation_not_allowed
@@ -149,7 +149,7 @@ def update(
     :return:             The created model based on the data returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "update")
-    model_metadata = lookup_metadata(name)
+    model_metadata = lookup_metadata_by_name(name)
     model = model_metadata["model"]
     if not isinstance(data, Model) and partial:
         resource_id = data[model_metadata["resource_id"]]
@@ -197,7 +197,7 @@ def message(
     :return:             The created Model object as returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "message")
-    model_metadata = lookup_metadata(name)
+    model_metadata = lookup_metadata_by_name(name)
     model = model_metadata["model"]
     if not isinstance(message, Message):
         message_validated = Message.model_validate(message)

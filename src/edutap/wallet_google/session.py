@@ -1,4 +1,4 @@
-from .registry import lookup_metadata
+from .registry import lookup_metadata_by_name
 from .settings import Settings
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials
@@ -87,7 +87,7 @@ class SessionManager:
 
         :return: the url of the google RESTful API endpoint to handle this model
         """
-        model_metadata = lookup_metadata(name)
+        model_metadata = lookup_metadata_by_name(name)
         return f"{self.settings.base_url}/{model_metadata['url_part']}{additional_path}"
 
 

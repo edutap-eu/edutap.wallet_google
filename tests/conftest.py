@@ -13,15 +13,27 @@ DATA_PATH = Path(__file__).parent / "data"
 
 
 @pytest.fixture
-def clean_registry():
+def clean_registry_by_name():
     """Fixture to provide a clean the google_wallet model registry."""
-    from edutap.wallet_google.registry import _MODEL_REGISTRY
+    from edutap.wallet_google.registry import _MODEL_REGISTRY_BY_NAME
 
-    OLD_MODEL_REGISTRY = copy.deepcopy(_MODEL_REGISTRY)
-    _MODEL_REGISTRY.clear()
-    yield _MODEL_REGISTRY
-    _MODEL_REGISTRY.clear()
-    _MODEL_REGISTRY.update(OLD_MODEL_REGISTRY)
+    OLD_MODEL_REGISTRY_BY_NAME = copy.deepcopy(_MODEL_REGISTRY_BY_NAME)
+    _MODEL_REGISTRY_BY_NAME.clear()
+    yield _MODEL_REGISTRY_BY_NAME
+    _MODEL_REGISTRY_BY_NAME.clear()
+    _MODEL_REGISTRY_BY_NAME.update(OLD_MODEL_REGISTRY_BY_NAME)
+
+
+@pytest.fixture
+def clean_registry_by_model():
+    """Fixture to provide a clean the google_wallet model registry."""
+    from edutap.wallet_google.registry import _MODEL_REGISTRY_BY_MODEL
+
+    OLD_MODEL_REGISTRY_BY_MODEL = copy.deepcopy(_MODEL_REGISTRY_BY_MODEL)
+    _MODEL_REGISTRY_BY_MODEL.clear()
+    yield _MODEL_REGISTRY_BY_MODEL
+    _MODEL_REGISTRY_BY_MODEL.clear()
+    _MODEL_REGISTRY_BY_MODEL.update(OLD_MODEL_REGISTRY_BY_MODEL)
 
 
 @pytest.fixture
