@@ -14,17 +14,6 @@ from .datatypes.smarttap import SmartTapMerchantData
 from .passes import generic
 from .passes import retail
 from .passes import tickets_and_transit
-from .passes.bases import ClassModel
-
-
-class ObjectWithClassReference(WithIdModel):
-    """
-
-    Google Wallet Object with a classReferences attribute, that reflects the whole class data.
-    This class is used to create the save_link only, never inherit from it.
-    """
-
-    classReference: ClassModel | None = None
 
 
 @register_model(

@@ -91,7 +91,7 @@ class register_model:
         return cls
 
 
-def lookup_model(name: str) -> type[Model]:
+def lookup_model_by_name(name: str) -> type[Model]:
     """
     Returns the model with the given name.
     """
@@ -117,9 +117,16 @@ def lookup_metadata_by_name(name: str) -> RegistryMetadataDict:
 
 def lookup_metadata_by_model_instance(model: Model) -> RegistryMetadataDict:
     """
-    Returns the registry metadata by a given instacne of a model
+    Returns the registry metadata by a given instance of a model
     """
     return _MODEL_REGISTRY_BY_MODEL[type(model)]
+
+
+def lookup_metadata_by_model_type(model_type: type[Model]) -> RegistryMetadataDict:
+    """
+    Returns the registry metadata by a given model type
+    """
+    return _MODEL_REGISTRY_BY_MODEL[model_type]
 
 
 def raise_when_operation_not_allowed(name: str, operation: str) -> None:

@@ -46,10 +46,12 @@ params_for_create = [
 @pytest.mark.parametrize("class_type,class_data", params_for_create)
 def test_class_creation(class_type, class_data, integration_test_id):
     from edutap.wallet_google.api import create
+    from edutap.wallet_google.api import new
     from edutap.wallet_google.api import session_manager
 
     class_data["id"] = (
         f"{session_manager.settings.issuer_id}.{integration_test_id}.test_class_creation.wallet_google.edutap"
     )
-    result = create(class_type, class_data)
+    data = new(class_type, class_data)
+    result = create(data)
     assert result is not None

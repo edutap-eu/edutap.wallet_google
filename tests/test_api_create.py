@@ -31,15 +31,17 @@ testdata = [
 @pytest.mark.parametrize("prefix,name,method,checkdata", testdata)
 def test_api_create(mock_request_response, prefix, name, method, checkdata):
     from edutap.wallet_google.api import create
-    from edutap.wallet_google.registry import lookup_model
+    from edutap.wallet_google.api import new
+    from edutap.wallet_google.registry import lookup_model_by_name
     from edutap.wallet_google.session import session_manager
 
     request_data = mock_request_response(
         f"{prefix}{name}", session_manager.url(name), method
     )
-    result = create(name, request_data["request"]["body"])
+    data = new(name, request_data["request"]["body"])
+    result = create(data)
 
-    model = lookup_model(name)
+    model = lookup_model_by_name(name)
     assert isinstance(result, model)
     for key, value in checkdata.items():
         assert getattr(result, key) == value

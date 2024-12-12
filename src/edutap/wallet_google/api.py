@@ -1,11 +1,16 @@
 from .models.bases import Model
 from .models.datatypes.general import Pagination
+from .models.datatypes.jwt import JWTClaims
+from .models.datatypes.jwt import JWTPayload
+from .models.datatypes.jwt import Reference
 from .models.datatypes.message import Message
 from .models.misc import AddMessageRequest
-from .models.misc import ObjectWithClassReference
+from .models.passes.bases import ClassModel
+from .models.passes.bases import ObjectModel
+from .registry import lookup_metadata_by_model_instance
+from .registry import lookup_metadata_by_model_type
 from .registry import lookup_metadata_by_name
-from .registry import lookup_model
-from .registry import lookup_model_by_plural_name
+from .registry import lookup_model_by_name
 from .registry import raise_when_operation_not_allowed
 from .session import session_manager
 from collections.abc import Generator
@@ -65,22 +70,38 @@ def _validate_data_and_convert_to_json(
     return (identifier, verified_json)
 
 
-def create(
+def new(
     name: str,
-    data: dict[str, typing.Any] | Model,
+    data: dict[str, typing.Any] = {},
+):
+    """
+    Factors a new registered Google Wallet Model by name, based on the given data.
+
+    :param name:       Registered name of the model to use
+    :param data:       Data to initialize the model with.
+                       A simple JSON compatible Python data structure using built-ins.
+    :raises Exception: When the data does not validate.
+    :return:           The created model instance.
+    """
+    model = lookup_model_by_name(name)
+    return _validate_data(model, data)
+
+
+def create(
+    data: Model,
 ) -> Model:
     """
     Creates a Google Wallet items. `C` in CRUD.
 
-    :param name:       Registered name of the model to use
     :param data:       Data to pass to the Google RESTful API.
-                       Either a simple python data structure using built-ins,
-                       or a Pydantic model instance matching the registered name's model.
+                       A model instance, has to be a registered model.
     :raises Exception: When the response status code is not 200.
     :return:           The created model based on the data returned by the Restful API.
     """
+    model_metadata = lookup_metadata_by_model_instance(data)
+    name = model_metadata["name"]
     raise_when_operation_not_allowed(name, "create")
-    model = lookup_model(name)
+    model = model_metadata["model"]
     resource_id, verified_json = _validate_data_and_convert_to_json(model, data)
     session = session_manager.session
     url = session_manager.url(name)
@@ -123,7 +144,7 @@ def read(
         raise LookupError(f"{url}: {name} not found")
 
     if response.status_code == 200:
-        model = lookup_model(name)
+        model = lookup_model_by_name(name)
         logger.debug(f"RAW-Response: {response.content!r}")
         return model.model_validate_json(response.content)
 
@@ -131,34 +152,27 @@ def read(
 
 
 def update(
-    name: str,
-    data: dict[str, typing.Any] | Model,
+    data: Model,
     *,
     partial: bool = True,
 ) -> Model:
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
 
-    :param name:         Registered name of the model to use
     :param data:         Data to pass to the Google RESTful API.
-                         Either a simple python data structure using built-ins,
-                         or a Pydantic model instance matching the registered name's model.
-    :param override_all: When True, all fields will be overwritten, otherwise only given fields.
+                         A model instance, has to be a registered model.
+    :param partial:      Whether a partial update is executed or a full replacement.
     :raises LookupError: When the resource was not found (404)
     :raises Exception:   When the response status code is not 200 or 404
     :return:             The created model based on the data returned by the Restful API
     """
+    model_metadata = lookup_metadata_by_model_instance(data)
+    name = model_metadata["name"]
     raise_when_operation_not_allowed(name, "update")
-    model_metadata = lookup_metadata_by_name(name)
     model = model_metadata["model"]
-    if not isinstance(data, Model) and partial:
-        resource_id = data[model_metadata["resource_id"]]
-        # we can not validate partial data for patch yet
-        verified_json = json.dumps(data)
-    else:
-        resource_id, verified_json = _validate_data_and_convert_to_json(
-            model, data, existing=True, resource_id_key=model_metadata["resource_id"]
-        )
+    resource_id, verified_json = _validate_data_and_convert_to_json(
+        model, data, existing=True, resource_id_key=model_metadata["resource_id"]
+    )
     session = session_manager.session
     if partial:
         response = session.patch(
@@ -259,7 +273,7 @@ def listing(
     if resource_id and issuer_id:
         raise ValueError("resource_id and issuer_id are mutually exclusive")
 
-    model = lookup_model(name)  # early, also to test if name is registered
+    model = lookup_model_by_name(name)  # early, also to test if name is registered
 
     params = {}
     is_pageable = False
@@ -319,7 +333,7 @@ def listing(
 
 
 def save_link(
-    resources: dict[str, list[Model | dict]],
+    models: list[ClassModel | ObjectModel | Reference],
     *,
     origins: list[str] = [],
 ) -> str:
@@ -328,64 +342,53 @@ def save_link(
 
     Besides the capability to save an object to the wallet, it is also able create classes on-the-fly.
 
-    :param resources:   Dictionary of resources to save.
-                        Each dictionary key is the registered plural name of a model.
-                        Usually, this is the name with a lower first character and as plural.
-                        The value is either a simple python data structure using built-ins,
-                        or a Pydantic model instance matching the registered name's model.
-                        If a resource is an Object, it can be an ObjectReference instance too.
+    More information about the construction of the save_link can be found here:
+
+    - https://developers.google.com/wallet/reference/rest/v1/jwt
+    - https://developers.google.com/wallet/generic/web
+    - https://developers.google.com/wallet/generic/use-cases/jwt
+
+    :param models:      List of ObjectModels or ClassModels to save.
+                        A resource can be an ObjectReference instance too.
     :param origins:     List of domains to approve for JWT saving functionality.
                         The Google Wallet API button will not render when the origins field is not defined.
                         You could potentially get an "Load denied by X-Frame-Options" or "Refused to display"
                         messages in the browser console when the origins field is not defined.
     :return:            Link with JWT to save the resources to the wallet.
     """
-    # validate resources
-    payload: dict[str, typing.Any] = {}
-    for name, objs in resources.items():
-        payload[name] = []
-        for obj in objs:
+    payload = JWTPayload()
+    for model in models:
+        if isinstance(model, Reference):
+            if model.model_name is not None:
+                name = model.model_name
+            elif model.model_type is not None:
+                name = lookup_metadata_by_model_type(model.model_type)["plural"]
+        else:
+            name = lookup_metadata_by_model_instance(model)["plural"]
+        if getattr(payload, name) is None:
+            setattr(payload, name, [])
+        getattr(payload, name).append(model)
 
-            # first look if this is a reference to an existing wallet object passed as dict
-            if isinstance(obj, dict) and (
-                ("id" in obj and len(obj.keys()) == 1)
-                or ("id" in obj and "classReference" in obj and len(obj.keys()) == 2)
-            ):
-                obj = ObjectWithClassReference.model_validate(obj)
-
-            # if it is not a reference, it must be a full wallet object model
-            if not isinstance(obj, ObjectWithClassReference):
-                model = lookup_model_by_plural_name(name)
-                obj = _validate_data(model, obj)
-
-            # dump the model to json
-            obj_json = obj.model_dump(
-                # explicitly set to model_dump(mode="json") instead of model_dump_json due to problems
-                # reported by jensens
-                mode="json",
-                exclude_none=True,  # exclude None values - here we create something new, no updates.
-                exclude_unset=True,  # exclude unset values - this are values not set explicitly by the code
-                by_alias=True,
-            )
-            # append to the current payload section
-            payload[name].append(obj_json)
-
-    claims = {
-        "iat": "",
-        "iss": session_manager.settings.credentials_info["client_email"],
-        "aud": "google",
-        "origins": origins,
-        "typ": "savetowallet",
-        "payload": payload,
-    }
+    claims = JWTClaims(
+        iss=session_manager.settings.credentials_info["client_email"],
+        origins=origins,
+        payload=payload,
+    )
     signer = crypt.RSASigner.from_service_account_file(
         session_manager.settings.credentials_file
     )
-    jwt_string = jwt.encode(signer, claims).decode("utf-8")
+    jwt_string = jwt.encode(
+        signer,
+        claims.model_dump(
+            exclude_unset=False,
+            exclude_defaults=False,
+            exclude_none=True,
+        ),
+    ).decode("utf-8")
     if len(jwt_string) >= 1800:
         logger.debug(
             "JWT-Length: %d, is larger than recommended 1800 bytes: %s",
             len(jwt_string),
             len(jwt_string) >= 1800,
         )
-    return f"{session_manager.settings.save_url}/{jwt_string}"
+    return session_manager.url("Jwt", f"/{jwt_string}")

@@ -61,19 +61,19 @@ def test_decorator(clean_registry_by_name, clean_registry_by_model):
     assert clean_registry_by_model[Bar] == expected
 
 
-def test_lookup_model(clean_registry_by_name, clean_registry_by_model):
+def test_lookup_model_by_name(clean_registry_by_name, clean_registry_by_model):
     from edutap.wallet_google.registry import register_model
 
     @register_model("Foo", url_part="foo")
     class Foo:
         pass
 
-    from edutap.wallet_google.registry import lookup_model
+    from edutap.wallet_google.registry import lookup_model_by_name
 
-    assert lookup_model("Foo") == Foo
+    assert lookup_model_by_name("Foo") == Foo
 
     with pytest.raises(KeyError):
-        lookup_model("Bar")
+        lookup_model_by_name("Bar")
 
 
 def test_lookup_metadata_by_name(clean_registry_by_name, clean_registry_by_model):
