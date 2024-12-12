@@ -360,7 +360,7 @@ def save_link(
     for model in models:
         if isinstance(model, Reference):
             if model.model_name is not None:
-                name = model.model_name
+                name = lookup_metadata_by_name(model.model_name)["plural"]
             elif model.model_type is not None:
                 name = lookup_metadata_by_model_type(model.model_type)["plural"]
         else:
@@ -380,6 +380,7 @@ def save_link(
     jwt_string = jwt.encode(
         signer,
         claims.model_dump(
+            mode="json",
             exclude_unset=False,
             exclude_defaults=False,
             exclude_none=True,
