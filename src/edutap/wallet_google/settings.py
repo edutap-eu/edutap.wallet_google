@@ -46,9 +46,9 @@ class Settings(BaseSettings):
     save_url: HttpUrl = HttpUrl(SAVE_URL)
     scopes: list[str] = [SCOPE]
 
-    credentials_file: Path = ROOT_DIR / "credentials.json"
+    credentials_file: Path = ROOT_DIR / "tests" / "data" / "credentials_fake.json"
     issuer_account_email: EmailStr | None = None
-    issuer_id: str = Field(min_length=19, max_length=20, default="")
+    issuer_id: str = Field(default="")
 
     callback_url: HttpUrl | None = None
     callback_update_url: HttpUrl | None = None
