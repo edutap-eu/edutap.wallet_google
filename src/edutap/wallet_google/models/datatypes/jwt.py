@@ -3,37 +3,10 @@ Models to be used to assemble the JWT for the save link (add to wallet link).
 """
 
 from ..bases import Model
-from ..bases import WithIdModel
 from ..passes import generic
 from ..passes import retail
 from ..passes import tickets_and_transit
-from pydantic import Field
-from pydantic import model_validator
-
-
-class Reference(WithIdModel):
-    """
-    References an existing wallet object.
-
-    It is used to create the JWT for the add to wallet link.
-    The id must be an existing wallet object id.
-
-    Either model_name or mode_type must be set.
-    """
-
-    # inherits id
-
-    # mode_name and model_type are implementation specific for this package
-    model_name: str | None = Field(exclude=True, default=None)
-    model_type: type[Model] | None = Field(exclude=True, default=None)
-
-    @model_validator(mode="after")
-    def check_one_of(self) -> "Reference":
-        if self.model_name is None and self.model_type is None:
-            raise ValueError("One of [model_name, model_type] must be set")
-        if self.model_name is not None and self.model_type is not None:
-            raise ValueError("Only one of [model_name, model_type] must be set")
-        return self
+from ..passes.bases import Reference
 
 
 class JWTPayload(Model):

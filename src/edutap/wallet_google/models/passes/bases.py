@@ -1,3 +1,4 @@
+from ...registry import register_model
 from ..bases import WithIdModel
 from ..datatypes.barcode import Barcode
 from ..datatypes.barcode import RotatingBarcode
@@ -20,6 +21,42 @@ from ..datatypes.general import SecurityAnimation
 from ..datatypes.message import Message
 from ..datatypes.moduledata import ValueAddedModuleData
 from pydantic import Field
+from pydantic import model_validator
+
+
+@register_model(
+    "Reference",
+    url_part="",
+    can_create=False,
+    can_read=False,
+    can_update=False,
+    can_disable=False,
+    can_list=False,
+    can_message=False,
+)
+class Reference(WithIdModel):
+    """
+    References an existing wallet object.
+
+    It is used to create the JWT for the add to wallet link.
+    The id must be an existing wallet object id.
+
+    Either model_name or mode_type must be set.
+    """
+
+    # inherits id
+
+    # mode_name and model_type are implementation specific for this package
+    model_name: str | None = Field(exclude=True, default=None)
+    model_type: type[WithIdModel] | None = Field(exclude=True, default=None)
+
+    @model_validator(mode="after")
+    def check_one_of(self) -> "Reference":
+        if self.model_name is None and self.model_type is None:
+            raise ValueError("One of [model_name, model_type] must be set")
+        if self.model_name is not None and self.model_type is not None:
+            raise ValueError("Only one of [model_name, model_type] must be set")
+        return self
 
 
 class ClassModel(WithIdModel):

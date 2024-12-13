@@ -392,4 +392,4 @@ def save_link(
             len(jwt_string),
             len(jwt_string) >= 1800,
         )
-    return session_manager.url("Jwt", f"/{jwt_string}")
+    return f"{session_manager.settings.save_url}/{jwt_string}"
