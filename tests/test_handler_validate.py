@@ -10,7 +10,7 @@ callbackdata_for_test_failure = {
         "signedKey": {"keyValue": "baz", "keyExpiration": 0},
         "signatures": ["bar"],
     },
-    "protocolVersion": "",
+    "protocolVersion": "ECv2SigningOnly",
     "signedMessage": {
         "classId": "1",
         "objectId": "2",
@@ -26,4 +26,3 @@ def test_handler_validate_invalid():
     data = CallbackData.model_validate(callbackdata_for_test_failure)
     with pytest.raises(GooglePayError):
         verified_signed_message(data)
-

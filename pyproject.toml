@@ -47,6 +47,7 @@ fastapi = [
 ]
 test = [
     "pytest",
+    "pytest-explicit",
     "requests-mock",
     "tox",
     "fastapi",
@@ -78,6 +79,10 @@ testpaths = [
 ]
 markers = [
     "integration: Test are running against the real Google Wallet API, needs account configuration. (deselect with '-m \"not integration\"')",
+]
+# https://pypi.org/project/pytest-explicit/
+explicit-only = [
+    "integration",
 ]
 
 [tool.mypy]
