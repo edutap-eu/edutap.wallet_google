@@ -1,3 +1,4 @@
+from .models.callback import SignedMessage
 from .models.handlers import ImageData
 from typing import Protocol
 from typing import runtime_checkable
@@ -16,7 +17,7 @@ class ImageProvider(Protocol):
 @runtime_checkable
 class CallbackHandler(Protocol):
 
-    async def handle(self, pass_id: str) -> None:
+    async def handle(self, message: SignedMessage) -> None:
         """
         :param pass_id: Pass ID as string.
         """
