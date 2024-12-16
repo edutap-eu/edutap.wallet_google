@@ -386,10 +386,8 @@ def save_link(
             exclude_none=True,
         ),
     ).decode("utf-8")
-    if len(jwt_string) >= 1800:
+    if (jwt_len := len(jwt_string)) >= 1800:
         logger.debug(
-            "JWT-Length: %d, is larger than recommended 1800 bytes: %s",
-            len(jwt_string),
-            len(jwt_string) >= 1800,
+            f"JWT-Length: {jwt_len} is larger than recommended 1800 bytes",
         )
     return f"{session_manager.settings.save_url}/{jwt_string}"
