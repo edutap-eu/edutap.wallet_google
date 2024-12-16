@@ -61,7 +61,7 @@ class SessionManager:
     def _make_session(self) -> AuthorizedSession:
         if not self.settings.credentials_file.is_file():
             raise ValueError(
-                f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.settings.credentials_file} does not exist."
+                f"Configured credentials file '{self.settings.credentials_file}' does not exist."
             )
         credentials = Credentials.from_service_account_file(
             str(self.settings.credentials_file), scopes=self.settings.scopes
