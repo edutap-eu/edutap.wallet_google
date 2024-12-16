@@ -38,7 +38,17 @@ async def handle_callback(request: Request, callback_data: CallbackData):
     # call each handler asynchronously
     try:
         await asyncio.gather(
-            *(handler.handle(callback_message) for handler in handlers)
+            *(
+                handler.handle(
+                    callback_message.classId,
+                    callback_message.objectId,
+                    callback_message.eventType.value,
+                    callback_message.expTimeMillis,
+                    callback_message.count,
+                    callback_message.nonce,
+                )
+                for handler in handlers
+            )
         )
     except Exception:
         logger.exception("Error while handling a callback")
