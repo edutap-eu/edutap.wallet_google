@@ -25,14 +25,11 @@ callbackdata_for_test_failure = {
 }
 
 
-def test_handler_validate_invalid():
+def test_handler_validate_invalid(mock_settings):
     from edutap.wallet_google.handlers.validate import verified_signed_message
-    from edutap.wallet_google.session import session_manager
 
-    settings = session_manager.settings
-    settings.callback_verify_signature = True
+    mock_settings.callback_verify_signature = True
 
     data = CallbackData.model_validate(callbackdata_for_test_failure)
     with pytest.raises(GooglePayError):
         verified_signed_message(data)
-    del session_manager._settings

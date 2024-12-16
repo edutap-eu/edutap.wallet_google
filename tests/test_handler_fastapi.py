@@ -16,13 +16,12 @@ real_callback_data = {
 }
 
 
-def test_callback():
+def test_callback(mock_settings):
     ...
     from edutap.wallet_google.models.handlers import CallbackData
-    from edutap.wallet_google.session import session_manager
 
-    settings = session_manager.settings
-    settings.callback_verify_signature = False
+    mock_settings.callback_verify_signature = False
+
     callback_data = CallbackData(**real_callback_data)
 
     from edutap.wallet_google.handlers.fastapi import router
@@ -31,4 +30,3 @@ def test_callback():
     app.include_router(router)
     client = TestClient(app)
     client.post("/googlewallet/callback", json=callback_data.model_dump(mode="json"))
-    del session_manager._settings

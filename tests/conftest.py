@@ -86,3 +86,11 @@ def integration_test_id():
         "%Y-%m-%d_%H-%M-%S_%f"
     )
     yield f"{prefix}.{timestamp}"
+
+
+@pytest.fixture
+def mock_settings():
+    from edutap.wallet_google.session import session_manager
+
+    yield session_manager.settings
+    del session_manager._settings
