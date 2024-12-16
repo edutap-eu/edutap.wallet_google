@@ -61,7 +61,7 @@ class SessionManager:
     def _make_session(self) -> AuthorizedSession:
         if not self.settings.credentials_file.is_file():
             raise ValueError(
-                f"Configured credentials file '{self.settings.credentials_file}' does not exist."
+                f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.settings.credentials_file} does not exist."
             )
         credentials = Credentials.from_service_account_file(
             str(self.settings.credentials_file), scopes=self.settings.scopes
@@ -88,7 +88,7 @@ class SessionManager:
         :return: the url of the google RESTful API endpoint to handle this model
         """
         model_metadata = lookup_metadata_by_name(name)
-        return f"{self.settings.base_url}/{model_metadata['url_part']}{additional_path}"
+        return f"{self.settings.api_url}/{model_metadata['url_part']}{additional_path}"
 
 
 session_manager = SessionManager()

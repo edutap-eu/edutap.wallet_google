@@ -13,7 +13,7 @@ import requests
 
 ENV_PREFIX = "EDUTAP_WALLET_GOOGLE_"
 ROOT_DIR = Path(__file__).parent.parent.parent.parent.resolve()
-BASE_URL = "https://walletobjects.googleapis.com/walletobjects/v1"
+API_URL = "https://walletobjects.googleapis.com/walletobjects/v1"
 SAVE_URL = "https://pay.google.com/gp/v/save"
 SCOPE = "https://www.googleapis.com/auth/wallet_object.issuer"
 GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL = {
@@ -42,16 +42,16 @@ class Settings(BaseSettings):
     )
 
     record_api_calls_dir: Path | None = None
-    base_url: HttpUrl = HttpUrl(BASE_URL)
+    api_url: HttpUrl = HttpUrl(API_URL)
     save_url: HttpUrl = HttpUrl(SAVE_URL)
+    callback_url: HttpUrl | None = None
+    callback_prefix: str = "/googlewallet"
+
     scopes: list[str] = [SCOPE]
 
     credentials_file: Path = ROOT_DIR / "tests" / "data" / "credentials_fake.json"
     issuer_account_email: EmailStr | None = None
     issuer_id: str = Field(default="")
-
-    callback_url: HttpUrl | None = None
-    callback_update_url: HttpUrl | None = None
 
     environment: Literal["production", "testing"] = "testing"
 
