@@ -34,9 +34,7 @@ class CallbackData(Model):
     signature: str
     intermediateSigningKey: IntermediateSigningKey
     protocolVersion: str
-    signedMessage: (
-        SignedMessage | str
-    )  # google sends this as a string, but we want to parse it as a SignedMessage
+    signedMessage: str
 
 
 class RootSigningPublicKey(Model):
