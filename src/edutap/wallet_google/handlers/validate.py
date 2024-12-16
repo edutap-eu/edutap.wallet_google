@@ -29,5 +29,5 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
         settings.issuer_id,
         _raw_private_key(settings.credentials_info["private_key"]),
     )
-    decryptor.verify_signature(dict(data))
+    decryptor.verify_signature(data.model_dump(mode="json"))
     return SignedMessage.model_validate(data.signedMessage)

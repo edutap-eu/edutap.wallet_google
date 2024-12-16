@@ -1,13 +1,47 @@
 from ..models.callback import CallbackData
+from ..plugins import get_callback_handlers
+from ..session import session_manager
 from .validate import verified_signed_message
+from fastapi import APIRouter
 from fastapi import Request
+from fastapi.exceptions import HTTPException
 from fastapi.logger import logger
 
+import asyncio
 
-# @router.post("/callback")
+
+router = APIRouter(
+    prefix=session_manager.settings.callback_prefix,
+    tags=["google_wallet"],
+)
+
+
+@router.post("/callback")
 async def handle_callback(request: Request, callback_data: CallbackData):
+    """FastAPI handler for the callback endpoint.
+
+    It is called by Google Wallet API when a user interacts with a pass.
+    The callback is triggered on save and delete of a pass in the wallet.
+    """
     callback_message = verified_signed_message(callback_data)
     logger.debug(f"Got message {callback_message}")
-    # TODO: here we need to call a plugin (async best) to handle the callback
-    # and handle erross
+
+    # get the registered callback handlers
+    handlers = get_callback_handlers()
+    if len(handlers) == 0:
+        logger.warning("No callback handlers registered")
+        raise HTTPException(
+            status_code=500, detail="No callback handlers were registered."
+        )
+
+    # call each handler asynchronously
+    try:
+        await asyncio.gather(
+            *(handler.handle(callback_message) for handler in handlers)
+        )
+    except Exception:
+        logger.exception("Error while handling a callback")
+        raise HTTPException(
+            status_code=500, detail="Error while handling the callback."
+        )
     return {"status": "success"}

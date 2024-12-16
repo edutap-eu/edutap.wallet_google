@@ -26,3 +26,4 @@ def test_handler_validate_invalid():
     data = CallbackData.model_validate(callbackdata_for_test_failure)
     with pytest.raises(GooglePayError):
         verified_signed_message(data)
+
