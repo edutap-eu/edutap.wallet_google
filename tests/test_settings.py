@@ -6,8 +6,7 @@ def test_base_settings():
     settings = Settings()
 
     assert (
-        str(settings.base_url)
-        == "https://walletobjects.googleapis.com/walletobjects/v1"
+        str(settings.api_url) == "https://walletobjects.googleapis.com/walletobjects/v1"
     )
     assert str(settings.save_url) == "https://pay.google.com/gp/v/save"
     assert [str(s) for s in settings.scopes] == [
