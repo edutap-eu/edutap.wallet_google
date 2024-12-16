@@ -16,6 +16,8 @@ callbackdata_for_test_failure = {
         "objectId": "2",
         "expTimeMillis": 0,
         "eventType": "SAVE",
+        "count": 0,
+        "nonce": "3",
     },
 }
 

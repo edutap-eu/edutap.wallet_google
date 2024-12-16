@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     save_url: HttpUrl = HttpUrl(SAVE_URL)
     callback_url: HttpUrl | None = None
     callback_prefix: str = "/googlewallet"
+    callback_verify_signature: bool = True
 
     scopes: list[str] = [SCOPE]
 

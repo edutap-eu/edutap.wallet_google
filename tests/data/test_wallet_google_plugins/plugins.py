@@ -1,3 +1,4 @@
+from edutap.wallet_google.models.callback import CallbackData
 from edutap.wallet_google.models.handlers import ImageData
 
 
@@ -15,4 +16,4 @@ class TestCallbackHandler:
     Implementation of edutap.wallet_google.protocols.CallbackHandler
     """
 
-    async def handle(self, pass_id: str) -> None: ...
+    async def handle(self, pass_id: CallbackData) -> None: ...

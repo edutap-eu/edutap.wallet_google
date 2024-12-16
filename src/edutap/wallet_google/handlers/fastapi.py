@@ -23,9 +23,6 @@ async def handle_callback(request: Request, callback_data: CallbackData):
     It is called by Google Wallet API when a user interacts with a pass.
     The callback is triggered on save and delete of a pass in the wallet.
     """
-    callback_message = verified_signed_message(callback_data)
-    logger.debug(f"Got message {callback_message}")
-
     # get the registered callback handlers
     handlers = get_callback_handlers()
     if len(handlers) == 0:
@@ -33,6 +30,10 @@ async def handle_callback(request: Request, callback_data: CallbackData):
         raise HTTPException(
             status_code=500, detail="No callback handlers were registered."
         )
+
+    # extract and verify message (given verification is not disabled)
+    callback_message = verified_signed_message(callback_data)
+    logger.debug(f"Got message {callback_message}")
 
     # call each handler asynchronously
     try:

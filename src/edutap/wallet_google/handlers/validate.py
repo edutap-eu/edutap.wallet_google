@@ -1,7 +1,7 @@
 from .._vendor.google_pay_token_decryption import GooglePayTokenDecryptor
 from ..models.callback import CallbackData
 from ..models.callback import SignedMessage
-from ..settings import Settings
+from ..session import session_manager
 
 
 def _raw_private_key(in_key: str) -> str:
@@ -23,11 +23,12 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
     Verifies the signature of the callback data.
     and returns the parsed SignedMessage
     """
-    settings = Settings()
-    decryptor = GooglePayTokenDecryptor(
-        settings.google_root_signing_public_keys.dict()["keys"],
-        settings.issuer_id,
-        _raw_private_key(settings.credentials_info["private_key"]),
-    )
-    decryptor.verify_signature(data.model_dump(mode="json"))
-    return SignedMessage.model_validate(data.signedMessage)
+    settings = session_manager.settings
+    if settings.callback_verify_signature:
+        decryptor = GooglePayTokenDecryptor(
+            settings.google_root_signing_public_keys.dict()["keys"],
+            settings.issuer_id,
+            _raw_private_key(settings.credentials_info["private_key"]),
+        )
+        decryptor.verify_signature(data.model_dump(mode="json"))
+    return SignedMessage.model_validate_json(data.signedMessage)
