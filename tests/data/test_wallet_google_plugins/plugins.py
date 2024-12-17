@@ -7,7 +7,7 @@ class TestImageProvider:
     """
 
     async def image_by_id(self, image_id: str) -> ImageData:
-        return ImageData(mimetype="image/jpeg", data=b"")
+        return ImageData(mimetype="image/jpeg", data=b"mock-a-jepg")
 
 
 class TestCallbackHandler:
