@@ -1,12 +1,14 @@
 from ..models.handlers import CallbackData
 from ..plugins import get_callback_handlers
-from ..plugins import get_image_handlers
+from ..plugins import get_image_providers
 from ..session import session_manager
 from .validate import verified_signed_message
 from fastapi import APIRouter
 from fastapi import Request
+from fastapi import Response
 from fastapi.exceptions import HTTPException
 from fastapi.logger import logger
+from fastapi.responses import JSONResponse
 
 import asyncio
 
@@ -27,7 +29,7 @@ async def handle_callback(request: Request, callback_data: CallbackData):
     # get the registered callback handlers
     try:
         handlers = get_callback_handlers()
-    except NotImplementedError:``
+    except NotImplementedError:
         raise HTTPException(
             status_code=500, detail="No callback handlers were registered."
         )
@@ -38,25 +40,41 @@ async def handle_callback(request: Request, callback_data: CallbackData):
 
     # call each handler asynchronously
     try:
-        await asyncio.gather(
-            *(
-                handler.handle(
-                    callback_message.classId,
-                    callback_message.objectId,
-                    callback_message.eventType.value,
-                    callback_message.expTimeMillis,
-                    callback_message.count,
-                    callback_message.nonce,
-                )
-                for handler in handlers
+        results: list = (
+            # this could be replaced by async with asyncio.timeout(5.0) in Py 3.11
+            # see also https://hynek.me/articles/waiting-in-asyncio/
+            await asyncio.wait_for(
+                asyncio.gather(
+                    *(
+                        handler.handle(
+                            callback_message.classId,
+                            callback_message.objectId,
+                            callback_message.eventType.value,
+                            callback_message.expTimeMillis,
+                            callback_message.count,
+                            callback_message.nonce,
+                        )
+                        for handler in handlers
+                    ),
+                    return_exceptions=True,
+                ),
+                timeout=session_manager.settings.handlers_callback_timeout,
             )
         )
-    except Exception:
-        logger.exception("Error while handling a callback")
-        raise HTTPException(
-            status_code=500, detail="Error while handling the callback."
+    except asyncio.TimeoutError:
+        logger.exception(
+            f"Timeout after {session_manager.settings.handlers_callback_timeout}s while handling the callbacks.",
         )
-    return {"status": "success"}
+        raise HTTPException(
+            status_code=500, detail="Error while handling the callbacks (timeout)."
+        )
+    # results is a list of exceptions or None
+    if any(results):
+        logger.error("Error while handling a callbacks.")
+        raise HTTPException(
+            status_code=500, detail="Error while handling the callbacks (exception)."
+        )
+    return JSONResponse(content={"status": "success"})
 
 
 @router.get("/images/{image_id}")
@@ -67,8 +85,45 @@ async def handle_image(request: Request, image_id: str):
     """
     # get the registered image providers
     try:
-        providers = get_image_providers()
+        handlers = get_image_providers()
     except NotImplementedError:
         raise HTTPException(
             status_code=500, detail="No image providers were registered."
         )
+    if len(handlers) > 1:
+        logger.error("Multiple image providers found, abort.")
+        raise HTTPException(
+            status_code=500, detail="Multiple image providers found, abort."
+        )
+
+    handler = handlers[0]
+
+    try:
+        result = await asyncio.wait_for(
+            handler.image_by_id(image_id),
+            timeout=session_manager.settings.handlers_image_timeout,
+        )
+    except asyncio.TimeoutError:
+        logger.exception(
+            "Timeout Timeout after {session_manager.settings.handlers_image_timeout}s while handling the image.",
+        )
+        raise HTTPException(
+            status_code=500, detail="Error while handling the image (timeout)."
+        )
+    except asyncio.CancelledError:
+        logger.exception(
+            "Cancelled while handling the image.",
+        )
+        raise HTTPException(
+            status_code=500, detail="Error while handling the image (cancel)."
+        )
+    except LookupError:
+        raise HTTPException(status_code=404, detail="Image not found.")
+    except Exception:
+        logger.exception(
+            "Error while handling a image.",
+        )
+        raise HTTPException(
+            status_code=500, detail="Error while handling the image (exception)."
+        )
+    return Response(content=result.data, media_type=result.mimetype)

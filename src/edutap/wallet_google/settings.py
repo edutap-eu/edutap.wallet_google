@@ -56,7 +56,10 @@ class Settings(BaseSettings):
 
     fernet_encryption_key: str = ""
 
-    environment: Literal["production", "testing"] = "testing"
+    handlers_callback_timeout: float = 5.0
+    handlers_image_timeout: float = 5.0
+
+    google_environment: Literal["production", "testing"] = "testing"
 
     cached_credentials_info: dict[str, str] = {}
 
@@ -66,12 +69,14 @@ class Settings(BaseSettings):
         Fetch Googles root signing keys once for the configured environment and return them or the cached value.
         """
         if (
-            GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(self.environment, None)
+            GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(self.google_environment, None)
             is not None
         ):
-            return GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[self.environment]
+            return GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[self.google_environment]
         # fetch once
-        resp = requests.get(GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[self.environment])
+        resp = requests.get(
+            GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[self.google_environment]
+        )
         resp.raise_for_status()
         return RootSigningPublicKeys.model_validate_json(resp.text)
 

@@ -1,5 +1,5 @@
 from edutap.wallet_google._vendor.google_pay_token_decryption import GooglePayError
-from edutap.wallet_google.models.callback import CallbackData
+from edutap.wallet_google.models.handlers import CallbackData
 
 import json
 import pytest

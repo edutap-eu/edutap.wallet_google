@@ -18,8 +18,9 @@ __pycache__/
 .vscode/
 node_modules/
 sandbox/
+htmlcov/
 
-# venv / buildout related
+# venv  related
 bin/
 develop-eggs/
 eggs/

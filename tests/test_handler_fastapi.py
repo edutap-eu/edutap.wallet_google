@@ -16,10 +16,10 @@ real_callback_data = {
 }
 
 
-def test_callback(mock_settings):
-    ...
+def test_callback_disabled_signature_check_OK(mock_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 
+    # test callback handler without signature check
     mock_settings.callback_verify_signature = False
 
     callback_data = CallbackData(**real_callback_data)
@@ -29,4 +29,175 @@ def test_callback(mock_settings):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    client.post("/googlewallet/callback", json=callback_data.model_dump(mode="json"))
+    resp = client.post(
+        "/googlewallet/callback", json=callback_data.model_dump(mode="json")
+    )
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "success"}
+
+
+def test_callback_disabled_signature_check_ERROR(mock_settings):
+    from edutap.wallet_google.models.handlers import CallbackData
+
+    # test callback handler without signature check
+    mock_settings.callback_verify_signature = False
+
+    callback_data = CallbackData(**real_callback_data)
+    callback_data.signedMessage = '{"classId":"","objectId":"","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":""}'
+
+    from edutap.wallet_google.handlers.fastapi import router
+
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+    resp = client.post(
+        "/googlewallet/callback", json=callback_data.model_dump(mode="json")
+    )
+    assert resp.status_code == 500
+    assert resp.text == '{"detail":"Error while handling the callbacks (exception)."}'
+
+
+def test_callback_disabled_signature_check_NOTIMPLEMENTED(monkeypatch, mock_settings):
+    from edutap.wallet_google.models.handlers import CallbackData
+
+    # test callback handler without signature check
+    mock_settings.callback_verify_signature = False
+
+    def raise_not_implemented():
+        raise NotImplementedError
+
+    # disable all plugins for callback_handlers - patch the instance at fastapi!
+    monkeypatch.setattr(
+        "edutap.wallet_google.handlers.fastapi.get_callback_handlers",
+        raise_not_implemented,
+    )
+
+    callback_data = CallbackData(**real_callback_data)
+    callback_data.signedMessage = '{"classId":"","objectId":"","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":""}'
+
+    from edutap.wallet_google.handlers.fastapi import router
+
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+    resp = client.post(
+        "/googlewallet/callback", json=callback_data.model_dump(mode="json")
+    )
+    assert resp.status_code == 500
+    assert resp.text == '{"detail":"No callback handlers were registered."}'
+
+
+def test_callback_disabled_signature_check_TIMEOUT(mock_settings):
+    from edutap.wallet_google.models.handlers import CallbackData
+
+    # test callback handler without signature check
+    mock_settings.callback_verify_signature = False
+    # set low timeout to trigger a timeout cancellation
+    mock_settings.handlers_callback_timeout = 0.1
+
+    callback_data = CallbackData(**real_callback_data)
+    callback_data.signedMessage = '{"classId":"TIMEOUT","objectId":"","eventType":"save","expTimeMillis":250,"count":1,"nonce":""}'
+
+    from edutap.wallet_google.handlers.fastapi import router
+
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+    resp = client.post(
+        "/googlewallet/callback", json=callback_data.model_dump(mode="json")
+    )
+    assert resp.status_code == 500
+    assert resp.text == '{"detail":"Error while handling the callbacks (timeout)."}'
+
+
+def test_image_OK():
+    from edutap.wallet_google.handlers.fastapi import router
+
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+    resp = client.get("/googlewallet/images/OK")
+    assert resp.status_code == 200
+    assert resp.text == "mock-a-jepg"
+
+
+def test_image_ERROR():
+    from edutap.wallet_google.handlers.fastapi import router
+
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+    resp = client.get("/googlewallet/images/ERROR")
+    assert resp.status_code == 404
+    assert resp.text == '{"detail":"Image not found."}'
+
+
+def test_image_TIMEOUT(mock_settings):
+    mock_settings.handlers_image_timeout = 0.1
+
+    from edutap.wallet_google.handlers.fastapi import router
+
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+    resp = client.get("/googlewallet/images/TIMEOUT")
+    assert resp.status_code == 500
+    assert resp.text == '{"detail":"Error while handling the image (timeout)."}'
+
+
+def test_image_CANCEL():
+    from edutap.wallet_google.handlers.fastapi import router
+
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+    resp = client.get("/googlewallet/images/CANCEL")
+    assert resp.status_code == 500
+    assert resp.text == '{"detail":"Error while handling the image (cancel)."}'
+
+
+def test_image_UNEXPECTED():
+    from edutap.wallet_google.handlers.fastapi import router
+
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+    resp = client.get("/googlewallet/images/UNEXPECTED")
+    assert resp.status_code == 500
+    assert resp.text == '{"detail":"Error while handling the image (exception)."}'
+
+
+def test_image_NOTIMPLEMENTED(monkeypatch):
+    from edutap.wallet_google.handlers.fastapi import router
+
+    def raise_not_implemented():
+        raise NotImplementedError
+
+    # disable all plugins for callback_handlers - patch the instance at fastapi!
+    monkeypatch.setattr(
+        "edutap.wallet_google.handlers.fastapi.get_image_providers",
+        raise_not_implemented,
+    )
+
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+    resp = client.get("/googlewallet/images/ANYWAY")
+    assert resp.status_code == 500
+    assert resp.text == '{"detail":"No image providers were registered."}'
+
+
+def test_image_TO_MANY_REGISTERED(monkeypatch):
+    from edutap.wallet_google.handlers.fastapi import router
+
+    # disable all plugins for callback_handlers - patch the instance at fastapi!
+    monkeypatch.setattr(
+        "edutap.wallet_google.handlers.fastapi.get_image_providers", lambda: [1, 2]
+    )
+
+    app = FastAPI()
+    app.include_router(router)
+    client = TestClient(app)
+    resp = client.get("/googlewallet/images/ANYWAY")
+    assert resp.status_code == 500
+    assert resp.text == '{"detail":"Multiple image providers found, abort."}'
