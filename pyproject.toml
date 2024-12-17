@@ -47,6 +47,7 @@ fastapi = [
 ]
 test = [
     "pytest",
+    "pytest-cov",
     "pytest-explicit",
     "requests-mock",
     "tox",
@@ -77,6 +78,7 @@ minversion = "6.0"
 testpaths = [
     "tests",
 ]
+addopts = "--cov=edutap.wallet_google --cov-report term --cov-report html"
 markers = [
     "integration: Test are running against the real Google Wallet API, needs account configuration. (deselect with '-m \"not integration\"')",
 ]
