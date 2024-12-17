@@ -1,5 +1,6 @@
-from ..models.callback import CallbackData
+from ..models.handlers import CallbackData
 from ..plugins import get_callback_handlers
+from ..plugins import get_image_handlers
 from ..session import session_manager
 from .validate import verified_signed_message
 from fastapi import APIRouter
@@ -24,9 +25,9 @@ async def handle_callback(request: Request, callback_data: CallbackData):
     The callback is triggered on save and delete of a pass in the wallet.
     """
     # get the registered callback handlers
-    handlers = get_callback_handlers()
-    if len(handlers) == 0:
-        logger.warning("No callback handlers registered")
+    try:
+        handlers = get_callback_handlers()
+    except NotImplementedError:``
         raise HTTPException(
             status_code=500, detail="No callback handlers were registered."
         )
@@ -56,3 +57,18 @@ async def handle_callback(request: Request, callback_data: CallbackData):
             status_code=500, detail="Error while handling the callback."
         )
     return {"status": "success"}
+
+
+@router.get("/images/{image_id}")
+async def handle_image(request: Request, image_id: str):
+    """FastAPI handler for the image endpoint.
+
+    It is called by Google Wallet API to fetch images for a pass.
+    """
+    # get the registered image providers
+    try:
+        providers = get_image_providers()
+    except NotImplementedError:
+        raise HTTPException(
+            status_code=500, detail="No image providers were registered."
+        )

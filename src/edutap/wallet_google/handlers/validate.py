@@ -1,6 +1,6 @@
 from .._vendor.google_pay_token_decryption import GooglePayTokenDecryptor
-from ..models.callback import CallbackData
-from ..models.callback import SignedMessage
+from ..models.handlers import CallbackData
+from ..models.handlers import SignedMessage
 from ..session import session_manager
 
 

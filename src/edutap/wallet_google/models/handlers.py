@@ -35,8 +35,10 @@ class IntermediateSigningKey(Model):
 class SignedMessage(Model):
     classId: str
     objectId: str
-    expTimeMillis: int
     eventType: EventType
+    expTimeMillis: int
+    count: int
+    nonce: str
 
 
 class CallbackData(Model):

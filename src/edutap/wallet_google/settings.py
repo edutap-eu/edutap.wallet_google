@@ -1,4 +1,4 @@
-from .models.callback import RootSigningPublicKeys
+from .models.handlers import RootSigningPublicKeys
 from pathlib import Path
 from pydantic import EmailStr
 from pydantic import Field
@@ -53,6 +53,8 @@ class Settings(BaseSettings):
     credentials_file: Path = ROOT_DIR / "tests" / "data" / "credentials_fake.json"
     issuer_account_email: EmailStr | None = None
     issuer_id: str = Field(default="")
+
+    fernet_encryption_key: str = ""
 
     environment: Literal["production", "testing"] = "testing"
 
