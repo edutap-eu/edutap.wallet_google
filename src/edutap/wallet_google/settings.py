@@ -78,14 +78,15 @@ class Settings(BaseSettings):
             GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[self.google_environment]
         )
         resp.raise_for_status()
-        return RootSigningPublicKeys.model_validate_json(resp.text)
+        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[self.google_environment] = RootSigningPublicKeys.model_validate_json(resp.text)
+        return GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[self.google_environment]
 
     @property
     def credentials_info(self) -> dict[str, str]:
         if credentials_info := self.cached_credentials_info:
             return credentials_info
         if not self.credentials_file.exists():
-            raise ValueError(
+            raise FileNotFoundError(
                 f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.credentials_file} does not exist."
             )
         with open(self.credentials_file) as fp:
