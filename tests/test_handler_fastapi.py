@@ -117,7 +117,7 @@ def test_image_OK(mock_fernet_encryption_key):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get(f"/googlewallet/images/{encrypt_data("OK")}")
+    resp = client.get(f"/googlewallet/images/{encrypt_data('OK')}")
     assert resp.status_code == 200
     assert resp.text == "mock-a-jepg"
 
@@ -129,7 +129,7 @@ def test_image_ERROR(mock_fernet_encryption_key):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get(f"/googlewallet/images/{encrypt_data("ERROR")}")
+    resp = client.get(f"/googlewallet/images/{encrypt_data('ERROR')}")
     assert resp.status_code == 404
     assert resp.text == '{"detail":"Image not found."}'
 
@@ -143,7 +143,7 @@ def test_image_TIMEOUT(mock_settings, mock_fernet_encryption_key):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get(f"/googlewallet/images/{encrypt_data("TIMEOUT")}")
+    resp = client.get(f"/googlewallet/images/{encrypt_data('TIMEOUT')}")
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Error while handling the image (timeout)."}'
 
@@ -155,7 +155,7 @@ def test_image_CANCEL(mock_fernet_encryption_key):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get(f"/googlewallet/images/{encrypt_data("CANCEL")}")
+    resp = client.get(f"/googlewallet/images/{encrypt_data('CANCEL')}")
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Error while handling the image (cancel)."}'
 
