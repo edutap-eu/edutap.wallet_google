@@ -3,8 +3,7 @@ variables:
   PYTHON_VERSION: 3.13
   BASE_LAYER: bookworm-slim
 
-tags:
-  - groot
+
 
 lint:
   image: 
@@ -15,7 +14,8 @@ lint:
   parallel:
     matrix:
       - PYTHON_VERSIONS: ["3.10", "3.13"]
-
+tags:
+  - groot
 unittest:
   image: 
     name: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
@@ -27,3 +27,6 @@ unittest:
   parallel:
     matrix:
       - PYTHON_VERSIONS: ["3.10", "3.11", "3.12", "3.13"]
+tags:
+  - groot
+  
