@@ -7,6 +7,7 @@ lint:
   image:
     name: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
   before_script:
+    - apt-get update && apt-get install -y git
     - uv venv
     - uv pip install pre-commit
     - uv pip install -e.[test,typecheck,callbacks]
