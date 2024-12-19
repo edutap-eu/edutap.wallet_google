@@ -6,8 +6,10 @@ variables:
 lint:
   image:
     name: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
+  before_script:
+    - uv pip install tox-uv tox
   script:
-    - uvx --with tox-uv tox -e lint
+    - tox -e lint
   parallel:
     matrix:
       - PYTHON_VERSIONS: ["3.10", "3.13"]
