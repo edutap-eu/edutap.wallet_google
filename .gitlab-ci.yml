@@ -8,9 +8,10 @@ lint:
     name: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
   before_script:
     - uv venv
-    - uv pip install tox-uv tox
+    - uv pip install pre-commit
+    - uv pip installl -e.[test,typecheck,callbacks]
   script:
-    - .venv/bin/tox -e lint
+    - .venv/bin/pre-commit -a
   parallel:
     matrix:
       - PYTHON_VERSIONS: ["3.10", "3.13"]
