@@ -1,5 +1,5 @@
 variables:
-  UV_VERSION: latest
+  UV_VERSION: 0.5
   PYTHON_VERSION: 3.13
   BASE_LAYER: bookworm-slim
 
@@ -11,7 +11,7 @@ lint:
     - uvx tox --with tox-uv lint
   parallel:
     matrix:
-      - PYTHON_VERSIONS: ["3.10", "3.12"]
+      - PYTHON_VERSIONS: ["3.10", "3.13"]
   tags:
     - groot
 unittest:
@@ -24,6 +24,6 @@ unittest:
     - uvx tox --with tox-uv test
   parallel:
     matrix:
-      - PYTHON_VERSIONS: ["3.10", "3.11", "3.12", "3.12"]
+      - PYTHON_VERSIONS: ["3.10", "3.11", "3.12", "3.13"]
   tags:
     - groot
