@@ -9,7 +9,7 @@ lint:
   before_script:
     - uv venv
     - uv pip install pre-commit
-    - uv pip installl -e.[test,typecheck,callbacks]
+    - uv pip install -e.[test,typecheck,callbacks]
   script:
     - .venv/bin/pre-commit -a
   parallel:
