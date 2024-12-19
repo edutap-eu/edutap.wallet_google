@@ -7,7 +7,7 @@ lint:
   image:
     name: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
   script:
-    - uvx tox --with tox-uv lint
+    - uvx --with tox-uv tox -e lint
   parallel:
     matrix:
       - PYTHON_VERSIONS: ["3.10", "3.13"]
@@ -19,7 +19,7 @@ unittest:
   needs:
     - lint
   script:
-    - uvx tox --with tox-uv test
+    - uvx --with tox-uv tox -e test
   parallel:
     matrix:
       - PYTHON_VERSIONS: ["3.10", "3.11", "3.12", "3.13"]
