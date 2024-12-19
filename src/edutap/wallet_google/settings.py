@@ -78,7 +78,9 @@ class Settings(BaseSettings):
             GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[self.google_environment]
         )
         resp.raise_for_status()
-        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[self.google_environment] = RootSigningPublicKeys.model_validate_json(resp.text)
+        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[self.google_environment] = (
+            RootSigningPublicKeys.model_validate_json(resp.text)
+        )
         return GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[self.google_environment]
 
     @property
