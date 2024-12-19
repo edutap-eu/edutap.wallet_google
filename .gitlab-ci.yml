@@ -6,7 +6,6 @@ variables:
 lint:
   image:
     name: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
-    pull_policy: if-not-present
   script:
     - uvx tox --with tox-uv lint
   parallel:
@@ -17,7 +16,6 @@ lint:
 unittest:
   image:
     name: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
-    pull_policy: if-not-present
   needs:
     - lint
   script:
