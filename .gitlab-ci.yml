@@ -9,6 +9,9 @@ lint:
   pull_policy: if-not-present
   script:
     - uv tox --with tox-uv lint
+  parallel:
+    matrix:
+      - PYTHON_VERSIONS: ["3.10", "3.13"]
 
 unittest:
   image: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
@@ -17,3 +20,6 @@ unittest:
     - lint
   script:
     - uv tox --with tox-uv test
+  parallel:
+    matrix:
+      - PYTHON_VERSIONS: ["3.10", "3.11", "3.12", "3.13"]
