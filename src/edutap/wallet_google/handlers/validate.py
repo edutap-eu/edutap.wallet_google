@@ -24,7 +24,7 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
     and returns the parsed SignedMessage
     """
     settings = session_manager.settings
-    if settings.callback_verify_signature:
+    if settings.handler_callback_verify_signature:
         decryptor = GooglePayTokenDecryptor(
             settings.google_root_signing_public_keys.dict()["keys"],
             settings.issuer_id,

@@ -15,7 +15,7 @@ ENV_PREFIX = "EDUTAP_WALLET_GOOGLE_"
 ROOT_DIR = Path(__file__).parent.parent.parent.parent.resolve()
 API_URL = "https://walletobjects.googleapis.com/walletobjects/v1"
 SAVE_URL = "https://pay.google.com/gp/v/save"
-SCOPE = "https://www.googleapis.com/auth/wallet_object.issuer"
+SCOPES = ["https://www.googleapis.com/auth/wallet_object.issuer"]
 GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL = {
     # see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys
     "testing": "https://payments.developers.google.com/paymentmethodtoken/test/keys.json",
@@ -44,20 +44,19 @@ class Settings(BaseSettings):
     record_api_calls_dir: Path | None = None
     api_url: HttpUrl = HttpUrl(API_URL)
     save_url: HttpUrl = HttpUrl(SAVE_URL)
-    callback_url: HttpUrl | None = None
-    callback_prefix: str = "/googlewallet"
-    callback_verify_signature: bool = True
 
-    scopes: list[str] = [SCOPE]
+    handler_prefix: str = "/googlewallet"
+    handler_callback_verify_signature: bool = True
+    handler_image_cache_control: str = "no-cache"
+    handlers_callback_timeout: float = 5.0
+    handlers_image_timeout: float = 5.0
 
     credentials_file: Path = ROOT_DIR / "tests" / "data" / "credentials_fake.json"
+    credentials_scopes: list[str] = SCOPES
     issuer_account_email: EmailStr | None = None
     issuer_id: str = Field(default="")
 
     fernet_encryption_key: str = ""
-
-    handlers_callback_timeout: float = 5.0
-    handlers_image_timeout: float = 5.0
 
     google_environment: Literal["production", "testing"] = "testing"
 

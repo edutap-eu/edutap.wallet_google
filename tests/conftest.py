@@ -94,3 +94,8 @@ def mock_settings():
 
     yield session_manager.settings
     del session_manager._settings
+
+
+@pytest.fixture
+def mock_fernet_encryption_key(mock_settings):
+    mock_settings.fernet_encryption_key = "TDTPJVv24gha-jRX0apPgPpMDN2wX1kVSNNZdWXcz8E="

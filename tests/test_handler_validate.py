@@ -28,7 +28,7 @@ callbackdata_for_test_failure = {
 def test_handler_validate_invalid(mock_settings):
     from edutap.wallet_google.handlers.validate import verified_signed_message
 
-    mock_settings.callback_verify_signature = True
+    mock_settings.handler_callback_verify_signature = True
 
     data = CallbackData.model_validate(callbackdata_for_test_failure)
     with pytest.raises(GooglePayError):
