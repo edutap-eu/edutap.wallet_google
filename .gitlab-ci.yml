@@ -4,27 +4,26 @@ variables:
   BASE_LAYER: bookworm-slim
 
 lint:
-  image: 
+  image:
     name: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
     pull_policy: if-not-present
   script:
-    - uv tox --with tox-uv lint
+    - uvx tox --with tox-uv lint
   parallel:
     matrix:
-      - PYTHON_VERSIONS: ["3.10", "3.13"]
+      - PYTHON_VERSIONS: ["3.10", "3.12"]
   tags:
     - groot
 unittest:
-  image: 
+  image:
     name: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
     pull_policy: if-not-present
   needs:
     - lint
   script:
-    - uv tox --with tox-uv test
+    - uvx tox --with tox-uv test
   parallel:
     matrix:
-      - PYTHON_VERSIONS: ["3.10", "3.11", "3.12", "3.13"]
+      - PYTHON_VERSIONS: ["3.10", "3.11", "3.12", "3.12"]
   tags:
     - groot
-  
