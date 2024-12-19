@@ -11,7 +11,7 @@ lint:
     - uv pip install pre-commit
     - uv pip install -e.[test,typecheck,callbacks]
   script:
-    - .venv/bin/pre-commit -a
+    - .venv/bin/pre-commit run -a
   parallel:
     matrix:
       - PYTHON_VERSIONS: ["3.10", "3.13"]
