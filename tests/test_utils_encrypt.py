@@ -6,3 +6,11 @@ def test_encrypt_decrypt(mock_fernet_encryption_key):
     encrypted_data = encrypt_data(data)
     assert encrypted_data != data
     assert data == decrypt_data(encrypted_data)
+
+
+def test_generate_fernet_key(capsys):
+    from edutap.wallet_google.utils import generate_fernet_key
+
+    generate_fernet_key()
+    captured = capsys.readouterr()
+    assert captured.out.endswith("=\n")
