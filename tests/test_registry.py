@@ -154,3 +154,18 @@ def test_raise_when_operation_not_allowed(
 
     with pytest.raises(ValueError):
         raise_when_operation_not_allowed("foo", "message")
+
+
+def test_lookup_model_by_plural_name(clean_registry_by_name):
+    from edutap.wallet_google.registry import register_model
+
+    @register_model("Foo", url_part="foo", plural="fooos")
+    class Foo:
+        pass
+
+    from edutap.wallet_google.registry import lookup_model_by_plural_name
+
+    assert lookup_model_by_plural_name("fooos") == Foo
+
+    with pytest.raises(LookupError):
+        lookup_model_by_plural_name("barses")
