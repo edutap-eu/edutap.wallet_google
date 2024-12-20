@@ -169,3 +169,18 @@ def test_lookup_model_by_plural_name(clean_registry_by_name):
 
     with pytest.raises(LookupError):
         lookup_model_by_plural_name("barses")
+
+
+def test_lookup_metadata_by_model_type(clean_registry_by_model):
+    from edutap.wallet_google.registry import register_model
+
+    @register_model("Foo", url_part="foo", plural="foos")
+    class Foo:
+        pass
+
+    from edutap.wallet_google.registry import lookup_metadata_by_model_type
+
+    md = lookup_metadata_by_model_type(Foo)
+    assert md["name"] == "Foo"
+    assert md["url_part"] == "foo"
+    assert md["plural"] == "foos"
