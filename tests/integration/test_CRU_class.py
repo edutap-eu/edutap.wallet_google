@@ -46,7 +46,7 @@ params_for_create = [
 ]
 
 
-# @pytest.mark.integration
+@pytest.mark.integration
 @pytest.mark.parametrize("class_type,class_data", params_for_create)
 def test_class_cru(class_type, class_data, integration_test_id):
     from edutap.wallet_google.api import create
