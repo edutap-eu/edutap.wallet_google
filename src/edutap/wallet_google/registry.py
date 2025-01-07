@@ -13,7 +13,6 @@ class RegistryMetadataDict(TypedDict, total=False):
     can_create: bool
     can_read: bool
     can_update: bool
-    can_disable: bool
     can_list: bool
     can_message: bool
 
@@ -38,7 +37,6 @@ class register_model:
         can_create: bool = True,
         can_read: bool = True,
         can_update: bool = True,
-        can_disable: bool = True,
         can_list: bool = True,
         can_message: bool = True,
     ):
@@ -55,8 +53,6 @@ class register_model:
                             Defaults to True.
         :param can_update:  Whether it is possible to use in the 'update' API function.
                             Defaults to True.
-        :param can_disable: Whether it is possible to use in the 'disable' API function.
-                            Defaults to True.
         :param can_list:    Whether it is possible to use in the 'list' API function.
                             Defaults to True.
         :param can_message: Whether it is possible to use in the 'message' API function.
@@ -70,7 +66,6 @@ class register_model:
             "can_create": can_create,
             "can_read": can_read,
             "can_update": can_update,
-            "can_disable": can_disable,
             "can_list": can_list,
             "can_message": can_message,
         }
