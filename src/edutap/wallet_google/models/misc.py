@@ -21,7 +21,6 @@ from .passes import tickets_and_transit
     url_part="smartTap",
     can_read=False,
     can_update=False,
-    can_disable=False,
     can_list=False,
     can_message=False,
 )
@@ -64,7 +63,6 @@ class Issuer(Model):
     "Permissions",
     url_part="permissions",
     resource_id="issuerId",
-    can_disable=False,
     can_list=False,
     can_message=False,
 )
@@ -96,7 +94,6 @@ class AddMessageRequest(Model):
     url_part="jwt",
     can_read=False,
     can_update=False,
-    can_disable=False,
     can_list=False,
     can_message=False,
 )

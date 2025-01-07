@@ -10,7 +10,10 @@ from .bases import StyleableMixin
 
 
 @register_model(
-    "GenericClass", url_part="genericClass", plural="genericClasses", can_disable=False
+    "GenericClass",
+    url_part="genericClass",
+    plural="genericClasses",
+    can_message=False,
 )
 class GenericClass(ClassModel):
     """
@@ -44,7 +47,7 @@ class GenericClass(ClassModel):
     # inherits valueAddedModuleData
 
 
-@register_model("GenericObject", url_part="genericObject")
+@register_model("GenericObject", url_part="genericObject", can_message=False)
 class GenericObject(ObjectModel, StyleableMixin, CommonLogosMixin):
     """
     The GenericObject is a specific object and does not act as the base for other wallet objects!

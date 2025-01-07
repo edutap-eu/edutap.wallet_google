@@ -30,7 +30,6 @@ from pydantic import model_validator
     can_create=False,
     can_read=False,
     can_update=False,
-    can_disable=False,
     can_list=False,
     can_message=False,
 )
