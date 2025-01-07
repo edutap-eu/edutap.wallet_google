@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     save_url: HttpUrl = HttpUrl(SAVE_URL)
 
     handler_prefix: str = "/googlewallet"
+    handler_prefix_callback: str = ""
+    handler_prefix_images: str = ""
     handler_callback_verify_signature: bool = True
     handler_image_cache_control: str = "no-cache"
     handlers_callback_timeout: float = 5.0

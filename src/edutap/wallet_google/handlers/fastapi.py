@@ -14,21 +14,15 @@ from fastapi.responses import JSONResponse
 import asyncio
 
 
-# define routers for all use cases: callback, images, and the combined router
+# define routers for all use cases: callback, images, and the combined router (at bottom of file)
 router_callback = APIRouter(
-    prefix=session_manager.settings.handler_prefix,
+    prefix=session_manager.settings.handler_prefix_callback,
     tags=["edutap", "google_wallet"],
 )
 router_images = APIRouter(
-    prefix=session_manager.settings.handler_prefix,
+    prefix=session_manager.settings.handler_prefix_images,
     tags=["edutap", "google_wallet"],
 )
-router = APIRouter(
-    prefix=session_manager.settings.handler_prefix,
-    tags=["edutap", "google_wallet"],
-)
-router.include_router(router_callback)
-router.include_router(router_images)
 
 
 @router_callback.post("/callback")
@@ -146,3 +140,12 @@ async def handle_image(request: Request, encrypted_image_id: str):
         media_type=result.mimetype,
         headers={"Cache-Control": session_manager.settings.handler_image_cache_control},
     )
+
+
+# needs to be included after the routers are defined
+router = APIRouter(
+    prefix=session_manager.settings.handler_prefix,
+    tags=["edutap", "google_wallet"],
+)
+router.include_router(router_callback)
+router.include_router(router_images)
