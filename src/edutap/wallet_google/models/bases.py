@@ -19,10 +19,11 @@ class Model(BaseModel):
         # use_enum_values=True,
     )
 
-    # many google wallet models or datatypes have a kind attribute
-    # that is deprecated and should not be serialized again
-    # handle this in the base class
+    # many Google wallet models or datatypes have deprecated attributes
+    # those must not be serialized again, nor repeated in the special models
+    # we handle this in the base class
     kind: str | None = Field(deprecated=True, exclude=True, default=None)
+    allowMultipleUsersPerObject: bool = Field(deprecated=True, exclude=True, default=False)
 
 
 class WithIdModel(Model):

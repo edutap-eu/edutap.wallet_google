@@ -43,6 +43,14 @@ params_for_create = [
             "textModulesData": text_modules_data,
         },
     ),
+    (
+        "GiftCardClass",
+        {
+            "issuerName": "test issuer",
+            "reviewStatus": "DRAFT",
+            "textModulesData": text_modules_data,
+        },
+    ),
 ]
 
 
@@ -51,10 +59,12 @@ params_for_create = [
 def test_class_cru(class_type, class_data, integration_test_id):
     from edutap.wallet_google.api import create
     from edutap.wallet_google.api import listing
+    from edutap.wallet_google.api import message
     from edutap.wallet_google.api import new
     from edutap.wallet_google.api import read
     from edutap.wallet_google.api import session_manager
     from edutap.wallet_google.api import update
+    from edutap.wallet_google.registry import lookup_metadata_by_name
 
     import time
 
@@ -81,6 +91,8 @@ def test_class_cru(class_type, class_data, integration_test_id):
     assert (
         result_read.textModulesData[0].body == class_data["textModulesData"][0]["body"]
     )
+    if "reviewStatus" in class_data:
+        assert result_read.reviewStatus == class_data["reviewStatus"]
 
     # update - full
     result_read.textModulesData[0].body = "updated body"
@@ -92,6 +104,22 @@ def test_class_cru(class_type, class_data, integration_test_id):
     result_read = read(name=class_type, resource_id=class_data["id"])
     assert result_read is not None
     assert result_read.textModulesData[0].body == "updated body"
+
+    model_metadata = lookup_metadata_by_name(class_type)
+    if model_metadata["can_message"]:
+        # send message to all
+        result_message = message(
+            name=class_type,
+            resource_id=class_data["id"],
+            message={
+                "messageType": "TEXT",
+                "id": "test-message",
+                "header": "test header",
+                "body": "test body",
+            },
+        )
+        assert result_message is not None
+        assert result_message.id == class_data["id"]
 
     # list all
     result_list = [x for x in listing(name=class_type)]
