@@ -14,18 +14,14 @@ This package provides a Python API to interact with the Google Wallet Restful AP
 
 It contains:
 
-- an API to
-   - create,
-   - read,
-   - update,
-   - disable,
-   - list
-  wallet classes and objects
-  and
-  - issue passes.
-- Pydantic models of the classes, objects, and their primitives.
-- An extensible registry for models of classes and objects.
-- A session manager for authorized HTTPS communication with the Google Restful API.
+- an API to create, read, update and list wallet classes and objects to issue passes;
+- FastAPI endpoints for Google callbacks and pass image delivery.
+
+This is supported by
+- Pydantic models of the classes, objects, and their data-types according to the Google documentation;
+- an extensible registry for models of theses classes and objects;
+- a session manager for authorized HTTPS communication with the Google Restful API;
+- a plugin system with protocols to decouple the actual business logic for the callback/ image provider.
 
 ## Documentation
 
