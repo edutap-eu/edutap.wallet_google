@@ -10,7 +10,6 @@ def test_decorator(clean_registry_by_name, clean_registry_by_model):
 
     expected = {
         "can_create": True,
-        "can_disable": True,
         "can_list": True,
         "can_message": True,
         "can_read": True,
@@ -37,7 +36,6 @@ def test_decorator(clean_registry_by_name, clean_registry_by_model):
         can_create=False,
         can_read=False,
         can_update=False,
-        can_disable=False,
         can_list=False,
         can_message=False,
     )
@@ -46,7 +44,6 @@ def test_decorator(clean_registry_by_name, clean_registry_by_model):
 
     expected = {
         "can_create": False,
-        "can_disable": False,
         "can_list": False,
         "can_message": False,
         "can_read": False,
@@ -89,7 +86,6 @@ def test_lookup_metadata_by_name(clean_registry_by_name, clean_registry_by_model
         "plural": "foos",
         "resource_id": "id",
         "can_create": True,
-        "can_disable": True,
         "can_list": True,
         "can_message": True,
         "can_read": True,
@@ -120,7 +116,6 @@ def test_lookup_metadata_by_model_instance(
         "plural": "foos",
         "resource_id": "id",
         "can_create": True,
-        "can_disable": True,
         "can_list": True,
         "can_message": True,
         "can_read": True,
