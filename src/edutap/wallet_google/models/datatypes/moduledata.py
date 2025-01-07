@@ -1,7 +1,7 @@
+from ..bases import Model
 from .datetime import TimeInterval
 from .general import Image
 from .localized_string import LocalizedString
-from ..bases import Model
 
 
 class ModuleViewConstraints(Model):

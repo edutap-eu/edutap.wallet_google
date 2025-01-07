@@ -1,7 +1,7 @@
+from ..bases import Model
 from .enums import DateFormat
 from .enums import PredefinedItem
 from .enums import TransitOption
-from ..bases import Model
 from pydantic import Field
 
 

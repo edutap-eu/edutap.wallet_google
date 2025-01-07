@@ -1,7 +1,7 @@
+from ..bases import Model
 from .general import Image
 from .general import Uri
 from .localized_string import LocalizedString
-from ..bases import Model
 from pydantic import Field
 
 

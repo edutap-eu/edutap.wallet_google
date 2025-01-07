@@ -1,8 +1,8 @@
+from ..bases import Model
 from .enums import BarcodeRenderEncoding
 from .enums import BarcodeType
 from .enums import TotpAlgorithm
 from .localized_string import LocalizedString
-from ..bases import Model
 
 
 class Barcode(Model):

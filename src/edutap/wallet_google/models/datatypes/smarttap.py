@@ -1,7 +1,7 @@
+from ..bases import Model
 from .enums import Action
 from .enums import Role
 from pydantic import AnyHttpUrl
-from ..bases import Model
 from pydantic import EmailStr
 from pydantic import HttpUrl
 

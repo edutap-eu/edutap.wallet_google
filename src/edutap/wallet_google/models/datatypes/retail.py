@@ -1,7 +1,7 @@
+from ..bases import Model
 from .enums import SharedDataType
 from .enums import State
 from .general import Uri
-from ..bases import Model
 
 
 class DiscoverableProgramMerchantSignupInfo(Model):

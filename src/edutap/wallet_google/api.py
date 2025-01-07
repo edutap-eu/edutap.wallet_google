@@ -315,8 +315,8 @@ def listing(
         for count, record in enumerate(data["resources"]):
             try:
                 yield model.model_validate(record)
-            except Exception as e:
-                logger.error(f"Error validating record {count}:\n{record}")
+            except Exception:
+                logger.exception(f"Error validating record {count}:\n{record}")
                 raise
         if not is_pageable:
             break

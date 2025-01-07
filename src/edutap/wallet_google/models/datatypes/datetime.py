@@ -1,5 +1,4 @@
 from ..bases import Model
-from pydantic import Field
 
 import datetime
 

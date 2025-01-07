@@ -1,9 +1,9 @@
+from ..bases import Model
 from .enums import AnimationType
 from .enums import NfcConstraint
 from .enums import ScreenshotEligibility
 from .localized_string import LocalizedString
 from pydantic import AnyUrl
-from ..bases import Model
 from pydantic import Field
 from pydantic import HttpUrl
 

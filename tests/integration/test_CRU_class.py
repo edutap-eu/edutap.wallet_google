@@ -46,15 +46,15 @@ params_for_create = [
 ]
 
 
-#@pytest.mark.integration
+# @pytest.mark.integration
 @pytest.mark.parametrize("class_type,class_data", params_for_create)
 def test_class_cru(class_type, class_data, integration_test_id):
     from edutap.wallet_google.api import create
-    from edutap.wallet_google.api import read
-    from edutap.wallet_google.api import update
-    from edutap.wallet_google.api import new
     from edutap.wallet_google.api import listing
+    from edutap.wallet_google.api import new
+    from edutap.wallet_google.api import read
     from edutap.wallet_google.api import session_manager
+    from edutap.wallet_google.api import update
 
     import time
 
@@ -67,7 +67,10 @@ def test_class_cru(class_type, class_data, integration_test_id):
     result_create = create(data)
     assert result_create is not None
     assert result_create.textModulesData[0].id == class_data["textModulesData"][0]["id"]
-    assert result_create.textModulesData[0].header == class_data["textModulesData"][0]["header"]
+    assert (
+        result_create.textModulesData[0].header
+        == class_data["textModulesData"][0]["header"]
+    )
 
     # relax - not sure if this is necessary
     time.sleep(0.05)
@@ -75,7 +78,9 @@ def test_class_cru(class_type, class_data, integration_test_id):
     # read
     result_read = read(name=class_type, resource_id=class_data["id"])
     assert result_read is not None
-    assert result_read.textModulesData[0].body == class_data["textModulesData"][0]["body"]
+    assert (
+        result_read.textModulesData[0].body == class_data["textModulesData"][0]["body"]
+    )
 
     # update - full
     result_read.textModulesData[0].body = "updated body"
@@ -92,4 +97,3 @@ def test_class_cru(class_type, class_data, integration_test_id):
     result_list = [x for x in listing(name=class_type)]
     assert result_list is not None
     assert len(result_list) > 0
-
