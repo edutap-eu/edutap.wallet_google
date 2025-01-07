@@ -316,7 +316,7 @@ def listing(
             try:
                 yield model.model_validate(record)
             except Exception:
-                logger.error(f"Error validating record {count}:\n{record}")
+                logger.exception(f"Error validating record {count}:\n{record}")
                 raise
         if not is_pageable:
             break

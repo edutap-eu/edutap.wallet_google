@@ -12,7 +12,7 @@ def test_base_settings():
         str(settings.api_url) == "https://walletobjects.googleapis.com/walletobjects/v1"
     )
     assert str(settings.save_url) == "https://pay.google.com/gp/v/save"
-    assert [str(s) for s in settings.scopes] == [
+    assert [str(s) for s in settings.credentials_scopes] == [
         "https://www.googleapis.com/auth/wallet_object.issuer"
     ]
 

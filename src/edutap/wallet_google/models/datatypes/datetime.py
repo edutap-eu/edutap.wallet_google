@@ -1,10 +1,9 @@
-from pydantic import BaseModel
-from pydantic import Field
+from ..bases import Model
 
 import datetime
 
 
-class DateTime(BaseModel):
+class DateTime(Model):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/DateTime
     """
@@ -12,17 +11,10 @@ class DateTime(BaseModel):
     date: datetime.datetime
 
 
-class TimeInterval(BaseModel):
+class TimeInterval(Model):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/TimeInterval
     """
-
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#timeInterval",
-    )
 
     start: DateTime | None = None
     end: DateTime | None = None

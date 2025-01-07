@@ -1,0 +1,29 @@
+variables:
+  UV_VERSION: 0.5
+  BASE_LAYER: bookworm-slim
+
+lint:
+  image:
+    name: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
+  before_script:
+    - apt-get update && apt-get install -y git
+  script:
+    - uvx --with tox-uv tox -e lint
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ["3.10", "3.13"]
+  tags:
+    - groot
+  variables:
+    GIT_STRATEGY: clone
+
+unittest:
+  image:
+    name: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
+  script:
+    - uvx --with tox-uv tox -e test
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ["3.10", "3.11", "3.12", "3.13"]
+  tags:
+    - groot

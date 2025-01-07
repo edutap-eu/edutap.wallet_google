@@ -1,11 +1,11 @@
+from ..bases import Model
 from .enums import BarcodeRenderEncoding
 from .enums import BarcodeType
 from .enums import TotpAlgorithm
 from .localized_string import LocalizedString
-from pydantic import BaseModel
 
 
-class Barcode(BaseModel):
+class Barcode(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/Barcode
     """
@@ -22,7 +22,7 @@ class Barcode(BaseModel):
     showCodeText: LocalizedString | None = None
 
 
-class TotpParameters(BaseModel):
+class TotpParameters(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode#totpparameters
     """
@@ -31,7 +31,7 @@ class TotpParameters(BaseModel):
     valueLength: int
 
 
-class TotpDetails(BaseModel):
+class TotpDetails(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode#totpdetails
     """
@@ -41,7 +41,7 @@ class TotpDetails(BaseModel):
     parameters: list[TotpParameters]
 
 
-class RotatingBarcode(BaseModel):
+class RotatingBarcode(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode
     """

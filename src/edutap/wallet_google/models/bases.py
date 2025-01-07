@@ -1,6 +1,9 @@
 from enum import Enum
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import Field
+
+import typing
 
 
 class Model(BaseModel):
@@ -15,6 +18,11 @@ class Model(BaseModel):
         extra="forbid",
         # use_enum_values=True,
     )
+
+    # many google wallet models or datatypes have a kind attribute
+    # that is deprecated and should not be serialized again
+    # handle this in the base class
+    kind: str | None = Field(deprecated=True, exclude=True, default=None)
 
 
 class WithIdModel(Model):
@@ -59,14 +67,14 @@ class CamelCaseAliasEnum(Enum):
         cls._member_names_.append(camel)
         return obj
 
-    def __eq__(self, other: object | Enum) -> bool:
+    def __eq__(self, other: typing.Any | Enum) -> bool:
         """Allow comparison with the camelcase value.
         take into account that UPPER_CASE and camelCase are equal
         """
-        if isinstance(other, Enum):
-            if self.value == other.value:
-                return True
-            v1 = self.value.lower().replace("_", "")
-            v2 = other.value.lower().replace("_", "")
-            return v1 == v2
-        return False
+        if not isinstance(other, Enum):
+            other = self.__class__(other)
+        if self.value == other.value:
+            return True
+        v1 = self.value.lower().replace("_", "")
+        v2 = other.value.lower().replace("_", "")
+        return v1 == v2

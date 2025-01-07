@@ -1,10 +1,10 @@
+from ..bases import Model
 from .datetime import TimeInterval
 from .general import Image
 from .localized_string import LocalizedString
-from pydantic import BaseModel
 
 
-class ModuleViewConstraints(BaseModel):
+class ModuleViewConstraints(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/ValueAddedModuleData
     """
@@ -14,7 +14,7 @@ class ModuleViewConstraints(BaseModel):
     displayInterval: TimeInterval | None = None
 
 
-class ValueAddedModuleData(BaseModel):
+class ValueAddedModuleData(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/ValueAddedModuleData
     """

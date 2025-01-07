@@ -30,7 +30,7 @@ class HTTPRecorder(HTTPAdapter):
         }
         target_directory = self.settings.record_api_calls_dir
         if target_directory.is_dir() and not target_directory.exists():
-            target_directory
+            target_directory.mkdir(parents=True)
         filename = f"{target_directory}/{request.method}-{request.url.replace('/', '_')}.REQUEST.json"
         with open(filename, "w") as fp:
             json.dump(req_record, fp, indent=4)
@@ -64,7 +64,8 @@ class SessionManager:
                 f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.settings.credentials_file} does not exist."
             )
         credentials = Credentials.from_service_account_file(
-            str(self.settings.credentials_file), scopes=self.settings.scopes
+            str(self.settings.credentials_file),
+            scopes=self.settings.credentials_scopes,
         )
         session = AuthorizedSession(credentials)
         if self.settings.record_api_calls_dir is not None:

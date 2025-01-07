@@ -1,14 +1,14 @@
+from ..bases import Model
 from .enums import AnimationType
 from .enums import NfcConstraint
 from .enums import ScreenshotEligibility
 from .localized_string import LocalizedString
 from pydantic import AnyUrl
-from pydantic import BaseModel
 from pydantic import Field
 from pydantic import HttpUrl
 
 
-class Uri(BaseModel):
+class Uri(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/Uri
     """
@@ -19,7 +19,7 @@ class Uri(BaseModel):
     id: str | None = None
 
 
-class ImageUri(BaseModel):
+class ImageUri(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/Image#imageuri
     """
@@ -29,7 +29,7 @@ class ImageUri(BaseModel):
     localizedDescription: LocalizedString | None = Field(deprecated=True, default=None)
 
 
-class Image(BaseModel):
+class Image(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/Image
     """
@@ -38,7 +38,7 @@ class Image(BaseModel):
     contentDescription: LocalizedString | None = None
 
 
-class PassConstraints(BaseModel):
+class PassConstraints(Model):
     """
     see https://developers.google.com/wallet/generic/rest/v1/PassConstraints
     """
@@ -53,7 +53,7 @@ class PassConstraints(BaseModel):
     )
 
 
-class SecurityAnimation(BaseModel):
+class SecurityAnimation(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/SecurityAnimation
     """
@@ -61,7 +61,7 @@ class SecurityAnimation(BaseModel):
     animationType: AnimationType = AnimationType.ANIMATION_UNSPECIFIED
 
 
-class GroupingInfo(BaseModel):
+class GroupingInfo(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/GroupingInfo
     """
@@ -70,7 +70,7 @@ class GroupingInfo(BaseModel):
     groupingId: str | None = None
 
 
-class Pagination(BaseModel):
+class Pagination(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/Pagination
     """
@@ -79,7 +79,7 @@ class Pagination(BaseModel):
     nextPageToken: str | None = None
 
 
-class CallbackOptions(BaseModel):
+class CallbackOptions(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/CallbackOptions
     """
@@ -87,7 +87,7 @@ class CallbackOptions(BaseModel):
     url: HttpUrl | None = None
 
 
-class SaveRestrictions(BaseModel):
+class SaveRestrictions(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/SaveRestrictions
     """

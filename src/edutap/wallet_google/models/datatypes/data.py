@@ -1,23 +1,27 @@
+from ..bases import Model
 from .general import Image
 from .general import Uri
 from .localized_string import LocalizedString
-from pydantic import BaseModel
 from pydantic import Field
 
 
-class TextModuleData(BaseModel):
+class TextModuleData(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/TextModuleData
+
+    Google accepts both header and localizedHeader, body and localizedBody
+    but if localizedHeader and localizedBody are present, header and body are ignored and set to None.
     """
 
-    header: str | None = None
-    body: str | None = None
+    header: str | None = Field(max_length=35, default=None)
+    body: str | None = Field(max_length=500, default=None)
     localizedHeader: LocalizedString | None = None
     localizedBody: LocalizedString | None = None
     id: str | None = None
+    # TODO: custom field validator for id with Field(pattern="^[a-zA-Z0-9_-]+$") plus None
 
 
-class LabelValue(BaseModel):
+class LabelValue(Model):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvalue
     """
@@ -28,7 +32,7 @@ class LabelValue(BaseModel):
     localizedValue: LocalizedString | None = None
 
 
-class LabelValueRow(BaseModel):
+class LabelValueRow(Model):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvaluerow
     """
@@ -36,7 +40,7 @@ class LabelValueRow(BaseModel):
     columns: list[LabelValue] | None = None
 
 
-class LinksModuleData(BaseModel):
+class LinksModuleData(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/LinksModuleData
     """
@@ -44,7 +48,7 @@ class LinksModuleData(BaseModel):
     uris: list[Uri] | None = None
 
 
-class ImageModuleData(BaseModel):
+class ImageModuleData(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ImageModuleData
     """
@@ -53,7 +57,7 @@ class ImageModuleData(BaseModel):
     id: str | None = None
 
 
-class InfoModuleData(BaseModel):
+class InfoModuleData(Model):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData
     """
@@ -66,7 +70,7 @@ class InfoModuleData(BaseModel):
     )
 
 
-class AppTarget(BaseModel):
+class AppTarget(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#apptargets
     """
@@ -74,7 +78,7 @@ class AppTarget(BaseModel):
     targetUri: Uri | None = None
 
 
-class AppLinkInfo(BaseModel):
+class AppLinkInfo(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#applinkinfo
     """
@@ -85,7 +89,7 @@ class AppLinkInfo(BaseModel):
     appTarget: AppTarget | None = None
 
 
-class AppLinkData(BaseModel):
+class AppLinkData(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData
     """

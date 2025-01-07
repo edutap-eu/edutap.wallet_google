@@ -2,6 +2,7 @@ from ..models.handlers import CallbackData
 from ..plugins import get_callback_handlers
 from ..plugins import get_image_providers
 from ..session import session_manager
+from ..utils import decrypt_data
 from .validate import verified_signed_message
 from fastapi import APIRouter
 from fastapi import Request
@@ -13,13 +14,18 @@ from fastapi.responses import JSONResponse
 import asyncio
 
 
-router = APIRouter(
-    prefix=session_manager.settings.callback_prefix,
-    tags=["google_wallet"],
+# define routers for all use cases: callback, images, and the combined router (at bottom of file)
+router_callback = APIRouter(
+    prefix=session_manager.settings.handler_prefix_callback,
+    tags=["edutap", "google_wallet"],
+)
+router_images = APIRouter(
+    prefix=session_manager.settings.handler_prefix_images,
+    tags=["edutap", "google_wallet"],
 )
 
 
-@router.post("/callback")
+@router_callback.post("/callback")
 async def handle_callback(request: Request, callback_data: CallbackData):
     """FastAPI handler for the callback endpoint.
 
@@ -77,8 +83,8 @@ async def handle_callback(request: Request, callback_data: CallbackData):
     return JSONResponse(content={"status": "success"})
 
 
-@router.get("/images/{image_id}")
-async def handle_image(request: Request, image_id: str):
+@router_images.get("/images/{encrypted_image_id}")
+async def handle_image(request: Request, encrypted_image_id: str):
     """FastAPI handler for the image endpoint.
 
     It is called by Google Wallet API to fetch images for a pass.
@@ -97,6 +103,9 @@ async def handle_image(request: Request, image_id: str):
         )
 
     handler = handlers[0]
+
+    # decrypt the image id
+    image_id = decrypt_data(encrypted_image_id)
 
     try:
         result = await asyncio.wait_for(
@@ -126,4 +135,17 @@ async def handle_image(request: Request, image_id: str):
         raise HTTPException(
             status_code=500, detail="Error while handling the image (exception)."
         )
-    return Response(content=result.data, media_type=result.mimetype)
+    return Response(
+        content=result.data,
+        media_type=result.mimetype,
+        headers={"Cache-Control": session_manager.settings.handler_image_cache_control},
+    )
+
+
+# needs to be included after the routers are defined
+router = APIRouter(
+    prefix=session_manager.settings.handler_prefix,
+    tags=["edutap", "google_wallet"],
+)
+router.include_router(router_callback)
+router.include_router(router_images)

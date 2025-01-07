@@ -20,7 +20,7 @@ def test_callback_disabled_signature_check_OK(mock_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.callback_verify_signature = False
+    mock_settings.handler_callback_verify_signature = False
 
     callback_data = CallbackData(**real_callback_data)
 
@@ -40,7 +40,7 @@ def test_callback_disabled_signature_check_ERROR(mock_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.callback_verify_signature = False
+    mock_settings.handler_callback_verify_signature = False
 
     callback_data = CallbackData(**real_callback_data)
     callback_data.signedMessage = '{"classId":"","objectId":"","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":""}'
@@ -61,7 +61,7 @@ def test_callback_disabled_signature_check_NOTIMPLEMENTED(monkeypatch, mock_sett
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.callback_verify_signature = False
+    mock_settings.handler_callback_verify_signature = False
 
     def raise_not_implemented():
         raise NotImplementedError
@@ -91,7 +91,7 @@ def test_callback_disabled_signature_check_TIMEOUT(mock_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.callback_verify_signature = False
+    mock_settings.handler_callback_verify_signature = False
     # set low timeout to trigger a timeout cancellation
     mock_settings.handlers_callback_timeout = 0.1
 
@@ -110,65 +110,71 @@ def test_callback_disabled_signature_check_TIMEOUT(mock_settings):
     assert resp.text == '{"detail":"Error while handling the callbacks (timeout)."}'
 
 
-def test_image_OK():
+def test_image_OK(mock_fernet_encryption_key):
     from edutap.wallet_google.handlers.fastapi import router
+    from edutap.wallet_google.utils import encrypt_data
 
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get("/googlewallet/images/OK")
+    resp = client.get(f"/googlewallet/images/{encrypt_data('OK')}")
     assert resp.status_code == 200
     assert resp.text == "mock-a-jepg"
 
 
-def test_image_ERROR():
+def test_image_ERROR(mock_fernet_encryption_key):
     from edutap.wallet_google.handlers.fastapi import router
+    from edutap.wallet_google.utils import encrypt_data
 
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get("/googlewallet/images/ERROR")
+    resp = client.get(f"/googlewallet/images/{encrypt_data('ERROR')}")
     assert resp.status_code == 404
     assert resp.text == '{"detail":"Image not found."}'
 
 
-def test_image_TIMEOUT(mock_settings):
+def test_image_TIMEOUT(mock_settings, mock_fernet_encryption_key):
     mock_settings.handlers_image_timeout = 0.1
 
     from edutap.wallet_google.handlers.fastapi import router
+    from edutap.wallet_google.utils import encrypt_data
 
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get("/googlewallet/images/TIMEOUT")
+    resp = client.get(f"/googlewallet/images/{encrypt_data('TIMEOUT')}")
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Error while handling the image (timeout)."}'
 
 
-def test_image_CANCEL():
+def test_image_CANCEL(mock_fernet_encryption_key):
     from edutap.wallet_google.handlers.fastapi import router
+    from edutap.wallet_google.utils import encrypt_data
 
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get("/googlewallet/images/CANCEL")
+    resp = client.get(f"/googlewallet/images/{encrypt_data('CANCEL')}")
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Error while handling the image (cancel)."}'
 
 
-def test_image_UNEXPECTED():
+def test_image_UNEXPECTED(mock_fernet_encryption_key):
     from edutap.wallet_google.handlers.fastapi import router
+    from edutap.wallet_google.utils import encrypt_data
 
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get("/googlewallet/images/UNEXPECTED")
+    resp = client.get(f"/googlewallet/images/{encrypt_data('UNEXPECTED')}")
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Error while handling the image (exception)."}'
 
 
-def test_image_NOTIMPLEMENTED(monkeypatch):
+def test_image_NOTIMPLEMENTED(monkeypatch, mock_fernet_encryption_key):
     from edutap.wallet_google.handlers.fastapi import router
+    from edutap.wallet_google.utils import encrypt_data
 
     def raise_not_implemented():
         raise NotImplementedError
@@ -182,13 +188,14 @@ def test_image_NOTIMPLEMENTED(monkeypatch):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get("/googlewallet/images/ANYWAY")
+    resp = client.get(f"/googlewallet/images/{encrypt_data('ANYWAY')}")
     assert resp.status_code == 500
     assert resp.text == '{"detail":"No image providers were registered."}'
 
 
-def test_image_TO_MANY_REGISTERED(monkeypatch):
+def test_image_TO_MANY_REGISTERED(monkeypatch, mock_fernet_encryption_key):
     from edutap.wallet_google.handlers.fastapi import router
+    from edutap.wallet_google.utils import encrypt_data
 
     # disable all plugins for callback_handlers - patch the instance at fastapi!
     monkeypatch.setattr(
@@ -198,6 +205,6 @@ def test_image_TO_MANY_REGISTERED(monkeypatch):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get("/googlewallet/images/ANYWAY")
+    resp = client.get(f"/googlewallet/images/{encrypt_data('ANYWAY')}")
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Multiple image providers found, abort."}'
