@@ -1,7 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel
 from pydantic import ConfigDict
-
+from pydantic import Field
 import typing
 
 
@@ -17,6 +17,11 @@ class Model(BaseModel):
         extra="forbid",
         # use_enum_values=True,
     )
+
+    # many google wallet models or datatypes have a kind attribute
+    # that is deprecated and should not be serialized again
+    # handle this in the base class
+    kind: str | None = Field(deprecated=True, exclude=True, default=None)
 
 
 class WithIdModel(Model):

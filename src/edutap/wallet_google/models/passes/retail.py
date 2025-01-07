@@ -35,12 +35,6 @@ class GiftCardClass(ClassModel, StyleableMixin):
     # Most deprecated are skipped.
     # last check: 2024-11-29
 
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#giftCardClass",
-    )
     merchantName: str | None = None
     programLogo: Image | None = None
     pinLabel: str | None = None
@@ -90,13 +84,6 @@ class GiftCardObject(ObjectModel):
     # Most deprecated are skipped.
     # last check: 2024-11-29
 
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#giftCardObject",
-    )
-
     classReference: GiftCardClass | None = None
     cardNumber: str | None = None
     pin: str | None = None
@@ -142,14 +129,6 @@ class LoyaltyClass(ClassModel, StyleableMixin):
     # Attribute order as in Google's documentation to make future updates easier!
     # Most deprecated are skipped.
     # last check: 2024-11-29
-
-    # deprecated
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#loyaltyClass",
-    )
 
     programName: str | None = None
     programLogo: Image | None = None
@@ -208,13 +187,6 @@ class LoyaltyObject(ObjectModel):
     # Most deprecated are skipped.
     # last check: 2024-11-29
 
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#loyaltyObject",
-    )
-
     classReference: LoyaltyClass | None = None
     accountName: str | None = None
     accountId: str | None = None
@@ -261,13 +233,6 @@ class OfferClass(ClassModel, StyleableMixin):
     # Attribute order as in Google's documentation to make future updates easier!
     # Most deprecated are skipped.
     # last check: 2024-11-29
-
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#offerClass",
-    )
 
     title: str | None = None
     redemptionChannel: RedemptionChannel = (
@@ -322,13 +287,6 @@ class OfferObject(ObjectModel, StyleableMixin):
     # Attribute order as in Google's documentation to make future updates easier!
     # Most deprecated are skipped.
     # last check: 2024-11-29
-
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#offerClass",
-    )
 
     classReference: OfferClass | None = None
     # inherits id

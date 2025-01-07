@@ -27,7 +27,7 @@ def test_loyality_LoyaltyPointsBalance_validator_OK():
     LoyaltyPointsBalance(string="1234")
     LoyaltyPointsBalance(int=1234)
     LoyaltyPointsBalance(double=1234.00)
-    LoyaltyPointsBalance(money=Money(micros="123400", currency="USD"))
+    LoyaltyPointsBalance(money=Money(micros="123400", currencyCode="USD"))
 
 
 def test_loyality_LoyaltyPointsBalance_validator_failures():
@@ -56,6 +56,6 @@ def test_loyality_LoyaltyPointsBalance_validator_failures():
             double=1234.00,
             money=Money(
                 micros="123400",
-                currency="USD",
+                currencyCode="USD",
             ),
         )

@@ -53,12 +53,6 @@ class EventTicketClass(ClassModel, StyleableMixin, CommonLogosMixin):
     # Most deprecated are skipped.
     # last check: 2024-11-29
 
-    kind: str | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default="walletobjects#eventTicketClass",
-    )
     eventName: LocalizedString | None = None
     eventId: str | None = Field(default=None, max_length=64)
     venue: EventVenue | None = None
@@ -122,11 +116,6 @@ class EventTicketObject(
     # Most deprecated are skipped.
     # last check: 2024-11-29
 
-    kind: str | None = Field(
-        description="deprecated",
-        exclude=True,
-        default="walletobjects#eventTicketObject",
-    )
     classReference: EventTicketClass | None = None
     seatInfo: EventSeat | None = None
     reservationInfo: EventReservationInfo | None = None
@@ -313,11 +302,7 @@ class FlightClass(ClassModel, StyleableMixin, CommonLogosMixin):
     # Attribute order as in Google's documentation to make future updates easier!
     # Most deprecated are skipped.
     # last check: 2024-11-29
-    kind: str | None = Field(
-        description="deprecated",
-        exclude=True,
-        default="walletobjects#flightClass",
-    )
+
     localScheduledDepartureDateTime: str | None = Field(default=None)
     localEstimatedOrActualDepartureDateTime: str | None = Field(default=None)
     localBoardingDateTime: str | None = Field(default=None)
@@ -370,11 +355,7 @@ class FlightObject(ObjectModel, StyleableMixin):
 
     # Attribute order as in Google's documentation to make future updates easier!
     # last check: 2024-11-29
-    kind: str | None = Field(
-        description="deprecated",
-        exclude=True,
-        default="walletobjects#flightObject",
-    )
+
     classReference: FlightClass | None = None
     passengerName: str | None = None
     # TODO boardingAndSeatingInfo

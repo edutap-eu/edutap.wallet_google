@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from ..bases import Model
 
 
-class Money(BaseModel):
+class Money(Model):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/Money
     """

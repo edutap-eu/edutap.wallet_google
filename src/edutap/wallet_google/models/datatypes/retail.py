@@ -1,10 +1,10 @@
 from .enums import SharedDataType
 from .enums import State
 from .general import Uri
-from pydantic import BaseModel
+from ..bases import Model
 
 
-class DiscoverableProgramMerchantSignupInfo(BaseModel):
+class DiscoverableProgramMerchantSignupInfo(Model):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#LoyaltyClass.DiscoverableProgramMerchantSigninInfo
     """
@@ -13,7 +13,7 @@ class DiscoverableProgramMerchantSignupInfo(BaseModel):
     signupSharedDatas: list[SharedDataType]
 
 
-class DiscoverableProgramMerchantSigninInfo(BaseModel):
+class DiscoverableProgramMerchantSigninInfo(Model):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#discoverableprogrammerchantsignininfo
     """
@@ -21,7 +21,7 @@ class DiscoverableProgramMerchantSigninInfo(BaseModel):
     signinWebsite: Uri
 
 
-class DiscoverableProgram(BaseModel):
+class DiscoverableProgram(Model):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#discoverableprogram
     """

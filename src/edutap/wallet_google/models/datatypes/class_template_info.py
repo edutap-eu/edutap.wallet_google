@@ -1,11 +1,11 @@
 from .enums import DateFormat
 from .enums import PredefinedItem
 from .enums import TransitOption
-from pydantic import BaseModel
+from ..bases import Model
 from pydantic import Field
 
 
-class FieldReference(BaseModel):
+class FieldReference(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#fieldreference
     """
@@ -14,7 +14,7 @@ class FieldReference(BaseModel):
     dateFormat: DateFormat | None = None
 
 
-class FieldSelector(BaseModel):
+class FieldSelector(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#fieldselector
     """
@@ -22,7 +22,7 @@ class FieldSelector(BaseModel):
     fields: list[FieldReference]
 
 
-class TemplateItem(BaseModel):
+class TemplateItem(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#templateitem
     """
@@ -32,7 +32,7 @@ class TemplateItem(BaseModel):
     predefinedItem: PredefinedItem | None = None
 
 
-class BarcodeSectionDetail(BaseModel):
+class BarcodeSectionDetail(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#barcodesectiondetail
     """
@@ -40,7 +40,7 @@ class BarcodeSectionDetail(BaseModel):
     fieldSelector: FieldSelector
 
 
-class CardBarcodeSectionDetails(BaseModel):
+class CardBarcodeSectionDetails(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardbarcodesectiondetails
     """
@@ -50,7 +50,7 @@ class CardBarcodeSectionDetails(BaseModel):
     secondTopDetail: BarcodeSectionDetail | None = None
 
 
-class CardRowOneItem(BaseModel):
+class CardRowOneItem(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardrowoneitem
     """
@@ -58,7 +58,7 @@ class CardRowOneItem(BaseModel):
     item: TemplateItem | None = None
 
 
-class CardRowTwoItems(BaseModel):
+class CardRowTwoItems(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardrowtwoitems
     """
@@ -67,7 +67,7 @@ class CardRowTwoItems(BaseModel):
     endItem: TemplateItem | None = None
 
 
-class CardRowThreeItems(BaseModel):
+class CardRowThreeItems(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardrowthreeitems
     """
@@ -77,7 +77,7 @@ class CardRowThreeItems(BaseModel):
     endItem: TemplateItem | None = None
 
 
-class CardRowTemplateInfo(BaseModel):
+class CardRowTemplateInfo(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardrowtemplateinfo
     """
@@ -87,7 +87,7 @@ class CardRowTemplateInfo(BaseModel):
     threeItems: CardRowThreeItems | None = None
 
 
-class CardTemplateOverride(BaseModel):
+class CardTemplateOverride(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#cardtemplateoverride
     """
@@ -95,7 +95,7 @@ class CardTemplateOverride(BaseModel):
     cardRowTemplateInfos: list[CardRowTemplateInfo] | None = None
 
 
-class DetailsItemInfo(BaseModel):
+class DetailsItemInfo(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#detailsiteminfo
     """
@@ -103,7 +103,7 @@ class DetailsItemInfo(BaseModel):
     item: TemplateItem | None = None
 
 
-class DetailsTemplateOverride(BaseModel):
+class DetailsTemplateOverride(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#detailstemplateoverride
     """
@@ -111,7 +111,7 @@ class DetailsTemplateOverride(BaseModel):
     detailsItemInfos: list[DetailsItemInfo] | None = None
 
 
-class FirstRowOption(BaseModel):
+class FirstRowOption(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#firstrowoption
     """
@@ -120,7 +120,7 @@ class FirstRowOption(BaseModel):
     fieldOption: FieldSelector | None = None
 
 
-class ListTemplateOverride(BaseModel):
+class ListTemplateOverride(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#listtemplateoverride
     """
@@ -132,7 +132,7 @@ class ListTemplateOverride(BaseModel):
     )
 
 
-class ClassTemplateInfo(BaseModel):
+class ClassTemplateInfo(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo
     """

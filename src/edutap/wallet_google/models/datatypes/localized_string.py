@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from ..bases import Model
 from pydantic import Field
 
 
-class TranslatedString(BaseModel):
+class TranslatedString(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString#translatedstring
     """
@@ -11,7 +11,7 @@ class TranslatedString(BaseModel):
     value: str | None = Field(default=None)
 
 
-class LocalizedString(BaseModel):
+class LocalizedString(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString
     """
