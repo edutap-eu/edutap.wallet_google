@@ -211,25 +211,26 @@ def message(
     :return:             The created Model object as returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "message")
-    model_metadata = lookup_metadata_by_name(name)
-    model = model_metadata["model"]
+    model = lookup_model_by_name(name)
+
     if not isinstance(message, Message):
         message_validated = Message.model_validate(message)
     else:
         message_validated = message
+
     add_message = AddMessageRequest(message=message_validated)
     verified_json = add_message.model_dump_json(
         exclude_none=True,
     )
-    session = session_manager.session
     url = session_manager.url(name, f"/{resource_id}/addMessage")
-    response = session.post(url=url, data=verified_json.encode("utf-8"))
+    response = session_manager.session.post(url=url, data=verified_json.encode("utf-8"))
 
     if response.status_code == 404:
         raise LookupError(f"Error 404, {name} not found: - {response.text}")
 
     if response.status_code != 200:
         raise Exception(f"Error: {response.status_code} - {response.text}")
+
     logger.debug(f"RAW-Response: {response.content!r}")
     response_data = json.loads(response.content)
     return model.model_validate(response_data.get("resource"))
