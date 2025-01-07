@@ -24,6 +24,7 @@ class Model(BaseModel):
     # we handle this in the base class
     kind: str | None = Field(deprecated=True, exclude=True, default=None)
     allowMultipleUsersPerObject: bool = Field(deprecated=True, exclude=True, default=False)
+    version: str | None = Field(deprecated=True, exclude=True, default=None)
 
 
 class WithIdModel(Model):

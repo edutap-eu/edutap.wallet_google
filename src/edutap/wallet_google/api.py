@@ -16,6 +16,7 @@ from .session import session_manager
 from collections.abc import Generator
 from google.auth import crypt
 from google.auth import jwt
+from pydantic import ValidationError
 
 import json
 import logging
@@ -119,7 +120,11 @@ def create(
         raise Exception(f"Error at {url}: {response.status_code} - {response.text}")
 
     logger.debug(f"RAW-Response: {response.content!r}")
-    return model.model_validate_json(response.content)
+    try:
+        return model.model_validate_json(response.content)
+    except ValidationError as e:
+        logger.error(f"Validation Error: {e.errors()}")
+        raise
 
 
 def read(

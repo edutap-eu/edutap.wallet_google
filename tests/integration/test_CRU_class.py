@@ -51,10 +51,41 @@ params_for_create = [
             "textModulesData": text_modules_data,
         },
     ),
+    (
+        "LoyaltyClass",
+        {
+            "issuerName": "test issuer",
+            "programName": "test program",
+            "programLogo": {
+                "sourceUri": {
+                    "uri": "https://edutap.eu/static/3d642ea43b0bc1fb150510749f6c2333/084c2/eugloh-white.webp",
+                },
+                "contentDescription": {
+                    "defaultValue": {
+                        "language": "en",
+                        "value": "test logo",
+                    },
+                }
+            },
+            "reviewStatus": "DRAFT",
+            "textModulesData": text_modules_data,
+        },
+    ),
+    (
+        "OfferClass",
+        {
+            "issuerName": "test issuer",
+            "reviewStatus": "DRAFT",
+            "textModulesData": text_modules_data,
+            "title": "test title",
+            "redemptionChannel": "ONLINE",
+            "provider": "test provider",
+        },
+    ),
 ]
 
 
-@pytest.mark.integration
+# @pytest.mark.integration
 @pytest.mark.parametrize("class_type,class_data", params_for_create)
 def test_class_cru(class_type, class_data, integration_test_id):
     from edutap.wallet_google.api import create
