@@ -20,12 +20,7 @@ from .bases import StyleableMixin
 from pydantic import Field
 
 
-@register_model(
-    "GiftCardClass",
-    url_part="giftCardClass",
-    plural="giftCardClasses",
-    can_disable=False,
-)
+@register_model("GiftCardClass", url_part="giftCardClass", plural="giftCardClasses")
 class GiftCardClass(ClassModel, StyleableMixin):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
@@ -118,9 +113,7 @@ class GiftCardObject(ObjectModel):
     # inherits valueAddedModuleData
 
 
-@register_model(
-    "LoyaltyClass", url_part="loyaltyClass", plural="loyaltyClasses", can_disable=False
-)
+@register_model("LoyaltyClass", url_part="loyaltyClass", plural="loyaltyClasses")
 class LoyaltyClass(ClassModel, StyleableMixin):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
@@ -222,9 +215,7 @@ class LoyaltyObject(ObjectModel):
     # inherits valueAddedModuleData
 
 
-@register_model(
-    "OfferClass", url_part="offerClass", plural="offerClasses", can_disable=False
-)
+@register_model("OfferClass", url_part="offerClass", plural="offerClasses")
 class OfferClass(ClassModel, StyleableMixin):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass

@@ -42,7 +42,6 @@ from pydantic import Field
     "EventTicketClass",
     url_part="eventTicketClass",
     plural="eventTicketClasses",
-    can_disable=False,
 )
 class EventTicketClass(ClassModel, StyleableMixin, CommonLogosMixin):
     """
@@ -98,11 +97,7 @@ class EventTicketClass(ClassModel, StyleableMixin, CommonLogosMixin):
     # inherits valueAddedModuleData
 
 
-@register_model(
-    "EventTicketObject",
-    url_part="eventTicketObject",
-    plural="eventTicketObjects",
-)
+@register_model("EventTicketObject", url_part="eventTicketObject")
 class EventTicketObject(
     ObjectModel,
     StyleableMixin,
@@ -156,11 +151,7 @@ class EventTicketObject(
     # inherits valueAddedModuleData
 
 
-@register_model(
-    "TransitClass",
-    url_part="transitClass",
-    plural="transitClasses",
-)
+@register_model("TransitClass", url_part="transitClass", plural="transitClasses")
 class TransitClass(
     ClassModel,
     StyleableMixin,
@@ -224,11 +215,7 @@ class TransitClass(
     # inherits valueAddedModuleData
 
 
-@register_model(
-    "TransitObject",
-    url_part="transitObject",
-    plural="transitObjects",
-)
+@register_model("TransitObject", url_part="transitObject")
 class TransitObject(
     ObjectModel,
     StyleableMixin,
@@ -289,11 +276,7 @@ class TransitObject(
     # inherits valueAddedModuleData
 
 
-@register_model(
-    "FlightClass",
-    url_part="flightClass",
-    plural="flightClasses",
-)
+@register_model("FlightClass", url_part="flightClass", plural="flightClasses")
 class FlightClass(ClassModel, StyleableMixin, CommonLogosMixin):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass
@@ -343,11 +326,7 @@ class FlightClass(ClassModel, StyleableMixin, CommonLogosMixin):
     # inherits valueAddedModuleData
 
 
-@register_model(
-    "FlightObject",
-    url_part="flightObject",
-    plural="flightObjects",
-)
+@register_model("FlightObject", url_part="flightObject")
 class FlightObject(ObjectModel, StyleableMixin):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightobject
