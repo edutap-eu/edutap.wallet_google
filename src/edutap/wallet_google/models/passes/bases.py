@@ -109,9 +109,6 @@ class ObjectModel(WithIdModel):
 
     # inherits id
     classId: str
-    version: str | None = Field(
-        description="deprecated", deprecated=True, exclude=True, default=None
-    )
 
     # Templating and Visual Data
     imageModulesData: list[ImageModuleData] | None = None
