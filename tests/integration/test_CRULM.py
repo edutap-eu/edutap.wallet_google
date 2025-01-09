@@ -38,21 +38,40 @@ text_modules_data = [
 
 params_for_create = [
     (
-        "GenericClass",
+        "Generic",
         {
             "textModulesData": text_modules_data,
         },
+        {
+            "state": "INACTIVE",
+            "cardTitle": {
+                "defaultValue": {
+                    "language": "en",
+                    "value": "test card title",
+                },
+            },
+            "header": {
+                "defaultValue": {
+                    "language": "en",
+                    "value": "test header",
+                },
+            },
+        },
     ),
     (
-        "GiftCardClass",
+        "GiftCard",
         {
             "issuerName": "test issuer",
             "reviewStatus": "DRAFT",
             "textModulesData": text_modules_data,
         },
+        {
+            "state": "INACTIVE",
+            "cardNumber": "test card number 1234",
+        },
     ),
     (
-        "LoyaltyClass",
+        "Loyalty",
         {
             "issuerName": "test issuer",
             "programName": "test program",
@@ -70,9 +89,12 @@ params_for_create = [
             "reviewStatus": "DRAFT",
             "textModulesData": text_modules_data,
         },
+        {
+            "state": "INACTIVE",
+        },
     ),
     (
-        "OfferClass",
+        "Offer",
         {
             "issuerName": "test issuer",
             "reviewStatus": "DRAFT",
@@ -81,13 +103,16 @@ params_for_create = [
             "redemptionChannel": "ONLINE",
             "provider": "test provider",
         },
+        {
+            "state": "INACTIVE",
+        },
     ),
 ]
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize("class_type,class_data", params_for_create)
-def test_class_cru(class_type, class_data, integration_test_id):
+@pytest.mark.parametrize("type_base,class_data,object_data", params_for_create)
+def test_class_object_cru(type_base, class_data, object_data, integration_test_id):
     from edutap.wallet_google.api import create
     from edutap.wallet_google.api import listing
     from edutap.wallet_google.api import message
@@ -99,9 +124,14 @@ def test_class_cru(class_type, class_data, integration_test_id):
 
     import time
 
-    class_data["id"] = (
-        f"{session_manager.settings.issuer_id}.{integration_test_id}.{class_type}.test_CRU.wallet_google.edutap"
-    )
+    class_type = f"{type_base}Class"
+    object_type = f"{type_base}Object"
+
+    ############################
+    # test class
+    class_base = f"{integration_test_id}.{class_type}.test_CRU.wallet_google.edutap"
+    class_data["id"] = f"{session_manager.settings.issuer_id}.{class_base}"
+
     data = new(class_type, class_data)
 
     # create
@@ -127,6 +157,9 @@ def test_class_cru(class_type, class_data, integration_test_id):
 
     # update - full
     result_read.textModulesData[0].body = "updated body"
+    if type_base != "Generic":
+        # generic has no reviewState
+        result_read.reviewStatus = "UNDER_REVIEW"
     result_updated = update(result_read)
     assert result_updated is not None
     assert result_updated.textModulesData[0].body == "updated body"
@@ -154,5 +187,55 @@ def test_class_cru(class_type, class_data, integration_test_id):
 
     # list all
     result_list = [x for x in listing(name=class_type)]
-    assert result_list is not None
     assert len(result_list) > 0
+
+    ############################
+    # test object
+    object_data["classId"] = class_data["id"]
+    object_base = f"{integration_test_id}.{object_type}.test_CRU.wallet_google.edutap"
+    object_data["id"] = f"{session_manager.settings.issuer_id}.{object_base}"
+    odata = new(object_type, object_data)
+
+    # create
+    oresult_create = create(odata)
+    assert oresult_create is not None
+    assert oresult_create.state == "INACTIVE"
+
+    # relax - not sure if this is necessary
+    time.sleep(0.05)
+
+    # read
+    oresult_read = read(name=object_type, resource_id=object_data["id"])
+    assert oresult_read is not None
+    assert oresult_read.state == "INACTIVE"
+
+    # update
+    oresult_read.state = "ACTIVE"
+    oresult_updated = update(oresult_read)
+    assert oresult_updated is not None
+    assert oresult_updated.state == "ACTIVE"
+
+    # read after update
+    oresult_read = read(name=object_type, resource_id=object_data["id"])
+    assert oresult_read is not None
+    assert oresult_read.state == "ACTIVE"
+
+    # list all
+    result_list = [x for x in listing(name=object_type, resource_id=class_data["id"])]
+    assert len(result_list) == 1
+
+    model_metadata = lookup_metadata_by_name(class_type)
+    if model_metadata["can_message"]:
+        # send message
+        result_message = message(
+            name=object_type,
+            resource_id=object_data["id"],
+            message={
+                "messageType": "TEXT",
+                "id": "test-message",
+                "header": "test header",
+                "body": "test body",
+            },
+        )
+        assert result_message is not None
+        assert result_message.id == object_data["id"]
