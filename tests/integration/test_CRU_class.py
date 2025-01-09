@@ -65,7 +65,7 @@ params_for_create = [
                         "language": "en",
                         "value": "test logo",
                     },
-                }
+                },
             },
             "reviewStatus": "DRAFT",
             "textModulesData": text_modules_data,

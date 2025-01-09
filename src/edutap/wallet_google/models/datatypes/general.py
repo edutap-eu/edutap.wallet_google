@@ -26,7 +26,9 @@ class ImageUri(Model):
 
     uri: AnyUrl
     description: str | None = Field(deprecated=True, default=None, exclude=True)
-    localizedDescription: LocalizedString | None = Field(deprecated=True, default=None, exclude=True)
+    localizedDescription: LocalizedString | None = Field(
+        deprecated=True, default=None, exclude=True
+    )
 
 
 class Image(Model):

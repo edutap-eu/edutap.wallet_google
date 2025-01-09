@@ -23,7 +23,9 @@ class Model(BaseModel):
     # those must not be serialized again, nor repeated in the special models
     # we handle this in the base class
     kind: str | None = Field(deprecated=True, exclude=True, default=None)
-    allowMultipleUsersPerObject: bool = Field(deprecated=True, exclude=True, default=False)
+    allowMultipleUsersPerObject: bool = Field(
+        deprecated=True, exclude=True, default=False
+    )
     version: str | None = Field(deprecated=True, exclude=True, default=None)
 
 
@@ -34,11 +36,13 @@ class WithIdModel(Model):
 
     id: str
 
+
 def _snake_to_camel(snake_str: str) -> str:
     parts = snake_str.lower().split("_")
     return "".join(
-            [(x.capitalize() if count != 0 else x) for count, x in enumerate(parts)]
-        )
+        [(x.capitalize() if count != 0 else x) for count, x in enumerate(parts)]
+    )
+
 
 class CamelCaseAliasEnum(Enum):
     """Add an value alias in camelcase to the enum,
@@ -58,7 +62,6 @@ class CamelCaseAliasEnum(Enum):
     def __new__(cls: type["CamelCaseAliasEnum"], value: str) -> "CamelCaseAliasEnum":
         obj: "CamelCaseAliasEnum" = object.__new__(cls)
         obj._name_ = f"{cls.__name__} snake case literal"
-        parts = value.lower().split("_")
         camel = _snake_to_camel(value)
 
         # create a second object with the camelcase name
@@ -69,14 +72,12 @@ class CamelCaseAliasEnum(Enum):
         camel_obj._name_ = f"{cls.__name__} camel case alias"
         cls._value2member_map_[camel] = camel_obj
         cls._member_map_[camel] = camel_obj
-        cls._unhashable_values_.append(camel)
-        cls._unhashable_values_map_.setdefault(camel_obj._name_, []).append(camel)
-        # cls._member_names_.append(camel)
+        cls._member_names_.append(camel)
         return obj
 
     def __eq__(self, other: typing.Any | Enum) -> bool:
         """Allow comparison with the camelcase value.
-        take into account that UPPER_CASE and camelCase are equal
+        Take into account that UPPER_CASE and camelCase are equal
         """
         if not isinstance(other, Enum):
             other = self.__class__(other)

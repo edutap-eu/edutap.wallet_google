@@ -7,6 +7,7 @@ def test_camel_case_alias_enum():
     class TestFoo(CamelCaseAliasEnum):
         FOO_BAR_BAZ = "FOO_BAR_BAZ"
 
+    assert TestFoo("FOO_BAR_BAZ") == TestFoo.FOO_BAR_BAZ
     assert TestFoo("fooBarBaz") == TestFoo.FOO_BAR_BAZ
     assert TestFoo("fooBarBaz") == "FOO_BAR_BAZ"
     with pytest.raises(ValueError):
@@ -32,3 +33,30 @@ def test_action_enum():
 
     assert Action("SIGN_UP") == Action.SIGN_UP
     assert Action("signUp") == Action.SIGN_UP
+
+
+def test_pydantic_constraints():
+    from edutap.wallet_google.models.bases import CamelCaseAliasEnum
+
+    import pydantic
+
+    class TestFoo(CamelCaseAliasEnum):
+        FOO_BAR_BAZ = "FOO_BAR_BAZ"
+
+    class TestModel(pydantic.BaseModel):
+        foo: TestFoo = TestFoo.FOO_BAR_BAZ
+
+    # accept snake case enum
+    TestModel(foo=TestFoo("FOO_BAR_BAZ"))
+
+    # accept snake case string
+    TestModel(foo="FOO_BAR_BAZ")
+
+    # accept camel case enum
+    TestModel(foo=TestFoo("fooBarBaz"))
+
+    # accept camel case string
+    TestModel(foo="fooBarBaz")
+
+    with pytest.raises(pydantic.ValidationError):
+        TestModel(foo="wrong")
