@@ -1,3 +1,10 @@
+"""
+Parts of this module are rewrites and borrows from from https://github.com/yoyowallet/google-pay-token-decryption
+The above packages does not fulfill the needs we have here, but was a great starting point.
+Copyright is by its original authors at Yoyo Wallet <dev@yoyowallet.com>
+This file is under the MIT License, as found here https://github.com/yoyowallet/google-pay-token-decryption/blob/5cd006da9687171c1e35b55507b671c6e4eb513d/pyproject.toml#L8
+"""
+
 from ..models.handlers import CallbackData
 from ..models.handlers import IntermediateSigningKey
 from ..models.handlers import RootSigningPublicKeys
