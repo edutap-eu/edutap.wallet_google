@@ -28,6 +28,7 @@ import time
 
 
 ECv2_PROTOCOL_VERSION = "ECv2"
+ECv2_PROTOCOL_VERSION_SIGNING = "ECv2SigningOnly"
 
 
 class GooglePayError(Exception):
@@ -208,9 +209,12 @@ class GooglePayTokenDecryptor:
 
         :raises: An exception if the signatures could not be verified.
         """
-        if data["protocolVersion"] != ECv2_PROTOCOL_VERSION:
+        if data["protocolVersion"] not in [
+            ECv2_PROTOCOL_VERSION,
+            ECv2_PROTOCOL_VERSION_SIGNING,
+        ]:
             raise GooglePayError(
-                f"Only {ECv2_PROTOCOL_VERSION}-signed tokens are supported, but token is {data['protocolVersion']}-signed."
+                f"Only {ECv2_PROTOCOL_VERSION} or {ECv2_PROTOCOL_VERSION_SIGNING}-signed tokens are supported, but token is {data['protocolVersion']}-signed."
             )
 
         self._verify_intermediate_signing_key(data)
@@ -284,7 +288,7 @@ class GooglePayTokenDecryptor:
         except Exception:
             raise GooglePayError("Could not verify message signature")
 
-    def _filter_root_signing_keys(self) -> None:
+    def _filter_root_signing_keys(self, protocol=ECv2_PROTOCOL_VERSION) -> None:
         """
         Filter the root signing keys to get only the keys that use ECv2 protocol
         and that either doesn't expire or has an expiry date in the future.
@@ -292,7 +296,7 @@ class GooglePayTokenDecryptor:
         self.root_signing_keys = [
             key
             for key in self.root_signing_keys
-            if key["protocolVersion"] == ECv2_PROTOCOL_VERSION
+            if key["protocolVersion"] == protocol
             and (
                 "keyExpiration" not in key
                 or check_expiration_date_is_valid(key["keyExpiration"])
@@ -300,5 +304,5 @@ class GooglePayTokenDecryptor:
         ]
         if len(self.root_signing_keys) == 0:
             raise GooglePayError(
-                f"At least one root signing key must be {ECv2_PROTOCOL_VERSION}-signed and have a valid expiration date."
+                f"At least one root signing key must be {protocol}-signed and have a valid expiration date."
             )

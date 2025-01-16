@@ -1,0 +1,47 @@
+version: '3.7'
+
+volumes:
+  logs:
+    driver_opts:
+      type: none
+      device: /data/wallet_google_example_callback
+      o: bind
+
+networks:
+  traefik-public:
+    external: true
+    driver: overlay
+
+services:
+  callback:
+    image: 'edutap_wallet_google_example_callback:latest'
+    volumes:
+    - logs:/logs
+    networks:
+    - traefik-public
+    environment:
+      EDUTAP_WALLET_GOOGLE_HANDLER_CALLBACK_VERIFY_SIGNATURE: "0"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1'
+          memory: 128M
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+        # SERVICE
+        - traefik.http.services.wallet_google_example_callback.loadbalancer.server.port=8080
+        # DOMAIN TLS
+        - traefik.http.routers.wallet_google_example_callback-domain.rule=Host(`${EDUTAP_WALLET_GOOGLE_EXAMPLE_DOMAIN?Unset}`)
+        - traefik.http.routers.wallet_google_example_callback-domain.entrypoints=https
+        - traefik.http.routers.wallet_google_example_callback-domain.tls=true
+        - traefik.http.routers.wallet_google_example_callback-domain.tls.certresolver=le
+        - traefik.http.routers.wallet_google_example_callback-domain.service=wallet_google_example_callback
+        - traefik.http.routers.wallet_google_example_callback-domain.middlewares=gzip
+        # DOMAIN insecure
+        - traefik.http.routers.wallet_google_example_callback-domain-ins.rule=Host(`${EDUTAP_WALLET_GOOGLE_EXAMPLE_DOMAIN?Unset}`)
+        - traefik.http.routers.wallet_google_example_callback-domain-ins.entrypoints=http
+        - traefik.http.routers.wallet_google_example_callback-domain-ins.service=wallet_google_example_callback
+        - traefik.http.routers.wallet_google_example_callback-domain-ins.middlewares=gzip

@@ -20,7 +20,7 @@ def test_callback_disabled_signature_check_OK(mock_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.handler_callback_verify_signature = False
+    mock_settings.handler_callback_verify_signature = "0"
 
     callback_data = CallbackData(**real_callback_data)
 
@@ -30,7 +30,7 @@ def test_callback_disabled_signature_check_OK(mock_settings):
     app.include_router(router)
     client = TestClient(app)
     resp = client.post(
-        "/googlewallet/callback", json=callback_data.model_dump(mode="json")
+        "/wallet/google/callback", json=callback_data.model_dump(mode="json")
     )
     assert resp.status_code == 200
     assert resp.json() == {"status": "success"}
@@ -40,7 +40,7 @@ def test_callback_disabled_signature_check_ERROR(mock_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.handler_callback_verify_signature = False
+    mock_settings.handler_callback_verify_signature = "0"
 
     callback_data = CallbackData(**real_callback_data)
     callback_data.signedMessage = '{"classId":"","objectId":"","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":""}'
@@ -51,7 +51,7 @@ def test_callback_disabled_signature_check_ERROR(mock_settings):
     app.include_router(router)
     client = TestClient(app)
     resp = client.post(
-        "/googlewallet/callback", json=callback_data.model_dump(mode="json")
+        "/wallet/google/callback", json=callback_data.model_dump(mode="json")
     )
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Error while handling the callbacks (exception)."}'
@@ -61,7 +61,7 @@ def test_callback_disabled_signature_check_NOTIMPLEMENTED(monkeypatch, mock_sett
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.handler_callback_verify_signature = False
+    mock_settings.handler_callback_verify_signature = "0"
 
     def raise_not_implemented():
         raise NotImplementedError
@@ -81,7 +81,7 @@ def test_callback_disabled_signature_check_NOTIMPLEMENTED(monkeypatch, mock_sett
     app.include_router(router)
     client = TestClient(app)
     resp = client.post(
-        "/googlewallet/callback", json=callback_data.model_dump(mode="json")
+        "/wallet/google/callback", json=callback_data.model_dump(mode="json")
     )
     assert resp.status_code == 500
     assert resp.text == '{"detail":"No callback handlers were registered."}'
@@ -91,7 +91,7 @@ def test_callback_disabled_signature_check_TIMEOUT(mock_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.handler_callback_verify_signature = False
+    mock_settings.handler_callback_verify_signature = "0"
     # set low timeout to trigger a timeout cancellation
     mock_settings.handlers_callback_timeout = 0.1
 
@@ -104,7 +104,7 @@ def test_callback_disabled_signature_check_TIMEOUT(mock_settings):
     app.include_router(router)
     client = TestClient(app)
     resp = client.post(
-        "/googlewallet/callback", json=callback_data.model_dump(mode="json")
+        "/wallet/google/callback", json=callback_data.model_dump(mode="json")
     )
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Error while handling the callbacks (timeout)."}'
@@ -117,7 +117,7 @@ def test_image_OK(mock_fernet_encryption_key):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get(f"/googlewallet/images/{encrypt_data('OK')}")
+    resp = client.get(f"/wallet/google/images/{encrypt_data('OK')}")
     assert resp.status_code == 200
     assert resp.text == "mock-a-jepg"
 
@@ -129,7 +129,7 @@ def test_image_ERROR(mock_fernet_encryption_key):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get(f"/googlewallet/images/{encrypt_data('ERROR')}")
+    resp = client.get(f"/wallet/google/images/{encrypt_data('ERROR')}")
     assert resp.status_code == 404
     assert resp.text == '{"detail":"Image not found."}'
 
@@ -143,7 +143,7 @@ def test_image_TIMEOUT(mock_settings, mock_fernet_encryption_key):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get(f"/googlewallet/images/{encrypt_data('TIMEOUT')}")
+    resp = client.get(f"/wallet/google/images/{encrypt_data('TIMEOUT')}")
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Error while handling the image (timeout)."}'
 
@@ -155,7 +155,7 @@ def test_image_CANCEL(mock_fernet_encryption_key):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get(f"/googlewallet/images/{encrypt_data('CANCEL')}")
+    resp = client.get(f"/wallet/google/images/{encrypt_data('CANCEL')}")
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Error while handling the image (cancel)."}'
 
@@ -167,7 +167,7 @@ def test_image_UNEXPECTED(mock_fernet_encryption_key):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get(f"/googlewallet/images/{encrypt_data('UNEXPECTED')}")
+    resp = client.get(f"/wallet/google/images/{encrypt_data('UNEXPECTED')}")
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Error while handling the image (exception)."}'
 
@@ -188,7 +188,7 @@ def test_image_NOTIMPLEMENTED(monkeypatch, mock_fernet_encryption_key):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get(f"/googlewallet/images/{encrypt_data('ANYWAY')}")
+    resp = client.get(f"/wallet/google/images/{encrypt_data('ANYWAY')}")
     assert resp.status_code == 500
     assert resp.text == '{"detail":"No image providers were registered."}'
 
@@ -205,6 +205,6 @@ def test_image_TO_MANY_REGISTERED(monkeypatch, mock_fernet_encryption_key):
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
-    resp = client.get(f"/googlewallet/images/{encrypt_data('ANYWAY')}")
+    resp = client.get(f"/wallet/google/images/{encrypt_data('ANYWAY')}")
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Multiple image providers found, abort."}'

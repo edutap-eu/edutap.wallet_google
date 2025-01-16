@@ -2,14 +2,14 @@
 see https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions
 """
 
-from .bases import Model
 from .datatypes.enums import CamelCaseAliasEnum
+from pydantic import BaseModel
 
 
 # image fetching from data provider
 
 
-class ImageData(Model):
+class ImageData(BaseModel):
     mimetype: str
     data: bytes
 
@@ -22,17 +22,17 @@ class EventType(CamelCaseAliasEnum):
     DEL = "DEL"
 
 
-class SignedKey(Model):
+class SignedKey(BaseModel):
     keyValue: str
     keyExpiration: int
 
 
-class IntermediateSigningKey(Model):
-    signedKey: SignedKey | str
+class IntermediateSigningKey(BaseModel):
+    signedKey: str
     signatures: list[str]
 
 
-class SignedMessage(Model):
+class SignedMessage(BaseModel):
     classId: str
     objectId: str
     eventType: EventType
@@ -41,7 +41,7 @@ class SignedMessage(Model):
     nonce: str
 
 
-class CallbackData(Model):
+class CallbackData(BaseModel):
     signature: str
     intermediateSigningKey: IntermediateSigningKey
     protocolVersion: str
@@ -51,7 +51,7 @@ class CallbackData(Model):
 # keys for callback data validation
 
 
-class RootSigningPublicKey(Model):
+class RootSigningPublicKey(BaseModel):
     """
     see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys
     """
@@ -61,7 +61,7 @@ class RootSigningPublicKey(Model):
     keyExpiration: str | None = None
 
 
-class RootSigningPublicKeys(Model):
+class RootSigningPublicKeys(BaseModel):
     """
     see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys
     """

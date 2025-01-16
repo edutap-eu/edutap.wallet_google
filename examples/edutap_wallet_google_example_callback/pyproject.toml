@@ -1,0 +1,10 @@
+[project]
+name = "edutap_wallet_google_example_callback"
+version = "1.0"
+dependencies = [
+    "edutap.wallet_google[fastapi]",
+    "fastapi[standard]",
+]
+
+[project.entry-points.'edutap.wallet_google.plugins']
+CallbackHandler = 'edutap_wallet_google_example_callback:LoggingCallbackHandler'

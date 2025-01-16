@@ -17,11 +17,11 @@ import asyncio
 # define routers for all use cases: callback, images, and the combined router (at bottom of file)
 router_callback = APIRouter(
     prefix=session_manager.settings.handler_prefix_callback,
-    tags=["edutap", "google_wallet"],
+    tags=["edutap.wallet_google"],
 )
 router_images = APIRouter(
     prefix=session_manager.settings.handler_prefix_images,
-    tags=["edutap", "google_wallet"],
+    tags=["edutap.wallet_google"],
 )
 
 

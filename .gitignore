@@ -19,6 +19,7 @@ __pycache__/
 node_modules/
 sandbox/
 htmlcov/
+.ipynb_checkpoints
 
 # venv  related
 bin/

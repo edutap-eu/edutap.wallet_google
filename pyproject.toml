@@ -42,8 +42,9 @@ Issues = "https://github.com/edutap-eu/edutap.wallet_google/issues"
 Documentation = "https://docs.edutap.eu/packages/edutap_wallet_google/index.html"
 
 [project.optional-dependencies]
-fastapi = [
+callback = [
     "fastapi",
+    "httpx",
 ]
 test = [
     "pytest",
@@ -51,15 +52,13 @@ test = [
     "pytest-explicit",
     "requests-mock",
     "tox",
-    "fastapi",
-    "httpx",
+    "edutap.wallet_google[callback]",
 ]
 typecheck  = [
     "google-auth-stubs",
     "mypy",
     "pytest-stub",
     "types-cryptography",
-    "types-requests",
 ]
 develop = [
     "pdbpp",

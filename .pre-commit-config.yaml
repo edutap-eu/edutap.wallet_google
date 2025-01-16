@@ -36,12 +36,12 @@ repos:
       - id: mypy
         args: ['--explicit-package-bases']
         additional_dependencies:
-        - "types-requests"
         - "pytest-stub"
         - "google-auth-stubs"
         - "pydantic"
         - "pydantic_settings"
         - "fastapi"
+        - "httpx"
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.3.0
     hooks:

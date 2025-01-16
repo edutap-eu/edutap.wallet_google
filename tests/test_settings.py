@@ -38,20 +38,6 @@ def test_settings_cached(mock_settings):
     assert mock_settings.credentials_info == "test"
 
 
-def test_settings_cached_empty(mock_settings):
-    assert mock_settings.google_root_signing_public_keys is not None
-
-    from edutap.wallet_google.settings import GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE
-
-    assert (
-        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(
-            mock_settings.google_environment, None
-        )
-        is not None
-    )
-    assert mock_settings.google_root_signing_public_keys is not None
-
-
 def test_settings_no_credentials_file(mock_settings):
     mock_settings.credentials_file = pathlib.Path("nonexistent.json")
     with pytest.raises(FileNotFoundError):
