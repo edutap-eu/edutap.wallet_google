@@ -37,9 +37,16 @@ class ImageUri(Model):
             exclude=True,
         ),
     ]
-    localizedDescription: LocalizedString | None = Field(
-        deprecated=True, default=None, exclude=True
-    )
+    localizedDescription: Annotated[
+        LocalizedString | None,
+        Field(
+            deprecated=deprecated(
+                'The Attribute "localizedDescription" is deprecated on "ImageUri'
+            ),
+            default=None,
+            exclude=True,
+        ),
+    ]
 
 
 class Image(Model):
