@@ -3,11 +3,11 @@ from .enums import AnimationType
 from .enums import NfcConstraint
 from .enums import ScreenshotEligibility
 from .localized_string import LocalizedString
-from typing_extensions import Annotated
-from typing_extensions import deprecated
 from pydantic import AnyUrl
 from pydantic import Field
 from pydantic import HttpUrl
+from typing_extensions import Annotated
+from typing_extensions import deprecated
 
 
 class Uri(Model):
@@ -27,7 +27,16 @@ class ImageUri(Model):
     """
 
     uri: AnyUrl
-    description: str | None = Annotated[str, Field(deprecated=deprecated('The Attribute "description" is deprected on "ImageUri'), default=None, exclude=True)]
+    description: str | None = Annotated[
+        str,
+        Field(
+            deprecated=deprecated(
+                'The Attribute "description" is deprecated on "ImageUri'
+            ),
+            default=None,
+            exclude=True,
+        ),
+    ]
     localizedDescription: LocalizedString | None = Field(
         deprecated=True, default=None, exclude=True
     )
@@ -89,7 +98,16 @@ class CallbackOptions(Model):
     """
 
     url: HttpUrl | None = None
-    updateRequestUrl: HttpUrl | None = Field(deprecated=True, default=None, exclude=True)  # 'The Parameter "updateRequestUrl of CallbackOption" is deprected, use "url" instead.'
+    updateRequestUrl: HttpUrl | None = Annotated[
+        HttpUrl,
+        Field(
+            deprecated=deprecated(
+                'The Parameter "updateRequestUrl of CallbackOption" is deprecated, use "url" instead.'
+            ),
+            default=None,
+            exclude=True,
+        ),
+    ]
 
 
 class SaveRestrictions(Model):
