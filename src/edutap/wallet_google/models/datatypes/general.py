@@ -31,7 +31,7 @@ class ImageUri(Model):
         str | None,
         Field(
             deprecated=deprecated(
-                'The Attribute "description" is deprecated on "ImageUri'
+                'The Attribute "description" is deprecated on "ImageUri", use "contentDesceription" on parent "Image" Instance.'
             ),
             default=None,
             exclude=True,
@@ -41,7 +41,7 @@ class ImageUri(Model):
         LocalizedString | None,
         Field(
             deprecated=deprecated(
-                'The Attribute "localizedDescription" is deprecated on "ImageUri'
+                'The Attribute "localizedDescription" is deprecated on "ImageUri", use "contentDesceription" on parent "Image" Instance.'
             ),
             default=None,
             exclude=True,
@@ -109,7 +109,7 @@ class CallbackOptions(Model):
         HttpUrl | None,
         Field(
             deprecated=deprecated(
-                'The Parameter "updateRequestUrl of CallbackOption" is deprecated, use "url" instead.'
+                'The Parameter "updateRequestUrl" is deprecated on "CallbackOption", use "url" instead.'
             ),
             default=None,
             exclude=True,
