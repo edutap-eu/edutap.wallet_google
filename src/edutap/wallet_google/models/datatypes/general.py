@@ -27,8 +27,8 @@ class ImageUri(Model):
     """
 
     uri: AnyUrl
-    description: str | None = Annotated[
-        str,
+    description: Annotated[
+        str | None,
         Field(
             deprecated=deprecated(
                 'The Attribute "description" is deprecated on "ImageUri'
@@ -98,8 +98,8 @@ class CallbackOptions(Model):
     """
 
     url: HttpUrl | None = None
-    updateRequestUrl: HttpUrl | None = Annotated[
-        HttpUrl,
+    updateRequestUrl: Annotated[
+        HttpUrl | None,
         Field(
             deprecated=deprecated(
                 'The Parameter "updateRequestUrl of CallbackOption" is deprecated, use "url" instead.'
