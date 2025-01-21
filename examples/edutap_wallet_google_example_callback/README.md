@@ -76,8 +76,10 @@ We hope you get the idea.
 
 There is an example swarm deployment in here in `swarm.yml`.
 It can be deployed on the cluster.
-The public domain is configured using the environment variable `EDUTAP_WALLET_GOOGLE_EXAMPLE_DOMAIN`.
+The public domain must be configured using the environment variable `EDUTAP_WALLET_GOOGLE_EXAMPLE_DOMAIN`.
 A TLS certificate will be issued automatically using Lets Encrypt.
+
+Example: `export EDUTAP_WALLET_GOOGLE_EXAMPLE_DOMAIN=edutap-wallet-google-callback.example.com`
 
 ```shell
 docker stack deploy swarm.yml -c swarm.yml edutap_wallet_google_example_callback
