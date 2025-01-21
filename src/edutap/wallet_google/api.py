@@ -20,6 +20,7 @@ from pydantic import ValidationError
 
 import json
 import logging
+import time
 import typing
 
 
@@ -338,6 +339,38 @@ def listing(
         break
 
 
+def _create_payload(models: list[ClassModel | ObjectModel | Reference]) -> JWTPayload:
+    """Creates a payload for the JWT."""
+    payload = JWTPayload()
+
+    for model in models:
+        if isinstance(model, Reference):
+            if model.model_name is not None:
+                name = lookup_metadata_by_name(model.model_name)["plural"]
+            elif model.model_type is not None:
+                name = lookup_metadata_by_model_type(model.model_type)["plural"]
+        else:
+            name = lookup_metadata_by_model_instance(model)["plural"]
+        if getattr(payload, name) is None:
+            setattr(payload, name, [])
+        getattr(payload, name).append(model)
+    return payload
+
+
+def _create_claims(
+    issuer: str,
+    origins: list[str],
+    models: list[ClassModel | ObjectModel | Reference],
+) -> JWTClaims:
+    """Creates a JWTClaims instance based on the given issuer, origins and models."""
+    return JWTClaims(
+        iss=issuer,
+        iat=str(int(time.time())),
+        origins=origins,
+        payload=_create_payload(models),
+    )
+
+
 def save_link(
     models: list[ClassModel | ObjectModel | Reference],
     *,
@@ -362,23 +395,11 @@ def save_link(
                         messages in the browser console when the origins field is not defined.
     :return:            Link with JWT to save the resources to the wallet.
     """
-    payload = JWTPayload()
-    for model in models:
-        if isinstance(model, Reference):
-            if model.model_name is not None:
-                name = lookup_metadata_by_name(model.model_name)["plural"]
-            elif model.model_type is not None:
-                name = lookup_metadata_by_model_type(model.model_type)["plural"]
-        else:
-            name = lookup_metadata_by_model_instance(model)["plural"]
-        if getattr(payload, name) is None:
-            setattr(payload, name, [])
-        getattr(payload, name).append(model)
 
-    claims = JWTClaims(
-        iss=session_manager.settings.credentials_info["client_email"],
-        origins=origins,
-        payload=payload,
+    claims = _create_claims(
+        session_manager.settings.credentials_info["client_email"],
+        origins,
+        models,
     )
     signer = crypt.RSASigner.from_service_account_file(
         session_manager.settings.credentials_file
