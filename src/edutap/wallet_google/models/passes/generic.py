@@ -47,7 +47,7 @@ class GenericClass(ClassModel):
     # inherits valueAddedModuleData
 
 
-@register_model("GenericObject", url_part="genericObject", can_message=False)
+@register_model("GenericObject", url_part="genericObject", can_message=True)
 class GenericObject(ObjectModel, StyleableMixin, CommonLogosMixin):
     """
     The GenericObject is a specific object and does not act as the base for other wallet objects!
