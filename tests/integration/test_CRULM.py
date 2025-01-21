@@ -130,7 +130,7 @@ def test_class_object_cru(type_base, class_data, object_data, integration_test_i
     ############################
     # test class
     class_base = f"{integration_test_id}.{class_type}.test_CRU.wallet_google.edutap"
-    class_data["id"] = f"{session_manager.settings.issuer_id}.{class_base}"
+    class_data["id"] = f"{session_manager.settings.test_issuer_id}.{class_base}"
 
     data = new(class_type, class_data)
 
@@ -186,14 +186,19 @@ def test_class_object_cru(type_base, class_data, object_data, integration_test_i
         assert result_message.id == class_data["id"]
 
     # list all
-    result_list = [x for x in listing(name=class_type)]
+    result_list = [
+        x
+        for x in listing(
+            name=class_type, issuer_id=session_manager.settings.test_issuer_id
+        )
+    ]
     assert len(result_list) > 0
 
     ############################
     # test object
     object_data["classId"] = class_data["id"]
     object_base = f"{integration_test_id}.{object_type}.test_CRU.wallet_google.edutap"
-    object_data["id"] = f"{session_manager.settings.issuer_id}.{object_base}"
+    object_data["id"] = f"{session_manager.settings.test_issuer_id}.{object_base}"
     odata = new(object_type, object_data)
 
     # create

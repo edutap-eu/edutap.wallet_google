@@ -19,7 +19,7 @@ def test_base_settings():
 
 def test_local_settings(monkeypatch):
     monkeypatch.setenv(
-        "EDUTAP_WALLET_GOOGLE_ISSUER_ID",
+        "EDUTAP_WALLET_GOOGLE_TEST_ISSUER_ID",
         "1234567890123456789",
     )
     monkeypatch.setenv(
@@ -29,7 +29,7 @@ def test_local_settings(monkeypatch):
 
     settings = Settings()
 
-    assert settings.issuer_id == "1234567890123456789"
+    assert settings.test_issuer_id == "1234567890123456789"
     assert settings.credentials_file.exists()
 
 

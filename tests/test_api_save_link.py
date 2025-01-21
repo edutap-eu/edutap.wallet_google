@@ -33,7 +33,7 @@ def test_create_claims():
         ),
     ]
     expected = {
-        "iss": "123456789",
+        "iss": "test@example.com",
         "aud": "google",
         "typ": "savetowallet",
         "iat": "1737115974",
@@ -55,7 +55,7 @@ def test_create_claims():
     }
 
     claims = api._create_claims(
-        "123456789",
+        "test@example.com",
         [],
         models,
         iat=datetime.datetime(2025, 1, 17, 12, 12, 54, 0, datetime.timezone.utc),
@@ -74,7 +74,6 @@ def test_create_claims():
 def test_api_save_link(mock_settings):
     from edutap.wallet_google.settings import ROOT_DIR
 
-    mock_settings.issuer_id = "1234567890123456789"
     mock_settings.credentials_file = (
         ROOT_DIR / "tests" / "data" / "credentials_fake.json"
     )
@@ -84,17 +83,23 @@ def test_api_save_link(mock_settings):
     link = api.save_link(
         [
             api.new(
-                "Reference", {"id": "test-1.edutap.eu", "model_name": "GenericObject"}
+                "Reference",
+                {
+                    "id": "1234567890123456789.test-1.edutap.eu",
+                    "model_name": "GenericObject",
+                },
             ),
             api.new(
                 "OfferObject",
-                {"id": "test-2.edutap.eu", "classId": "test-class-1.edutap.eu"},
+                {
+                    "id": "1234567890123456789.test-2.edutap.eu",
+                    "classId": "1234567890123456789.test-class-1.edutap.eu",
+                },
             ),
         ],
-        iat=datetime.datetime(2025, 1, 22, 10, 20, 0, 0, datetime.timezone.utc)
-
+        iat=datetime.datetime(2025, 1, 22, 10, 20, 0, 0, datetime.timezone.utc),
     )
-    expected = "https://pay.google.com/gp/v/save/eyJ0eXAiOiAiSldUIiwgImFsZyI6ICJSUzI1NiIsICJraWQiOiAiMTIzNDU2Nzg5MGFiY2RlZjEyMzQ1Njc4OTBhYmNkZWYxMjM0NTY3OCJ9.eyJpc3MiOiAiZWR1dGFwLXRlc3QtZXhhbXBsZUBzb2RpdW0tcmF5LTEyMzQ1Ni5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsICJhdWQiOiAiZ29vZ2xlIiwgInR5cCI6ICJzYXZldG93YWxsZXQiLCAiaWF0IjogIjE3Mzc1NDEyMDAiLCAiZXhwIjogIiIsICJwYXlsb2FkIjogeyJvZmZlck9iamVjdHMiOiBbeyJpZCI6ICJ0ZXN0LTIuZWR1dGFwLmV1IiwgImNsYXNzSWQiOiAidGVzdC1jbGFzcy0xLmVkdXRhcC5ldSIsICJzdGF0ZSI6ICJTVEFURV9VTlNQRUNJRklFRCIsICJoYXNMaW5rZWREZXZpY2UiOiBmYWxzZSwgImRpc2FibGVFeHBpcmF0aW9uTm90aWZpY2F0aW9uIjogZmFsc2UsICJub3RpZnlQcmVmZXJlbmNlIjogIk5PVElGSUNBVElPTl9TRVRUSU5HU19GT1JfVVBEQVRFU19VTlNQRUNJRklFRCJ9XSwgImdlbmVyaWNPYmplY3RzIjogW3siaWQiOiAidGVzdC0xLmVkdXRhcC5ldSJ9XX0sICJvcmlnaW5zIjogW119.u8xDMKKdPBB0yjYqR-uM4eAYMEskRZyv_AOBhGkZ0oswvr-nVOs4jogXZo6cOmSvzjE_tRviNf_GHDelOaND-c4AqNwTg13DRG0c-aNWKbROTlrZefG0dusPcAuhTwzG-gsDn_sCstHWy8gkKQOmb_x4RjRB-b_gsv2uhmeKtNPvofxBNLUHbOefYKL12PPII9kI00Dl0pAyh0dgqI3yew0197a2rYl6_lOlYfO4jd784b-3CDCDKpOZnEjqBBedbLSDhKdWV10eo9mz6OsgqydERuUDDzhJopkwz6BIFL_HA_IHeAaiLtoSNbuOqc7zUecgOHlqecaWBZhV_-WPkQ"
+    expected = "https://pay.google.com/gp/v/save/eyJ0eXAiOiAiSldUIiwgImFsZyI6ICJSUzI1NiIsICJraWQiOiAiMTIzNDU2Nzg5MGFiY2RlZjEyMzQ1Njc4OTBhYmNkZWYxMjM0NTY3OCJ9.eyJpc3MiOiAiZWR1dGFwLXRlc3QtZXhhbXBsZUBzb2RpdW0tcmF5LTEyMzQ1Ni5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsICJhdWQiOiAiZ29vZ2xlIiwgInR5cCI6ICJzYXZldG93YWxsZXQiLCAiaWF0IjogIjE3Mzc1NDEyMDAiLCAiZXhwIjogIiIsICJwYXlsb2FkIjogeyJvZmZlck9iamVjdHMiOiBbeyJpZCI6ICIxMjM0NTY3ODkwMTIzNDU2Nzg5LnRlc3QtMi5lZHV0YXAuZXUiLCAiY2xhc3NJZCI6ICIxMjM0NTY3ODkwMTIzNDU2Nzg5LnRlc3QtY2xhc3MtMS5lZHV0YXAuZXUiLCAic3RhdGUiOiAiU1RBVEVfVU5TUEVDSUZJRUQiLCAiaGFzTGlua2VkRGV2aWNlIjogZmFsc2UsICJkaXNhYmxlRXhwaXJhdGlvbk5vdGlmaWNhdGlvbiI6IGZhbHNlLCAibm90aWZ5UHJlZmVyZW5jZSI6ICJOT1RJRklDQVRJT05fU0VUVElOR1NfRk9SX1VQREFURVNfVU5TUEVDSUZJRUQifV0sICJnZW5lcmljT2JqZWN0cyI6IFt7ImlkIjogIjEyMzQ1Njc4OTAxMjM0NTY3ODkudGVzdC0xLmVkdXRhcC5ldSJ9XX0sICJvcmlnaW5zIjogW119.OJcaFwQ9XlKvMb0t-aokejx39zeHiPMIkA5EQSU7oPXgFy740OHFN0-vsw-8ABMc4HB-ZipuH6ZN1MhbOc1baabPl4s8XLU_Z43NMUXmKKz2KExt2F7qiuy_04aeFZQVBGoZOCQicjD_qrh6YqGYHdQFkcjtOAAdy0JPwVsfdiowTdDv4EdH2eZXLvE3bKYeu1rvD6oBS5xCIDwu77t3DurrKYf1yYfOL4YpnNAwru-o7MM_J-FKzVur6wJ0xQgYCP_UtX8PxHoj2-YXQ0yXlypgw8Vpo069hcrOVyQaRdrFEVf_TKi6IBLpPr6zxk19NhmJ9qjwIUygMEkyfRf3Mw"
     assert link == expected
 
 
@@ -118,7 +123,7 @@ def test__convert_str_or_datetime_to_str__str_int_tr_4bytes():
     from edutap.wallet_google.api import _convert_str_or_datetime_to_str
 
     with pytest.raises(ValueError):
-        _convert_str_or_datetime_to_str(f"{2**32+1}")
+        _convert_str_or_datetime_to_str(f"{2**32 + 1}")
 
 
 def test__convert_str_or_datetime_to_str__not_decimal():
