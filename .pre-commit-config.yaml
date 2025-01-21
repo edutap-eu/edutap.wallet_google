@@ -42,6 +42,7 @@ repos:
         - "pydantic_settings"
         - "fastapi"
         - "httpx"
+        - "freezegun"
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.3.0
     hooks:
