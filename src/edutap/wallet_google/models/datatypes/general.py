@@ -1,6 +1,5 @@
-from typing import Annotated
-
 from ..bases import Model
+from ..deprecated import DeprecatedKindFieldMixin
 from .enums import AnimationType
 from .enums import NfcConstraint
 from .enums import ScreenshotEligibility
@@ -8,10 +7,15 @@ from .localized_string import LocalizedString
 from pydantic import AnyUrl
 from pydantic import Field
 from pydantic import HttpUrl
+from typing import Annotated
 from typing_extensions import deprecated
 
 
-class Uri(Model):
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
+
+
+class Uri(DeprecatedKindFieldMixin, Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/Uri
     """
@@ -50,7 +54,7 @@ class ImageUri(Model):
     ]
 
 
-class Image(Model):
+class Image(DeprecatedKindFieldMixin, Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/Image
     """
@@ -91,7 +95,7 @@ class GroupingInfo(Model):
     groupingId: str | None = None
 
 
-class Pagination(Model):
+class Pagination(DeprecatedKindFieldMixin, Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/Pagination
     """
