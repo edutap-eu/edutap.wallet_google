@@ -13,7 +13,7 @@ from .bases import StyleableMixin
     "GenericClass",
     url_part="genericClass",
     plural="genericClasses",
-    can_message=False,
+    can_message=True,
 )
 class GenericClass(ClassModel):
     """
