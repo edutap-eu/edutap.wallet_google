@@ -16,6 +16,7 @@ class FlightCarrier(DeprecatedKindFieldMixin, Model):
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightcarrier
     """
 
+    # inherits kind (deprecated)
     carrierIataCode: str | None = Field(
         max_length=2,
         default=None,
@@ -35,6 +36,7 @@ class FlightHeader(DeprecatedKindFieldMixin, Model):
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightheader
     """
 
+    # inherits kind (deprecated)
     carrier: FlightCarrier | None = None
     flightNumber: str | None = None
     operatingCarrier: FlightCarrier | None = None
@@ -47,6 +49,7 @@ class AirportInfo(DeprecatedKindFieldMixin, Model):
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#airportinfo
     """
 
+    # inherits kind (deprecated)
     airportIataCode: str | None = Field(max_length=3, default=None)
     terminal: str | None = None
     gate: str | None = None
@@ -58,5 +61,6 @@ class BoardingAndSeatingPolicy(DeprecatedKindFieldMixin, Model):
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#boardingandseatingpolicy
     """
 
+    # inherits kind (deprecated)
     boardingPolicy: BoardingPolicy = BoardingPolicy.BOARDING_POLICY_UNSPECIFIED
     seatClassPolicy: SeatClassPolicy = SeatClassPolicy.SEAT_CLASS_POLICY_UNSPECIFIED

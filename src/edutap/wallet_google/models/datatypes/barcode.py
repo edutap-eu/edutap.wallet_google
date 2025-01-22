@@ -15,6 +15,7 @@ class Barcode(DeprecatedKindFieldMixin, Model):
     see: https://developers.google.com/wallet/generic/rest/v1/Barcode
     """
 
+    # inherits kind (deprecated)
     type: BarcodeType = BarcodeType.BARCODE_TYPE_UNSPECIFIED
     renderEncoding: BarcodeRenderEncoding = (
         BarcodeRenderEncoding.RENDER_ENCODING_UNSPECIFIED

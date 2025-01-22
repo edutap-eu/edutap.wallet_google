@@ -14,6 +14,7 @@ class Message(DeprecatedKindFieldMixin, Model):
     see: https://developers.google.com/wallet/tickets/events/rest/v1/Message
     """
 
+    # inherits kind (deprecated)
     header: str | None = None
     body: str | None = None
     displayInterval: TimeInterval | None = None

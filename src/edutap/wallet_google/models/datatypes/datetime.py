@@ -22,5 +22,6 @@ class TimeInterval(DeprecatedKindFieldMixin, Model):
     see: https://developers.google.com/wallet/tickets/events/rest/v1/TimeInterval
     """
 
+    # inherits kind (deprecated)
     start: DateTime | None = None
     end: DateTime | None = None

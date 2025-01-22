@@ -11,5 +11,6 @@ class Money(DeprecatedKindFieldMixin, Model):
     see: https://developers.google.com/wallet/tickets/events/rest/v1/Money
     """
 
+    # inherits kind (deprecated)
     micros: str | None = None
     currencyCode: str | None = None

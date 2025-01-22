@@ -20,6 +20,7 @@ class Uri(DeprecatedKindFieldMixin, Model):
     see: https://developers.google.com/wallet/generic/rest/v1/Uri
     """
 
+    # inherits kind (deprecated)
     uri: AnyUrl | str | None = None
     description: str | None = None
     localizedDescription: LocalizedString | None = None
@@ -59,6 +60,7 @@ class Image(DeprecatedKindFieldMixin, Model):
     see: https://developers.google.com/wallet/generic/rest/v1/Image
     """
 
+    # inherits kind (deprecated)
     sourceUri: ImageUri
     contentDescription: LocalizedString | None = None
 
@@ -100,6 +102,7 @@ class Pagination(DeprecatedKindFieldMixin, Model):
     see: https://developers.google.com/wallet/generic/rest/v1/Pagination
     """
 
+    # inherits kind (deprecated)
     resultsPerPage: int
     nextPageToken: str | None = None
 
