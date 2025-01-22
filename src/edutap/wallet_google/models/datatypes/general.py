@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from ..bases import Model
 from .enums import AnimationType
 from .enums import NfcConstraint
@@ -6,7 +8,6 @@ from .localized_string import LocalizedString
 from pydantic import AnyUrl
 from pydantic import Field
 from pydantic import HttpUrl
-from typing_extensions import Annotated
 from typing_extensions import deprecated
 
 
