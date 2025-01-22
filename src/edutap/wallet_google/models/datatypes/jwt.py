@@ -10,6 +10,10 @@ from ..passes.bases import Reference
 from datetime import datetime
 
 
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
+
+
 class JWTPayload(Model):
 
     eventTicketClasses: (
@@ -41,6 +45,7 @@ class JWTClaims(Model):
     aud: str = "google"
     typ: str = "savetowallet"
     iat: str | datetime = ""
+    # TODO: 'exp' is not specified in the documentation.
     exp: str | datetime = ""
     payload: JWTPayload
     origins: list[str]
