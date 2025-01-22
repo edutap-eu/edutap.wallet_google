@@ -18,9 +18,9 @@ from google.auth import crypt
 from google.auth import jwt
 from pydantic import ValidationError
 
+import datetime
 import json
 import logging
-import time
 import typing
 
 
@@ -290,13 +290,9 @@ def listing(
             raise ValueError("resource_id of a class must be given to list its objects")
         params["classId"] = resource_id
     elif name.endswith("Class"):
-        is_pageable = True
         if not issuer_id:
-            issuer_id = session_manager.settings.issuer_id
-            if not issuer_id:
-                raise ValueError(
-                    "'issuer_id' must be passed as keyword argument or set in environment"
-                )
+            raise ValueError("issuer_id must be given to list classes")
+        is_pageable = True
         params["issuerId"] = issuer_id
 
     if is_pageable:
@@ -357,15 +353,33 @@ def _create_payload(models: list[ClassModel | ObjectModel | Reference]) -> JWTPa
     return payload
 
 
+def _convert_str_or_datetime_to_str(value: str | datetime.datetime) -> str:
+    """convert and check the value to be a valid string for the JWT claim timestamps"""
+    if isinstance(value, datetime.datetime):
+        return str(int(value.timestamp()))
+    if value == "":
+        return value
+    if not value.isdecimal():
+        raise ValueError("string must be a decimal")
+    if int(value) < 0:
+        raise ValueError("string must be an int >= 0 number")
+    if int(value) > 2**32:
+        raise ValueError("string must be an int < 2**32 number")
+    return value
+
+
 def _create_claims(
     issuer: str,
     origins: list[str],
     models: list[ClassModel | ObjectModel | Reference],
+    iat: str | datetime.datetime,
+    exp: str | datetime.datetime,
 ) -> JWTClaims:
     """Creates a JWTClaims instance based on the given issuer, origins and models."""
     return JWTClaims(
         iss=issuer,
-        iat=str(int(time.time())),
+        iat=_convert_str_or_datetime_to_str(iat),
+        exp=_convert_str_or_datetime_to_str(exp),
         origins=origins,
         payload=_create_payload(models),
     )
@@ -375,6 +389,8 @@ def save_link(
     models: list[ClassModel | ObjectModel | Reference],
     *,
     origins: list[str] = [],
+    iat: str | datetime.datetime = "",
+    exp: str | datetime.datetime = "",
 ) -> str:
     """
     Creates a link to save a Google Wallet Object to the wallet on the device.
@@ -393,14 +409,26 @@ def save_link(
                         The Google Wallet API button will not render when the origins field is not defined.
                         You could potentially get an "Load denied by X-Frame-Options" or "Refused to display"
                         messages in the browser console when the origins field is not defined.
+    :param: iat:        Issued At Time. The time when the JWT was issued.
+    :param: exp:        Expiration Time. The time when the JWT expires.
     :return:            Link with JWT to save the resources to the wallet.
     """
-
     claims = _create_claims(
         session_manager.settings.credentials_info["client_email"],
         origins,
         models,
+        iat=iat,
+        exp=exp,
     )
+    logger.debug(
+        claims.model_dump_json(
+            indent=2,
+            exclude_unset=False,
+            exclude_defaults=False,
+            exclude_none=True,
+        )
+    )
+
     signer = crypt.RSASigner.from_service_account_file(
         session_manager.settings.credentials_file
     )
@@ -413,6 +441,7 @@ def save_link(
             exclude_none=True,
         ),
     ).decode("utf-8")
+    logger.debug(jwt_string)
     if (jwt_len := len(jwt_string)) >= 1800:
         logger.debug(
             f"JWT-Length: {jwt_len} is larger than recommended 1800 bytes",

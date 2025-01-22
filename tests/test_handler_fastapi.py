@@ -43,7 +43,7 @@ def test_callback_disabled_signature_check_ERROR(mock_settings):
     mock_settings.handler_callback_verify_signature = "0"
 
     callback_data = CallbackData(**real_callback_data)
-    callback_data.signedMessage = '{"classId":"","objectId":"","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":""}'
+    callback_data.signedMessage = '{"classId":"1.x","objectId":"1.y","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":""}'
 
     from edutap.wallet_google.handlers.fastapi import router
 
@@ -73,7 +73,7 @@ def test_callback_disabled_signature_check_NOTIMPLEMENTED(monkeypatch, mock_sett
     )
 
     callback_data = CallbackData(**real_callback_data)
-    callback_data.signedMessage = '{"classId":"","objectId":"","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":""}'
+    callback_data.signedMessage = '{"classId":"1.x","objectId":"1.y","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":"abcde"}'
 
     from edutap.wallet_google.handlers.fastapi import router
 
@@ -96,7 +96,7 @@ def test_callback_disabled_signature_check_TIMEOUT(mock_settings):
     mock_settings.handlers_callback_timeout = 0.1
 
     callback_data = CallbackData(**real_callback_data)
-    callback_data.signedMessage = '{"classId":"TIMEOUT","objectId":"","eventType":"save","expTimeMillis":250,"count":1,"nonce":""}'
+    callback_data.signedMessage = '{"classId":"TIMEOUT.x","objectId":"1.x","eventType":"save","expTimeMillis":250,"count":1,"nonce":"abcde"}'
 
     from edutap.wallet_google.handlers.fastapi import router
 
