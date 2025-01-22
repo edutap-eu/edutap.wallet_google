@@ -1,5 +1,4 @@
 from pathlib import Path
-from pydantic import EmailStr
 from pydantic import Field
 from pydantic import HttpUrl
 from pydantic_settings import BaseSettings
@@ -47,8 +46,7 @@ class Settings(BaseSettings):
 
     credentials_file: Path = ROOT_DIR / "tests" / "data" / "credentials_fake.json"
     credentials_scopes: list[str] = SCOPES
-    issuer_account_email: EmailStr | None = None
-    issuer_id: str = Field(default="")
+    test_issuer_id: str = Field(default="")
 
     fernet_encryption_key: str = ""
 

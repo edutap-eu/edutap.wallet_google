@@ -47,12 +47,13 @@ callback = [
     "httpx",
 ]
 test = [
-    "pytest",
+    "edutap.wallet_google[callback]",
+    "freezegun",
     "pytest-cov",
     "pytest-explicit",
+    "pytest",
     "requests-mock",
     "tox",
-    "edutap.wallet_google[callback]",
 ]
 typecheck  = [
     "google-auth-stubs",

@@ -7,6 +7,7 @@ from ..passes import generic
 from ..passes import retail
 from ..passes import tickets_and_transit
 from ..passes.bases import Reference
+from datetime import datetime
 
 
 class JWTPayload(Model):
@@ -38,7 +39,8 @@ class JWTClaims(Model):
 
     iss: str
     aud: str = "google"
-    typ: str = "savettowallet"
-    iat: str = ""
+    typ: str = "savetowallet"
+    iat: str | datetime = ""
+    exp: str | datetime = ""
     payload: JWTPayload
     origins: list[str]

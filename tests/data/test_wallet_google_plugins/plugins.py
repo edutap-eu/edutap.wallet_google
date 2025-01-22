@@ -24,6 +24,8 @@ class TestImageProvider:
 class TestCallbackHandler:
     """
     Implementation of edutap.wallet_google.protocols.CallbackHandler
+
+    Used in tests to simulate a callback handler and possible errors.
     """
 
     async def handle(
@@ -35,8 +37,8 @@ class TestCallbackHandler:
         count: int,
         nonce: str,
     ) -> None:
-        if class_id == "TIMEOUT":
+        if class_id.startswith("TIMEOUT"):
             await asyncio.sleep(exp_time_millis / 1000)
-        elif class_id:
+        elif nonce:
             return
-        raise ValueError("class_id is required")
+        raise ValueError("test case errors if nonce is 0")
