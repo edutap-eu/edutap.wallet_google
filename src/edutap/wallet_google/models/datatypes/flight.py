@@ -1,4 +1,5 @@
 from ..bases import Model
+from ..deprecated import DeprecatedKindFieldMixin
 from .enums import BoardingPolicy
 from .enums import SeatClassPolicy
 from .general import Image
@@ -6,13 +7,14 @@ from .general import LocalizedString
 from pydantic import Field
 
 
-class FlightCarrier(Model):
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
+
+
+class FlightCarrier(DeprecatedKindFieldMixin, Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightcarrier
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
 
     carrierIataCode: str | None = Field(
         max_length=2,
@@ -28,13 +30,10 @@ class FlightCarrier(Model):
     wideAirlineLogo: Image | None = None
 
 
-class FlightHeader(Model):
+class FlightHeader(DeprecatedKindFieldMixin, Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightheader
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
 
     carrier: FlightCarrier | None = None
     flightNumber: str | None = None
@@ -43,7 +42,7 @@ class FlightHeader(Model):
     flightNumberDisplayOverride: str | None = None
 
 
-class AirportInfo(Model):
+class AirportInfo(DeprecatedKindFieldMixin, Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#airportinfo
     """
@@ -54,13 +53,10 @@ class AirportInfo(Model):
     airportNameOverride: LocalizedString | None = None
 
 
-class BoardingAndSeatingPolicy(Model):
+class BoardingAndSeatingPolicy(DeprecatedKindFieldMixin, Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#boardingandseatingpolicy
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
 
     boardingPolicy: BoardingPolicy = BoardingPolicy.BOARDING_POLICY_UNSPECIFIED
     seatClassPolicy: SeatClassPolicy = SeatClassPolicy.SEAT_CLASS_POLICY_UNSPECIFIED
