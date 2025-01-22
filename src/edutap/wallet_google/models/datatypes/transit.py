@@ -6,15 +6,17 @@ from .general import LocalizedString
 from pydantic import model_validator
 
 
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
+
+
 class ActivationOptions(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitclass#activationoptions
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
     activationUrl: str | None = None
+    # TODO: should the default value rather be None?
     allowReactivation: bool = False
 
 
@@ -23,9 +25,6 @@ class ActivationStatus(Model):
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#activationstatus
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
     state: ActivationState = ActivationState.UNKNOWN_STATE
 
 
@@ -33,9 +32,6 @@ class TicketRestrictions(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketrestrictions
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
 
     routeRestrictions: LocalizedString | None = None
     routeRestrictionsDetails: LocalizedString | None = None
@@ -48,9 +44,6 @@ class TicketCost(Model):
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketcost
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
     faceValue: Money | None = None
     purchasePrice: Money | None = None
     discountMessage: LocalizedString | None = None
@@ -60,9 +53,6 @@ class TicketSeat(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketseat
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
 
     fareClass: FareClass = FareClass.FARE_CLASS_UNSPECIFIED
     customFareClass: LocalizedString | None = None
@@ -76,10 +66,7 @@ class TicketLeg(Model):
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketleg
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
-    originStationCod: str | None = None
+    originStationCode: str | None = None
     originName: LocalizedString | None = None
     destinationStationCode: str | None = None
     destinationName: LocalizedString | None = None
@@ -116,9 +103,6 @@ class PurchaseDetails(Model):
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#purchasedetails
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
     purchaseReceiptNumber: str | None = None
     purchaseDateTime: str | None = None
     accountId: str | None = None
@@ -130,8 +114,5 @@ class DeviceContext(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject#devicecontext
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
 
     deviceToken: str | None = None
