@@ -145,7 +145,6 @@ async def handle_image(request: Request, encrypted_image_id: str):
 # needs to be included after the routers are defined
 router = APIRouter(
     prefix=session_manager.settings.handler_prefix,
-    tags=["edutap", "google_wallet"],
 )
 router.include_router(router_callback)
 router.include_router(router_images)

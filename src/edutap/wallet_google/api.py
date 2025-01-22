@@ -290,13 +290,9 @@ def listing(
             raise ValueError("resource_id of a class must be given to list its objects")
         params["classId"] = resource_id
     elif name.endswith("Class"):
-        is_pageable = True
         if not issuer_id:
-            issuer_id = session_manager.settings.issuer_id
-            if not issuer_id:
-                raise ValueError(
-                    "'issuer_id' must be passed as keyword argument or set in environment"
-                )
+            raise ValueError("issuer_id must be given to list classes")
+        is_pageable = True
         params["issuerId"] = issuer_id
 
     if is_pageable:

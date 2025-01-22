@@ -138,11 +138,18 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
     Verifies the signature of the callback data.
     and returns the parsed SignedMessage
     """
+    # parse message
+    message = SignedMessage.model_validate_json(data.signedMessage)
 
+    # get issuer_id
+    if not message.classId or "." not in message.classId:
+        raise ValueError("Missing classId")
+    issuer_id = message.classId.split(".")[0]
+
+    # shortcut if signature validation is disabled
     settings = session_manager.settings
     if settings.handler_callback_verify_signature == "0":
-        # shortcut if signature validation is disabled
-        return SignedMessage.model_validate_json(data.signedMessage)
+        return message
 
     if data.protocolVersion != PROTOCOL_VERSION:
         raise ValueError("Invalid protocolVersion")
@@ -166,7 +173,7 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
     signature = base64.decodebytes(bytes(data.signature, "utf-8"))
     signed_data = _construct_signed_data(
         "GooglePayWallet",
-        settings.issuer_id,
+        issuer_id,
         PROTOCOL_VERSION,
         data.signedMessage,
     )
@@ -175,4 +182,4 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
     except (ValueError, InvalidSignature):
         raise ValueError("Invalid signature")
 
-    return SignedMessage.model_validate_json(data.signedMessage)
+    return message

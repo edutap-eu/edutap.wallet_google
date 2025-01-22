@@ -99,3 +99,10 @@ def mock_settings():
 @pytest.fixture
 def mock_fernet_encryption_key(mock_settings):
     mock_settings.fernet_encryption_key = "TDTPJVv24gha-jRX0apPgPpMDN2wX1kVSNNZdWXcz8E="
+
+
+@pytest.fixture
+def test_issuer_id():
+    from edutap.wallet_google.session import session_manager
+
+    yield session_manager.settings.test_issuer_id
