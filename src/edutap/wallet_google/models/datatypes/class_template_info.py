@@ -3,6 +3,12 @@ from .enums import DateFormat
 from .enums import PredefinedItem
 from .enums import TransitOption
 from pydantic import Field
+from typing import Annotated
+from typing_extensions import deprecated
+
+
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
 
 
 class FieldReference(Model):
@@ -127,9 +133,16 @@ class ListTemplateOverride(Model):
 
     firstRowOption: FirstRowOption | None = None
     secondRowOption: FieldSelector | None = None
-    thirdRowOption: FieldSelector | None = Field(
-        description="deprecated", exclude=True, default=None
-    )
+    thirdRowOption: Annotated[
+        FieldSelector | None,
+        Field(
+            deprecated=deprecated(
+                'The Attribute "thirdRowOption" is deprecated on "ListTemplateOverride". Setting it will have no effect on what the user sees.'
+            ),
+            default=None,
+            exclude=True,
+        ),
+    ]
 
 
 class ClassTemplateInfo(Model):
