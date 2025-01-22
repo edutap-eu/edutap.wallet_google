@@ -3,7 +3,12 @@ from .enums import Action
 from .enums import Role
 from pydantic import AnyHttpUrl
 from pydantic import EmailStr
+from pydantic import Field
 from pydantic import HttpUrl
+
+
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
 
 
 class Permission(Model):
@@ -38,7 +43,9 @@ class IssuerToUserInfo(Model):
     """
 
     action: Action = Action.ACTION_UNSPECIFIED
-    url: AnyHttpUrl | None = None
+    url: AnyHttpUrl | None = Field(
+        description="Currently not used, consider deprecating", default=None
+    )
     value: str | None = None
     signUpInfo: SignUpInfo | None = None
 
@@ -50,6 +57,7 @@ class IssuerContactInfo(Model):
 
     name: str | None = None
     phone: str | None = None
+    # TODO: 'homepageUrl' is not specified in the documentation.
     homepageUrl: HttpUrl | None = None
     email: EmailStr | None = None
     alertsEmails: list[EmailStr] | None = None
