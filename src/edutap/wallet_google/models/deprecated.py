@@ -15,6 +15,7 @@ class DeprecatedKindFieldMixin:
     Mixin to add the deprecated kind field to a model.
     May be removed in the future.
     """
+
     kind: Annotated[
         str,
         Field(
@@ -32,6 +33,7 @@ class DeprecatedAllowMultipleUsersPerObjectMixin:
     Mixin to add the deprecated allowMultipleUsersPerObject field to a model.
     May be removed in the future.
     """
+
     allowMultipleUsersPerObject: Annotated[
         bool,
         Field(
@@ -49,6 +51,7 @@ class DeprecatedVersionFieldMixin:
     Mixin to add the deprecated version field to a model.
     May be removed in the future.
     """
+
     version: Annotated[
         str,
         Field(
