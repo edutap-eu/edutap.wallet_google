@@ -14,22 +14,37 @@ from ..datatypes.loyalty import LoyaltyPoints
 from ..datatypes.money import Money
 from ..datatypes.retail import DiscoverableProgram
 from ..datatypes.review import Review
+from ..deprecated import DeprecatedAllowMultipleUsersPerObjectMixin
+from ..deprecated import DeprecatedInfoModuleDataFieldMixin
+from ..deprecated import DeprecatedKindFieldMixin
+from ..deprecated import DeprecatedLocationsFieldMixin
+from ..deprecated import DeprecatedVersionFieldMixin
+from ..deprecated import DeprecatedWordMarkFieldMixin
 from .bases import ClassModel
 from .bases import ObjectModel
 from .bases import StyleableMixin
-from pydantic import Field
+
+
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
 
 
 @register_model("GiftCardClass", url_part="giftCardClass", plural="giftCardClasses")
-class GiftCardClass(ClassModel, StyleableMixin):
+class GiftCardClass(
+    DeprecatedKindFieldMixin,
+    DeprecatedVersionFieldMixin,
+    DeprecatedAllowMultipleUsersPerObjectMixin,
+    DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
+    DeprecatedWordMarkFieldMixin,
+    StyleableMixin,
+    ClassModel,
+):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
-
+    # inherits kind (deprecated)
     merchantName: str | None = None
     programLogo: Image | None = None
     pinLabel: str | None = None
@@ -42,18 +57,22 @@ class GiftCardClass(ClassModel, StyleableMixin):
     localizedCardNumberLabel: LocalizedString | None = None
     # inherits classTemplateInfo
     # inherits id
-    version: str | None = Field(description="deprecated", exclude=True, default=None)
+    # inherits version (deprecated)
     issuerName: str
     # inherits messages
+    # inherits allowMultipleUsersPerObject (deprecated)
     homepageUri: Uri | None = None
+    # inherits locations (deprecated)
     reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     review: Review | None = None
+    # inherits infoModuleData (deprecated)
     # inherits imageModulesData
     # inherits textModulesData
     # inherits linksModuleData
     # inherits redemptionIssuers
     countryCode: str | None = None
     heroImage: Image | None = None
+    # inherits wordMark (deprecated)
     # inherits enableSmartTap
     # inherits hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
@@ -70,15 +89,17 @@ class GiftCardClass(ClassModel, StyleableMixin):
 
 
 @register_model("GiftCardObject", url_part="giftCardObject")
-class GiftCardObject(ObjectModel):
+class GiftCardObject(
+    DeprecatedKindFieldMixin,
+    DeprecatedVersionFieldMixin,
+    DeprecatedLocationsFieldMixin,
+    ObjectModel,
+):
     """
     see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
-
+    # inherits kind (deprecated)
     classReference: GiftCardClass | None = None
     cardNumber: str | None = None
     pin: str | None = None
@@ -86,12 +107,13 @@ class GiftCardObject(ObjectModel):
     balanceUpdateTime: DateTime | None = None
     eventNumber: str | None = None
     # inherits id
-    # inherits version
+    # inherits classId
+    # inherits version (deprecated)
     # inherits state
     # inherits barcode
     # inherits messages
     # inherits validTimeInterval
-    locations: list[LatLongPoint] | None = None
+    # inherits locations (deprecated)
     # inherits hasUsers
     # inherits smartTapRedemptionValue
     hasLinkedDevice: bool = False
@@ -114,14 +136,18 @@ class GiftCardObject(ObjectModel):
 
 
 @register_model("LoyaltyClass", url_part="loyaltyClass", plural="loyaltyClasses")
-class LoyaltyClass(ClassModel, StyleableMixin):
+class LoyaltyClass(
+    DeprecatedKindFieldMixin,
+    DeprecatedVersionFieldMixin,
+    DeprecatedAllowMultipleUsersPerObjectMixin,
+    DeprecatedInfoModuleDataFieldMixin,
+    DeprecatedWordMarkFieldMixin,
+    StyleableMixin,
+    ClassModel,
+):
     """
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
 
     programName: str | None = None
     programLogo: Image | None = None
@@ -141,20 +167,22 @@ class LoyaltyClass(ClassModel, StyleableMixin):
     discoverableProgram: DiscoverableProgram | None = None
     # inherits classTemplateInfo
     # inherits id
+    # inherits version (deprecated)
     issuerName: str | None = None
     # inherits messages
+    # inherits allowMultipleUsersPerObject (deprecated)
     homepageUri: Uri | None = None
     locations: list[LatLongPoint] | None = None
-    review: Review | None = None
     reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
-    # inherits infoModuleData
+    review: Review | None = None
+    # inherits infoModuleData (deprecated)
     # inherits imageModulesData
     # inherits textModulesData
     # inherits linksModuleData
     # inherits redemptionIssuers
     countryCode: str | None = None
     heroImage: Image | None = None
-    # inherits wordMark
+    # inherits wordMark (deprecated)
     # inherits enableSmartTap
     # inherits hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
@@ -166,20 +194,23 @@ class LoyaltyClass(ClassModel, StyleableMixin):
     notifyPreference: NotificationSettingsForUpdates = (
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
+    # inherits appLinkData
     # inherits valueAddedModuleData
 
 
 @register_model("LoyaltyObject", url_part="loyaltyObject", plural="loyaltyObjects")
-class LoyaltyObject(ObjectModel):
+class LoyaltyObject(
+    DeprecatedKindFieldMixin,
+    DeprecatedVersionFieldMixin,
+    DeprecatedLocationsFieldMixin,
+    ObjectModel,
+):
     """
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
-
+    # inherits kind (deprecated)
     classReference: LoyaltyClass | None = None
     accountName: str | None = None
     accountId: str | None = None
@@ -189,14 +220,17 @@ class LoyaltyObject(ObjectModel):
     # inherits id
     # inherits classId
     # inherits messages
+    # inherits version (deprecated)
     # inherits state
     # inherits barcode
     # inherits messages
     # inherits validTimeInterval
+    # inherits locations (deprecated)
     # inherits hasUsers
     # inherits smartTapRedemptionValue
     hasLinkedDevice: bool | None = None
     disableExpirationNotification: bool | None = False
+    # TODO: 'imageModule' is not specified in the documentation.
     imageModule: ImageModuleData | None = None
     # inherits infoModuleData
     # inherits imageModulesData
@@ -216,15 +250,21 @@ class LoyaltyObject(ObjectModel):
 
 
 @register_model("OfferClass", url_part="offerClass", plural="offerClasses")
-class OfferClass(ClassModel, StyleableMixin):
+class OfferClass(
+    DeprecatedKindFieldMixin,
+    DeprecatedVersionFieldMixin,
+    DeprecatedAllowMultipleUsersPerObjectMixin,
+    DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
+    DeprecatedWordMarkFieldMixin,
+    StyleableMixin,
+    ClassModel,
+):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
-
+    # inherits kind (deprecated)
     title: str | None = None
     redemptionChannel: RedemptionChannel = (
         RedemptionChannel.REDEMPTION_CHANNEL_UNSPECIFIED
@@ -242,18 +282,22 @@ class OfferClass(ClassModel, StyleableMixin):
     localizedShortTitle: LocalizedString | None = None
     # inherits classTemplateInfo
     # inherits id
+    # inherits version (deprecated)
     issuerName: str | None = None
     # inherits messages
+    # inherits allowMultipleUsersPerObject (deprecated)
     homepageUri: Uri | None = None
+    # inherits locations (deprecated)
     reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     review: Review | None = None
-    # inherits infoModuleData
+    # inherits infoModuleData (deprecated)
     # inherits imageModulesData
     # inherits textModulesData
     # inherits linksModuleData
     # inherits redemptionIssuers
     countryCode: str | None = None
     heroImage: Image | None = None
+    # inherits wordMark (deprecated)
     # inherits enableSmartTap
     # inherits hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
@@ -270,21 +314,21 @@ class OfferClass(ClassModel, StyleableMixin):
 
 
 @register_model("OfferObject", url_part="offerObject")
-class OfferObject(ObjectModel, StyleableMixin):
+class OfferObject(
+    DeprecatedKindFieldMixin, DeprecatedVersionFieldMixin, StyleableMixin, ObjectModel
+):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerobject
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
-
+    # inherits kind (deprecated)
     classReference: OfferClass | None = None
     # inherits id
     # inherits classId
+    # inherits version (deprecated)
     # inherits state
     # inherits barcode
-    # inertied messages
+    # inherits messages
     # inherits validTimeInterval
     locations: list[LatLongPoint] | None = None
     # inherits hasUsers
