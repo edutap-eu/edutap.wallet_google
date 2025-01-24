@@ -79,6 +79,7 @@ def test_api_save_link(mock_settings):
     )
 
     from edutap.wallet_google import api
+
     link = api.save_link(
         [
             api.new(
