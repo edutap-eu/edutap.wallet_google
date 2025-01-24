@@ -1,12 +1,16 @@
 from ..bases import Model
+from .enums import RetailState
 from .enums import SharedDataType
-from .enums import State
 from .general import Uri
+
+
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
 
 
 class DiscoverableProgramMerchantSignupInfo(Model):
     """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#LoyaltyClass.DiscoverableProgramMerchantSigninInfo
+    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#discoverableprogrammerchantsignupinfo
     """
 
     signupWebsite: Uri
@@ -28,4 +32,4 @@ class DiscoverableProgram(Model):
 
     merchantSignupInfo: DiscoverableProgramMerchantSignupInfo | None = None
     merchantSigninInfo: DiscoverableProgramMerchantSigninInfo | None = None
-    state: State = State.STATE_UNSPECIFIED
+    state: RetailState = RetailState.STATE_UNSPECIFIED

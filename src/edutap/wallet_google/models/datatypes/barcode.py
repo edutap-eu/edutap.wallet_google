@@ -1,18 +1,21 @@
 from ..bases import Model
+from ..deprecated import DeprecatedKindFieldMixin
 from .enums import BarcodeRenderEncoding
 from .enums import BarcodeType
 from .enums import TotpAlgorithm
 from .localized_string import LocalizedString
 
 
-class Barcode(Model):
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
+
+
+class Barcode(DeprecatedKindFieldMixin, Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/Barcode
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
+    # inherits kind (deprecated)
     type: BarcodeType = BarcodeType.BARCODE_TYPE_UNSPECIFIED
     renderEncoding: BarcodeRenderEncoding = (
         BarcodeRenderEncoding.RENDER_ENCODING_UNSPECIFIED
@@ -54,3 +57,4 @@ class RotatingBarcode(Model):
     totpDetails: TotpDetails | None = None
     alternateText: str | None = None
     showCodeText: LocalizedString | None = None
+    # TODO initialRotatingBarcodeValues

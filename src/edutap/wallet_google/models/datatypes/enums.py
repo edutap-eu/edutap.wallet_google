@@ -1,6 +1,10 @@
 from ..bases import CamelCaseAliasEnum
 
 
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
+
+
 class Action(CamelCaseAliasEnum):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/smarttap#action
@@ -94,6 +98,10 @@ class ConfirmationCodeLabel(CamelCaseAliasEnum):
 
 
 class DateFormat(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/ClassTemplateInfo#dateformat
+    """
+
     DATE_FORMAT_UNSPECIFIED = "DATE_FORMAT_UNSPECIFIED"
     DATE_TIME = "DATE_TIME"
     DATE_ONLY = "DATE_ONLY"

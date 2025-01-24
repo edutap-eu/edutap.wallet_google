@@ -9,6 +9,10 @@ from .bases import ObjectModel
 from .bases import StyleableMixin
 
 
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
+
+
 @register_model(
     "GenericClass",
     url_part="genericClass",
@@ -26,9 +30,6 @@ class GenericClass(ClassModel):
 
     see: https://developers.google.com/wallet/generic/rest/v1/genericclass
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-12-02
 
     # inherits id
     # inherits classTemplateInfo
@@ -48,15 +49,12 @@ class GenericClass(ClassModel):
 
 
 @register_model("GenericObject", url_part="genericObject", can_message=True)
-class GenericObject(ObjectModel, StyleableMixin, CommonLogosMixin):
+class GenericObject(StyleableMixin, CommonLogosMixin, ObjectModel):
     """
     The GenericObject is a specific object and does not act as the base for other wallet objects!
 
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
 
     genericType: GenericType = GenericType.GENERIC_TYPE_UNSPECIFIED
     cardTitle: LocalizedString | None = None
@@ -83,5 +81,5 @@ class GenericObject(ObjectModel, StyleableMixin, CommonLogosMixin):
     # inherits passConstraints
     # inherits wideLogo
     # inherits saveRestrictions
-    # inherits linkedObjectIds
     # inherits valueAddedModuleData
+    # inherits linkedObjectIds

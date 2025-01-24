@@ -22,7 +22,6 @@ from ..datatypes.flight import FlightHeader
 from ..datatypes.general import Image
 from ..datatypes.general import Uri
 from ..datatypes.localized_string import LocalizedString
-from ..datatypes.location import LatLongPoint
 from ..datatypes.money import Money
 from ..datatypes.review import Review
 from ..datatypes.transit import ActivationOptions
@@ -31,6 +30,12 @@ from ..datatypes.transit import DeviceContext
 from ..datatypes.transit import PurchaseDetails
 from ..datatypes.transit import TicketLeg
 from ..datatypes.transit import TicketRestrictions
+from ..deprecated import DeprecatedAllowMultipleUsersPerObjectMixin
+from ..deprecated import DeprecatedInfoModuleDataFieldMixin
+from ..deprecated import DeprecatedKindFieldMixin
+from ..deprecated import DeprecatedLocationsFieldMixin
+from ..deprecated import DeprecatedVersionFieldMixin
+from ..deprecated import DeprecatedWordMarkFieldMixin
 from .bases import ClassModel
 from .bases import CommonLogosMixin
 from .bases import ObjectModel
@@ -38,22 +43,34 @@ from .bases import StyleableMixin
 from pydantic import Field
 
 
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
+
+
 @register_model(
     "EventTicketClass",
     url_part="eventTicketClass",
     plural="eventTicketClasses",
 )
-class EventTicketClass(ClassModel, StyleableMixin, CommonLogosMixin):
+class EventTicketClass(
+    DeprecatedKindFieldMixin,
+    DeprecatedVersionFieldMixin,
+    DeprecatedAllowMultipleUsersPerObjectMixin,
+    DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
+    DeprecatedWordMarkFieldMixin,
+    StyleableMixin,
+    CommonLogosMixin,
+    ClassModel,
+):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
-
+    # inherits kind (deprecated)
     eventName: LocalizedString | None = None
     eventId: str | None = Field(default=None, max_length=64)
+    # inherits logo
     venue: EventVenue | None = None
     dateTime: EventDateTime | None = None
     confirmationCodeLabel: ConfirmationCodeLabel | None = None
@@ -69,19 +86,22 @@ class EventTicketClass(ClassModel, StyleableMixin, CommonLogosMixin):
     finePrint: LocalizedString | None = None
     # inherits classTemplateInfo
     # inherits id
+    # inherits version (deprecated)
     issuerName: str | None = None
     # inherits messages
+    # inherits allowMultipleUsersPerObject (deprecated)
     homepageUri: Uri | None = None
-    locations: list[LatLongPoint] | None = Field(default=None, deprecated=True)
+    # inherits locations (deprecated)
     reviewStatus: ReviewStatus | None = None
     review: Review | None = None
-    # inherits infoModuleData
+    # inherits infoModuleData (deprecated)
     # inherits imageModulesData
     # inherits textModulesData
     # inherits linksModuleData
     # inherits redemptionIssuers
     countryCode: str | None = None
     # inherits heroImage
+    # inherits wordMark (deprecated)
     # inherits enableSmartTap
     # inherits hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
@@ -99,18 +119,19 @@ class EventTicketClass(ClassModel, StyleableMixin, CommonLogosMixin):
 
 @register_model("EventTicketObject", url_part="eventTicketObject")
 class EventTicketObject(
-    ObjectModel,
+    DeprecatedKindFieldMixin,
+    DeprecatedVersionFieldMixin,
+    DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
     StyleableMixin,
     CommonLogosMixin,
+    ObjectModel,
 ):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketobject
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
-
+    # inherits kind (deprecated)
     classReference: EventTicketClass | None = None
     seatInfo: EventSeat | None = None
     reservationInfo: EventReservationInfo | None = None
@@ -123,19 +144,17 @@ class EventTicketObject(
     # inherits hexBackgroundColor
     # inherits id
     # inherits classId
-    version: str | None = Field(description="deprecated", exclude=True, default=None)
+    # inherits version (deprecated)
     # inherits state
     # inherits barcode
     # inherits messages
     # inherits validTimeInterval
-    locations: list[LatLongPoint] | None = Field(
-        description="deprecated", exclude=True, default=None
-    )
+    # inherits locations (deprecated)
     # inherits hasUsers
     # inherits smartTapRedemptionValue
     hasLinkedDevice: bool | None = False
     disableExpirationNotification: bool | None = False
-    # inherits infoModuleData
+    # inherits infoModuleData (deprecated)
     # inherits imageModulesData
     # inherits textModulesData
     # inherits linksModuleData
@@ -153,9 +172,14 @@ class EventTicketObject(
 
 @register_model("TransitClass", url_part="transitClass", plural="transitClasses")
 class TransitClass(
-    ClassModel,
+    DeprecatedVersionFieldMixin,
+    DeprecatedAllowMultipleUsersPerObjectMixin,
+    DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
+    DeprecatedWordMarkFieldMixin,
     StyleableMixin,
     CommonLogosMixin,
+    ClassModel,
 ):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitclass
@@ -188,17 +212,22 @@ class TransitClass(
     # inherits classTemplateInfo
     enableSingleLegItinerary: bool = False
     # inherits id
+    # inherits version (deprecated)
     issuerName: str | None = None
     # inherits messages
+    # inherits allowMultipleUsersPerObject (deprecated)
     homepageUri: Uri | None = None
+    # inherits locations (deprecated)
     reviewStatus: ReviewStatus | None = None
     review: Review | None = None
+    # inherits infoModuleData (deprecated)
     # inherits imageModulesData
     # inherits textModulesData
     # inherits linksModuleData
     # inherits redemptionIssuers
     countryCode: str | None = None
     # inherits heroImage
+    # inherits wordMark (deprecated)
     # inherits enableSmartTap
     # inherits hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
@@ -217,17 +246,16 @@ class TransitClass(
 
 @register_model("TransitObject", url_part="transitObject")
 class TransitObject(
-    ObjectModel,
+    DeprecatedVersionFieldMixin,
+    DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
     StyleableMixin,
     CommonLogosMixin,
+    ObjectModel,
 ):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/transitobject
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
 
     classReference: TransitClass | None = None
     ticketNumber: str | None = None
@@ -240,24 +268,28 @@ class TransitObject(
         ConcessionCategory.CONCESSION_CATEGORY_UNSPECIFIED
     )
     customConcessionCategory: LocalizedString | None = None
+    # TODO: validator: Only one of the two fields should be set, i.e. either customConcessionCategory or concessionCategory
     ticketRestrictions: TicketRestrictions | None = None
     purchaseDetails: PurchaseDetails | None = None
     ticketLeg: TicketLeg | None = None
     ticketLegs: list[TicketLeg] | None = None
     # TODO: validator: If more than one leg is to be specified then use the ticketLegs field instead.
     #                  Both ticketLeg and ticketLegs may not be set.
+    # inherits hexBackgroundColor
     tripType: TripType = TripType.TRIP_TYPE_UNSPECIFIED
     # inherits id
     # inherits classId
+    # inherits version (deprecated)
     # inherits state
     # inherits barcode
     # inherits messages
     # inherits validTimeInterval
+    # inherits locations (deprecated)
     # inherits hasUsers
     # inherits smartTapRedemptionValue
     hasLinkedDevice: bool | None = False
     disableExpirationNotification: bool | None = False
-    # inherits infoModuleData
+    # inherits infoModuleData (deprecated)
     # inherits imageModulesData
     # inherits textModulesData
     # inherits linksModuleData
@@ -277,15 +309,22 @@ class TransitObject(
 
 
 @register_model("FlightClass", url_part="flightClass", plural="flightClasses")
-class FlightClass(ClassModel, StyleableMixin, CommonLogosMixin):
+class FlightClass(
+    DeprecatedKindFieldMixin,
+    DeprecatedVersionFieldMixin,
+    DeprecatedAllowMultipleUsersPerObjectMixin,
+    DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
+    DeprecatedWordMarkFieldMixin,
+    StyleableMixin,
+    CommonLogosMixin,
+    ClassModel,
+):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
-
+    # inherits kind (deprecated)
     localScheduledDepartureDateTime: str | None = Field(default=None)
     localEstimatedOrActualDepartureDateTime: str | None = Field(default=None)
     localBoardingDateTime: str | None = Field(default=None)
@@ -300,18 +339,22 @@ class FlightClass(ClassModel, StyleableMixin, CommonLogosMixin):
     # inherits classTemplateInfo
     languageOverride: str | None = None
     # inherits id
+    # inherits version (deprecated)
     issuerName: str | None = None
     # inherits messages
+    # inherits allowMultipleUsersPerObject (deprecated)
     # inherits homepageUri
+    # inherits locations (deprecated)
     reviewStatus: ReviewStatus | None = None
     review: Review | None = None
-    # inherits infoModuleData
+    # inherits infoModuleData (deprecated)
     # inherits imageModulesData
     # inherits textModulesData
     # inherits linksModuleData
     # inherits redemptionIssuers
     countryCode: str | None = None
     # inherits heroImage
+    # inherits wordMark (deprecated)
     # inherits enableSmartTap
     # inherits hexBackgroundColor
     localizedIssuerName: LocalizedString | None = None
@@ -327,26 +370,32 @@ class FlightClass(ClassModel, StyleableMixin, CommonLogosMixin):
 
 
 @register_model("FlightObject", url_part="flightObject")
-class FlightObject(ObjectModel, StyleableMixin):
+class FlightObject(
+    DeprecatedKindFieldMixin,
+    DeprecatedVersionFieldMixin,
+    DeprecatedLocationsFieldMixin,
+    StyleableMixin,
+    ObjectModel,
+):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightobject
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
+    # inherits kind (deprecated)
     classReference: FlightClass | None = None
     passengerName: str | None = None
-    # TODO boardingAndSeatingInfo
-    # TODO reservationInfo
+    # TODO: boardingAndSeatingInfo
+    # TODO: reservationInfo
     securityProgramLogo: Image | None = None
     # inherits hexBackgroundColor
     # inherits id
     # inherits classId
+    # inherits version (deprecated)
     # inherits state
     # inherits barcode
     # inherits messages
     # inherits validTimeInterval
+    # inherits locations (deprecated)
     # inherits hasUsers
     # inherits smartTapRedemptionValue
     hasLinkedDevice: bool | None = False

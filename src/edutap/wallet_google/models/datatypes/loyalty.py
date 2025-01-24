@@ -5,15 +5,15 @@ from pydantic import Field
 from pydantic import model_validator
 
 
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
+
+
 class LoyaltyPointsBalance(Model):
     """
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPointsBalance
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
 
     string: str | None = None
     int_: int | None = Field(alias="int", serialization_alias="int", default=None)
@@ -39,10 +39,6 @@ class LoyaltyPoints(Model):
     data-type,
     see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPoints
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # Most deprecated are skipped.
-    # last check: 2024-11-29
 
     label: str | None = None
     balance: LoyaltyPointsBalance | None = None

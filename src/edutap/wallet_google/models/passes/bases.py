@@ -5,7 +5,6 @@ from ..datatypes.barcode import RotatingBarcode
 from ..datatypes.class_template_info import ClassTemplateInfo
 from ..datatypes.data import AppLinkData
 from ..datatypes.data import ImageModuleData
-from ..datatypes.data import InfoModuleData
 from ..datatypes.data import LinksModuleData
 from ..datatypes.data import TextModuleData
 from ..datatypes.datetime import TimeInterval
@@ -77,12 +76,6 @@ class ClassModel(WithIdModel):
     imageModulesData: list[ImageModuleData] | None = None
     textModulesData: list[TextModuleData] | None = None
     linksModuleData: LinksModuleData | None = None
-    infoModuleData: InfoModuleData | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default=None,
-    )
     enableSmartTap: bool | None = None
     redemptionIssuers: list[str] | None = None  # string (int64 format)
     securityAnimation: SecurityAnimation | None = None
@@ -114,12 +107,6 @@ class ObjectModel(WithIdModel):
     imageModulesData: list[ImageModuleData] | None = None
     textModulesData: list[TextModuleData] | None = None
     linksModuleData: LinksModuleData | None = None
-    infoModuleData: InfoModuleData | None = Field(
-        description="deprecated",
-        deprecated=True,
-        exclude=True,
-        default=None,
-    )
 
     # Security Options
     passConstraints: PassConstraints | None = None

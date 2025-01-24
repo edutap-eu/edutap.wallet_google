@@ -11,9 +11,16 @@ from .datatypes.smarttap import IssuerContactInfo
 from .datatypes.smarttap import IssuerToUserInfo
 from .datatypes.smarttap import Permission
 from .datatypes.smarttap import SmartTapMerchantData
+from .deprecated import DeprecatedKindFieldMixin
 from .passes import generic
 from .passes import retail
 from .passes import tickets_and_transit
+from pydantic import AnyHttpUrl
+from pydantic import Field
+
+
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
 
 
 @register_model(
@@ -24,13 +31,10 @@ from .passes import tickets_and_transit
     can_list=False,
     can_message=False,
 )
-class SmartTap(WithIdModel):
+class SmartTap(DeprecatedKindFieldMixin, WithIdModel):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/smarttap#resource:-smarttap
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
 
     # inherits id
     merchantId: str
@@ -48,13 +52,10 @@ class Issuer(Model):
     see: https://developers.google.com/wallet/generic/rest/v1/issuer
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
     issuerId: str
     name: str
     contactInfo: IssuerContactInfo | None = None
-    homepageUrl: str | None = None
+    homepageUrl: AnyHttpUrl | None = None
     smartTapMerchantData: SmartTapMerchantData | None = None
     callbackOptions: CallbackOptions | None = None
 
@@ -71,20 +72,14 @@ class Permissions(Model):
     see: https://developers.google.com/wallet/generic/rest/v1/permissions
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
-
     issuerId: str | None = None
-    permissions: list[Permission] = []
+    permissions: list[Permission] = Field(default_factory=list)
 
 
 class AddMessageRequest(Model):
     """
     see: https://developers.google.com/wallet/tickets/events/rest/v1/AddMessageRequest
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-11-29
 
     message: Message | None = None
 
@@ -104,20 +99,14 @@ class JwtResource(Model):
          https://developers.google.com/wallet/generic/web/javascript-button#google-pay-api-for-passes-jwt
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-12-11
-
     jwt: str
 
 
 class Resources(Model):
     """
-    see: https://developers.google.com/wallet/reference/rest/v1/jwt/insert
+    see: https://developers.google.com/wallet/reference/rest/v1/jwt/insert#resources
          https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert#resources
     """
-
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-12-11
 
     eventTicketClasses: list[tickets_and_transit.EventTicketClass] | None = None
     eventTicketObjects: list[tickets_and_transit.EventTicketObject] | None = None
@@ -140,8 +129,5 @@ class JwtResponse(Model):
     see: https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert
     """
 
-    # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-12-11
-
-    saveUri: str
+    saveUri: AnyHttpUrl
     resources: Resources

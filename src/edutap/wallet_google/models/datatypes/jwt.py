@@ -10,6 +10,10 @@ from ..passes.bases import Reference
 from datetime import datetime
 
 
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
+
+
 class JWTPayload(Model):
 
     eventTicketClasses: (
@@ -35,12 +39,18 @@ class JWTPayload(Model):
 class JWTClaims(Model):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/Jwt
+
+    Note: `exp` is added to the model as standard field of the JWT specification,
+    see https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.4,
+    but it is not documented in the Google Wallet JWT Specification!
     """
 
     iss: str
     aud: str = "google"
     typ: str = "savetowallet"
     iat: str | datetime = ""
-    exp: str | datetime = ""
     payload: JWTPayload
     origins: list[str]
+
+    # a standard field in the JWT Specification, but not documented for the Google Wallet JWT:
+    exp: str | datetime = ""

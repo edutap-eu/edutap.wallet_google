@@ -3,6 +3,12 @@ from .general import Image
 from .general import Uri
 from .localized_string import LocalizedString
 from pydantic import Field
+from typing import Annotated
+from typing_extensions import deprecated
+
+
+# Attribute order as in Google's documentation to make future updates easier!
+# last check: 2025-01-22
 
 
 class TextModuleData(Model):
@@ -19,25 +25,7 @@ class TextModuleData(Model):
     localizedBody: LocalizedString | None = None
     id: str | None = None
     # TODO: custom field validator for id with Field(pattern="^[a-zA-Z0-9_-]+$") plus None
-
-
-class LabelValue(Model):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvalue
-    """
-
-    label: str | None = None
-    value: str | None = None
-    localizedLabel: LocalizedString | None = None
-    localizedValue: LocalizedString | None = None
-
-
-class LabelValueRow(Model):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvaluerow
-    """
-
-    columns: list[LabelValue] | None = None
+    # TODO: custom modelvalidator for either header/body or localizedHeader/localizedBody
 
 
 class LinksModuleData(Model):
@@ -57,25 +45,13 @@ class ImageModuleData(Model):
     id: str | None = None
 
 
-class InfoModuleData(Model):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData
-    """
-
-    labelValueRows: list[LabelValueRow]
-    showLastUpdatedTime: bool = Field(
-        description="deprecated",
-        exclude=True,
-        default=False,
-    )
-
-
 class AppTarget(Model):
     """
-    see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#apptargets
+    see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#apptarget
     """
 
     targetUri: Uri | None = None
+    packageName: str | None = None
 
 
 class AppLinkInfo(Model):
@@ -83,9 +59,36 @@ class AppLinkInfo(Model):
     see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#applinkinfo
     """
 
-    appLogoImage: Image | None = None
-    title: LocalizedString | None = None
-    description: LocalizedString | None = None
+    appLogoImage: Annotated[
+        Image | None,
+        Field(
+            deprecated=deprecated(
+                'The Attribute "appLogoImage" on "AppLinkInfo" is deprecated. Image isn\'t supported in the app link module'
+            ),
+            exclude=True,
+            default=None,
+        ),
+    ]
+    title: Annotated[
+        LocalizedString | None,
+        Field(
+            deprecated=deprecated(
+                'The Attribute "title" on "AppLinkInfo" is deprecated. Title isn\'t supported in the app link module'
+            ),
+            exclude=True,
+            default=None,
+        ),
+    ]
+    description: Annotated[
+        LocalizedString | None,
+        Field(
+            deprecated=deprecated(
+                'The Attribute "description" on "AppLinkInfo" is deprecated. Description isn\'t supported in the app link module'
+            ),
+            exclude=True,
+            default=None,
+        ),
+    ]
     appTarget: AppTarget | None = None
 
 
@@ -95,5 +98,15 @@ class AppLinkData(Model):
     """
 
     androidAppLinkInfo: AppLinkInfo | None = None
-    iosAppLinkInfo: AppLinkInfo | None = None
+    iosAppLinkInfo: Annotated[
+        AppLinkInfo | None,
+        Field(
+            deprecated=deprecated(
+                'The Attribute "iosAppLinkInfo" on "AppLinkData" is deprecated. Links to open iOS apps are not supported'
+            ),
+            exclude=True,
+            default=None,
+        ),
+    ]
     webAppLinkInfo: AppLinkInfo | None = None
+    displayText: LocalizedString | None = None
