@@ -4,10 +4,9 @@ Those must not be serialized again, nor repeated in the special models.
 To handle this, we create mixins which can be added to the models which still have the deprecated fields.
 """
 
-from edutap.wallet_google.models.datatypes.data import InfoModuleData
-from edutap.wallet_google.models.datatypes.general import Image
-from edutap.wallet_google.models.datatypes.location import LatLongPoint
+from .bases import Model
 from pydantic import Field
+from pydantic import AnyUrl
 from typing import Annotated
 from typing_extensions import deprecated
 
@@ -67,6 +66,20 @@ class DeprecatedVersionFieldMixin:
     ]
 
 
+class LatLongPoint(DeprecatedKindFieldMixin, Model):
+    """
+    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/LatLongPoint
+
+    To avoid circular imports this model is a duplicate of the one in location.py
+
+    Deprecated!
+    """
+
+    # inherits kind (deprecated)
+    latitude: float = Field(ge=-90.0, le=90.0)
+    longitude: float = Field(ge=-180.0, le=180.0)
+
+
 class DeprecatedLocationsFieldMixin:
     """
     Mixin to add the deprecated locations field to a model.
@@ -81,6 +94,83 @@ class DeprecatedLocationsFieldMixin:
             ),
             exclude=True,
             default=None,
+        ),
+    ]
+
+
+class TranslatedString(DeprecatedKindFieldMixin, Model):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString#translatedstring
+
+    To avoid circular imports this model is a duplicate of the one in location.py
+
+    Deprecated!
+    """
+
+    # inherits kind (deprecated)
+    language: str | None = Field(default=None)
+    value: str | None = Field(default=None)
+
+
+class LocalizedString(DeprecatedKindFieldMixin, Model):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString
+
+    To avoid circular imports this model is a duplicate of the one in localized_string.py
+
+    Deprecated!
+    """
+
+    # inherits kind (deprecated)
+    translatedValues: list[TranslatedString] = Field(default_factory=list)
+    defaultValue: TranslatedString
+
+
+class LabelValue(Model):
+    """
+    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvalue
+
+    To avoid circular imports this model is a duplicate of the one in data.py
+
+    Deprecated!
+    """
+
+    label: str | None = None
+    value: str | None = None
+    localizedLabel: LocalizedString | None = None
+    localizedValue: LocalizedString | None = None
+
+
+class LabelValueRow(Model):
+    """
+    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvaluerow
+
+    To avoid circular imports this model is a duplicate of the one in data.py
+
+    Deprecated!
+    """
+
+    columns: list[LabelValue] | None = None
+
+
+class InfoModuleData(Model):
+    """
+    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData
+
+    To avoid circular imports this model is a duplicate of the one in data.py
+
+    Deprecated!
+    """
+
+    labelValueRows: list[LabelValueRow]
+    showLastUpdateTime: Annotated[
+        bool,
+        Field(
+            deprecated=deprecated(
+                'The Attribute "showLastUpdateTime" on "InfoModuleData" is deprecated.'
+            ),
+            exclude=True,
+            default=False,
         ),
     ]
 
@@ -101,6 +191,51 @@ class DeprecatedInfoModuleDataFieldMixin:
             default=None,
         ),
     ]
+
+class ImageUri(Model):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/Image#imageuri
+
+    To avoid circular imports this model is a duplicate of the one in general.py
+
+    Deprecated!
+    """
+
+    uri: AnyUrl
+    description: Annotated[
+        str | None,
+        Field(
+            deprecated=deprecated(
+                'The Attribute "description" is deprecated on "ImageUri", use "contentDesceription" on parent "Image" Instance.'
+            ),
+            default=None,
+            exclude=True,
+        ),
+    ]
+    localizedDescription: Annotated[
+        LocalizedString | None,
+        Field(
+            deprecated=deprecated(
+                'The Attribute "localizedDescription" is deprecated on "ImageUri", use "contentDesceription" on parent "Image" Instance.'
+            ),
+            default=None,
+            exclude=True,
+        ),
+    ]
+
+
+class Image(DeprecatedKindFieldMixin, Model):
+    """
+    see: https://developers.google.com/wallet/generic/rest/v1/Image
+
+    To avoid circular imports this model is a duplicate of the one in general.py
+
+    Deprecated!
+    """
+
+    # inherits kind (deprecated)
+    sourceUri: ImageUri
+    contentDescription: LocalizedString | None = None
 
 
 class DeprecatedWordMarkFieldMixin:

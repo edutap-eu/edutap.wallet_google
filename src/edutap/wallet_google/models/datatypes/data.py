@@ -25,25 +25,7 @@ class TextModuleData(Model):
     localizedBody: LocalizedString | None = None
     id: str | None = None
     # TODO: custom field validator for id with Field(pattern="^[a-zA-Z0-9_-]+$") plus None
-
-
-class LabelValue(Model):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvalue
-    """
-
-    label: str | None = None
-    value: str | None = None
-    localizedLabel: LocalizedString | None = None
-    localizedValue: LocalizedString | None = None
-
-
-class LabelValueRow(Model):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvaluerow
-    """
-
-    columns: list[LabelValue] | None = None
+    # TODO: custom modelvalidator for either header/body or localizedHeader/localizedBody
 
 
 class LinksModuleData(Model):
@@ -63,24 +45,6 @@ class ImageModuleData(Model):
     id: str | None = None
 
 
-class InfoModuleData(Model):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData
-    """
-
-    labelValueRows: list[LabelValueRow]
-    showLastUpdateTime: Annotated[
-        bool,
-        Field(
-            deprecated=deprecated(
-                'The Attribute "showLastUpdateTime" on "InfoModuleData" is deprecated.'
-            ),
-            exclude=True,
-            default=False,
-        ),
-    ]
-
-
 class AppTarget(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#apptarget
@@ -95,7 +59,6 @@ class AppLinkInfo(Model):
     see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#applinkinfo
     """
 
-    #  TODO: add deprecated decorator to appLogoImage, title, description
     appLogoImage: Annotated[
         Image | None,
         Field(
