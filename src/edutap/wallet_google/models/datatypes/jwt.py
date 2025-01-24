@@ -54,4 +54,3 @@ class JWTClaims(Model):
 
     # a standard field in the JWT Specification, but not documented for the Google Wallet JWT:
     exp: str | datetime = ""
-

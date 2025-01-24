@@ -1,5 +1,4 @@
 from ...registry import register_model
-from ..datatypes.data import ImageModuleData
 from ..datatypes.datetime import DateTime
 from ..datatypes.enums import NotificationSettingsForUpdates
 from ..datatypes.enums import RedemptionChannel
