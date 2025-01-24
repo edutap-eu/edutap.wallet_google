@@ -230,8 +230,6 @@ class LoyaltyObject(
     # inherits smartTapRedemptionValue
     hasLinkedDevice: bool | None = None
     disableExpirationNotification: bool | None = False
-    # TODO: 'imageModule' is not specified in the documentation.
-    imageModule: ImageModuleData | None = None
     # inherits infoModuleData
     # inherits imageModulesData
     # inherits textModulesData
