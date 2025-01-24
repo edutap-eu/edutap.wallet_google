@@ -15,6 +15,7 @@ from .deprecated import DeprecatedKindFieldMixin
 from .passes import generic
 from .passes import retail
 from .passes import tickets_and_transit
+from pydantic import AnyHttpUrl
 from pydantic import Field
 
 
@@ -54,7 +55,7 @@ class Issuer(Model):
     issuerId: str
     name: str
     contactInfo: IssuerContactInfo | None = None
-    homepageUrl: str | None = None
+    homepageUrl: AnyHttpUrl | None = None
     smartTapMerchantData: SmartTapMerchantData | None = None
     callbackOptions: CallbackOptions | None = None
 
@@ -128,5 +129,5 @@ class JwtResponse(Model):
     see: https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert
     """
 
-    saveUri: str
+    saveUri: AnyHttpUrl
     resources: Resources
