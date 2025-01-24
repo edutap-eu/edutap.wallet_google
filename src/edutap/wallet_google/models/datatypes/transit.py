@@ -3,7 +3,7 @@ from ..datatypes.enums import ActivationState
 from ..datatypes.money import Money
 from .enums import FareClass
 from .general import LocalizedString
-from pydantic import HttpUrl
+from pydantic import AnyHttpUrl
 from pydantic import model_validator
 
 # Attribute order as in Google's documentation to make future updates easier!
@@ -15,7 +15,7 @@ class ActivationOptions(Model):
     see: https://developers.google.com/wallet/reference/rest/v1/transitclass#activationoptions
     """
 
-    activationUrl: HttpUrl | None = None
+    activationUrl: AnyHttpUrl | None = None
     allowReactivation: bool = False
 
 
