@@ -1,13 +1,14 @@
 [project]
 name = "edutap.wallet_google"
-version = "2.0.0a1.dev0"
+version = "2.0.0b1.dev0"
 description = "Library for Google Wallet Communication"
-keywords = ["wallet", "google", "api", "pass"]
+keywords = ["wallet", "google", "api", "pass", 'fastapi', 'digital identity']
 readme = "README.md"
 authors = [
-    {name = "Philipp Auersperg-Castell", email = "phil@bluedynamics.com"},
     {name = "Alexander Loechel", email = "Alexander.Loechel@lmu.de"},
+    {name = "Philipp Auersperg-Castell", email = "phil@bluedynamics.com"},
     {name = "Jens Klein", email = "jk@kleinundpartner.at"},
+    {name = "Robert Niederreiter", email = "office@squarewave.at"},
 ]
 requires-python = ">=3.10"
 license = { text = "EUPL 1.2" }
