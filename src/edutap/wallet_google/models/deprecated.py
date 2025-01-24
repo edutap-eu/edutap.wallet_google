@@ -42,7 +42,6 @@ class DeprecatedAllowMultipleUsersPerObjectMixin:
                 'Attribute "allowMultipleUsersPerObject" was used in the past to allow multiple users per object but is now deprecated.'
             ),
             exclude=True,
-            # TODO: should this be set to False? or rather None?
             default=False,
         ),
     ]
