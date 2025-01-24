@@ -315,7 +315,10 @@ class OfferClass(
 
 @register_model("OfferObject", url_part="offerObject")
 class OfferObject(
-    DeprecatedKindFieldMixin, DeprecatedVersionFieldMixin, StyleableMixin, ObjectModel
+    DeprecatedKindFieldMixin,
+    DeprecatedVersionFieldMixin,
+    StyleableMixin,
+    ObjectModel,
 ):
     """
     see: https://developers.google.com/wallet/retail/offers/rest/v1/offerobject

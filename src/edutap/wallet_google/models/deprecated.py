@@ -5,8 +5,8 @@ To handle this, we create mixins which can be added to the models which still ha
 """
 
 from .bases import Model
-from pydantic import Field
 from pydantic import AnyUrl
+from pydantic import Field
 from typing import Annotated
 from typing_extensions import deprecated
 
@@ -191,6 +191,7 @@ class DeprecatedInfoModuleDataFieldMixin:
             default=None,
         ),
     ]
+
 
 class ImageUri(Model):
     """
