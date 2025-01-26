@@ -48,7 +48,7 @@ callback = [
     "httpx",
 ]
 test = [
-    "edutap.wallet_google[callback]",
+    "edutap.wallet-google[callback]",
     "pytest-cov",
     "pytest-explicit",
     "pytest",
