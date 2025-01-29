@@ -1,6 +1,6 @@
 from pathlib import Path
+from pydantic import AnyHttpUrl
 from pydantic import Field
-from pydantic import HttpUrl
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 from typing import Literal
@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     )
 
     record_api_calls_dir: Path | None = None
-    api_url: HttpUrl = HttpUrl(API_URL)
-    save_url: HttpUrl = HttpUrl(SAVE_URL)
+    api_url: AnyHttpUrl = AnyHttpUrl(API_URL)
+    save_url: AnyHttpUrl = AnyHttpUrl(SAVE_URL)
 
     handler_prefix: str = "/wallet/google"
     handler_prefix_callback: str = ""
