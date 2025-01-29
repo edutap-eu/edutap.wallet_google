@@ -45,4 +45,3 @@ Please report any issues at our [issue tracker](https://github.com/edutap-eu/edu
 
 The code is under [European Union Public Licence v1.2](https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12) (EUPL).
 The EUPL is an [OpenSource Initiative (OSI) approved Free and OpenSource license](https://opensource.org/license/eupl-1-2/).
-
