@@ -16,7 +16,7 @@ def get_image_providers() -> list[ImageProvider]:
 
 def get_callback_handlers() -> list[CallbackHandler]:
     eps = entry_points(group="edutap.wallet_google.plugins")
-    plugins = [ep.load() for ep in eps if "CallbackHandler" in ep.name]
+    plugins = [ep.load() for ep in eps if ep.name.startswith("CallbackHandler")]
     if not plugins:
         raise NotImplementedError("No callback handler plugin found.")
     for plugin in plugins:
