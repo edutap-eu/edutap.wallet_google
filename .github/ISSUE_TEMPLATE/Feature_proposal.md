@@ -35,4 +35,3 @@ Detailed proposal with implementation details and - if needed - possible variant
 <!--
 What will break/ affect existing installations of Plone after upgrade, including end user point of view, training efforts etc.
 -->
-
