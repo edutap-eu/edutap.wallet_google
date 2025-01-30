@@ -1,5 +1,5 @@
 ---
-name: "\U0010067 Question"
+name: "\U00002753 Question"
 about: Question
 title: ''
 assignees: ''
