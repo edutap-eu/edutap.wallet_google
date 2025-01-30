@@ -4,9 +4,9 @@ from .enums import AnimationType
 from .enums import NfcConstraint
 from .enums import ScreenshotEligibility
 from .localized_string import LocalizedString
+from pydantic import AnyHttpUrl
 from pydantic import AnyUrl
 from pydantic import Field
-from pydantic import HttpUrl
 from typing import Annotated
 from typing_extensions import deprecated
 
@@ -112,9 +112,9 @@ class CallbackOptions(Model):
     see: https://developers.google.com/wallet/generic/rest/v1/CallbackOptions
     """
 
-    url: HttpUrl | None = None
+    url: AnyHttpUrl | None = None
     updateRequestUrl: Annotated[
-        HttpUrl | None,
+        AnyHttpUrl | None,
         Field(
             deprecated=deprecated(
                 'The Parameter "updateRequestUrl" is deprecated on "CallbackOption", use "url" instead.'
