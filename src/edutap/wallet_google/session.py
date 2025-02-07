@@ -1,4 +1,6 @@
 from .registry import lookup_metadata_by_name
+from .settings import CallbackHandlerSettings
+from .settings import ImageHandlerSettings
 from .settings import Settings
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials
@@ -57,6 +59,20 @@ class SessionManager:
         if settings is None:
             self._settings = Settings()
         return self._settings
+
+    @property
+    def callback_settings(self) -> CallbackHandlerSettings:
+        settings = getattr(self, "_callback_settings", None)
+        if settings is None:
+            self._callback_settings = CallbackHandlerSettings()
+        return self._callback_settings
+
+    @property
+    def image_settings(self) -> ImageHandlerSettings:
+        settings = getattr(self, "_image_settings", None)
+        if settings is None:
+            self._image_settings = ImageHandlerSettings()
+        return self._image_settings
 
     def _make_session(self) -> AuthorizedSession:
         if not self.settings.credentials_file.is_file():

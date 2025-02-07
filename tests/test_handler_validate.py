@@ -4,10 +4,13 @@ import json
 import pytest
 
 
-def test_google_public_key_cached_empty(mock_settings):
+def test_google_public_key_cached_empty(mock_callback_settings):
     from edutap.wallet_google.handlers.validate import google_root_signing_public_keys
 
-    assert google_root_signing_public_keys(mock_settings.google_environment) is not None
+    assert (
+        google_root_signing_public_keys(mock_callback_settings.google_environment)
+        is not None
+    )
 
     from edutap.wallet_google.handlers.validate import (
         GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE,
@@ -15,11 +18,14 @@ def test_google_public_key_cached_empty(mock_settings):
 
     assert (
         GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(
-            mock_settings.google_environment, None
+            mock_callback_settings.google_environment, None
         )
         is not None
     )
-    assert google_root_signing_public_keys(mock_settings.google_environment) is not None
+    assert (
+        google_root_signing_public_keys(mock_callback_settings.google_environment)
+        is not None
+    )
 
 
 callback_data_for_test_failure = {
@@ -45,10 +51,10 @@ callback_data_for_test_failure = {
 
 
 @pytest.mark.skip(reason="Not implemented")
-def test_handler_validate_invalid(mock_settings):
+def test_handler_validate_invalid(mock_callback_settings):
     from edutap.wallet_google.handlers.validate import verified_signed_message
 
-    mock_settings.handler_callback_verify_signature = "1"
+    mock_callback_settings.verify_signature = "1"
 
     data = CallbackData.model_validate(callback_data_for_test_failure)
     with pytest.raises(Exception):
@@ -68,10 +74,10 @@ callback_data = {
 }
 
 
-def test_handler_validate_ok(mock_settings):
+def test_handler_validate_ok(mock_callback_settings):
     from edutap.wallet_google.handlers.validate import verified_signed_message
 
-    mock_settings.handler_callback_verify_signature = "0"
+    mock_callback_settings.verify_signature = "0"
 
     data = CallbackData.model_validate(callback_data)
     verified_signed_message(data)

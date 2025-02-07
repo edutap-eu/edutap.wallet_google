@@ -97,6 +97,22 @@ def mock_settings():
 
 
 @pytest.fixture
+def mock_callback_settings():
+    from edutap.wallet_google.session import session_manager
+
+    yield session_manager.callback_settings
+    del session_manager._callback_settings
+
+
+@pytest.fixture
+def mock_image_settings():
+    from edutap.wallet_google.session import session_manager
+
+    yield session_manager.image_settings
+    del session_manager._image_settings
+
+
+@pytest.fixture
 def mock_fernet_encryption_key(mock_settings):
     mock_settings.fernet_encryption_key = "TDTPJVv24gha-jRX0apPgPpMDN2wX1kVSNNZdWXcz8E="
 
