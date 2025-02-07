@@ -16,11 +16,11 @@ real_callback_data = {
 }
 
 
-def test_callback_disabled_signature_check_OK(mock_settings):
+def test_callback_disabled_signature_check_OK(mock_callback_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.handler_callback_verify_signature = "0"
+    mock_callback_settings.verify_signature = "0"
 
     callback_data = CallbackData(**real_callback_data)
 
@@ -36,11 +36,11 @@ def test_callback_disabled_signature_check_OK(mock_settings):
     assert resp.json() == {"status": "success"}
 
 
-def test_callback_disabled_signature_check_ERROR(mock_settings):
+def test_callback_disabled_signature_check_ERROR(mock_callback_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.handler_callback_verify_signature = "0"
+    mock_callback_settings.verify_signature = "0"
 
     callback_data = CallbackData(**real_callback_data)
     callback_data.signedMessage = '{"classId":"1.x","objectId":"1.y","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":""}'
@@ -57,11 +57,13 @@ def test_callback_disabled_signature_check_ERROR(mock_settings):
     assert resp.text == '{"detail":"Error while handling the callbacks (exception)."}'
 
 
-def test_callback_disabled_signature_check_NOTIMPLEMENTED(monkeypatch, mock_settings):
+def test_callback_disabled_signature_check_NOTIMPLEMENTED(
+    monkeypatch, mock_callback_settings
+):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.handler_callback_verify_signature = "0"
+    mock_callback_settings.verify_signature = "0"
 
     def raise_not_implemented():
         raise NotImplementedError
@@ -87,13 +89,13 @@ def test_callback_disabled_signature_check_NOTIMPLEMENTED(monkeypatch, mock_sett
     assert resp.text == '{"detail":"No callback handlers were registered."}'
 
 
-def test_callback_disabled_signature_check_TIMEOUT(mock_settings):
+def test_callback_disabled_signature_check_TIMEOUT(mock_callback_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.handler_callback_verify_signature = "0"
+    mock_callback_settings.verify_signature = "0"
     # set low timeout to trigger a timeout cancellation
-    mock_settings.handlers_callback_timeout = 0.1
+    mock_callback_settings.timeout = 0.1
 
     callback_data = CallbackData(**real_callback_data)
     callback_data.signedMessage = '{"classId":"TIMEOUT.x","objectId":"1.x","eventType":"save","expTimeMillis":250,"count":1,"nonce":"abcde"}'
@@ -134,8 +136,8 @@ def test_image_ERROR(mock_fernet_encryption_key):
     assert resp.text == '{"detail":"Image not found."}'
 
 
-def test_image_TIMEOUT(mock_settings, mock_fernet_encryption_key):
-    mock_settings.handlers_image_timeout = 0.1
+def test_image_TIMEOUT(mock_image_settings, mock_fernet_encryption_key):
+    mock_image_settings.timeout = 0.1
 
     from edutap.wallet_google.handlers.fastapi import router
     from edutap.wallet_google.utils import encrypt_data

@@ -147,8 +147,8 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
     issuer_id = message.classId.split(".")[0]
 
     # shortcut if signature validation is disabled
-    settings = session_manager.settings
-    if settings.handler_callback_verify_signature == "0":
+    settings = session_manager.callback_settings
+    if settings.verify_signature == "0":
         return message
 
     if data.protocolVersion != PROTOCOL_VERSION:

@@ -32,25 +32,18 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    record_api_calls_dir: Path | None = None
     api_url: AnyHttpUrl = AnyHttpUrl(API_URL)
     save_url: AnyHttpUrl = AnyHttpUrl(SAVE_URL)
 
     handler_prefix: str = "/wallet/google"
-    handler_prefix_callback: str = ""
-    handler_prefix_images: str = ""
-    handler_callback_verify_signature: str = "1"
-    handler_image_cache_control: str = "no-cache"
-    handlers_callback_timeout: float = 5.0
-    handlers_image_timeout: float = 5.0
-
-    credentials_file: Path = ROOT_DIR / "tests" / "data" / "credentials_fake.json"
-    credentials_scopes: list[str] = SCOPES
-    test_issuer_id: str = Field(default="")
 
     fernet_encryption_key: str = ""
 
-    google_environment: Literal["production", "testing"] = "testing"
+    credentials_file: Path = ROOT_DIR / "tests" / "data" / "credentials_fake.json"
+    credentials_scopes: list[str] = SCOPES
+
+    record_api_calls_dir: Path | None = None
+    test_issuer_id: str = Field(default="")
 
     cached_credentials_info: dict[str, str] = {}
 
@@ -69,3 +62,48 @@ class Settings(BaseSettings):
                 f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.credentials_file} content is not a dict"
             )
         return self.cached_credentials_info
+
+
+class CallbackHandlerSettings(BaseSettings):
+    """Settings for Google Wallet Preferences.
+
+    For more on how these settings work follow https://docs.pydantic.dev/latest/concepts/pydantic_settings/
+
+    Any default can be overridden by setting the corresponding environment variable prefixed with `EDUTAP_WALLET_GOOGLE_`.
+    If a `.env` file is present in the root directory of the project, the environment variables will be loaded from there.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix=ENV_PREFIX + "HANDLER_CALLBACK_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    google_environment: Literal["production", "testing"] = "testing"
+    verify_signature: str = "1"
+    router_prefix: str = ""
+    timeout: float = 5.0
+
+
+class ImageHandlerSettings(BaseSettings):
+    """Settings for Google Wallet Preferences.
+
+    For more on how these settings work follow https://docs.pydantic.dev/latest/concepts/pydantic_settings/
+
+    Any default can be overridden by setting the corresponding environment variable prefixed with `EDUTAP_WALLET_GOOGLE_`.
+    If a `.env` file is present in the root directory of the project, the environment variables will be loaded from there.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix=ENV_PREFIX + "HANDLER_IMAGE_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    router_prefix: str = ""
+    cache_control: str = "no-cache"
+    timeout: float = 5.0
