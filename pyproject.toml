@@ -61,6 +61,10 @@ typecheck  = [
     "pytest-stub",
     "types-cryptography",
 ]
+dev = [
+    "pdbpp",
+    "ipython",
+]
 develop = [
     "pdbpp",
     "ipython",

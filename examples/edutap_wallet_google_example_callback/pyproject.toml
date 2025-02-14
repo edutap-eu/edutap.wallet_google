@@ -8,3 +8,4 @@ dependencies = [
 
 [project.entry-points.'edutap.wallet_google.plugins']
 CallbackHandler = 'edutap_wallet_google_example_callback:LoggingCallbackHandler'
+ImageProvider = 'edutap_wallet_google_inactive_example_image:DisabledImageProvider'
