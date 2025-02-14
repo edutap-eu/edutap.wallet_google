@@ -15,6 +15,9 @@ class LoggingCallbackHandler:
     Implementation of edutap.wallet_google.protocols.CallbackHandler
     """
 
+    def __init__(self):
+        self.active = True
+
     async def handle(
         self,
         class_id: str,

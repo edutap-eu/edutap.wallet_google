@@ -6,13 +6,12 @@ from typing import runtime_checkable
 @runtime_checkable
 class ImageProvider(Protocol):
 
-    async def active(self) -> bool:
-        """
-        Indicates if the Protocol Service is active and should be used.
+    # active: bool
+    """
+    Indicates if the Protocol Service is active and should be used.
 
-        :returns: bool if service is configured and available.
-        """
-        return True  # should be changed to default False on next major Update
+    :returns: bool if service is configured and available.
+    """
 
     async def image_by_id(self, image_id: str) -> ImageData:
         """
@@ -26,13 +25,12 @@ class ImageProvider(Protocol):
 @runtime_checkable
 class CallbackHandler(Protocol):
 
-    async def active(self) -> bool:
-        """
-        Indicates if the Protocol Service is active and should be used.
+    # active: bool
+    """
+    Indicates if the Protocol Service is active and should be used.
 
-        :returns: bool if service is configured and available.
-        """
-        return True  # should be changed to default False on next major Update
+    :returns: bool if service is configured and available.
+    """
 
     async def handle(
         self,

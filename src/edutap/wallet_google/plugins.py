@@ -13,10 +13,10 @@ def get_image_providers() -> list[ImageProvider]:
             raise ValueError(f"{plugin} not implements ImageProvider")
     active_plugins: list[ImageProvider] = []
     for plugin in plugins:
-        if getattr(
-            plugin(), "active", True
-        ):  # should be changed to default False on next major Update
+        if getattr(plugin(), "active", True):
             active_plugins.append(plugin())
+    if not active_plugins:
+        raise NotImplementedError("No active image provider plug-in found")
     return active_plugins
 
 
@@ -30,8 +30,8 @@ def get_callback_handlers() -> list[CallbackHandler]:
             raise ValueError(f"{plugin} not implements CallbackHandler")
     active_plugins: list[CallbackHandler] = []
     for plugin in plugins:
-        if getattr(
-            plugin(), "active", True
-        ):  # should be changed to default False on next major Update
+        if getattr(plugin(), "active", True):  # active by default
             active_plugins.append(plugin())
+    if not active_plugins:
+        raise NotImplementedError("No active callback handler plugin found.")
     return active_plugins
