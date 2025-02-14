@@ -11,7 +11,13 @@ def get_image_providers() -> list[ImageProvider]:
     for plugin in plugins:
         if not isinstance(plugin, ImageProvider):
             raise ValueError(f"{plugin} not implements ImageProvider")
-    return [plugin() for plugin in plugins]
+    active_plugins: list[ImageProvider] = []
+    for plugin in plugins:
+        if getattr(
+            plugin(), "active", True
+        ):  # should be changed to default False on next major Update
+            active_plugins.append(plugin())
+    return active_plugins
 
 
 def get_callback_handlers() -> list[CallbackHandler]:
@@ -22,4 +28,10 @@ def get_callback_handlers() -> list[CallbackHandler]:
     for plugin in plugins:
         if not isinstance(plugin, CallbackHandler):
             raise ValueError(f"{plugin} not implements CallbackHandler")
-    return [plugin() for plugin in plugins]
+    active_plugins: list[CallbackHandler] = []
+    for plugin in plugins:
+        if getattr(
+            plugin(), "active", True
+        ):  # should be changed to default False on next major Update
+            active_plugins.append(plugin())
+    return active_plugins
