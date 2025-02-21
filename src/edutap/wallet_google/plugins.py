@@ -17,6 +17,8 @@ _PLUGIN_REGISTRY: dict[str, list[CallbackHandler | ImageProvider]] = {
 
 
 def add_plugin(name: str, klass: CallbackHandler | ImageProvider):
+    if not isinstance(klass, _POSSIBLE_PLUGINS[name]):
+        raise TypeError(f"{klass} not implements {name}")
     _PLUGIN_REGISTRY[name].append(klass)
 
 
