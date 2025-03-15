@@ -2,3 +2,4 @@
 # models also registers the models in the registry
 from . import api  # noqa: F401
 from . import models  # noqa: F401
+from . import utils  # noqa: F401
