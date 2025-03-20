@@ -41,13 +41,13 @@ jobs:
       url: https://pypi.org/edutap-eu/edutap.wallet_google/
     steps:
       - uses: actions/checkout@v4
-      - name: Check for changed models or API
-        id: changed-models-or-api
-        uses: tj-actions/changed-files@v45
-        with:
-          files: |
-            src/edutap/wallet_google/models/**
-            src/edutap/wallet_google/api.py
+      # - name: Check for changed models or API
+      #   id: changed-models-or-api
+      #   uses: tj-actions/changed-files@v45
+      #   with:
+      #     files: |
+      #       src/edutap/wallet_google/models/**
+      #       src/edutap/wallet_google/api.py
       - name: Install the latest version of uv
         if: steps.changed-models-or-api.outputs.any_changed == 'true'
         uses: astral-sh/setup-uv@v5
