@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     handler_prefix: str = "/wallet/google"
     handler_prefix_callback: str = ""
     handler_prefix_images: str = ""
+    handler_prefix_private_content_update: str = ""
     handler_callback_verify_signature: str = "1"
     handler_image_cache_control: str = "no-cache"
     handlers_callback_timeout: float = 5.0
