@@ -232,6 +232,37 @@ def update(
     return model.model_validate_json(response.content)
 
 
+def setPassUpdateNotice(
+    externalPassId: str, updatedPassJwTSignature: str, updateUri: str
+) -> bool:
+    """
+    Sets the update notice for a Google Wallet GenericPrivatePass object.
+    :param externalPassId:           External pass id of the object to update.
+    :param updatedPassJwTSignature:  JWT signature of the updated pass.
+    :param updateUri:                URI to the updated pass.
+    :raises QuotaExceededException:  When the quota was exceeded
+    :raises LookupError:             When the resource was not found (404)
+    :raises WalletException:         When the response status code is not 200 or 404
+    :return:                         True if the update notice was set successfully.
+    """
+    response = session_manager.session.post(
+        url=session_manager.url(
+            name="GenericPrivatePass",
+            additional_path="setPassUpdateNotice",
+        ),
+        data={
+            "externalPassId": externalPassId,
+            "updatedPassJwTSignature": updatedPassJwTSignature,
+            "updateUri": updateUri,
+        },
+    )
+    if response.status_code == 404:
+        raise LookupError(f"Error 404, {externalPassId} not found: - {response.text}")
+    if response.status_code != 200:
+        raise WalletException(f"Error: {response.status_code} - {response.text}")
+    return True
+
+
 def message(
     name: str,
     resource_id: str,
