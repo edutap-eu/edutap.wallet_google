@@ -314,13 +314,27 @@ def listing(
         if response.status_code != 200:
             raise Exception(f"Error: {response.status_code} - {response.text}")
 
-        data = json.loads(response.content)
-        for count, record in enumerate(data["resources"]):
-            try:
-                yield model.model_validate(record)
-            except Exception:
-                logger.exception(f"Error validating record {count}:\n{record}")
-                raise
+        try:
+            data = json.loads(response.content)
+            if "resources" not in data.keys():
+                logger.warning(
+                    f"Response does not contain 'resources' key, got: {data.keys()}"
+                )
+                pagination = Pagination.model_validate(data.get("pagination", {}))
+                if pagination.resultsPerPage == 0:
+                    logger.warning(
+                        "No results per page set, this might be an error in the API response."
+                    )
+                    break
+            for count, record in enumerate(data["resources"]):
+                try:
+                    yield model.model_validate(record)
+                except Exception:
+                    logger.exception(f"Error validating record {count}:\n{record}")
+                    raise
+        except KeyError as e:
+            logger.error(f"Error parsing response: {e}")
+            logger.error(f"Response content: {response.content!r}")
         if not is_pageable:
             break
         pagination = Pagination.model_validate(data["pagination"])
