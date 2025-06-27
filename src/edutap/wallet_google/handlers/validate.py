@@ -169,6 +169,7 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
         raise ValueError("Expired intermediate signing key")
 
     # check signed message's signature
+    # https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions#verify-the-signature
     intermediate_public_key = _load_public_key(intermediate_signing_key.keyValue)
     signature = base64.decodebytes(bytes(data.signature, "utf-8"))
     signed_data = _construct_signed_data(
