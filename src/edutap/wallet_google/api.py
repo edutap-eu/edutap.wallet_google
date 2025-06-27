@@ -72,6 +72,18 @@ def _validate_data_and_convert_to_json(
     return (identifier, verified_json)
 
 
+class WalletException(Exception):
+    pass
+
+
+class ObjectAlreadyExistsException(WalletException):
+    pass
+
+
+class QuotaExceededException(WalletException):
+    pass
+
+
 def new(
     name: str,
     data: dict[str, typing.Any] = {},
@@ -95,10 +107,12 @@ def create(
     """
     Creates a Google Wallet items. `C` in CRUD.
 
-    :param data:       Data to pass to the Google RESTful API.
-                       A model instance, has to be a registered model.
-    :raises Exception: When the response status code is not 200.
-    :return:           The created model based on the data returned by the Restful API.
+    :param data:                          Data to pass to the Google RESTful API.
+                                          A model instance, has to be a registered model.
+    :raises QuotaExceededException:       When the quota was exceeded.
+    :raises ObjectAlreadyExistsException: When the id to be created already exists at Google.
+    :raises WalletException:              When the response status code is not 200.
+    :return:                              The created model based on the data returned by the Restful API.
     """
     model_metadata = lookup_metadata_by_model_instance(data)
     name = model_metadata["name"]
@@ -113,12 +127,18 @@ def create(
         data=verified_json.encode("utf-8"),
         headers=headers,
     )
-    if response.status_code == 409:
-        raise Exception(
-            f"Wallet Object {name} {getattr(data, 'id', 'No ID')} already exists\n{response.text}"
+    if response.status_code == 403:
+        raise QuotaExceededException(
+            f"Quota exceeded while trying to create {name} {getattr(data, 'id', 'No ID')}"
+        )
+    elif response.status_code == 409:
+        raise ObjectAlreadyExistsException(
+            f"{name} {getattr(data, 'id', 'No ID')} already exists\n{response.text}"
         )
     elif response.status_code != 200:
-        raise Exception(f"Error at {url}: {response.status_code} - {response.text}")
+        raise WalletException(
+            f"Error on create of {name} {getattr(data, 'id', 'No ID')} at {url}: {response.status_code} - {response.text}"
+        )
 
     logger.debug(f"RAW-Response: {response.content!r}")
     try:
@@ -135,18 +155,23 @@ def read(
     """
     Reads a Google Wallet Class or Object. `R` in CRUD.
 
-    :param name:               Registered name of the model to use
-    :param resource_id:        Identifier of the resource to read from the Google RESTful API
-    :raises LookupError:       When the resource was not found (404).
-    :raises Exception:         When the response status code is not 200 or 404.
-    :return:                   the created model based on the data returned by the Restful API
+    :param name:                      Registered name of the model to use
+    :param resource_id:               Identifier of the resource to read from the Google RESTful API
+    :QuotaExceededException:          When the quota was exceeded.
+    :raises LookupError:              When the resource was not found (404).
+    :raises WalletException           When the response status code is not 200 or 404.
+    :return:                          the created model based on the data returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "read")
     session = session_manager.session
     url = session_manager.url(name, f"/{resource_id}")
     response = session.get(url=url)
 
-    if response.status_code == 404:
+    if response.status_code == 403:
+        raise QuotaExceededException(
+            f"Quota exceeded while trying to read {name} {resource_id}"
+        )
+    elif response.status_code == 404:
         raise LookupError(f"{url}: {name} not found")
 
     if response.status_code == 200:
@@ -154,7 +179,7 @@ def read(
         logger.debug(f"RAW-Response: {response.content!r}")
         return model.model_validate_json(response.content)
 
-    raise Exception(f"{url} {response.status_code} - {response.text}")
+    raise WalletException(f"{url} {response.status_code} - {response.text}")
 
 
 def update(
@@ -165,12 +190,13 @@ def update(
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
 
-    :param data:         Data to pass to the Google RESTful API.
-                         A model instance, has to be a registered model.
-    :param partial:      Whether a partial update is executed or a full replacement.
-    :raises LookupError: When the resource was not found (404)
-    :raises Exception:   When the response status code is not 200 or 404
-    :return:             The created model based on the data returned by the Restful API
+    :param data:                    Data to pass to the Google RESTful API.
+                                    A model instance, has to be a registered model.
+    :param partial:                 Whether a partial update is executed or a full replacement.
+    :raises QuotaExceededException: When the quota was exceeded
+    :raises LookupError:            When the resource was not found (404)
+    :raises WalletException:        When the response status code is not 200 or 404
+    :return:                        The created model based on the data returned by the Restful API
     """
     model_metadata = lookup_metadata_by_model_instance(data)
     name = model_metadata["name"]
@@ -191,13 +217,16 @@ def update(
             data=verified_json.encode("utf-8"),
         )
     logger.debug(verified_json.encode("utf-8"))
-    if response.status_code == 404:
+    if response.status_code == 403:
+        raise QuotaExceededException(
+            f"Quota exceeded while trying to read {name} {resource_id}"
+        )
+    elif response.status_code == 404:
         raise LookupError(
             f"Error 404, {name} {getattr(data, 'id', 'No ID')} not found: - {response.text}"
         )
-
     if response.status_code != 200:
-        raise Exception(f"Error: {response.status_code} - {response.text}")
+        raise WalletException(f"Error: {response.status_code} - {response.text}")
 
     logger.debug(f"RAW-Response: {response.content!r}")
     return model.model_validate_json(response.content)
@@ -210,11 +239,12 @@ def message(
 ) -> Model:
     """Sends a message to a Google Wallet Class or Object.
 
-    :param name:         Registered name of the model to use
-    :param resource_id:  Identifier of the resource to send to
-    :raises LookupError: When the resource was not found (404)
-    :raises Exception:   When the response status code is not 200 or 404
-    :return:             The created Model object as returned by the Restful API
+    :param name:                      Registered name of the model to use
+    :param resource_id:               Identifier of the resource to send to
+    :raises QuotaExceededException:   When the quota was exceeded
+    :raises LookupError:              When the resource was not found (404)
+    :raises WalletException:          When the response status code is not 200 or 404
+    :return:                          The created Model object as returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "message")
     model = lookup_model_by_name(name)
@@ -231,11 +261,15 @@ def message(
     url = session_manager.url(name, f"/{resource_id}/addMessage")
     response = session_manager.session.post(url=url, data=verified_json.encode("utf-8"))
 
-    if response.status_code == 404:
+    if response.status_code == 403:
+        raise QuotaExceededException(
+            f"Quota exceeded while trying to read {name} {resource_id}"
+        )
+    elif response.status_code == 404:
         raise LookupError(f"Error 404, {name} not found: - {response.text}")
 
-    if response.status_code != 200:
-        raise Exception(f"Error: {response.status_code} - {response.text}")
+    elif response.status_code != 200:
+        raise WalletException(f"Error: {response.status_code} - {response.text}")
 
     logger.debug(f"RAW-Response: {response.content!r}")
     response_data = json.loads(response.content)
@@ -257,24 +291,25 @@ def listing(
     Parameter 'name' has to end with 'Object'.
     To get all issuers, parameter 'name' has to be 'Issuer' and no further parameters are allowed.
 
-    :param name:            Registered name to base the listing on.
-    :param resource_id:     Id of the class to list objects of.
-                            Only for object listings`
-                            Mutually exclusive with issuer_id.
-    :param issuer_id:       Identifier of the issuer to list classes of.
-                            Only for class listings.
-                            If no resource_id is given and issuer_id is None, it will
-                            be fetched from the environment variable EDUTAP_WALLET_GOOGLE_ISSUER_ID.
-                            Mutually exclusive with resource_id.
-    :param result_per_page: Number of results per page to fetch.
-                            If omitted all results will be fetched and provided by the generator.
-    :param next_page_token: Token to get the next page of results.
-    :raises ValueError:     When input was invalid.
-    :raises LookupError:    When the resource was not found (404)
-    :raises Exception:      When the response status code is not 200 or 404
-    :return:                Generator of the data as model-instances based on the data returned by the
-                            Restful API. When result_per_page is given, the generator will return
-                            a next_page_token after the last model-instance result.
+    :param name:                    Registered name to base the listing on.
+    :param resource_id:             Id of the class to list objects of.
+                                    Only for object listings`
+                                    Mutually exclusive with issuer_id.
+    :param issuer_id:               Identifier of the issuer to list classes of.
+                                    Only for class listings.
+                                    If no resource_id is given and issuer_id is None, it will
+                                    be fetched from the environment variable EDUTAP_WALLET_GOOGLE_ISSUER_ID.
+                                    Mutually exclusive with resource_id.
+    :param result_per_page:         Number of results per page to fetch.
+                                    If omitted all results will be fetched and provided by the generator.
+    :param next_page_token:         Token to get the next page of results.
+    :raises QuotaExceededException: When the quota was exceeded
+    :raises ValueError:             When input was invalid.
+    :raises LookupError:            When the resource was not found (404)
+    :raises WalletException:        When the response status code is not 200 or 404
+    :return:                        Generator of the data as model-instances based on the data returned by the
+                                    Restful API. When result_per_page is given, the generator will return
+                                    a next_page_token after the last model-instance result.
     """
     raise_when_operation_not_allowed(name, "list")
     if resource_id and issuer_id:

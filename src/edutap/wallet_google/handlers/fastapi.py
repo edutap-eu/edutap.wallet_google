@@ -83,7 +83,7 @@ async def handle_callback(request: Request, callback_data: CallbackData):
     return JSONResponse(content={"status": "success"})
 
 
-@router_images.get("/images/{encrypted_image_id}")
+@router_images.get("/images/{encrypted_image_id:path}")
 async def handle_image(request: Request, encrypted_image_id: str):
     """FastAPI handler for the image endpoint.
 
