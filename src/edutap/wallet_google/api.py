@@ -1,5 +1,5 @@
 from .models.bases import Model
-from .models.datatypes.general import Pagination
+from .models.datatypes.general import PaginatedResponse
 from .models.datatypes.jwt import JWTClaims
 from .models.datatypes.jwt import JWTPayload
 from .models.datatypes.jwt import Reference
@@ -325,10 +325,12 @@ def listing(
             raise ValueError("resource_id of a class must be given to list its objects")
         params["classId"] = resource_id
     elif name.endswith("Class"):
+        is_pageable = True
         if not issuer_id:
             raise ValueError("issuer_id must be given to list classes")
-        is_pageable = True
         params["issuerId"] = issuer_id
+    elif name == "Issuer":
+        is_pageable = False
 
     if is_pageable:
         if next_page_token:
@@ -349,36 +351,32 @@ def listing(
         if response.status_code != 200:
             raise Exception(f"Error: {response.status_code} - {response.text}")
 
-        try:
-            data = json.loads(response.content)
-            if "resources" not in data.keys():
+        data = json.loads(response.content)
+        data = PaginatedResponse.model_validate(data)
+        resources = data.resources
+        pagination = data.pagination
+
+        if not resources:
+            logger.warning("Response does not contain 'resources'")
+            if pagination and pagination.resultsPerPage == 0:
                 logger.warning(
-                    f"Response does not contain 'resources' key, got: {data.keys()}"
+                    "No results per page set, this might be an error in the API response."
                 )
-                pagination = Pagination.model_validate(data.get("pagination", {}))
-                if pagination.resultsPerPage == 0:
-                    logger.warning(
-                        "No results per page set, this might be an error in the API response."
-                    )
-                    break
-            for count, record in enumerate(data["resources"]):
-                try:
-                    yield model.model_validate(record)
-                except Exception:
-                    logger.exception(f"Error validating record {count}:\n{record}")
-                    raise
-        except KeyError as e:
-            logger.error(f"Error parsing response: {e}")
-            logger.error(f"Response content: {response.content!r}")
+                break
+        for count, record in enumerate(resources):
+            try:
+                yield model.model_validate(record)
+            except Exception:
+                logger.exception(f"Error validating record {count}:\n{record}")
+                raise
         if not is_pageable:
             break
-        pagination = Pagination.model_validate(data["pagination"])
         if result_per_page > 0:
-            if pagination.nextPageToken:
+            if pagination and pagination.nextPageToken:
                 yield pagination.nextPageToken
                 break
         else:
-            if pagination.nextPageToken:
+            if pagination and pagination.nextPageToken:
                 params["token"] = pagination.nextPageToken
                 continue
         break
