@@ -369,17 +369,18 @@ def listing(
             except Exception:
                 logger.exception(f"Error validating record {count}:\n{record}")
                 raise
-        if not is_pageable:
+        if not is_pageable or not pagination:
             break
         if result_per_page > 0:
-            if pagination and pagination.nextPageToken:
+            if pagination.nextPageToken:
                 yield pagination.nextPageToken
                 break
         else:
-            if pagination and pagination.nextPageToken:
+            if pagination.nextPageToken:
                 params["token"] = pagination.nextPageToken
                 continue
         break
+    return
 
 
 def _create_payload(models: list[ClassModel | ObjectModel | Reference]) -> JWTPayload:
