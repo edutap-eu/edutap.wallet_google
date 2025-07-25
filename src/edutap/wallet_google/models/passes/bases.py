@@ -88,7 +88,7 @@ class ClassModel(WithIdModel):
     )
     messages: list[Message] | None = None
     appLinkData: AppLinkData | None = None
-    valueAddedModuleData: ValueAddedModuleData | None = None
+    valueAddedModuleData: list[ValueAddedModuleData] | None = None
 
 
 class ObjectModel(WithIdModel):
@@ -122,7 +122,7 @@ class ObjectModel(WithIdModel):
     groupingInfo: GroupingInfo | None = None
     saveRestrictions: SaveRestrictions | None = None
     linkedObjectIds: list[str] | None = None
-    valueAddedModuleData: ValueAddedModuleData | None = None
+    valueAddedModuleData: list[ValueAddedModuleData] | None = None
     messages: list[Message] | None = None
     appLinkData: AppLinkData | None = None
     state: State = Field(default=State.STATE_UNSPECIFIED)
