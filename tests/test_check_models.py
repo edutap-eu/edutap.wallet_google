@@ -1,51 +1,277 @@
-# from edutap.wallet_google.models.passes import event_ticket
-# from edutap.wallet_google.models.passes import generic
-# from edutap.wallet_google.models.passes import loyalty
-# from edutap.wallet_google.models.passes import retail
-# from edutap.wallet_google.models.passes import transit
-from edutap.wallet_google.models.misc import Issuer
-
+from edutap.wallet_google.registry import _MODEL_REGISTRY_BY_NAME
+from edutap.wallet_google.registry import lookup_metadata_by_name
 from httpx import get
+from pydantic._internal._model_construction import ModelMetaclass
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Set
+from typing import Type
+from typing import Union
 
+import importlib
+import inspect
 import json
+import pathlib
+import pytest
 
 
-def test_check_modles():
-    discovery_api_data = get(
+DATA_DIR = pathlib.Path(__file__).parent / "data"
+MODEL_ALIAS_DICT = {
+    "AppLinkInfo": "AppLinkDataAppLinkInfo",
+    "AppTarget": "AppLinkDataAppLinkInfoAppTarget",
+    "Jwt": "JwtResource",
+    "TotpDetails": "RotatingBarcodeTotpDetails",
+    "TotpParameters": "RotatingBarcodeTotpDetailsTotpParameters",
+}
+
+
+def find_models() -> Dict[str, Type]:
+    models: Dict[str, Type] = {}
+    pkg = importlib.import_module("edutap.wallet_google")
+    datatypes_modul = pkg.models.datatypes
+    for name, modul in inspect.getmembers(datatypes_modul, inspect.ismodule):
+
+        # print(f"Module: 'name', '{modul}'")
+        for cls_name, cls in inspect.getmembers(modul, inspect.isclass):
+            if (
+                cls.__module__.startswith("edutap.wallet_google.models.datatypes")
+                and cls.__class__ == ModelMetaclass
+            ):
+                # print(f"Class: '{cls_name}', '{cls}'")
+                models[cls_name] = cls
+    return models
+
+
+def get_discovery_api_data():
+    response = get(
         "https://discovery.googleapis.com/discovery/v1/apis?name=walletobjects"
     )
-    data = json.loads(discovery_api_data.text)
-    print("\n")
-    print("Google Discorvery API response:")
-    print(json.dumps(data, indent=2))
-    print("\n")
-    assert len(data["items"]) == 1, "Discovery API response showed more than one API Description"
-    assert data["items"][0]["version"] == "v1", "Discovery API response showed a different version than v1"
-    assert data["items"][0]["id"] == "walletobjects:v1", "Discovery API response showed a different ID than walletobjects:v1"
-    assert data["items"][0]["name"] == "walletobjects"
-    assert data["items"][0]["title"] == "Google Wallet API", "Discovery API response showed a different title than Google Wallet API"
+    if response.status_code != 200:
+        raise Exception(
+            f"Failed to fetch data from 'https://discovery.googleapis.com'."
+            f"Status code: {response.status_code}"
+            f"Response: {response}"
+        )
+    # Save the discovery API data to a local file
+    # This is useful for offline testing and to avoid hitting the API rate limits
+    # in case the API is called multiple times during testing.
+    # The data is saved in a file named "discovery_api_data.json"
+    data = json.loads(response.text)
+    json.dump(data, open(DATA_DIR / "discovery_api_data.json", "w"), indent=2)
 
-    discoveryRestURL = data.get("items", [{}])[0].get("discoveryRestUrl")
-    google_wallet_api_data = get(discoveryRestURL)
-    data = json.loads(google_wallet_api_data.text)
-    assert data["version"] == "v1", "Google Wallet API response showed a different version than v1"
-    assert data["id"] == "walletobjects:v1", "Google Wallet API response showed a different ID than walletobjects:v1"
-    assert data["title"] == "Google Wallet API", "Google Wallet API response showed a different title than Google Wallet API"
-    assert data["protocol"] == "rest", "Google Wallet API response showed a different protocol than rest"
-    print("\n")
-    print(data.keys())
-    # print(json.dumps(data["schemas"], indent=2))
-    print("\n")
-    print("Google Wallet Models:")
-    # print(json.dumps(data, indent=2))
-    print("\n")
-    print("Checking models...")
-    for model_name, attributes in data.get("schemas", {}).items():
-        print(f"Checking model: {model_name}")
-        if model_name == "Issuer":
-            properties_schema = set(Issuer.model_json_schema().get("properties").keys())
-            properties_model = set(attributes.get("properties", {}).keys())
-            assert properties_schema == properties_model, f"Properties mismatch for model {model_name}"
-            print(f"Model {model_name} properties match.")
-    data
-    print("Finished checking models")
+
+@pytest.fixture(scope="module")
+def load_discovery_api_data():
+    data: Dict[str, Any] = {}
+    with open(DATA_DIR / "discovery_api_data.json") as file:
+        data = json.load(file)
+    return data
+
+
+def get_wallet_api_data():
+    """Fetches the Google Wallet API data from the discovery API and returns it."""
+    # Load the discovery API data from the local file
+    discovery_data = load_discovery_api_data()
+    url: str = discovery_data.get("items", [{}])[0].get(
+        "discoveryRestUrl",
+        "https://walletobjects.googleapis.com/$discovery/rest?version=v1",
+    )
+    response = get(url)
+    if response.status_code != 200:
+        raise Exception(
+            f"Failed to fetch data from {url}. Status code: {response.status_code}"
+        )
+    data: Dict[str, Any] = json.loads(response.text)
+    json.dump(data, open(DATA_DIR / "wallet_api_data.json", "w"), indent=2)
+
+
+@pytest.fixture(scope="module")
+def load_wallet_api_data():
+    """Loads the Google Wallet API data from the local file."""
+    data: Dict[str, Any] = {}
+    with open(DATA_DIR / "wallet_api_data.json") as file:
+        data = json.load(file)
+    return data
+
+
+@pytest.mark.xfail(
+    reason="This test is expected to fail if the discovery API data is not available."
+)
+def test_load_data():
+    """Test to ensure that the discovery API data can be loaded correctly."""
+    get_discovery_api_data()
+    get_wallet_api_data()
+    data = load_wallet_api_data()
+    assert isinstance(data, dict)
+
+
+def test_discovery_api(load_discovery_api_data: Dict[str, Any]):
+    data = load_discovery_api_data
+    assert data["kind"] == "discovery#directoryList"
+    assert data["discoveryVersion"] == "v1"
+    assert len(data["items"]) == 1
+    for api_description in data["items"]:
+        assert isinstance(api_description, dict)
+        assert "kind" in api_description
+        assert api_description["kind"] == "discovery#directoryItem"
+        assert "version" in api_description
+        assert api_description["version"] == "v1"
+        assert "id" in api_description
+        assert api_description["id"] == "walletobjects:v1"
+        assert "name" in api_description
+        assert api_description["name"] == "walletobjects"
+        assert "title" in api_description
+        assert api_description["title"] == "Google Wallet API"
+        assert "preferred" in api_description
+        assert api_description["preferred"] is True
+        assert "discoveryRestUrl" in api_description
+
+
+def test_wallet_api(load_wallet_api_data: Dict[str, Any]):
+    wallet_data = load_wallet_api_data
+    assert isinstance(wallet_data, dict)
+    assert wallet_data["kind"] == "discovery#restDescription"
+    assert wallet_data["discoveryVersion"] == "v1"
+    assert wallet_data["version"] == "v1"
+    assert wallet_data["revision"] == "20250807"
+    assert wallet_data["protocol"] == "rest"
+    assert wallet_data["id"] == "walletobjects:v1"
+    assert wallet_data["title"] == "Google Wallet API"
+    assert wallet_data["canonicalName"] == "Walletobjects"
+    assert wallet_data["name"] == "walletobjects"
+    assert "resources" in wallet_data
+    assert isinstance(wallet_data["resources"], dict)
+    assert "schemas" in wallet_data
+    assert isinstance(wallet_data["schemas"], dict)
+    assert "parameters" in wallet_data
+    assert isinstance(wallet_data["parameters"], dict)
+
+
+def test_known_schemas(load_wallet_api_data: Dict[str, Any]):
+    wallet_data = load_wallet_api_data
+    schemas: Dict[str, Dict[str, Any]] = wallet_data.get("schemas", {})
+    assert isinstance(schemas, dict)
+    assert len(schemas) > 0
+
+    api_schemas: Set[str] = set()
+    for elem in schemas.keys():
+        if elem.endswith("Request") or elem.endswith("Response"):
+            continue
+        api_schemas.add(elem)
+
+    our_schemas: Dict[str, Type] = {}
+    our_known_schemas: Set[str] = set(_MODEL_REGISTRY_BY_NAME.keys())
+    for name in our_known_schemas:
+        our_schemas[name] = lookup_metadata_by_name(name)["model"]
+
+    for name, model in find_models().items():
+        our_known_schemas.add(name)
+        our_schemas[name] = model
+
+    for name in [
+        "JWTClaims",
+        "JWTPayload",
+        "PaginatedResponse",
+        "Reference",
+    ]:
+        del our_schemas[name]
+
+    # assert api_schemas == our_known_schemas, (
+    #     f"\nAPI schemas do not match our known schemas."
+    #     f"\nAPI schemas: {api_schemas}, "
+    #     f"\nOur known schemas: {our_known_schemas}"
+    #     f"\nDifference: {api_schemas - our_known_schemas}"
+    # )
+
+    our_schemas = dict(sorted(our_schemas.items()))
+    print("Our known schemas:")
+    for name in our_schemas.keys():
+        print(f" * {name}")
+
+    for name, model in our_schemas.items():
+        print(f"\nCheck: '{name}'", end=" ")
+
+        api_schema = schemas.get(name, {})
+        if api_schema == {} and name in MODEL_ALIAS_DICT.keys():
+            api_schema = schemas.get(MODEL_ALIAS_DICT.get(name), {})
+        assert api_schema
+        # print(api_schema)
+        try:
+            if name not in MODEL_ALIAS_DICT.keys():
+                assert api_schema["id"] == name
+            assert api_schema["type"] == "object"
+            assert "properties" in api_schema
+            assert isinstance(api_schema["properties"], dict)
+        except KeyError as e:
+            print(f"Model: '{name}' has no property: '{e}'")
+
+        model_schema_names = set(model.model_json_schema().get("properties", {}).keys())
+        model_schema = model.model_json_schema().get("properties", {})
+
+        assert (
+            set(api_schema["properties"].keys()) == model_schema_names
+        ), f"Set of properties does not match for: '{name}'"
+
+        for prop, prop_schema in api_schema["properties"].items():
+            assert prop in model_schema_names
+            if "deprecated" in prop_schema:
+                our_prop = model_schema[prop]
+                assert (
+                    our_prop.get("deprecated", False) is True
+                ), f"The property: '{prop}' is deprecated, but not marked as such in our schema."
+
+
+def test_methods(load_wallet_api_data: Dict[str, Any]):
+    wallet_data = load_wallet_api_data
+    resources = wallet_data["resources"]
+
+    model_names: Dict[str, str] = {m.lower(): m for m in _MODEL_REGISTRY_BY_NAME.keys()}
+    print(f"Known Model names: {model_names}")
+
+    for resource_name, resource in resources.items():
+        print(f"\nChecking resource: '{resource_name}'", end=" ")
+        if resource_name in ["walletobjects"]:
+            print(f"--> NO Model with this name is registered.", end="")
+            continue
+        assert isinstance(resource, dict)
+        assert "methods" in resource
+        assert isinstance(
+            resource["methods"], dict
+        ), f"--> does not have a 'methods' key or it is not a dictionary."
+
+        if resource_name not in model_names:
+            print(f"--> NO Model with this name is registered.", end="")
+            continue
+        model = lookup_metadata_by_name(
+            model_names[resource_name]
+        )  # Ensure the resource is registered
+
+        print(f"--> check with model: '{model['name']}'", end="")
+        assert model["name"].lower() == resource_name
+
+        expected_methods: Set[str] = set()
+        if model["can_read"]:
+            expected_methods.add("get")
+        if model["can_list"]:
+            expected_methods.add("list")
+        if model["can_create"]:
+            expected_methods.add("insert")
+        if model["can_update"]:
+            expected_methods.update({"update", "patch"})
+        if model["can_message"]:
+            expected_methods.add("addmessage")
+        if model["name"] == "Permissions":
+            expected_methods = {"get", "update"}
+
+        available_methods = set(resource["methods"].keys())
+        if "modifylinkedofferobjects" in available_methods:
+            available_methods.remove("modifylinkedofferobjects")
+
+        assert available_methods == expected_methods, (
+            f"\nModel '{model['name']}' methods do not match the API methods."
+            f"\nAPI methods do not match our expected methods."
+            f"\nAPI methods: {resource["methods"].keys()}, "
+            f"\nExpected methods: {expected_methods}"
+            f"\nDifference: {available_methods - expected_methods}"
+        )
