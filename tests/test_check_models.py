@@ -269,7 +269,7 @@ def test_methods(load_wallet_api_data: Dict[str, Any]):
         assert available_methods == expected_methods, (
             f"\nModel '{model['name']}' methods do not match the API methods."
             f"\nAPI methods do not match our expected methods."
-            f"\nAPI methods: {resource["methods"].keys()}, "
+            f"\nAPI methods: {resource['methods'].keys()}, "
             f"\nExpected methods: {expected_methods}"
             f"\nDifference: {available_methods - expected_methods}"
         )
