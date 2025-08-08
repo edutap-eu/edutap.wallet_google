@@ -24,7 +24,6 @@ from ..datatypes.flight import ReservationInfo
 from ..datatypes.general import Image
 from ..datatypes.general import Uri
 from ..datatypes.localized_string import LocalizedString
-from ..datatypes.location import MerchantLocation
 from ..datatypes.money import Money
 from ..datatypes.review import Review
 from ..datatypes.transit import ActivationOptions

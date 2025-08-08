@@ -53,6 +53,7 @@ class RotatingBarcodeValues(Model):
     values: list[str] | None = None
     periodMillis: str | None = None
 
+
 class RotatingBarcode(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode

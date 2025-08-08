@@ -47,6 +47,7 @@ repos:
     rev: v2.4.1
     hooks:
     -   id: codespell
+        args: ["--skip", "tests/data/*.json"]
         additional_dependencies:
           - tomli
 -   repo: https://github.com/mgedmin/check-manifest

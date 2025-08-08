@@ -4,10 +4,8 @@ from httpx import get
 from pydantic._internal._model_construction import ModelMetaclass
 from typing import Any
 from typing import Dict
-from typing import List
 from typing import Set
 from typing import Type
-from typing import Union
 
 import importlib
 import inspect
@@ -29,11 +27,11 @@ MODEL_ALIAS_DICT = {
 def find_models() -> Dict[str, Type]:
     models: Dict[str, Type] = {}
     pkg = importlib.import_module("edutap.wallet_google")
-    datatypes_modul = pkg.models.datatypes
-    for name, modul in inspect.getmembers(datatypes_modul, inspect.ismodule):
+    datatypes_module = pkg.models.datatypes
+    for name, module in inspect.getmembers(datatypes_module, inspect.ismodule):
 
-        # print(f"Module: 'name', '{modul}'")
-        for cls_name, cls in inspect.getmembers(modul, inspect.isclass):
+        # print(f"Module: 'name', '{module}'")
+        for cls_name, cls in inspect.getmembers(module, inspect.isclass):
             if (
                 cls.__module__.startswith("edutap.wallet_google.models.datatypes")
                 and cls.__class__ == ModelMetaclass
@@ -194,7 +192,7 @@ def test_known_schemas(load_wallet_api_data: Dict[str, Any]):
 
         api_schema = schemas.get(name, {})
         if api_schema == {} and name in MODEL_ALIAS_DICT.keys():
-            api_schema = schemas.get(MODEL_ALIAS_DICT.get(name), {})
+            api_schema = schemas.get(MODEL_ALIAS_DICT[name], {})
         assert api_schema
         # print(api_schema)
         try:
@@ -232,16 +230,16 @@ def test_methods(load_wallet_api_data: Dict[str, Any]):
     for resource_name, resource in resources.items():
         print(f"\nChecking resource: '{resource_name}'", end=" ")
         if resource_name in ["walletobjects"]:
-            print(f"--> NO Model with this name is registered.", end="")
+            print("--> NO Model with this name is registered.", end="")
             continue
         assert isinstance(resource, dict)
         assert "methods" in resource
         assert isinstance(
             resource["methods"], dict
-        ), f"--> does not have a 'methods' key or it is not a dictionary."
+        ), "--> does not have a 'methods' key or it is not a dictionary."
 
         if resource_name not in model_names:
-            print(f"--> NO Model with this name is registered.", end="")
+            print("--> NO Model with this name is registered.", end="")
             continue
         model = lookup_metadata_by_name(
             model_names[resource_name]
