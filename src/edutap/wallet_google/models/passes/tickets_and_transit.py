@@ -17,11 +17,14 @@ from ..datatypes.event import EventReservationInfo
 from ..datatypes.event import EventSeat
 from ..datatypes.event import EventVenue
 from ..datatypes.flight import AirportInfo
+from ..datatypes.flight import BoardingAndSeatingInfo
 from ..datatypes.flight import BoardingAndSeatingPolicy
 from ..datatypes.flight import FlightHeader
+from ..datatypes.flight import ReservationInfo
 from ..datatypes.general import Image
 from ..datatypes.general import Uri
 from ..datatypes.localized_string import LocalizedString
+from ..datatypes.location import MerchantLocation
 from ..datatypes.money import Money
 from ..datatypes.review import Review
 from ..datatypes.transit import ActivationOptions
@@ -38,6 +41,7 @@ from ..deprecated import DeprecatedVersionFieldMixin
 from ..deprecated import DeprecatedWordMarkFieldMixin
 from .bases import ClassModel
 from .bases import CommonLogosMixin
+from .bases import HeroImageMixin
 from .bases import ObjectModel
 from .bases import StyleableMixin
 from pydantic import Field
@@ -124,7 +128,8 @@ class EventTicketObject(
     DeprecatedLocationsFieldMixin,
     DeprecatedInfoModuleDataFieldMixin,
     StyleableMixin,
-    CommonLogosMixin,
+    # CommonLogosMixin,
+    HeroImageMixin,
     ObjectModel,
 ):
     """
@@ -250,7 +255,8 @@ class TransitObject(
     DeprecatedLocationsFieldMixin,
     DeprecatedInfoModuleDataFieldMixin,
     StyleableMixin,
-    CommonLogosMixin,
+    # CommonLogosMixin,
+    HeroImageMixin,
     ObjectModel,
 ):
     """
@@ -317,7 +323,8 @@ class FlightClass(
     DeprecatedInfoModuleDataFieldMixin,
     DeprecatedWordMarkFieldMixin,
     StyleableMixin,
-    CommonLogosMixin,
+    # CommonLogosMixin,
+    HeroImageMixin,
     ClassModel,
 ):
     """
@@ -343,7 +350,7 @@ class FlightClass(
     issuerName: str | None = None
     # inherits messages
     # inherits allowMultipleUsersPerObject (deprecated)
-    # inherits homepageUri
+    homepageUri: Uri | None = None
     # inherits locations (deprecated)
     reviewStatus: ReviewStatus | None = None
     review: Review | None = None
@@ -367,6 +374,7 @@ class FlightClass(
     )
     # inherits appLinkData
     # inherits valueAddedModuleData
+    # inherits merchantLocations  # merchantLocations: list[MerchantLocation] | None = None
 
 
 @register_model("FlightObject", url_part="flightObject")
@@ -374,6 +382,7 @@ class FlightObject(
     DeprecatedKindFieldMixin,
     DeprecatedVersionFieldMixin,
     DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
     StyleableMixin,
     ObjectModel,
 ):
@@ -384,8 +393,8 @@ class FlightObject(
     # inherits kind (deprecated)
     classReference: FlightClass | None = None
     passengerName: str | None = None
-    # TODO: boardingAndSeatingInfo
-    # TODO: reservationInfo
+    boardingAndSeatingInfo: BoardingAndSeatingInfo | None = None
+    reservationInfo: ReservationInfo | None = None
     securityProgramLogo: Image | None = None
     # inherits hexBackgroundColor
     # inherits id
@@ -415,3 +424,4 @@ class FlightObject(
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
     # inherits valueAddedModuleData
+    # inherits merchantLocations  # merchantLocations: list[MerchantLocation] | None = None

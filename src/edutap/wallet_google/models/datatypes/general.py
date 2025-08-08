@@ -61,7 +61,8 @@ class Image(DeprecatedKindFieldMixin, Model):
     """
 
     # inherits kind (deprecated)
-    sourceUri: ImageUri
+    sourceUri: ImageUri | None = None
+    privateImageId: str | None = None
     contentDescription: LocalizedString | None = None
 
 

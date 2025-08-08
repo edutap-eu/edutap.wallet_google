@@ -63,6 +63,16 @@ class BarcodeType(CamelCaseAliasEnum):
     TEXT_ONLY = "TEXT_ONLY"
 
 
+class BoardingDoor(CamelCaseAliasEnum):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/flightobject#BoardingDoor
+    """
+
+    BOARDING_DOOR_UNSPECIFIED = "BOARDING_DOOR_UNSPECIFIED"
+    FRONT = "FRONT"
+    BACK = "BACK"
+
+
 class BoardingPolicy(CamelCaseAliasEnum):
     """
     see: https://developers.google.com/wallet/reference/rest/v1/flightclass#boardingpolicy

@@ -44,6 +44,15 @@ class TotpDetails(Model):
     parameters: list[TotpParameters]
 
 
+class RotatingBarcodeValues(Model):
+    """
+    see: https://developers.google.com/wallet/reference/rest/v1/RotatingBarcode#rotatingbarcodevalues
+    """
+
+    startDateTime: str | None = None
+    values: list[str] | None = None
+    periodMillis: str | None = None
+
 class RotatingBarcode(Model):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode
@@ -57,4 +66,4 @@ class RotatingBarcode(Model):
     totpDetails: TotpDetails | None = None
     alternateText: str | None = None
     showCodeText: LocalizedString | None = None
-    # TODO initialRotatingBarcodeValues
+    initialRotatingBarcodeValues: RotatingBarcodeValues | None = None
