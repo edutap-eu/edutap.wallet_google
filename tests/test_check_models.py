@@ -1,6 +1,7 @@
 from edutap.wallet_google.registry import _MODEL_REGISTRY_BY_NAME
 from edutap.wallet_google.registry import lookup_metadata_by_name
-from httpx import get, head, HTTPError
+from httpx import get
+from httpx import HTTPError
 from pydantic._internal._model_construction import ModelMetaclass
 from typing import Any
 from typing import Dict
@@ -81,7 +82,7 @@ def load_wallet_api_data():
 
 
 def check_if_url_is_not_reachable(url: str) -> bool:
-    try: 
+    try:
         result = get(url)
         print(f"Status Code: {result.status_code}")
         if result.status_code == 200:
@@ -90,7 +91,7 @@ def check_if_url_is_not_reachable(url: str) -> bool:
     except HTTPError as e:
         print(e)
     return True
-        
+
 
 # @pytest.mark.skipif(
 #     check_if_url_is_not_reachable("https://discovery.googleapis.com/discovery/v1/apis?name=walletobjects"),
@@ -99,14 +100,19 @@ def check_if_url_is_not_reachable(url: str) -> bool:
 def test_load_data(load_discovery_api_data, load_wallet_api_data):
     """Test to ensure that the discovery API data can be loaded correctly."""
     print("\n")
-    assert request_api_data_write_to_file("https://discovery.googleapis.com/discovery/v1/apis?name=walletobjects", DATA_DIR / "discovery_api_data.json"), "Failed to load Discovery API"
+    assert request_api_data_write_to_file(
+        "https://discovery.googleapis.com/discovery/v1/apis?name=walletobjects",
+        DATA_DIR / "discovery_api_data.json",
+    ), "Failed to load Discovery API"
     print("Load discovery api successful.")
     assert isinstance(load_discovery_api_data, dict)
     wallet_api_url = load_discovery_api_data.get("items", [{}])[0].get(
         "discoveryRestUrl",
         "https://walletobjects.googleapis.com/$discovery/rest?version=v1",
     )
-    assert request_api_data_write_to_file(wallet_api_url, DATA_DIR / "wallet_api_data.json"), "Failed to load Wallet API."
+    assert request_api_data_write_to_file(
+        wallet_api_url, DATA_DIR / "wallet_api_data.json"
+    ), "Failed to load Wallet API."
     print("Load wallet api successful.")
     file_stat = pathlib.Path(DATA_DIR / "wallet_api_data.json").stat()
     mtime = datetime.datetime.fromtimestamp(file_stat.st_mtime)
