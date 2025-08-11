@@ -1,12 +1,13 @@
 from edutap.wallet_google.registry import _MODEL_REGISTRY_BY_NAME
 from edutap.wallet_google.registry import lookup_metadata_by_name
-from httpx import get
+from httpx import get, head, HTTPError
 from pydantic._internal._model_construction import ModelMetaclass
 from typing import Any
 from typing import Dict
 from typing import Set
 from typing import Type
 
+import datetime
 import importlib
 import inspect
 import json
@@ -41,22 +42,25 @@ def find_models() -> Dict[str, Type]:
     return models
 
 
-def get_discovery_api_data():
-    response = get(
-        "https://discovery.googleapis.com/discovery/v1/apis?name=walletobjects"
-    )
-    if response.status_code != 200:
-        raise Exception(
-            f"Failed to fetch data from 'https://discovery.googleapis.com'."
-            f"Status code: {response.status_code}"
-            f"Response: {response}"
-        )
-    # Save the discovery API data to a local file
-    # This is useful for offline testing and to avoid hitting the API rate limits
-    # in case the API is called multiple times during testing.
-    # The data is saved in a file named "discovery_api_data.json"
-    data = json.loads(response.text)
-    json.dump(data, open(DATA_DIR / "discovery_api_data.json", "w"), indent=2)
+def request_api_data_write_to_file(url: str, file_path: pathlib.Path) -> bool:
+    try:
+        response = get(url)
+        if response.status_code != 200:
+            raise Exception(
+                f"Failed to fetch data from '{url}'."
+                f"Status code: {response.status_code}"
+                f"Response: {response}"
+            )
+        # Save the API data to a local file
+        # This is useful for offline testing and to avoid hitting the API rate limits
+        # in case the API is called multiple times during testing.
+        # The data is saved in a  JSON file.
+        data = json.loads(response.text)
+        json.dump(data, open(file_path, "w"), indent=2, sort_keys=True)
+    except HTTPError as e:
+        print(e)
+        return False
+    return True
 
 
 @pytest.fixture(scope="module")
@@ -65,23 +69,6 @@ def load_discovery_api_data():
     with open(DATA_DIR / "discovery_api_data.json") as file:
         data = json.load(file)
     return data
-
-
-def get_wallet_api_data():
-    """Fetches the Google Wallet API data from the discovery API and returns it."""
-    # Load the discovery API data from the local file
-    discovery_data = load_discovery_api_data()
-    url: str = discovery_data.get("items", [{}])[0].get(
-        "discoveryRestUrl",
-        "https://walletobjects.googleapis.com/$discovery/rest?version=v1",
-    )
-    response = get(url)
-    if response.status_code != 200:
-        raise Exception(
-            f"Failed to fetch data from {url}. Status code: {response.status_code}"
-        )
-    data: Dict[str, Any] = json.loads(response.text)
-    json.dump(data, open(DATA_DIR / "wallet_api_data.json", "w"), indent=2)
 
 
 @pytest.fixture(scope="module")
@@ -93,15 +80,39 @@ def load_wallet_api_data():
     return data
 
 
-@pytest.mark.xfail(
-    reason="This test is expected to fail if the discovery API data is not available."
-)
-def test_load_data():
+def check_if_url_is_not_reachable(url: str) -> bool:
+    try: 
+        result = get(url)
+        print(f"Status Code: {result.status_code}")
+        if result.status_code == 200:
+            print(f"URL: {url} is reachable.")
+            return False
+    except HTTPError as e:
+        print(e)
+    return True
+        
+
+# @pytest.mark.skipif(
+#     check_if_url_is_not_reachable("https://discovery.googleapis.com/discovery/v1/apis?name=walletobjects"),
+#     reason="This test is expected to fail if the discovery API data is not available."
+# )
+def test_load_data(load_discovery_api_data, load_wallet_api_data):
     """Test to ensure that the discovery API data can be loaded correctly."""
-    get_discovery_api_data()
-    get_wallet_api_data()
-    data = load_wallet_api_data()
-    assert isinstance(data, dict)
+    print("\n")
+    assert request_api_data_write_to_file("https://discovery.googleapis.com/discovery/v1/apis?name=walletobjects", DATA_DIR / "discovery_api_data.json"), "Failed to load Discovery API"
+    print("Load discovery api successful.")
+    assert isinstance(load_discovery_api_data, dict)
+    wallet_api_url = load_discovery_api_data.get("items", [{}])[0].get(
+        "discoveryRestUrl",
+        "https://walletobjects.googleapis.com/$discovery/rest?version=v1",
+    )
+    assert request_api_data_write_to_file(wallet_api_url, DATA_DIR / "wallet_api_data.json"), "Failed to load Wallet API."
+    print("Load wallet api successful.")
+    file_stat = pathlib.Path(DATA_DIR / "wallet_api_data.json").stat()
+    mtime = datetime.datetime.fromtimestamp(file_stat.st_mtime)
+    print(f"Wallet API file last modified at: {mtime.isoformat()}")
+    assert isinstance(load_wallet_api_data, dict)
+    assert datetime.date(mtime.year, mtime.month, mtime.day) == datetime.date.today()
 
 
 def test_discovery_api(load_discovery_api_data: Dict[str, Any]):
@@ -132,7 +143,7 @@ def test_wallet_api(load_wallet_api_data: Dict[str, Any]):
     assert wallet_data["kind"] == "discovery#restDescription"
     assert wallet_data["discoveryVersion"] == "v1"
     assert wallet_data["version"] == "v1"
-    assert wallet_data["revision"] == "20250807"
+    assert wallet_data["revision"] == "20250808"
     assert wallet_data["protocol"] == "rest"
     assert wallet_data["id"] == "walletobjects:v1"
     assert wallet_data["title"] == "Google Wallet API"
