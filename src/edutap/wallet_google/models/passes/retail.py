@@ -8,7 +8,7 @@ from ..datatypes.general import Image
 from ..datatypes.general import PassConstraints
 from ..datatypes.general import Uri
 from ..datatypes.localized_string import LocalizedString
-from ..datatypes.location import LatLongPoint
+from ..datatypes.location import MerchantLocation
 from ..datatypes.loyalty import LoyaltyPoints
 from ..datatypes.money import Money
 from ..datatypes.retail import DiscoverableProgram
@@ -25,7 +25,7 @@ from .bases import StyleableMixin
 
 
 # Attribute order as in Google's documentation to make future updates easier!
-# last check: 2025-01-22
+# last check: 2025-06-19
 
 
 @register_model("GiftCardClass", url_part="giftCardClass", plural="giftCardClasses")
@@ -85,6 +85,7 @@ class GiftCardClass(
     )
     # inherits appLinkData
     # inherits valueAddedModuleData
+    merchantLocations: list[MerchantLocation] | None = None
 
 
 @register_model("GiftCardObject", url_part="giftCardObject")
@@ -92,6 +93,7 @@ class GiftCardObject(
     DeprecatedKindFieldMixin,
     DeprecatedVersionFieldMixin,
     DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
     ObjectModel,
 ):
     """
@@ -132,12 +134,14 @@ class GiftCardObject(
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
     # inherits valueAddedModuleData
+    merchantLocations: list[MerchantLocation] | None = None
 
 
 @register_model("LoyaltyClass", url_part="loyaltyClass", plural="loyaltyClasses")
 class LoyaltyClass(
     DeprecatedKindFieldMixin,
     DeprecatedVersionFieldMixin,
+    DeprecatedLocationsFieldMixin,
     DeprecatedAllowMultipleUsersPerObjectMixin,
     DeprecatedInfoModuleDataFieldMixin,
     DeprecatedWordMarkFieldMixin,
@@ -171,7 +175,7 @@ class LoyaltyClass(
     # inherits messages
     # inherits allowMultipleUsersPerObject (deprecated)
     homepageUri: Uri | None = None
-    locations: list[LatLongPoint] | None = None
+    # inherits locations (deprecated)
     reviewStatus: ReviewStatus = ReviewStatus.REVIEW_STATUS_UNSPECIFIED
     review: Review | None = None
     # inherits infoModuleData (deprecated)
@@ -195,6 +199,7 @@ class LoyaltyClass(
     )
     # inherits appLinkData
     # inherits valueAddedModuleData
+    merchantLocations: list[MerchantLocation] | None = None
 
 
 @register_model("LoyaltyObject", url_part="loyaltyObject", plural="loyaltyObjects")
@@ -202,6 +207,7 @@ class LoyaltyObject(
     DeprecatedKindFieldMixin,
     DeprecatedVersionFieldMixin,
     DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
     ObjectModel,
 ):
     """
@@ -244,6 +250,7 @@ class LoyaltyObject(
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
     # inherits valueAddedModuleData
+    merchantLocations: list[MerchantLocation] | None = None
 
 
 @register_model("OfferClass", url_part="offerClass", plural="offerClasses")
@@ -308,13 +315,16 @@ class OfferClass(
     )
     # inherits appLinkData
     # inherits valueAddedModuleData
+    merchantLocations: list[MerchantLocation] | None = None
 
 
 @register_model("OfferObject", url_part="offerObject")
 class OfferObject(
     DeprecatedKindFieldMixin,
     DeprecatedVersionFieldMixin,
-    StyleableMixin,
+    DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
+    # StyleableMixin,
     ObjectModel,
 ):
     """
@@ -330,12 +340,12 @@ class OfferObject(
     # inherits barcode
     # inherits messages
     # inherits validTimeInterval
-    locations: list[LatLongPoint] | None = None
+    # inherits locations (deprecated)
     # inherits hasUsers
     # inherits smartTapRedemptionValue
     hasLinkedDevice: bool = False
     disableExpirationNotification: bool | None = False
-    # inherits infoModuleData
+    # inherits infoModuleData (deprecated)
     # inherits imageModulesData
     # inherits textModulesData
     # inherits linksModuleData
@@ -350,3 +360,4 @@ class OfferObject(
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
     # inherits valueAddedModuleData
+    merchantLocations: list[MerchantLocation] | None = None

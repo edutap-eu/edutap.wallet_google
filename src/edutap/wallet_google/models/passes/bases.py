@@ -17,6 +17,7 @@ from ..datatypes.general import Image
 from ..datatypes.general import PassConstraints
 from ..datatypes.general import SaveRestrictions
 from ..datatypes.general import SecurityAnimation
+from ..datatypes.location import MerchantLocation
 from ..datatypes.message import Message
 from ..datatypes.moduledata import ValueAddedModuleData
 from pydantic import Field
@@ -88,7 +89,8 @@ class ClassModel(WithIdModel):
     )
     messages: list[Message] | None = None
     appLinkData: AppLinkData | None = None
-    valueAddedModuleData: ValueAddedModuleData | None = None
+    valueAddedModuleData: list[ValueAddedModuleData] | None = None
+    merchantLocations: list[MerchantLocation] | None = None
 
 
 class ObjectModel(WithIdModel):
@@ -122,12 +124,13 @@ class ObjectModel(WithIdModel):
     groupingInfo: GroupingInfo | None = None
     saveRestrictions: SaveRestrictions | None = None
     linkedObjectIds: list[str] | None = None
-    valueAddedModuleData: ValueAddedModuleData | None = None
+    valueAddedModuleData: list[ValueAddedModuleData] | None = None
     messages: list[Message] | None = None
     appLinkData: AppLinkData | None = None
     state: State = Field(default=State.STATE_UNSPECIFIED)
     hasUsers: bool | None = None
     validTimeInterval: TimeInterval | None = None
+    merchantLocations: list[MerchantLocation] | None = None
 
 
 class StyleableMixin:
@@ -147,4 +150,12 @@ class CommonLogosMixin:
 
     logo: Image | None = None
     wideLogo: Image | None = None
+    heroImage: Image | None = None
+
+
+class HeroImageMixin:
+    """
+    Mixin for Google Wallet Classes/Object with a hero image.
+    """
+
     heroImage: Image | None = None

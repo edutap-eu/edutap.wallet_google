@@ -86,7 +86,7 @@ class DeprecatedLocationsFieldMixin:
     """
 
     locations: Annotated[
-        LatLongPoint | None,
+        list[LatLongPoint] | None,
         Field(
             deprecated=deprecated(
                 'Attribute "locations" was used in the past to specify locations but is now deprecated.'

@@ -61,7 +61,8 @@ class Image(DeprecatedKindFieldMixin, Model):
     """
 
     # inherits kind (deprecated)
-    sourceUri: ImageUri
+    sourceUri: ImageUri | None = None
+    privateImageId: str | None = None
     contentDescription: LocalizedString | None = None
 
 
@@ -105,6 +106,24 @@ class Pagination(DeprecatedKindFieldMixin, Model):
     # inherits kind (deprecated)
     resultsPerPage: int
     nextPageToken: str | None = None
+
+
+class PaginatedResponse(Model):
+    """All Class and Object List Responses are paginated.
+    see: https://developers.google.com/wallet/reference/rest/v1/loyaltyclass/list
+         https://developers.google.com/wallet/reference/rest/v1/loyaltyobject/list
+         https://developers.google.com/wallet/reference/rest/v1/offerclass/list
+         https://developers.google.com/wallet/reference/rest/v1/offerobject/list
+         https://developers.google.com/wallet/reference/rest/v1/eventticketclass/list
+         https://developers.google.com/wallet/reference/rest/v1/eventticketobject/list
+         ... and many more
+
+    The List Response for Issuer is not paginated (see: https://developers.google.com/wallet/reference/rest/v1/issuer/list),
+    therefore the pagination attribute is optional.
+    """
+
+    resources: list = []
+    pagination: Pagination | None = None
 
 
 class CallbackOptions(Model):

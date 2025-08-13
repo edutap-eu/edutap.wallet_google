@@ -85,7 +85,7 @@ class AddMessageRequest(Model):
 
 
 @register_model(
-    "Jwt",
+    "JwtResource",
     url_part="jwt",
     can_read=False,
     can_update=False,

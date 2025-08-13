@@ -1,5 +1,5 @@
 from .models.bases import Model
-from .models.datatypes.general import Pagination
+from .models.datatypes.general import PaginatedResponse
 from .models.datatypes.jwt import JWTClaims
 from .models.datatypes.jwt import JWTPayload
 from .models.datatypes.jwt import Reference
@@ -356,10 +356,12 @@ def listing(
             raise ValueError("resource_id of a class must be given to list its objects")
         params["classId"] = resource_id
     elif name.endswith("Class"):
+        is_pageable = True
         if not issuer_id:
             raise ValueError("issuer_id must be given to list classes")
-        is_pageable = True
         params["issuerId"] = issuer_id
+    elif name == "Issuer":
+        is_pageable = False
 
     if is_pageable:
         if next_page_token:
@@ -381,15 +383,25 @@ def listing(
             raise Exception(f"Error: {response.status_code} - {response.text}")
 
         data = json.loads(response.content)
-        for count, record in enumerate(data["resources"]):
+        data = PaginatedResponse.model_validate(data)
+        resources = data.resources
+        pagination = data.pagination
+
+        if not resources:
+            logger.warning("Response does not contain 'resources'")
+            if pagination and pagination.resultsPerPage == 0:
+                logger.warning(
+                    "No results per page set, this might be an error in the API response."
+                )
+                break
+        for count, record in enumerate(resources):
             try:
                 yield model.model_validate(record)
             except Exception:
                 logger.exception(f"Error validating record {count}:\n{record}")
                 raise
-        if not is_pageable:
+        if not is_pageable or not pagination:
             break
-        pagination = Pagination.model_validate(data["pagination"])
         if result_per_page > 0:
             if pagination.nextPageToken:
                 yield pagination.nextPageToken
@@ -399,6 +411,7 @@ def listing(
                 params["token"] = pagination.nextPageToken
                 continue
         break
+    return
 
 
 def _create_payload(models: list[ClassModel | ObjectModel | Reference]) -> JWTPayload:
