@@ -93,6 +93,7 @@ class GiftCardObject(
     DeprecatedKindFieldMixin,
     DeprecatedVersionFieldMixin,
     DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
     ObjectModel,
 ):
     """
@@ -206,6 +207,7 @@ class LoyaltyObject(
     DeprecatedKindFieldMixin,
     DeprecatedVersionFieldMixin,
     DeprecatedLocationsFieldMixin,
+    DeprecatedInfoModuleDataFieldMixin,
     ObjectModel,
 ):
     """
@@ -321,7 +323,8 @@ class OfferObject(
     DeprecatedKindFieldMixin,
     DeprecatedVersionFieldMixin,
     DeprecatedLocationsFieldMixin,
-    StyleableMixin,
+    DeprecatedInfoModuleDataFieldMixin,
+    # StyleableMixin,
     ObjectModel,
 ):
     """
