@@ -66,12 +66,12 @@ develop = [
     "ipython",
 ]
 
+[project.scripts]
+generate-fernet-key = "edutap.wallet_google.utils:generate_fernet_key"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[project.scripts]
-generate-fernet-key = "edutap.wallet_google.utils:generate_fernet_key"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/edutap"]
