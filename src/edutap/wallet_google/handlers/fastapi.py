@@ -23,6 +23,10 @@ router_images = APIRouter(
     prefix=session_manager.settings.handler_prefix_images,
     tags=["edutap.wallet_google"],
 )
+router_private_content_update = APIRouter(
+    prefix=session_manager.settings.handler_prefix_private_content_update,
+    tags=["edutap.wallet_google"],
+)
 
 
 @router_callback.post("/callback")
@@ -140,6 +144,17 @@ async def handle_image(request: Request, encrypted_image_id: str):
         media_type=result.mimetype,
         headers={"Cache-Control": session_manager.settings.handler_image_cache_control},
     )
+
+
+@router_private_content_update.get("update/passId={external_pass_id}")
+async def handle_private_content_update(
+    request: Request, external_pass_id: str, authentication: str | None = None
+):
+    """FastAPI handler for the private content update endpoint.
+
+    It is called by Google Wallet API to update the private content of a pass.
+    """
+    pass
 
 
 # needs to be included after the routers are defined
