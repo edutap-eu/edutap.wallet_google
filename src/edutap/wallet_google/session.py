@@ -5,6 +5,7 @@ from google.oauth2.service_account import Credentials
 from requests.adapters import HTTPAdapter
 
 import json
+import httpx
 import threading
 
 
