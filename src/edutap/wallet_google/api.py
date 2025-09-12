@@ -13,7 +13,7 @@ from .registry import lookup_metadata_by_name
 from .registry import lookup_model_by_name
 from .registry import raise_when_operation_not_allowed
 from .session import session_manager
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from google.auth import crypt
 from google.auth import jwt
 from pydantic import ValidationError
@@ -101,7 +101,7 @@ def new(
     return _validate_data(model, data)
 
 
-def create(
+async def create(
     data: Model,
 ) -> Model:
     """
@@ -122,7 +122,7 @@ def create(
     session = session_manager.session
     url = session_manager.url(name)
     headers = {"Content-Type": "application/json"}
-    response = session.post(
+    response = await session.post(
         url=url,
         data=verified_json.encode("utf-8"),
         headers=headers,
@@ -148,7 +148,7 @@ def create(
         raise
 
 
-def read(
+async def read(
     name: str,
     resource_id: str,
 ) -> Model:
@@ -165,7 +165,7 @@ def read(
     raise_when_operation_not_allowed(name, "read")
     session = session_manager.session
     url = session_manager.url(name, f"/{resource_id}")
-    response = session.get(url=url)
+    response = await session.get(url=url)
 
     if response.status_code == 403:
         raise QuotaExceededException(
@@ -182,7 +182,7 @@ def read(
     raise WalletException(f"{url} {response.status_code} - {response.text}")
 
 
-def update(
+async def update(
     data: Model,
     *,
     partial: bool = True,
@@ -207,12 +207,12 @@ def update(
     )
     session = session_manager.session
     if partial:
-        response = session.patch(
+        response = await session.patch(
             url=session_manager.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
         )
     else:
-        response = session.put(
+        response = await session.put(
             url=session_manager.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
         )
@@ -232,7 +232,7 @@ def update(
     return model.model_validate_json(response.content)
 
 
-def message(
+async def message(
     name: str,
     resource_id: str,
     message: dict[str, typing.Any] | Message,
@@ -259,7 +259,7 @@ def message(
         exclude_none=True,
     )
     url = session_manager.url(name, f"/{resource_id}/addMessage")
-    response = session_manager.session.post(url=url, data=verified_json.encode("utf-8"))
+    response = await session_manager.session.post(url=url, data=verified_json.encode("utf-8"))
 
     if response.status_code == 403:
         raise QuotaExceededException(
@@ -276,14 +276,14 @@ def message(
     return model.model_validate(response_data.get("resource"))
 
 
-def listing(
+async def listing(
     name: str,
     *,
     resource_id: str | None = None,
     issuer_id: str | None = None,
     result_per_page: int = 0,
     next_page_token: str | None = None,
-) -> Generator[Model | str, None, None]:
+) -> AsyncGenerator[Model | str, None, None]:
     """Lists wallet related resources.
 
     It is possible to list all classes of an issuer. Parameter 'name' has to end with 'Class',
@@ -344,7 +344,7 @@ def listing(
     url = session_manager.url(name)
     session = session_manager.session
     while True:
-        response = session.get(url=url, params=params)
+        response = await session.get(url=url, params=params)
         if response.status_code == 404:
             raise LookupError(f"Error 404, {name} not found: - {response.text}")
 

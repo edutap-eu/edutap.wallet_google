@@ -1,6 +1,6 @@
 [project]
 name = "edutap.wallet-google"
-version = "2.0.0b7"
+version = "3.0.0a1"
 description = "Library for Google Wallet Communication"
 keywords = ["wallet", "google", "api", "pass", 'fastapi', 'digital identity']
 readme = "README.md"
@@ -32,7 +32,8 @@ classifiers = [
 ]
 dependencies = [
     "cryptography",
-    "google-auth[requests]",
+    "google-auth",
+    "httpx",
     "pydantic-settings",
     "pydantic[email]>=2.0",
   ]
@@ -45,15 +46,13 @@ Documentation = "https://docs.edutap.eu/packages/edutap_wallet_google/index.html
 [project.optional-dependencies]
 callback = [
     "fastapi",
-    "httpx",
 ]
 test = [
     "edutap.wallet-google[callback]",
+    "pytest",
     "pytest-cov",
     "pytest-explicit",
-    "pytest",
-    "requests-mock",
-    "tox",
+    "pytest-httpx",
 ]
 typecheck  = [
     "google-auth-stubs",
