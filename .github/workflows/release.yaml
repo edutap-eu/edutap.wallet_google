@@ -26,7 +26,7 @@
           id-token: write
 
         steps:
-          - uses: actions/checkout@v4
+          - uses: actions/checkout@v5
             with:
               fetch-depth: 0
               persist-credentials: false
@@ -48,7 +48,7 @@
 
         steps:
           - name: Download packages built by build-and-inspect-python-package
-            uses: actions/download-artifact@v4
+            uses: actions/download-artifact@v5
             with:
               name: Packages
               path: dist
@@ -71,7 +71,7 @@
 
         steps:
           - name: Download packages built by build-and-inspect-python-package
-            uses: actions/download-artifact@v4
+            uses: actions/download-artifact@v5
             with:
               name: Packages
               path: dist
