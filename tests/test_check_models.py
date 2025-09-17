@@ -8,7 +8,6 @@ from typing import Dict
 from typing import Set
 from typing import Type
 
-import datetime
 import importlib
 import inspect
 import json
@@ -16,7 +15,6 @@ import pathlib
 import pytest
 
 
-DATA_DIR = pathlib.Path(__file__).parent / "data"
 MODEL_ALIAS_DICT = {
     "AppLinkInfo": "AppLinkDataAppLinkInfo",
     "AppTarget": "AppLinkDataAppLinkInfoAppTarget",
@@ -57,7 +55,8 @@ def request_api_data_write_to_file(url: str, file_path: pathlib.Path) -> bool:
         # in case the API is called multiple times during testing.
         # The data is saved in a  JSON file.
         data = json.loads(response.text)
-        json.dump(data, open(file_path, "w"), indent=2, sort_keys=True)
+        with file_path.open("w") as fd:
+            json.dump(data, fd, indent=2, sort_keys=True)
     except HTTPError as e:
         print(e)
         return False
@@ -65,20 +64,33 @@ def request_api_data_write_to_file(url: str, file_path: pathlib.Path) -> bool:
 
 
 @pytest.fixture(scope="module")
-def load_discovery_api_data():
-    data: Dict[str, Any] = {}
-    with open(DATA_DIR / "discovery_api_data.json") as file:
-        data = json.load(file)
-    return data
+def module_tmp_path(tmp_path_factory):
+    return tmp_path_factory.mktemp("module_tmp")
 
 
 @pytest.fixture(scope="module")
-def load_wallet_api_data():
+def discovery_api_data(module_tmp_path):
+    filename = module_tmp_path / "discovery_api_data.json"
+    if not filename.exists():
+        request_api_data_write_to_file(
+            "https://discovery.googleapis.com/discovery/v1/apis?name=walletobjects",
+            filename,
+        )
+    with filename.open("r") as file:
+        yield json.load(file)
+
+
+@pytest.fixture(scope="module")
+def wallet_api_data(module_tmp_path):
     """Loads the Google Wallet API data from the local file."""
-    data: Dict[str, Any] = {}
-    with open(DATA_DIR / "wallet_api_data.json") as file:
-        data = json.load(file)
-    return data
+    filename = module_tmp_path / "wallet_api_data.json"
+    if not filename.exists():
+        request_api_data_write_to_file(
+            "https://walletobjects.googleapis.com/$discovery/rest?version=v1",
+            filename,
+        )
+    with filename.open("r") as file:
+        yield json.load(file)
 
 
 def check_if_url_is_not_reachable(url: str) -> bool:
@@ -97,75 +109,55 @@ def check_if_url_is_not_reachable(url: str) -> bool:
 #     check_if_url_is_not_reachable("https://discovery.googleapis.com/discovery/v1/apis?name=walletobjects"),
 #     reason="This test is expected to fail if the discovery API data is not available."
 # )
-def test_load_data(load_discovery_api_data, load_wallet_api_data):
+def test_load_data(discovery_api_data, wallet_api_data):
     """Test to ensure that the discovery API data can be loaded correctly."""
-    print("\n")
-    assert request_api_data_write_to_file(
-        "https://discovery.googleapis.com/discovery/v1/apis?name=walletobjects",
-        DATA_DIR / "discovery_api_data.json",
-    ), "Failed to load Discovery API"
-    print("Load discovery api successful.")
-    assert isinstance(load_discovery_api_data, dict)
-    wallet_api_url = load_discovery_api_data.get("items", [{}])[0].get(
-        "discoveryRestUrl",
-        "https://walletobjects.googleapis.com/$discovery/rest?version=v1",
-    )
-    assert request_api_data_write_to_file(
-        wallet_api_url, DATA_DIR / "wallet_api_data.json"
-    ), "Failed to load Wallet API."
-    print("Load wallet api successful.")
-    file_stat = pathlib.Path(DATA_DIR / "wallet_api_data.json").stat()
-    mtime = datetime.datetime.fromtimestamp(file_stat.st_mtime)
-    print(f"Wallet API file last modified at: {mtime.isoformat()}")
-    assert isinstance(load_wallet_api_data, dict)
-    assert datetime.date(mtime.year, mtime.month, mtime.day) == datetime.date.today()
+    assert isinstance(discovery_api_data, dict)
+    assert isinstance(wallet_api_data, dict)
 
 
-def test_discovery_api(load_discovery_api_data: Dict[str, Any]):
-    data = load_discovery_api_data
-    assert data["kind"] == "discovery#directoryList"
-    assert data["discoveryVersion"] == "v1"
-    assert len(data["items"]) == 1
-    for api_description in data["items"]:
-        assert isinstance(api_description, dict)
-        assert "kind" in api_description
-        assert api_description["kind"] == "discovery#directoryItem"
-        assert "version" in api_description
-        assert api_description["version"] == "v1"
-        assert "id" in api_description
-        assert api_description["id"] == "walletobjects:v1"
-        assert "name" in api_description
-        assert api_description["name"] == "walletobjects"
-        assert "title" in api_description
-        assert api_description["title"] == "Google Wallet API"
-        assert "preferred" in api_description
-        assert api_description["preferred"] is True
-        assert "discoveryRestUrl" in api_description
+def test_discovery_api(discovery_api_data: Dict[str, Any]):
+    assert discovery_api_data["kind"] == "discovery#directoryList"
+    assert discovery_api_data["discoveryVersion"] == "v1"
+    assert len(discovery_api_data["items"]) == 1
+    api_description = discovery_api_data["items"][0]
+    assert isinstance(api_description, dict)
+    assert "kind" in api_description
+    assert api_description["kind"] == "discovery#directoryItem"
+    assert "version" in api_description
+    assert api_description["version"] == "v1"
+    assert "id" in api_description
+    assert api_description["id"] == "walletobjects:v1"
+    assert "name" in api_description
+    assert api_description["name"] == "walletobjects"
+    assert "title" in api_description
+    assert api_description["title"] == "Google Wallet API"
+    assert "preferred" in api_description
+    assert api_description["preferred"] is True
+    assert "discoveryRestUrl" in api_description
 
 
-def test_wallet_api(load_wallet_api_data: Dict[str, Any]):
-    wallet_data = load_wallet_api_data
-    assert isinstance(wallet_data, dict)
-    assert wallet_data["kind"] == "discovery#restDescription"
-    assert wallet_data["discoveryVersion"] == "v1"
-    assert wallet_data["version"] == "v1"
-    assert wallet_data["revision"] == "20250808"
-    assert wallet_data["protocol"] == "rest"
-    assert wallet_data["id"] == "walletobjects:v1"
-    assert wallet_data["title"] == "Google Wallet API"
-    assert wallet_data["canonicalName"] == "Walletobjects"
-    assert wallet_data["name"] == "walletobjects"
-    assert "resources" in wallet_data
-    assert isinstance(wallet_data["resources"], dict)
-    assert "schemas" in wallet_data
-    assert isinstance(wallet_data["schemas"], dict)
-    assert "parameters" in wallet_data
-    assert isinstance(wallet_data["parameters"], dict)
+def test_wallet_api(wallet_api_data: Dict[str, Any]):
+    assert isinstance(wallet_api_data, dict)
+    assert wallet_api_data["kind"] == "discovery#restDescription"
+    assert wallet_api_data["discoveryVersion"] == "v1"
+    assert wallet_api_data["version"] == "v1"
+    # this is subject to change over time
+    # assert wallet_api_data["revision"] == "20250808"
+    assert wallet_api_data["protocol"] == "rest"
+    assert wallet_api_data["id"] == "walletobjects:v1"
+    assert wallet_api_data["title"] == "Google Wallet API"
+    assert wallet_api_data["canonicalName"] == "Walletobjects"
+    assert wallet_api_data["name"] == "walletobjects"
+    assert "resources" in wallet_api_data
+    assert isinstance(wallet_api_data["resources"], dict)
+    assert "schemas" in wallet_api_data
+    assert isinstance(wallet_api_data["schemas"], dict)
+    assert "parameters" in wallet_api_data
+    assert isinstance(wallet_api_data["parameters"], dict)
 
 
-def test_known_schemas(load_wallet_api_data: Dict[str, Any]):
-    wallet_data = load_wallet_api_data
-    schemas: Dict[str, Dict[str, Any]] = wallet_data.get("schemas", {})
+def test_known_schemas(wallet_api_data: Dict[str, Any]):
+    schemas: Dict[str, Dict[str, Any]] = wallet_api_data.get("schemas", {})
     assert isinstance(schemas, dict)
     assert len(schemas) > 0
 
@@ -200,12 +192,12 @@ def test_known_schemas(load_wallet_api_data: Dict[str, Any]):
     # )
 
     our_schemas = dict(sorted(our_schemas.items()))
-    print("Our known schemas:")
-    for name in our_schemas.keys():
-        print(f" * {name}")
+    # print("Our known schemas:")
+    # for name in our_schemas.keys():
+    #     print(f" * {name}")
 
     for name, model in our_schemas.items():
-        print(f"\nCheck: '{name}'", end=" ")
+        # print(f"\nCheck: '{name}'", end=" ")
 
         api_schema = schemas.get(name, {})
         if api_schema == {} and name in MODEL_ALIAS_DICT.keys():
@@ -237,9 +229,8 @@ def test_known_schemas(load_wallet_api_data: Dict[str, Any]):
                 ), f"The property: '{prop}' is deprecated, but not marked as such in our schema."
 
 
-def test_methods(load_wallet_api_data: Dict[str, Any]):
-    wallet_data = load_wallet_api_data
-    resources = wallet_data["resources"]
+def test_methods(wallet_api_data: Dict[str, Any]):
+    resources = wallet_api_data["resources"]
 
     model_names: Dict[str, str] = {m.lower(): m for m in _MODEL_REGISTRY_BY_NAME.keys()}
     print(f"Known Model names: {model_names}")
