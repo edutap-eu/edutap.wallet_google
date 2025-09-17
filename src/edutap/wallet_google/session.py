@@ -1,3 +1,4 @@
+from .plugins import get_credential_providers
 from .registry import lookup_metadata_by_name
 from .settings import Settings
 from google.auth.transport.requests import AuthorizedSession
@@ -58,25 +59,45 @@ class SessionManager:
             self._settings = Settings()
         return self._settings
 
-    def _make_session(self) -> AuthorizedSession:
-        if not self.settings.credentials_file.is_file():
-            raise ValueError(
-                f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.settings.credentials_file} does not exist."
-            )
-        credentials = Credentials.from_service_account_file(
-            str(self.settings.credentials_file),
+    def _credentials_for_issuer(self, issuer_id: str) -> Credentials:
+        try:
+            providers = get_credential_providers()
+        except NotImplementedError:
+            # fallback to the credentials file in the settings
+            if not self.settings.credentials_file.is_file():
+                raise ValueError(
+                    f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.settings.credentials_file} does not exist."
+                )
+            with self.settings.credentials_file.open("r") as fd:
+                data = json.load(fd)
+        else:
+            raw = None
+            for provider in providers:
+                try:
+                    raw = provider.credential_for_issuer(issuer_id)
+                    break
+                except LookupError:
+                    pass
+            if raw is None:
+                raise LookupError(f"No credentials found for issuer {issuer_id}")
+            data = json.loads(raw)
+        return Credentials.from_service_account_info(
+            data,
             scopes=self.settings.credentials_scopes,
         )
-        session = AuthorizedSession(credentials)
+
+    def _make_session(self, issuer_id: str) -> AuthorizedSession:
+        session = AuthorizedSession(self._credentials_for_issuer(issuer_id))
         if self.settings.record_api_calls_dir is not None:
             session.mount("https://", HTTPRecorder())
         return session
 
-    @property
-    def session(self) -> AuthorizedSession:
-        if getattr(_THREADLOCAL, "session", None) is None:
-            _THREADLOCAL.session = self._make_session()
-        return _THREADLOCAL.session  # type: ignore
+    def session(self, issuer_id: str) -> AuthorizedSession:
+        if getattr(_THREADLOCAL, "sessions", None) is None:
+            _THREADLOCAL.sessions = dict()
+        if issuer_id not in _THREADLOCAL.sessions:
+            _THREADLOCAL.sessions[issuer_id] = self._make_session(issuer_id)
+        return _THREADLOCAL.sessions[issuer_id]  # type: ignore
 
     def url(self, name: str, additional_path: str = "") -> str:
         """

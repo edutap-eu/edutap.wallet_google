@@ -44,7 +44,7 @@ def test_session_creation(monkeypatch):
         str(ROOT_DIR / "tests" / "data" / "credentials_fake.json"),
     )
     manager = SessionManager()
-    session = manager.session
+    session = manager.session("dummy-issuer")
     assert session is not None
     assert manager.settings.credentials_file is not None
     assert session.credentials.scopes == [
@@ -53,13 +53,13 @@ def test_session_creation(monkeypatch):
 
     from edutap.wallet_google.session import _THREADLOCAL
 
-    assert _THREADLOCAL.session is session
+    assert _THREADLOCAL.sessions["dummy-issuer"] is session
 
     import threading
 
     def thread_check_different_session(other_session_id):
-        session = manager.session  # noqa: F841
-        assert id(_THREADLOCAL.session) != other_session_id
+        session = manager.session("dummy-issuer")  # noqa: F841
+        assert id(_THREADLOCAL.session["dummy-issuer"]) != other_session_id
 
     threading.Thread(target=thread_check_different_session, args=[id(session)]).start()
 
@@ -68,11 +68,11 @@ def test_session_with_HTTPRecorder(tmp_path):
     from edutap.wallet_google.session import _THREADLOCAL
     from edutap.wallet_google.session import SessionManager
 
-    delattr(_THREADLOCAL, "session")
+    delattr(_THREADLOCAL, "sessions")
     manager = SessionManager()
     manager.settings.record_api_calls_dir = tmp_path
     manager.settings.credentials_file = (
         ROOT_DIR / "tests" / "data" / "credentials_fake.json"
     )
-    session = manager.session
+    session = manager.session("dummy-user")
     assert session.adapters["https://"].__class__.__name__ == "HTTPRecorder"

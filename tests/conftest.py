@@ -44,16 +44,20 @@ def mock_session(monkeypatch, requests_mock):
 
     import requests
 
-    _THREADLOCAL.session = None
+    before = getattr(_THREADLOCAL, "sessions", {})
+    try:
+        delattr(_THREADLOCAL, "sessions")
+    except AttributeError:
+        pass
 
-    def mock_session(self):
+    def mock_make_session(self, issuer_id):
         return requests.Session()
 
-    monkeypatch.setattr(SessionManager, "session", property(mock_session))
+    monkeypatch.setattr(SessionManager, "_make_session", mock_make_session)
 
     yield requests_mock
 
-    _THREADLOCAL.session = None
+    _THREADLOCAL.sessions = before
 
 
 @pytest.fixture
