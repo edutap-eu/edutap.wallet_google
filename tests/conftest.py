@@ -37,12 +37,8 @@ def clean_registry_by_model():
 
 
 @pytest.fixture
-def mock_session(monkeypatch, requests_mock):
-    """Fixture to provide a mock Google Wallet API session."""
+def clean_session_threadlocals():
     from edutap.wallet_google.session import _THREADLOCAL
-    from edutap.wallet_google.session import SessionManager
-
-    import requests
 
     before = getattr(_THREADLOCAL, "sessions", {})
     try:
@@ -50,14 +46,32 @@ def mock_session(monkeypatch, requests_mock):
     except AttributeError:
         pass
 
+    yield
+
+    _THREADLOCAL.sessions = before
+
+
+@pytest.fixture
+def mock_session(monkeypatch, requests_mock, clean_session_threadlocals):
+    """Fixture to provide a mock Google Wallet API session."""
+    from edutap.wallet_google.session import SessionManager
+
+    import requests
+
     def mock_make_session(self, issuer_id):
         return requests.Session()
 
     monkeypatch.setattr(SessionManager, "_make_session", mock_make_session)
 
-    yield requests_mock
+    def mock_get_credential_providers():
+        raise NotImplementedError()
 
-    _THREADLOCAL.sessions = before
+    monkeypatch.setattr(
+        "edutap.wallet_google.session.get_credential_providers",
+        mock_get_credential_providers,
+    )
+
+    yield requests_mock
 
 
 @pytest.fixture
