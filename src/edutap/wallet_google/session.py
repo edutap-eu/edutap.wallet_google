@@ -77,7 +77,7 @@ class SessionManager:
                     raw = provider.credential_for_issuer(issuer_id)
                     break
                 except LookupError:
-                    pass
+                    continue
             if raw is None:
                 raise LookupError(f"No credentials found for issuer {issuer_id}")
             data = json.loads(raw)
