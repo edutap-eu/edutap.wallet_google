@@ -125,7 +125,7 @@ There are two routers available for callback and images, plus one combined provi
 
   Default: `5.0`
 
-- `EDUTAP_WALLET_GOOGLE_FERNET_ENCRYPTIONS_KEY`
+- `EDUTAP_WALLET_GOOGLE_FERNET_ENCRYPTION_KEY`
 
   Image Identifiers in the images handler are encrypted symmetrically.
   To generate key use the provided script `generate-fernet-key` or any tool to generate a Fernet key,
