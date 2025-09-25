@@ -73,7 +73,7 @@ def _validate_data_and_convert_to_json(
     return (identifier, verified_json)
 
 
-def _issuer_from_resource_id(resource_id: str) -> str:
+def issuer_from_resource_id(resource_id: str) -> str:
     """Extracts the issuerId from a resource id.
 
     :param resource_id: Resource id in the form issuerId.identifier
@@ -116,9 +116,7 @@ def new(
     return _validate_data(model, data)
 
 
-def create(
-    data: Model,
-) -> Model:
+def create(data: Model, credentials: dict | None = None) -> Model:
     """
     Creates a Google Wallet items. `C` in CRUD.
 
@@ -134,7 +132,11 @@ def create(
     raise_when_operation_not_allowed(name, "create")
     model = model_metadata["model"]
     resource_id, verified_json = _validate_data_and_convert_to_json(model, data)
-    session = session_manager.session(_issuer_from_resource_id(resource_id))
+    if credentials is None:
+        issuer_id = issuer_from_resource_id(resource_id)
+        session = session_manager.session(issuer_id=issuer_id)
+    else:
+        session = session_manager.session(credentials=credentials)
     url = session_manager.url(name)
     headers = {"Content-Type": "application/json"}
     response = session.post(
@@ -163,10 +165,7 @@ def create(
         raise
 
 
-def read(
-    name: str,
-    resource_id: str,
-) -> Model:
+def read(name: str, resource_id: str, credentials: dict | None = None) -> Model:
     """
     Reads a Google Wallet Class or Object. `R` in CRUD.
 
@@ -178,7 +177,11 @@ def read(
     :return:                          the created model based on the data returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "read")
-    session = session_manager.session(_issuer_from_resource_id(resource_id))
+    if credentials is None:
+        issuer_id = issuer_from_resource_id(resource_id)
+        session = session_manager.session(issuer_id=issuer_id)
+    else:
+        session = session_manager.session(credentials=credentials)
     url = session_manager.url(name, f"/{resource_id}")
     response = session.get(url=url)
 
@@ -198,9 +201,7 @@ def read(
 
 
 def update(
-    data: Model,
-    *,
-    partial: bool = True,
+    data: Model, *, partial: bool = True, credentials: dict | None = None
 ) -> Model:
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
@@ -220,7 +221,11 @@ def update(
     resource_id, verified_json = _validate_data_and_convert_to_json(
         model, data, existing=True, resource_id_key=model_metadata["resource_id"]
     )
-    session = session_manager.session(_issuer_from_resource_id(resource_id))
+    if credentials is None:
+        issuer_id = issuer_from_resource_id(resource_id)
+        session = session_manager.session(issuer_id=issuer_id)
+    else:
+        session = session_manager.session(credentials=credentials)
     if partial:
         response = session.patch(
             url=session_manager.url(name, f"/{resource_id}"),
@@ -251,6 +256,7 @@ def message(
     name: str,
     resource_id: str,
     message: dict[str, typing.Any] | Message,
+    credentials: dict | None = None,
 ) -> Model:
     """Sends a message to a Google Wallet Class or Object.
 
@@ -274,7 +280,13 @@ def message(
         exclude_none=True,
     )
     url = session_manager.url(name, f"/{resource_id}/addMessage")
-    session = session_manager.session(_issuer_from_resource_id(resource_id))
+
+    if credentials is None:
+        issuer_id = issuer_from_resource_id(resource_id)
+        session = session_manager.session(issuer_id=issuer_id)
+    else:
+        session = session_manager.session(credentials=credentials)
+
     response = session.post(url=url, data=verified_json.encode("utf-8"))
 
     if response.status_code == 403:
@@ -299,6 +311,7 @@ def listing(
     issuer_id: str | None = None,
     result_per_page: int = 0,
     next_page_token: str | None = None,
+    credentials: dict | None = None,
 ) -> Generator[Model | str, None, None]:
     """Lists wallet related resources.
 
@@ -340,7 +353,7 @@ def listing(
         if not resource_id:
             raise ValueError("resource_id of a class must be given to list its objects")
         params["classId"] = resource_id
-        issuer_id = _issuer_from_resource_id(resource_id)
+        issuer_id = issuer_from_resource_id(resource_id)
 
     elif name.endswith("Class"):
         is_pageable = True
@@ -376,8 +389,12 @@ def listing(
     url = session_manager.url(name)
     if issuer_id is None:
         assert isinstance(resource_id, str)
-        issuer_id = _issuer_from_resource_id(resource_id)
-    session = session_manager.session(issuer_id)
+        issuer_id = issuer_from_resource_id(resource_id)
+
+    if credentials is None:
+        session = session_manager.session(issuer_id=issuer_id)
+    else:
+        session = session_manager.session(credentials=credentials)
 
     while True:
         response = session.get(url=url, params=params)
@@ -475,6 +492,7 @@ def save_link(
     origins: list[str] = [],
     iat: str | datetime.datetime = "",
     exp: str | datetime.datetime = "",
+    credentials: dict | None = None,
 ) -> str:
     """
     Creates a link to save a Google Wallet Object to the wallet on the device.
@@ -497,8 +515,15 @@ def save_link(
     :param: exp:        Expiration Time. The time when the JWT expires.
     :return:            Link with JWT to save the resources to the wallet.
     """
+    if credentials is None:
+        issuer_id = issuer_from_resource_id(models[0].id)
+        try:
+            credentials = session_manager.credentials_by_issuer(issuer_id)
+        except NotImplementedError:
+            credentials = session_manager.credentials_from_file()
+
     claims = _create_claims(
-        session_manager.settings.credentials_info["client_email"],
+        credentials["client_email"],
         origins,
         models,
         iat=iat,
@@ -512,10 +537,7 @@ def save_link(
             exclude_none=True,
         )
     )
-
-    issuer_id = _issuer_from_resource_id(models[0].id)
-    credentials_file_data = session_manager.credentials_file_data_for_issuer(issuer_id)
-    signer = crypt.RSASigner.from_service_account_info(credentials_file_data)
+    signer = crypt.RSASigner.from_service_account_info(credentials)
     jwt_string = jwt.encode(
         signer,
         claims.model_dump(

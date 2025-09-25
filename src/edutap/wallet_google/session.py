@@ -59,48 +59,57 @@ class SessionManager:
             self._settings = Settings()
         return self._settings
 
-    def credentials_file_data_for_issuer(self, issuer_id: str) -> str:
-        try:
-            providers = get_credential_providers()
-        except NotImplementedError:
-            # fallback to the credentials file in the settings
-            if not self.settings.credentials_file.is_file():
-                raise ValueError(
-                    f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.settings.credentials_file} does not exist."
-                )
-            with self.settings.credentials_file.open("r") as fd:
-                return fd.read()
-        else:
-            raw = None
-            for provider in providers:
-                try:
-                    raw = provider.credential_for_issuer(issuer_id)
-                    break
-                except LookupError:
-                    continue
-            if raw is None:
-                raise LookupError(f"No credentials found for issuer {issuer_id}")
-            return raw
+    def credentials_from_file(self) -> dict:
+        credentials_file = self.settings.credentials_file
+        if not credentials_file.is_file():
+            raise ValueError(f"Credentials file {credentials_file} not exists")
+        with credentials_file.open() as fd:
+            return json.loads(fd.read())
 
-    def _credentials_for_issuer(self, issuer_id: str) -> Credentials:
-        credentials_file_data = self.credentials_file_data_for_issuer(issuer_id)
-        return Credentials.from_service_account_info(
-            json.loads(credentials_file_data),
+    def credentials_by_issuer(self, issuer_id: str) -> dict:
+        providers = get_credential_providers()
+        for provider in providers:
+            try:
+                return provider.credential_for_issuer(issuer_id)
+            except LookupError:
+                continue
+        raise LookupError(f"No credentials found for issuer {issuer_id}")
+
+    def _make_session(self, credentials: dict) -> AuthorizedSession:
+        google_credentials = Credentials.from_service_account_info(
+            credentials,
             scopes=self.settings.credentials_scopes,
         )
-
-    def _make_session(self, issuer_id: str) -> AuthorizedSession:
-        session = AuthorizedSession(self._credentials_for_issuer(issuer_id))
+        session = AuthorizedSession(google_credentials)
         if self.settings.record_api_calls_dir is not None:
             session.mount("https://", HTTPRecorder())
         return session
 
-    def session(self, issuer_id: str) -> AuthorizedSession:
+    def session(
+        self, issuer_id: str | None = None, credentials: dict | None = None
+    ) -> AuthorizedSession:
+        if issuer_id and credentials:
+            raise RuntimeError(
+                "Either issuer ID or credentials data must be given, not both"
+            )
+        if not issuer_id and not credentials:
+            raise RuntimeError("Either issuer ID or credentials data must be given")
+
+        if not credentials:
+            try:
+                assert issuer_id is not None  # make mypy happy
+                credentials = self.credentials_by_issuer(issuer_id)
+            except NotImplementedError:
+                credentials = self.credentials_from_file()
+        cache_key = credentials["private_key_id"]
+
         if getattr(_THREADLOCAL, "sessions", None) is None:
             _THREADLOCAL.sessions = dict()
-        if issuer_id not in _THREADLOCAL.sessions:
-            _THREADLOCAL.sessions[issuer_id] = self._make_session(issuer_id)
-        return _THREADLOCAL.sessions[issuer_id]  # type: ignore
+
+        if cache_key not in _THREADLOCAL.sessions:
+            _THREADLOCAL.sessions[cache_key] = self._make_session(credentials)
+
+        return _THREADLOCAL.sessions[cache_key]
 
     def url(self, name: str, additional_path: str = "") -> str:
         """
