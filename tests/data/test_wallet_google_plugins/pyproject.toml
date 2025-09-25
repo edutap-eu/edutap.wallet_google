@@ -5,4 +5,4 @@ version = "1.0"
 [project.entry-points.'edutap.wallet_google.plugins']
 ImageProvider = 'plugins:TestImageProvider'
 CallbackHandler = 'plugins:TestCallbackHandler'
-CredentialProvider = 'plugins:TestCredentialProvider'
+CredentialsProvider = 'plugins:TestCredentialsProvider'

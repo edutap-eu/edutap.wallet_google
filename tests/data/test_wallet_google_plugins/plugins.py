@@ -45,15 +45,15 @@ class TestCallbackHandler:
         raise ValueError("test case errors if nonce is 0")
 
 
-class TestCredentialProvider:
+class TestCredentialsProvider:
     """
-    Implementation of edutap.wallet_google.protocols.CredentialProvider
+    Implementation of edutap.wallet_google.protocols.CredentialsProvider
 
     Used in tests to simulate a crednetial providertox -e lint
      and possible errors.
     """
 
-    def credential_for_issuer(self, issuer_id: str) -> str:
+    def credentials_for_issuer(self, issuer_id: str) -> str:
         # return some predictable data for unit testing
         if issuer_id == "OK":
             return "{}"
