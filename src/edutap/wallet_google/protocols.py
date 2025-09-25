@@ -42,10 +42,10 @@ class CallbackHandler(Protocol):
 @runtime_checkable
 class CredentialProvider(Protocol):
 
-    def credential_for_issuer(self, issuer_id: str) -> str:
+    def credential_for_issuer(self, issuer_id: str) -> dict:
         """
         :param issuer_id: Unique issuer identifier as string.
-        :return: data of the credentials file.
+        :return: data of the credentials file as dict.
 
         :raises: LookupError if issuer_id was not found.
         """
