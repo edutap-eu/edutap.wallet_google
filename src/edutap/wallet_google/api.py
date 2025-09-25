@@ -513,9 +513,9 @@ def save_link(
         )
     )
 
-    signer = crypt.RSASigner.from_service_account_file(
-        session_manager.settings.credentials_file
-    )
+    issuer_id = _issuer_from_resource_id(models[0].id)
+    credentials_file_data = session_manager.credentials_file_data_for_issuer(issuer_id)
+    signer = crypt.RSASigner.from_service_account_info(credentials_file_data)
     jwt_string = jwt.encode(
         signer,
         claims.model_dump(

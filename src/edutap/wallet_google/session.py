@@ -59,7 +59,7 @@ class SessionManager:
             self._settings = Settings()
         return self._settings
 
-    def _credentials_for_issuer(self, issuer_id: str) -> Credentials:
+    def credentials_file_data_for_issuer(self, issuer_id: str) -> str:
         try:
             providers = get_credential_providers()
         except NotImplementedError:
@@ -69,7 +69,7 @@ class SessionManager:
                     f"EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE={self.settings.credentials_file} does not exist."
                 )
             with self.settings.credentials_file.open("r") as fd:
-                data = json.load(fd)
+                return fd.read()
         else:
             raw = None
             for provider in providers:
@@ -80,9 +80,12 @@ class SessionManager:
                     continue
             if raw is None:
                 raise LookupError(f"No credentials found for issuer {issuer_id}")
-            data = json.loads(raw)
+            return raw
+
+    def _credentials_for_issuer(self, issuer_id: str) -> Credentials:
+        credentials_file_data = self.credentials_file_data_for_issuer(issuer_id)
         return Credentials.from_service_account_info(
-            data,
+            json.loads(credentials_file_data),
             scopes=self.settings.credentials_scopes,
         )
 
