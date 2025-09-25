@@ -58,17 +58,17 @@ def mock_session(monkeypatch, requests_mock, clean_session_threadlocals):
 
     import requests
 
-    def mock_make_session(self, issuer_id):
+    def mock_make_session(self, credentials):
         return requests.Session()
 
     monkeypatch.setattr(SessionManager, "_make_session", mock_make_session)
 
-    def mock_get_credential_providers():
+    def mock_get_credentials_providers():
         raise NotImplementedError()
 
     monkeypatch.setattr(
-        "edutap.wallet_google.session.get_credential_providers",
-        mock_get_credential_providers,
+        "edutap.wallet_google.session.get_credentials_providers",
+        mock_get_credentials_providers,
     )
 
     yield requests_mock

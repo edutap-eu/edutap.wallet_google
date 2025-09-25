@@ -1,4 +1,4 @@
-from .plugins import get_credential_providers
+from .plugins import get_credentials_providers
 from .registry import lookup_metadata_by_name
 from .settings import Settings
 from google.auth.transport.requests import AuthorizedSession
@@ -67,10 +67,10 @@ class SessionManager:
             return json.loads(fd.read())
 
     def credentials_by_issuer(self, issuer_id: str) -> dict:
-        providers = get_credential_providers()
+        providers = get_credentials_providers()
         for provider in providers:
             try:
-                return provider.credential_for_issuer(issuer_id)
+                return provider.credentials_for_issuer(issuer_id)
             except LookupError:
                 continue
         raise LookupError(f"No credentials found for issuer {issuer_id}")

@@ -7,7 +7,7 @@ from .models.datatypes.message import Message
 from .models.misc import AddMessageRequest
 from .models.passes.bases import ClassModel
 from .models.passes.bases import ObjectModel
-from .plugins import get_credential_providers
+from .plugins import get_credentials_providers
 from .registry import lookup_metadata_by_model_instance
 from .registry import lookup_metadata_by_model_type
 from .registry import lookup_metadata_by_name
@@ -368,7 +368,7 @@ def listing(
         # In multi-issuer setups this might be a problem, so we fail when there are providers registered
         # but no issuer_id is given in this case.
         if issuer_id is None:
-            providers = get_credential_providers()
+            providers = get_credentials_providers()
             if not providers:
                 raise ValueError(
                     "issuer_id must be given to list issuers in multi-issuer setups"
