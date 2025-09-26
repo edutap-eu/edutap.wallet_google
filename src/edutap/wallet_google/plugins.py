@@ -1,4 +1,5 @@
 from .protocols import CallbackHandler
+from .protocols import CredentialsProvider
 from .protocols import ImageProvider
 from importlib.metadata import entry_points
 
@@ -8,11 +9,15 @@ import typing
 _POSSIBLE_PLUGINS = {
     "ImageProvider": ImageProvider,
     "CallbackHandler": CallbackHandler,
+    "CredentialsProvider": CredentialsProvider,
 }
 
-_PLUGIN_REGISTRY: dict[str, list[CallbackHandler | ImageProvider]] = {
+_PLUGIN_REGISTRY: dict[
+    str, list[CallbackHandler | ImageProvider | CredentialsProvider]
+] = {
     "ImageProvider": [],
     "CallbackHandler": [],
+    "CredentialsProvider": [],
 }
 
 
@@ -27,7 +32,7 @@ def get_plugins(name: str) -> list[CallbackHandler | ImageProvider]:
     plugins = [ep.load() for ep in eps if ep.name.startswith(name)]
     plugins += _PLUGIN_REGISTRY.get(name, [])
     if not plugins:
-        raise NotImplementedError("No image provider plug-in found")
+        raise NotImplementedError(f"No {name} plug-in found")
     for plugin in plugins:
         if not isinstance(plugin, _POSSIBLE_PLUGINS[name]):
             raise ValueError(f"{plugin} not implements {name}")
@@ -40,3 +45,7 @@ def get_image_providers() -> list[ImageProvider]:
 
 def get_callback_handlers() -> list[CallbackHandler]:
     return typing.cast(list[CallbackHandler], get_plugins("CallbackHandler"))
+
+
+def get_credentials_providers() -> list[CredentialsProvider]:
+    return typing.cast(list[CredentialsProvider], get_plugins("CredentialsProvider"))
