@@ -53,14 +53,14 @@ class TestCredentialsProvider:
      and possible errors.
     """
 
-    def credentials_for_issuer(self, issuer_id: str) -> str:
+    def credentials_for_issuer(self, issuer_id: str) -> dict:
         # return some predictable data for unit testing
         if issuer_id == "OK":
-            return "{}"
+            return {}
         if issuer_id == "ERROR":
-            raise LookupError("Image not found.")
+            raise LookupError("Credentials not found.")
         if issuer_id == "CANCEL":
             raise LookupError("Cancelled")
         if issuer_id == "TIMEOUT":
             sleep(0.5)
-        raise Exception("Unexpected issuer_id")
+        raise LookupError("Unexpected issuer_id")
