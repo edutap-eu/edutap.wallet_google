@@ -86,7 +86,9 @@ class SessionManager:
         return session
 
     def session(
-        self, issuer_id: str | None = None, credentials: dict | None = None
+        self,
+        issuer_id: str | None = None,
+        credentials: dict | None = None,
     ) -> AuthorizedSession:
         if issuer_id and credentials:
             raise RuntimeError(
