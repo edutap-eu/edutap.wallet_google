@@ -5,6 +5,7 @@ from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials
 from requests.adapters import HTTPAdapter
 
+import functools
 import json
 import threading
 
@@ -59,6 +60,7 @@ class SessionManager:
             self._settings = Settings()
         return self._settings
 
+    @functools.cache
     def credentials_from_file(self) -> dict:
         credentials_file = self.settings.credentials_file
         if not credentials_file.is_file():
@@ -66,6 +68,7 @@ class SessionManager:
         with credentials_file.open() as fd:
             return json.loads(fd.read())
 
+    @functools.lru_cache(maxsize=100)
     def credentials_by_issuer(self, issuer_id: str) -> dict:
         providers = get_credentials_providers()
         for provider in providers:
