@@ -116,7 +116,10 @@ def new(
     return _validate_data(model, data)
 
 
-def create(data: Model, credentials: dict | None = None) -> Model:
+def create(
+    data: Model,
+    credentials: dict | None = None,
+) -> Model:
     """
     Creates a Google Wallet items. `C` in CRUD.
 
@@ -165,7 +168,11 @@ def create(data: Model, credentials: dict | None = None) -> Model:
         raise
 
 
-def read(name: str, resource_id: str, credentials: dict | None = None) -> Model:
+def read(
+    name: str,
+    resource_id: str,
+    credentials: dict | None = None,
+) -> Model:
     """
     Reads a Google Wallet Class or Object. `R` in CRUD.
 
@@ -201,7 +208,10 @@ def read(name: str, resource_id: str, credentials: dict | None = None) -> Model:
 
 
 def update(
-    data: Model, *, partial: bool = True, credentials: dict | None = None
+    data: Model,
+    *,
+    partial: bool = True,
+    credentials: dict | None = None,
 ) -> Model:
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
