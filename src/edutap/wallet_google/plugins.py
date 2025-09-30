@@ -1,5 +1,4 @@
 from .protocols import CallbackHandler
-from .protocols import CredentialsProvider
 from .protocols import ImageProvider
 from importlib.metadata import entry_points
 
@@ -9,15 +8,13 @@ import typing
 _POSSIBLE_PLUGINS = {
     "ImageProvider": ImageProvider,
     "CallbackHandler": CallbackHandler,
-    "CredentialsProvider": CredentialsProvider,
 }
 
 _PLUGIN_REGISTRY: dict[
-    str, list[CallbackHandler | ImageProvider | CredentialsProvider]
+    str, list[CallbackHandler | ImageProvider]
 ] = {
     "ImageProvider": [],
     "CallbackHandler": [],
-    "CredentialsProvider": [],
 }
 
 
@@ -45,7 +42,3 @@ def get_image_providers() -> list[ImageProvider]:
 
 def get_callback_handlers() -> list[CallbackHandler]:
     return typing.cast(list[CallbackHandler], get_plugins("CallbackHandler"))
-
-
-def get_credentials_providers() -> list[CredentialsProvider]:
-    return typing.cast(list[CredentialsProvider], get_plugins("CredentialsProvider"))
