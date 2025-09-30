@@ -21,7 +21,7 @@ This is supported by
 - Pydantic models of the classes, objects, and their data-types according to the Google Wallet documentation;
 - an extensible registry for models of these classes and objects;
 - a session manager for authorized HTTPS communication with the Google Restful API;
-- a plugin system with protocols to decouple the actual business logic for the callback/ image/ credential providers.
+- a plugin system with protocols to decouple the actual business logic for the callback and image providers.
 
 ## Documentation
 

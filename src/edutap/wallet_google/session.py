@@ -1,4 +1,3 @@
-from .plugins import get_credentials_providers
 from .registry import lookup_metadata_by_name
 from .settings import Settings
 from google.auth.transport.requests import AuthorizedSession
@@ -68,16 +67,6 @@ class SessionManager:
         with credentials_file.open() as fd:
             return json.loads(fd.read())
 
-    @functools.lru_cache(maxsize=100)
-    def credentials_by_issuer(self, issuer_id: str) -> dict:
-        providers = get_credentials_providers()
-        for provider in providers:
-            try:
-                return provider.credentials_for_issuer(issuer_id)
-            except LookupError:
-                continue
-        raise LookupError(f"No credentials found for issuer {issuer_id}")
-
     def _make_session(self, credentials: dict) -> AuthorizedSession:
         google_credentials = Credentials.from_service_account_info(
             credentials,
@@ -88,32 +77,21 @@ class SessionManager:
             session.mount("https://", HTTPRecorder())
         return session
 
-    def session(
-        self,
-        issuer_id: str | None = None,
-        credentials: dict | None = None,
-    ) -> AuthorizedSession:
-        if issuer_id and credentials:
-            raise RuntimeError(
-                "Either issuer ID or credentials data must be given, not both"
-            )
-        if not issuer_id and not credentials:
-            raise RuntimeError("Either issuer ID or credentials data must be given")
+    def session(self, credentials: dict | None = None) -> AuthorizedSession:
+        """
+        Create and return an authorized session.
 
+        :param credentials: Session credentials as dict. If not given, credentials
+                            are read from file defined in settings.
+        :return:            The authorized session.
+        """
         if not credentials:
-            try:
-                assert issuer_id is not None  # make mypy happy
-                credentials = self.credentials_by_issuer(issuer_id)
-            except NotImplementedError:
-                credentials = self.credentials_from_file()
+            credentials = self.credentials_from_file()
         cache_key = credentials["private_key_id"]
-
         if getattr(_THREADLOCAL, "sessions", None) is None:
             _THREADLOCAL.sessions = dict()
-
         if cache_key not in _THREADLOCAL.sessions:
             _THREADLOCAL.sessions[cache_key] = self._make_session(credentials)
-
         return _THREADLOCAL.sessions[cache_key]
 
     def url(self, name: str, additional_path: str = "") -> str:
@@ -124,7 +102,8 @@ class SessionManager:
         :param additional_path: Append this to the path.
                                 Must start with a forward slash.
 
-        :return: the url of the google RESTful API endpoint to handle this model
+        :return:                The url of the google RESTful API endpoint to handle
+                                this model
         """
         model_metadata = lookup_metadata_by_name(name)
         return f"{self.settings.api_url}/{model_metadata['url_part']}{additional_path}"

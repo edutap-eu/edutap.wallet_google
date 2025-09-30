@@ -43,24 +43,3 @@ class TestCallbackHandler:
         elif nonce:
             return
         raise ValueError("test case errors if nonce is 0")
-
-
-class TestCredentialsProvider:
-    """
-    Implementation of edutap.wallet_google.protocols.CredentialsProvider
-
-    Used in tests to simulate a crednetial providertox -e lint
-     and possible errors.
-    """
-
-    def credentials_for_issuer(self, issuer_id: str) -> dict:
-        # return some predictable data for unit testing
-        if issuer_id == "OK":
-            return {}
-        if issuer_id == "ERROR":
-            raise LookupError("Credentials not found.")
-        if issuer_id == "CANCEL":
-            raise LookupError("Cancelled")
-        if issuer_id == "TIMEOUT":
-            sleep(0.5)
-        raise LookupError("Unexpected issuer_id")

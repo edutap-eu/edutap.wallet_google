@@ -7,7 +7,6 @@ from .models.datatypes.message import Message
 from .models.misc import AddMessageRequest
 from .models.passes.bases import ClassModel
 from .models.passes.bases import ObjectModel
-from .plugins import get_credentials_providers
 from .registry import lookup_metadata_by_model_instance
 from .registry import lookup_metadata_by_model_type
 from .registry import lookup_metadata_by_name
@@ -73,20 +72,6 @@ def _validate_data_and_convert_to_json(
     return (identifier, verified_json)
 
 
-def issuer_from_resource_id(resource_id: str) -> str:
-    """Extracts the issuerId from a resource id.
-
-    :param resource_id: Resource id in the form issuerId.identifier
-    :raises ValueError: When the resource_id is malformed.
-    :return:           The issuerId part of the resource_id.
-    """
-    try:
-        issuer_id, _ = resource_id.split(".", 1)
-    except ValueError as e:
-        raise ValueError(f"Malformed resource_id {resource_id}, {e}") from e
-    return issuer_id
-
-
 class WalletException(Exception):
     pass
 
@@ -125,6 +110,7 @@ def create(
 
     :param data:                          Data to pass to the Google RESTful API.
                                           A model instance, has to be a registered model.
+    :param credentials:                   Optional session credentials as dict.
     :raises QuotaExceededException:       When the quota was exceeded.
     :raises ObjectAlreadyExistsException: When the id to be created already exists at Google.
     :raises WalletException:              When the response status code is not 200.
@@ -135,11 +121,7 @@ def create(
     raise_when_operation_not_allowed(name, "create")
     model = model_metadata["model"]
     resource_id, verified_json = _validate_data_and_convert_to_json(model, data)
-    if credentials is None:
-        issuer_id = issuer_from_resource_id(resource_id)
-        session = session_manager.session(issuer_id=issuer_id)
-    else:
-        session = session_manager.session(credentials=credentials)
+    session = session_manager.session(credentials=credentials)
     url = session_manager.url(name)
     headers = {"Content-Type": "application/json"}
     response = session.post(
@@ -176,19 +158,16 @@ def read(
     """
     Reads a Google Wallet Class or Object. `R` in CRUD.
 
-    :param name:                      Registered name of the model to use
-    :param resource_id:               Identifier of the resource to read from the Google RESTful API
-    :QuotaExceededException:          When the quota was exceeded.
-    :raises LookupError:              When the resource was not found (404).
-    :raises WalletException           When the response status code is not 200 or 404.
-    :return:                          the created model based on the data returned by the Restful API
+    :param name:             Registered name of the model to use
+    :param resource_id:      Identifier of the resource to read from the Google RESTful API
+    :param credentials:      Optional session credentials as dict.
+    :QuotaExceededException: When the quota was exceeded.
+    :raises LookupError:     When the resource was not found (404).
+    :raises WalletException  When the response status code is not 200 or 404.
+    :return:                 The created model based on the data returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "read")
-    if credentials is None:
-        issuer_id = issuer_from_resource_id(resource_id)
-        session = session_manager.session(issuer_id=issuer_id)
-    else:
-        session = session_manager.session(credentials=credentials)
+    session = session_manager.session(credentials=credentials)
     url = session_manager.url(name, f"/{resource_id}")
     response = session.get(url=url)
 
@@ -218,6 +197,7 @@ def update(
 
     :param data:                    Data to pass to the Google RESTful API.
                                     A model instance, has to be a registered model.
+    :param credentials:             Optional session credentials as dict.
     :param partial:                 Whether a partial update is executed or a full replacement.
     :raises QuotaExceededException: When the quota was exceeded
     :raises LookupError:            When the resource was not found (404)
@@ -231,11 +211,7 @@ def update(
     resource_id, verified_json = _validate_data_and_convert_to_json(
         model, data, existing=True, resource_id_key=model_metadata["resource_id"]
     )
-    if credentials is None:
-        issuer_id = issuer_from_resource_id(resource_id)
-        session = session_manager.session(issuer_id=issuer_id)
-    else:
-        session = session_manager.session(credentials=credentials)
+    session = session_manager.session(credentials=credentials)
     if partial:
         response = session.patch(
             url=session_manager.url(name, f"/{resource_id}"),
@@ -272,6 +248,8 @@ def message(
 
     :param name:                      Registered name of the model to use
     :param resource_id:               Identifier of the resource to send to
+    :param message:                   Message to send.
+    :param credentials:               Optional session credentials as dict.
     :raises QuotaExceededException:   When the quota was exceeded
     :raises LookupError:              When the resource was not found (404)
     :raises WalletException:          When the response status code is not 200 or 404
@@ -290,13 +268,7 @@ def message(
         exclude_none=True,
     )
     url = session_manager.url(name, f"/{resource_id}/addMessage")
-
-    if credentials is None:
-        issuer_id = issuer_from_resource_id(resource_id)
-        session = session_manager.session(issuer_id=issuer_id)
-    else:
-        session = session_manager.session(credentials=credentials)
-
+    session = session_manager.session(credentials=credentials)
     response = session.post(url=url, data=verified_json.encode("utf-8"))
 
     if response.status_code == 403:
@@ -305,7 +277,6 @@ def message(
         )
     elif response.status_code == 404:
         raise LookupError(f"Error 404, {name} not found: - {response.text}")
-
     elif response.status_code != 200:
         raise WalletException(f"Error: {response.status_code} - {response.text}")
 
@@ -342,6 +313,7 @@ def listing(
     :param result_per_page:         Number of results per page to fetch.
                                     If omitted all results will be fetched and provided by the generator.
     :param next_page_token:         Token to get the next page of results.
+    :param credentials:             Optional session credentials as dict.
     :raises QuotaExceededException: When the quota was exceeded
     :raises ValueError:             When input was invalid.
     :raises LookupError:            When the resource was not found (404)
@@ -363,7 +335,6 @@ def listing(
         if not resource_id:
             raise ValueError("resource_id of a class must be given to list its objects")
         params["classId"] = resource_id
-        issuer_id = issuer_from_resource_id(resource_id)
 
     elif name.endswith("Class"):
         is_pageable = True
@@ -372,20 +343,6 @@ def listing(
         params["issuerId"] = issuer_id
     elif name == "Issuer":
         is_pageable = False
-        # Technically we do not need an issuer_id to list issuers, just a credential file.
-        # To look up the credential file dynamically we need an issuer_id.
-        # If the credential file comes from the settings it will work without an issuer_id
-        # In multi-issuer setups this might be a problem, so we fail when there are providers registered
-        # but no issuer_id is given in this case.
-        if issuer_id is None:
-            providers = get_credentials_providers()
-            if not providers:
-                raise ValueError(
-                    "issuer_id must be given to list issuers in multi-issuer setups"
-                )
-            issuer_id = "not important"
-    else:
-        raise ValueError("name must end with 'Class' or 'Object', or be 'Issuer'")
 
     if is_pageable:
         if next_page_token:
@@ -397,14 +354,7 @@ def listing(
             params["maxResults"] = "100"
 
     url = session_manager.url(name)
-    if issuer_id is None:
-        assert isinstance(resource_id, str)
-        issuer_id = issuer_from_resource_id(resource_id)
-
-    if credentials is None:
-        session = session_manager.session(issuer_id=issuer_id)
-    else:
-        session = session_manager.session(credentials=credentials)
+    session = session_manager.session(credentials=credentials)
 
     while True:
         response = session.get(url=url, params=params)
@@ -523,15 +473,11 @@ def save_link(
                         messages in the browser console when the origins field is not defined.
     :param: iat:        Issued At Time. The time when the JWT was issued.
     :param: exp:        Expiration Time. The time when the JWT expires.
+    :param credentials: Optional session credentials as dict.
     :return:            Link with JWT to save the resources to the wallet.
     """
     if credentials is None:
-        issuer_id = issuer_from_resource_id(models[0].id)
-        try:
-            credentials = session_manager.credentials_by_issuer(issuer_id)
-        except NotImplementedError:
-            credentials = session_manager.credentials_from_file()
-
+        credentials = session_manager.credentials_from_file()
     claims = _create_claims(
         credentials["client_email"],
         origins,

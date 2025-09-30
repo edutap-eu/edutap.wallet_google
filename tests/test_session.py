@@ -42,14 +42,6 @@ def test_session_manager_url(
 def test_session_creation(monkeypatch, clean_session_threadlocals):
     from edutap.wallet_google.session import SessionManager
 
-    def mock_get_credentials_providers():
-        raise NotImplementedError()
-
-    monkeypatch.setattr(
-        "edutap.wallet_google.session.get_credentials_providers",
-        mock_get_credentials_providers,
-    )
-
     monkeypatch.setenv(
         "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE",
         str(ROOT_DIR / "tests" / "data" / "credentials_non_existent.json"),
@@ -63,7 +55,7 @@ def test_session_creation(monkeypatch, clean_session_threadlocals):
     )
 
     manager = SessionManager()
-    session = manager.session(issuer_id="dummy-issuer")
+    session = manager.session()
     assert session is not None
     assert manager.settings.credentials_file is not None
     assert session.credentials.scopes == [
@@ -78,72 +70,15 @@ def test_session_creation(monkeypatch, clean_session_threadlocals):
     import threading
 
     def thread_check_different_session(other_session_id):
-        session = manager.session(issuer_id="dummy-issuer")  # noqa: F841
+        session = manager.session()  # noqa: F841
         assert id(_THREADLOCAL.sessions[cache_key]) != other_session_id
 
     threading.Thread(target=thread_check_different_session, args=[id(session)]).start()
 
 
-def test_session_creation_with_provider(monkeypatch, clean_session_threadlocals):
-    from edutap.wallet_google.session import SessionManager
-
-    import json
-
-    class MockCredentialsProvider:
-
-        def credentials_for_issuer(self, issuer_id: str) -> str:
-            with (ROOT_DIR / "tests" / "data" / "credentials_fake.json").open(
-                "r"
-            ) as fd:
-                return json.loads(fd.read())
-
-    def mock_get_credentials_providers():
-        return [MockCredentialsProvider()]
-
-    monkeypatch.setattr(
-        "edutap.wallet_google.session.get_credentials_providers",
-        mock_get_credentials_providers,
-    )
-
-    manager = SessionManager()
-    session = manager.session(issuer_id="dummy-issuer")
-    assert session is not None
-
-
-def test_session_creation_with_provider_none_found(
-    monkeypatch, clean_session_threadlocals
-):
-    from edutap.wallet_google.session import SessionManager
-
-    class MockCredentialsProvider:
-
-        def credentials_for_issuer(self, issuer_id: str) -> str:
-            raise LookupError()
-
-    def mock_get_credentials_providers():
-        return [MockCredentialsProvider()]
-
-    monkeypatch.setattr(
-        "edutap.wallet_google.session.get_credentials_providers",
-        mock_get_credentials_providers,
-    )
-
-    manager = SessionManager()
-
-    pytest.raises(LookupError, manager.session, "dummy-issuer")
-
-
 def test_session_with_HTTPRecorder(tmp_path, monkeypatch):
     from edutap.wallet_google.session import _THREADLOCAL
     from edutap.wallet_google.session import SessionManager
-
-    def mock_get_credentials_providers():
-        raise NotImplementedError()
-
-    monkeypatch.setattr(
-        "edutap.wallet_google.session.get_credentials_providers",
-        mock_get_credentials_providers,
-    )
 
     delattr(_THREADLOCAL, "sessions")
     manager = SessionManager()
@@ -151,5 +86,5 @@ def test_session_with_HTTPRecorder(tmp_path, monkeypatch):
     manager.settings.credentials_file = (
         ROOT_DIR / "tests" / "data" / "credentials_fake.json"
     )
-    session = manager.session(issuer_id="dummy-user")
+    session = manager.session()
     assert session.adapters["https://"].__class__.__name__ == "HTTPRecorder"
