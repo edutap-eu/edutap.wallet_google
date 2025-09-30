@@ -128,8 +128,15 @@ def create(
         headers=headers,
     )
     if response.status_code == 403:
-        raise QuotaExceededException(
-            f"Quota exceeded while trying to create {name} {getattr(data, 'id', 'No ID')}"
+        # Check response text to distinguish between quota and permission errors
+        response_lower = response.text.lower()
+        if "quota" in response_lower or "rate" in response_lower:
+            raise QuotaExceededException(
+                f"Quota exceeded while trying to create {name} {getattr(data, 'id', 'No ID')}"
+            )
+        # Permission/access denied error
+        raise WalletException(
+            f"Access denied while trying to create {name} {getattr(data, 'id', 'No ID')}: {response.text}"
         )
     elif response.status_code == 409:
         raise ObjectAlreadyExistsException(
@@ -168,8 +175,15 @@ def read(
     response = session.get(url=url)
 
     if response.status_code == 403:
-        raise QuotaExceededException(
-            f"Quota exceeded while trying to read {name} {resource_id}"
+        # Check response text to distinguish between quota and permission errors
+        response_lower = response.text.lower()
+        if "quota" in response_lower or "rate" in response_lower:
+            raise QuotaExceededException(
+                f"Quota exceeded while trying to read {name} {resource_id}"
+            )
+        # Permission/access denied error
+        raise WalletException(
+            f"Access denied while trying to read {name} {resource_id}: {response.text}"
         )
     elif response.status_code == 404:
         raise LookupError(f"{url}: {name} not found")
@@ -218,8 +232,15 @@ def update(
         )
     logger.debug(verified_json.encode("utf-8"))
     if response.status_code == 403:
-        raise QuotaExceededException(
-            f"Quota exceeded while trying to read {name} {resource_id}"
+        # Check response text to distinguish between quota and permission errors
+        response_lower = response.text.lower()
+        if "quota" in response_lower or "rate" in response_lower:
+            raise QuotaExceededException(
+                f"Quota exceeded while trying to update {name} {resource_id}"
+            )
+        # Permission/access denied error
+        raise WalletException(
+            f"Access denied while trying to update {name} {resource_id}: {response.text}"
         )
     elif response.status_code == 404:
         raise LookupError(
@@ -262,8 +283,15 @@ def message(
     response = session_manager.session.post(url=url, data=verified_json.encode("utf-8"))
 
     if response.status_code == 403:
-        raise QuotaExceededException(
-            f"Quota exceeded while trying to read {name} {resource_id}"
+        # Check response text to distinguish between quota and permission errors
+        response_lower = response.text.lower()
+        if "quota" in response_lower or "rate" in response_lower:
+            raise QuotaExceededException(
+                f"Quota exceeded while trying to send message to {name} {resource_id}"
+            )
+        # Permission/access denied error
+        raise WalletException(
+            f"Access denied while trying to send message to {name} {resource_id}: {response.text}"
         )
     elif response.status_code == 404:
         raise LookupError(f"Error 404, {name} not found: - {response.text}")
