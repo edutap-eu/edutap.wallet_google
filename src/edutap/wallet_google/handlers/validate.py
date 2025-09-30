@@ -29,9 +29,9 @@ import time
 PROTOCOL_VERSION = "ECv2SigningOnly"
 ALGORITHM = ECDSA(hashes.SHA256())
 GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL = {
-    # see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys
-    "testing": "https://payments.developers.google.com/paymentmethodtoken/test/keys.json",
-    "production": "https://payments.developers.google.com/paymentmethodtoken/keys.json",
+    # see https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions#verify-the-signature
+    "testing": "https://pay.google.com/gp/m/issuer/keys",
+    "production": "https://pay.google.com/gp/m/issuer/keys",
 }
 GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE: dict[str, RootSigningPublicKeys] = {}
 
