@@ -4,6 +4,67 @@ import json
 import pytest
 
 
+def test_google_public_key_url_correct(mock_settings, requests_mock):
+    """Test that we're using the correct URL for Google Wallet callback keys."""
+    # Clear any cached keys
+    from edutap.wallet_google.handlers.validate import google_root_signing_public_keys
+    from edutap.wallet_google.handlers.validate import (
+        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL,
+    )
+    from edutap.wallet_google.handlers.validate import (
+        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE,
+    )
+
+    GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.clear()
+
+    # Mock the correct URL
+    correct_url = "https://pay.google.com/gp/m/issuer/keys"
+    mock_response = {
+        "keys": [
+            {
+                "keyValue": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEPYnHwS8uegWAewQtlxizmLFynw==",
+                "protocolVersion": "ECv2SigningOnly",
+            }
+        ]
+    }
+    requests_mock.get(correct_url, json=mock_response)
+
+    # Verify both environments use the correct URL
+    assert (
+        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL["testing"] == correct_url
+    ), "Testing environment should use Google Wallet keys URL"
+    assert (
+        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL["production"] == correct_url
+    ), "Production environment should use Google Wallet keys URL"
+
+    # Test that fetching keys works
+    keys = google_root_signing_public_keys(mock_settings.google_environment)
+    assert keys is not None
+    assert len(keys.keys) > 0
+    assert keys.keys[0].protocolVersion == "ECv2SigningOnly"
+
+
+def test_google_public_key_url_not_google_pay(mock_settings):
+    """Test that we're NOT using the Google Pay payment token URL."""
+    from edutap.wallet_google.handlers.validate import (
+        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL,
+    )
+
+    # The old incorrect URLs that should NOT be used
+    old_test_url = (
+        "https://payments.developers.google.com/paymentmethodtoken/test/keys.json"
+    )
+    old_prod_url = "https://payments.developers.google.com/paymentmethodtoken/keys.json"
+
+    # Verify we're not using the old Google Pay URLs
+    assert (
+        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL["testing"] != old_test_url
+    ), "Should not use Google Pay test URL for Wallet callbacks"
+    assert (
+        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL["production"] != old_prod_url
+    ), "Should not use Google Pay production URL for Wallet callbacks"
+
+
 def test_google_public_key_cached_empty(mock_settings):
     from edutap.wallet_google.handlers.validate import google_root_signing_public_keys
 
