@@ -94,7 +94,7 @@ class DummyCallbackHandler:
     ) -> None: ...
 
 
-def test_add_plugin(monkeypatch):
+def test_add_plugin():
     """
     test adding plugins at runtime
     """

@@ -103,12 +103,14 @@ def new(
 
 def create(
     data: Model,
+    credentials: dict | None = None,
 ) -> Model:
     """
     Creates a Google Wallet items. `C` in CRUD.
 
     :param data:                          Data to pass to the Google RESTful API.
                                           A model instance, has to be a registered model.
+    :param credentials:                   Optional session credentials as dict.
     :raises QuotaExceededException:       When the quota was exceeded.
     :raises ObjectAlreadyExistsException: When the id to be created already exists at Google.
     :raises WalletException:              When the response status code is not 200.
@@ -119,7 +121,7 @@ def create(
     raise_when_operation_not_allowed(name, "create")
     model = model_metadata["model"]
     resource_id, verified_json = _validate_data_and_convert_to_json(model, data)
-    session = session_manager.session
+    session = session_manager.session(credentials=credentials)
     url = session_manager.url(name)
     headers = {"Content-Type": "application/json"}
     response = session.post(
@@ -158,19 +160,21 @@ def create(
 def read(
     name: str,
     resource_id: str,
+    credentials: dict | None = None,
 ) -> Model:
     """
     Reads a Google Wallet Class or Object. `R` in CRUD.
 
-    :param name:                      Registered name of the model to use
-    :param resource_id:               Identifier of the resource to read from the Google RESTful API
-    :QuotaExceededException:          When the quota was exceeded.
-    :raises LookupError:              When the resource was not found (404).
-    :raises WalletException           When the response status code is not 200 or 404.
-    :return:                          the created model based on the data returned by the Restful API
+    :param name:             Registered name of the model to use
+    :param resource_id:      Identifier of the resource to read from the Google RESTful API
+    :param credentials:      Optional session credentials as dict.
+    :QuotaExceededException: When the quota was exceeded.
+    :raises LookupError:     When the resource was not found (404).
+    :raises WalletException  When the response status code is not 200 or 404.
+    :return:                 The created model based on the data returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "read")
-    session = session_manager.session
+    session = session_manager.session(credentials=credentials)
     url = session_manager.url(name, f"/{resource_id}")
     response = session.get(url=url)
 
@@ -200,12 +204,14 @@ def update(
     data: Model,
     *,
     partial: bool = True,
+    credentials: dict | None = None,
 ) -> Model:
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
 
     :param data:                    Data to pass to the Google RESTful API.
                                     A model instance, has to be a registered model.
+    :param credentials:             Optional session credentials as dict.
     :param partial:                 Whether a partial update is executed or a full replacement.
     :raises QuotaExceededException: When the quota was exceeded
     :raises LookupError:            When the resource was not found (404)
@@ -219,7 +225,7 @@ def update(
     resource_id, verified_json = _validate_data_and_convert_to_json(
         model, data, existing=True, resource_id_key=model_metadata["resource_id"]
     )
-    session = session_manager.session
+    session = session_manager.session(credentials=credentials)
     if partial:
         response = session.patch(
             url=session_manager.url(name, f"/{resource_id}"),
@@ -257,11 +263,14 @@ def message(
     name: str,
     resource_id: str,
     message: dict[str, typing.Any] | Message,
+    credentials: dict | None = None,
 ) -> Model:
     """Sends a message to a Google Wallet Class or Object.
 
     :param name:                      Registered name of the model to use
     :param resource_id:               Identifier of the resource to send to
+    :param message:                   Message to send.
+    :param credentials:               Optional session credentials as dict.
     :raises QuotaExceededException:   When the quota was exceeded
     :raises LookupError:              When the resource was not found (404)
     :raises WalletException:          When the response status code is not 200 or 404
@@ -280,7 +289,8 @@ def message(
         exclude_none=True,
     )
     url = session_manager.url(name, f"/{resource_id}/addMessage")
-    response = session_manager.session.post(url=url, data=verified_json.encode("utf-8"))
+    session = session_manager.session(credentials=credentials)
+    response = session.post(url=url, data=verified_json.encode("utf-8"))
 
     if response.status_code == 403:
         # Check response text to distinguish between quota and permission errors
@@ -295,7 +305,6 @@ def message(
         )
     elif response.status_code == 404:
         raise LookupError(f"Error 404, {name} not found: - {response.text}")
-
     elif response.status_code != 200:
         raise WalletException(f"Error: {response.status_code} - {response.text}")
 
@@ -311,6 +320,7 @@ def listing(
     issuer_id: str | None = None,
     result_per_page: int = 0,
     next_page_token: str | None = None,
+    credentials: dict | None = None,
 ) -> Generator[Model | str, None, None]:
     """Lists wallet related resources.
 
@@ -331,6 +341,7 @@ def listing(
     :param result_per_page:         Number of results per page to fetch.
                                     If omitted all results will be fetched and provided by the generator.
     :param next_page_token:         Token to get the next page of results.
+    :param credentials:             Optional session credentials as dict.
     :raises QuotaExceededException: When the quota was exceeded
     :raises ValueError:             When input was invalid.
     :raises LookupError:            When the resource was not found (404)
@@ -352,6 +363,7 @@ def listing(
         if not resource_id:
             raise ValueError("resource_id of a class must be given to list its objects")
         params["classId"] = resource_id
+
     elif name.endswith("Class"):
         is_pageable = True
         if not issuer_id:
@@ -370,7 +382,8 @@ def listing(
             params["maxResults"] = "100"
 
     url = session_manager.url(name)
-    session = session_manager.session
+    session = session_manager.session(credentials=credentials)
+
     while True:
         response = session.get(url=url, params=params)
         if response.status_code == 404:
@@ -467,6 +480,7 @@ def save_link(
     origins: list[str] = [],
     iat: str | datetime.datetime = "",
     exp: str | datetime.datetime = "",
+    credentials: dict | None = None,
 ) -> str:
     """
     Creates a link to save a Google Wallet Object to the wallet on the device.
@@ -487,10 +501,13 @@ def save_link(
                         messages in the browser console when the origins field is not defined.
     :param: iat:        Issued At Time. The time when the JWT was issued.
     :param: exp:        Expiration Time. The time when the JWT expires.
+    :param credentials: Optional session credentials as dict.
     :return:            Link with JWT to save the resources to the wallet.
     """
+    if credentials is None:
+        credentials = session_manager.credentials_from_file()
     claims = _create_claims(
-        session_manager.settings.credentials_info["client_email"],
+        credentials["client_email"],
         origins,
         models,
         iat=iat,
@@ -504,10 +521,7 @@ def save_link(
             exclude_none=True,
         )
     )
-
-    signer = crypt.RSASigner.from_service_account_file(
-        session_manager.settings.credentials_file
-    )
+    signer = crypt.RSASigner.from_service_account_info(credentials)
     jwt_string = jwt.encode(
         signer,
         claims.model_dump(
