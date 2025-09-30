@@ -1,5 +1,4 @@
 from edutap.wallet_google.models.handlers import ImageData
-from time import sleep
 
 import asyncio
 

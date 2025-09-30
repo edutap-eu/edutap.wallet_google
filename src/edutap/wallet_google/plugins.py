@@ -10,9 +10,7 @@ _POSSIBLE_PLUGINS = {
     "CallbackHandler": CallbackHandler,
 }
 
-_PLUGIN_REGISTRY: dict[
-    str, list[CallbackHandler | ImageProvider]
-] = {
+_PLUGIN_REGISTRY: dict[str, list[CallbackHandler | ImageProvider]] = {
     "ImageProvider": [],
     "CallbackHandler": [],
 }
