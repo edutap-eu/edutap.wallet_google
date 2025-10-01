@@ -27,7 +27,7 @@ def get_plugins(name: str) -> list[CallbackHandler | ImageProvider]:
     plugins = [ep.load() for ep in eps if ep.name.startswith(name)]
     plugins += _PLUGIN_REGISTRY.get(name, [])
     if not plugins:
-        raise NotImplementedError("No image provider plug-in found")
+        raise NotImplementedError(f"No {name} plug-in found")
     for plugin in plugins:
         if not isinstance(plugin, _POSSIBLE_PLUGINS[name]):
             raise ValueError(f"{plugin} not implements {name}")

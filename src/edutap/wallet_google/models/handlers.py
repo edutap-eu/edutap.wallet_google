@@ -12,6 +12,7 @@ from pydantic import BaseModel
 class ImageData(BaseModel):
     mimetype: str
     data: bytes
+    max_age: int = 86400  # in seconds, default 24h
 
 
 #  Callback

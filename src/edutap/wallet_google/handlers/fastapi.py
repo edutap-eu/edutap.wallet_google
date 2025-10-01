@@ -135,10 +135,13 @@ async def handle_image(request: Request, encrypted_image_id: str):
         raise HTTPException(
             status_code=500, detail="Error while handling the image (exception)."
         )
+    cache_control = session_manager.settings.handler_image_cache_control.format(
+        max_age=result.max_age
+    )
     return Response(
         content=result.data,
         media_type=result.mimetype,
-        headers={"Cache-Control": session_manager.settings.handler_image_cache_control},
+        headers={"Cache-Control": cache_control},
     )
 
 
