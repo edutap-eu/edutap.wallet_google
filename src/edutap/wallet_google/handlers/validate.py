@@ -3,6 +3,23 @@ Parts of this module are rewrites and borrows from from https://github.com/yoyow
 The above packages does not fulfill the needs we have here, but was a great starting point.
 Copyright is by its original authors at Yoyo Wallet <dev@yoyowallet.com>
 This file is under the MIT License, as found here https://github.com/yoyowallet/google-pay-token-decryption/blob/5cd006da9687171c1e35b55507b671c6e4eb513d/pyproject.toml#L8
+
+The google-pay-token-decryption uses ECv2 for verification and decryption of payment tokens.
+
+We need something slightly different here, as we need to verify the signature of
+Google Wallet callback data, which is similar, but not the same.
+
+The main differences/steps are:
+
+- We do not need to decrypt anything, only verify signatures
+- we use protocolVersion "ECv2SigningOnly" instead of "ECv2"
+- As in ECv2 we need to verify first the intermediate signing key against Google's root signing keys
+- the root signing keys are fetched from a different URL: https://pay.google.com/gp/m/issuer/keys (as it seems not difference between testing and prod)
+- the sender ID is "GooglePayPasses" instead of "GooglePay"
+- Then we need to verify the signedMessage against the intermediate signing key
+- The signedMessage is sent as a plain readable JSON string, not as a base64 encoded byte string
+
+The main documentation for this is at https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions
 """
 
 from ..models.handlers import CallbackData
@@ -30,8 +47,6 @@ PROTOCOL_VERSION = "ECv2SigningOnly"
 ALGORITHM = ECDSA(hashes.SHA256())
 GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL = {
     # see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys
-    # "testing": "https://payments.developers.google.com/paymentmethodtoken/test/keys.json",
-    # "production": "https://payments.developers.google.com/paymentmethodtoken/keys.json",
     "testing":"https://pay.google.com/gp/m/issuer/keys",
     "production": "https://pay.google.com/gp/m/issuer/keys",
 }

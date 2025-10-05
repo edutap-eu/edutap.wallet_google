@@ -27,7 +27,7 @@ def test_google_public_key_cached_empty(mock_settings):
 callback_data_for_test_failure = {
     "signature": "foo",
     "intermediateSigningKey": {
-        "signedKey": {"keyValue": "baz", "keyExpiration": 0},
+        "signedKey": '''{"keyValue": "baz", "keyExpiration": 0}''',
         "signatures": [
             "MEUCIQD3IATpRM45gpno9Remtx/FiDCOJUp45+C+Qzw6IrgphwIgJijXISc+Ft8Sj9eXNowzuYyXyWlgKAE+tVnN24Sek5M="
         ],
