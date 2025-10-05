@@ -30,8 +30,10 @@ PROTOCOL_VERSION = "ECv2SigningOnly"
 ALGORITHM = ECDSA(hashes.SHA256())
 GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL = {
     # see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys
-    "testing": "https://payments.developers.google.com/paymentmethodtoken/test/keys.json",
-    "production": "https://payments.developers.google.com/paymentmethodtoken/keys.json",
+    # "testing": "https://payments.developers.google.com/paymentmethodtoken/test/keys.json",
+    # "production": "https://payments.developers.google.com/paymentmethodtoken/keys.json",
+    "testing":"https://pay.google.com/gp/m/issuer/keys",
+    "production": "https://pay.google.com/gp/m/issuer/keys",
 }
 GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE: dict[str, RootSigningPublicKeys] = {}
 
@@ -111,22 +113,22 @@ def _verify_intermediate_signing_key(
         for sig in intermediate_signing_key.signatures
     ]
     signed_data = _construct_signed_data(
-        "Google",
+        session_manager.settings.sender_id,
         PROTOCOL_VERSION,
         intermediate_signing_key.signedKey,
     )
     for pkey in public_keys.keys:
 
-        if pkey.protocolVersion != PROTOCOL_VERSION:
-            continue
+        # if pkey.protocolVersion != PROTOCOL_VERSION:
+        #     continue
 
         public_key = _load_public_key(pkey.keyValue)
         for signature in signatures:
             try:
                 public_key.verify(signature, signed_data, ALGORITHM)
-            except (ValueError, InvalidSignature):
+            except (ValueError, InvalidSignature) as e:
                 # Invalid signature. Try the other signatures.
-                ...
+                print(f"Invalid signature: {e}")
             else:
                 # Valid signature was found
                 return True
@@ -173,11 +175,13 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
     intermediate_public_key = _load_public_key(intermediate_signing_key.keyValue)
     signature = base64.decodebytes(bytes(data.signature, "utf-8"))
     signed_data = _construct_signed_data(
-        "GooglePayWallet",
+        settings.sender_id,
         issuer_id,
         PROTOCOL_VERSION,
         data.signedMessage,
     )
+    print(f"Signature: {data.signature}")
+    print(f"Signed data: {signed_data}")
     try:
         intermediate_public_key.verify(signature, signed_data, ALGORITHM)
     except (ValueError, InvalidSignature):

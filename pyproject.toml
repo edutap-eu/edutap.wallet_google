@@ -54,6 +54,7 @@ test = [
     "pytest",
     "requests-mock",
     "tox",
+    "freezegun"    # for freezing time for tests
 ]
 typecheck  = [
     "google-auth-stubs",
@@ -63,6 +64,7 @@ typecheck  = [
 ]
 develop = [
     "pdbp>=1.7.1", # the maintained successor to pdbpp
+    "jupyter",
     # "ipython",  not recommended with pdpb, better use ipdb then
 ]
 
