@@ -20,6 +20,7 @@ At first we create the most simple Wallet Class.
 
 ```python
 from edutap.wallet_google import api
+from edutap.wallet_google.models.passes.generic import GenericClass
 
 import os
 
@@ -27,9 +28,9 @@ import os
 # like by incrementing the number part.
 class_id = f"{os.environ.get('EDUTAP_WALLET_GOOGLE_ISSUER_ID')}.example_class01.edutap_example"
 
-# Option 1: Create with dict
+# Option 1: Create with model
 new_class = api.create(
-    api.new("GenericClass", {"id": class_id})
+    api.new("GenericClass", GenericClass(id=class_id))
 )
 
 # Option 2: Create with dict directly (also works)
