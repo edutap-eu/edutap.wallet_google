@@ -19,9 +19,3 @@ try:
     from . import api_async  # noqa: F401
 except ImportError:
     pass
-
-# Optional: Import utils (may use optional dependencies)
-try:
-    from . import utils  # noqa: F401
-except ImportError:
-    pass
