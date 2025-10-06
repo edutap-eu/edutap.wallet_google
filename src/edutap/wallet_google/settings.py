@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     credentials_file: Path = ROOT_DIR / "tests" / "data" / "credentials_fake.json"
     credentials_scopes: list[str] = SCOPES
     test_issuer_id: str = Field(default="")
+    sender_id: str = "GooglePayPasses"
 
     fernet_encryption_key: str = ""
 
