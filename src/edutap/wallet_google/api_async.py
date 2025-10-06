@@ -6,8 +6,7 @@ like FastAPI, or when making multiple concurrent API calls.
 
 For synchronous code, use the regular `api` module instead.
 
-Note: save_link() is part of this API and requires google-auth to be installed.
-      It's a permanent part of both sync and async APIs.
+Note: save_link() is a permanent part of both sync and async APIs.
 """
 
 from .exceptions import ObjectAlreadyExistsException

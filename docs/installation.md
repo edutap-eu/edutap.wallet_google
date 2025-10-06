@@ -36,8 +36,10 @@ uv pip install edutap.wallet_google[sync,async]
 
 ### Optional extras
 
-- `[sync]` - Synchronous API using `google-auth` and `requests`
-- `[async]` - Asynchronous API using `authlib` and `httpx`
+The base package includes `google-auth` for JWT signing (required by both sync and async APIs).
+
+- `[sync]` - Adds synchronous HTTP client support using `requests` (via `google-auth[requests]`)
+- `[async]` - Adds asynchronous HTTP client support using `authlib` and `httpx`
 - `[callback]` - FastAPI endpoints for Google Wallet callbacks (requires `httpx` for signature verification)
 
 ## Configuration
