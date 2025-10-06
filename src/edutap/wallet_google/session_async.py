@@ -1,7 +1,6 @@
 from .registry import lookup_metadata_by_name
 from .settings import Settings
 from authlib.integrations.httpx_client import AsyncAssertionClient
-from pathlib import Path
 
 import functools
 import httpx

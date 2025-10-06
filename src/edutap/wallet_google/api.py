@@ -1,6 +1,4 @@
 from .exceptions import ObjectAlreadyExistsException
-from .exceptions import QuotaExceededException
-from .exceptions import WalletException
 from .models.bases import Model
 from .models.datatypes.general import PaginatedResponse
 from .models.datatypes.jwt import JWTClaims
@@ -23,7 +21,6 @@ from .utils import validate_data_and_convert_to_json
 from collections.abc import Generator
 from google.auth import crypt
 from google.auth import jwt
-from pydantic import ValidationError
 
 import datetime
 import json

@@ -8,16 +8,11 @@ For synchronous code, use the regular `api` module instead.
 """
 
 from .exceptions import ObjectAlreadyExistsException
-from .exceptions import QuotaExceededException
-from .exceptions import WalletException
 from .models.bases import Model
 from .models.datatypes.general import PaginatedResponse
 from .models.datatypes.message import Message
 from .models.misc import AddMessageRequest
-from .models.passes.bases import ClassModel
-from .models.passes.bases import ObjectModel
 from .registry import lookup_metadata_by_model_instance
-from .registry import lookup_metadata_by_name
 from .registry import lookup_model_by_name
 from .registry import raise_when_operation_not_allowed
 from .session_async import session_manager_async
@@ -26,7 +21,6 @@ from .utils import parse_response_json
 from .utils import validate_data
 from .utils import validate_data_and_convert_to_json
 from collections.abc import AsyncGenerator
-from pydantic import ValidationError
 
 import json
 import logging
