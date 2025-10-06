@@ -1,3 +1,6 @@
+from .exceptions import ObjectAlreadyExistsException
+from .exceptions import QuotaExceededException
+from .exceptions import WalletException
 from .models.bases import Model
 from .models.datatypes.general import PaginatedResponse
 from .models.datatypes.jwt import JWTClaims
@@ -13,6 +16,10 @@ from .registry import lookup_metadata_by_name
 from .registry import lookup_model_by_name
 from .registry import raise_when_operation_not_allowed
 from .session import session_manager
+from .utils import handle_response_errors
+from .utils import parse_response_json
+from .utils import validate_data
+from .utils import validate_data_and_convert_to_json
 from collections.abc import Generator
 from google.auth import crypt
 from google.auth import jwt
@@ -25,63 +32,6 @@ import typing
 
 
 logger = logging.getLogger(__name__)
-
-
-def _validate_data(model: type[Model], data: dict[str, typing.Any] | Model) -> Model:
-    """Takes a model and data, validates it and convert to a json string.
-
-    :param model:      Pydantic model class to use for validation.
-    :param data:       Data to pass to the Google RESTful API.
-                       Either a simple python data structure using built-ins,
-                       or a Pydantic model instance.
-    :return:           data as an instance of the given model.
-    """
-    if not isinstance(data, (Model)):
-        return model.model_validate(data)
-    if not isinstance(data, model):
-        raise ValueError(
-            f"Model of given data mismatches given name. Expected {model}, got {type(data)}."
-        )
-    return data
-
-
-def _validate_data_and_convert_to_json(
-    model: type[Model],
-    data: dict[str, typing.Any] | Model,
-    *,
-    existing: bool = False,
-    resource_id_key: str = "id",
-) -> tuple[str, str]:
-    """Takes a model and data, validates it and convert to a json string.
-
-    :param model:      Pydantic model class to use for validation.
-    :param data:       Data to pass to the Google RESTful API.
-                       Either a simple python data structure using built-ins,
-                       or a Pydantic model instance.
-    :param existing:   If True, the data is expected to be an existing object (i.e. on update).
-    :return:           Tuple of resource-id and JSON string.
-    """
-    verified_data = _validate_data(model, data)
-    verified_json = verified_data.model_dump_json(
-        exclude_none=not existing,  # exclude None values when we create something new
-        exclude_unset=True,  # exclude unset values - this are values not set explicitly by the code
-        by_alias=True,
-    )
-    identifier = getattr(verified_data, resource_id_key)
-    # nice to have: if existing: check if this is a valid identifier using read
-    return (identifier, verified_json)
-
-
-class WalletException(Exception):
-    pass
-
-
-class ObjectAlreadyExistsException(WalletException):
-    pass
-
-
-class QuotaExceededException(WalletException):
-    pass
 
 
 def new(
@@ -98,7 +48,7 @@ def new(
     :return:           The created model instance.
     """
     model = lookup_model_by_name(name)
-    return _validate_data(model, data)
+    return validate_data(model, data)
 
 
 def create(
@@ -120,7 +70,7 @@ def create(
     name = model_metadata["name"]
     raise_when_operation_not_allowed(name, "create")
     model = model_metadata["model"]
-    resource_id, verified_json = _validate_data_and_convert_to_json(model, data)
+    resource_id, verified_json = validate_data_and_convert_to_json(model, data)
     session = session_manager.session(credentials=credentials)
     url = session_manager.url(name)
     headers = {"Content-Type": "application/json"}
@@ -129,25 +79,14 @@ def create(
         data=verified_json.encode("utf-8"),
         headers=headers,
     )
-    if response.status_code == 403:
-        raise QuotaExceededException(
-            f"Quota exceeded while trying to create {name} {getattr(data, 'id', 'No ID')}"
-        )
-    elif response.status_code == 409:
+    handle_response_errors(
+        response, "create", name, getattr(data, "id", "No ID"), allow_409=True
+    )
+    if response.status_code == 409:
         raise ObjectAlreadyExistsException(
             f"{name} {getattr(data, 'id', 'No ID')} already exists\n{response.text}"
         )
-    elif response.status_code != 200:
-        raise WalletException(
-            f"Error on create of {name} {getattr(data, 'id', 'No ID')} at {url}: {response.status_code} - {response.text}"
-        )
-
-    logger.debug(f"RAW-Response: {response.content!r}")
-    try:
-        return model.model_validate_json(response.content)
-    except ValidationError as e:
-        logger.error(f"Validation Error: {e.errors()}")
-        raise
+    return parse_response_json(response, model)
 
 
 def read(
@@ -171,19 +110,9 @@ def read(
     url = session_manager.url(name, f"/{resource_id}")
     response = session.get(url=url)
 
-    if response.status_code == 403:
-        raise QuotaExceededException(
-            f"Quota exceeded while trying to read {name} {resource_id}"
-        )
-    elif response.status_code == 404:
-        raise LookupError(f"{url}: {name} not found")
-
-    if response.status_code == 200:
-        model = lookup_model_by_name(name)
-        logger.debug(f"RAW-Response: {response.content!r}")
-        return model.model_validate_json(response.content)
-
-    raise WalletException(f"{url} {response.status_code} - {response.text}")
+    handle_response_errors(response, "read", name, resource_id)
+    model = lookup_model_by_name(name)
+    return parse_response_json(response, model)
 
 
 def update(
@@ -208,7 +137,7 @@ def update(
     name = model_metadata["name"]
     raise_when_operation_not_allowed(name, "update")
     model = model_metadata["model"]
-    resource_id, verified_json = _validate_data_and_convert_to_json(
+    resource_id, verified_json = validate_data_and_convert_to_json(
         model, data, existing=True, resource_id_key=model_metadata["resource_id"]
     )
     session = session_manager.session(credentials=credentials)
@@ -223,19 +152,8 @@ def update(
             data=verified_json.encode("utf-8"),
         )
     logger.debug(verified_json.encode("utf-8"))
-    if response.status_code == 403:
-        raise QuotaExceededException(
-            f"Quota exceeded while trying to read {name} {resource_id}"
-        )
-    elif response.status_code == 404:
-        raise LookupError(
-            f"Error 404, {name} {getattr(data, 'id', 'No ID')} not found: - {response.text}"
-        )
-    if response.status_code != 200:
-        raise WalletException(f"Error: {response.status_code} - {response.text}")
-
-    logger.debug(f"RAW-Response: {response.content!r}")
-    return model.model_validate_json(response.content)
+    handle_response_errors(response, "update", name, resource_id)
+    return parse_response_json(response, model)
 
 
 def message(
@@ -271,15 +189,7 @@ def message(
     session = session_manager.session(credentials=credentials)
     response = session.post(url=url, data=verified_json.encode("utf-8"))
 
-    if response.status_code == 403:
-        raise QuotaExceededException(
-            f"Quota exceeded while trying to read {name} {resource_id}"
-        )
-    elif response.status_code == 404:
-        raise LookupError(f"Error 404, {name} not found: - {response.text}")
-    elif response.status_code != 200:
-        raise WalletException(f"Error: {response.status_code} - {response.text}")
-
+    handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
     response_data = json.loads(response.content)
     return model.model_validate(response_data.get("resource"))
