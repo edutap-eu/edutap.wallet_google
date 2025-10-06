@@ -51,7 +51,7 @@ Use this when working with async frameworks like FastAPI or when making concurre
    listing
 ```
 
-**Note:** `save_link` is only available in the synchronous API as it uses synchronous JWT signing.
+**Note:** `save_link` is only implemented as a synchronous function due to its use of synchronous JWT signing. While it is callable via `api_async`, it executes synchronously and should not be awaited.
 
 ## Models
 
