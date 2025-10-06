@@ -41,6 +41,7 @@ var/
 .env*
 keys/
 *.ipynb
+*-*.json
 
 # IDE
 .idea

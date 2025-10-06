@@ -16,7 +16,6 @@ import respx
 def mock_async_session(monkeypatch):
     """Fixture to provide a mock async session that doesn't require real credentials."""
     from edutap.wallet_google.session_async import AsyncSessionManager
-    from authlib.integrations.httpx_client import AsyncAssertionClient
 
     def mock_make_session(self, credentials):
         # Return httpx.AsyncClient wrapped as AsyncAssertionClient without real auth
@@ -391,9 +390,7 @@ async def test_listing_empty_result(mock_async_session):
     respx.get(url).mock(
         return_value=httpx.Response(
             200,
-            json={
-                "resources": []
-            },
+            json={"resources": []},
         )
     )
 
