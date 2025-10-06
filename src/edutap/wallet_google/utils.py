@@ -124,7 +124,9 @@ def handle_response_errors(
             raise QuotaExceededException(
                 f"Quota exceeded while trying to {operation} {name} {resource_id}"
             )
-        raise WalletException(f"Access denied: {response.text}")
+        raise WalletException(
+            f"Access denied while trying to {operation} {name} {resource_id}: {response.text}"
+        )
 
     elif response.status_code == 404:
         raise LookupError(f"{name} not found: {response.text}")
