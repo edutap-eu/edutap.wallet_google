@@ -69,19 +69,21 @@ new_object = api.create(
 )
 ```
 
-Now the pass is ready for download.
-To create a link to download the pass, we need to provide the pass object (or a reference to it) and the origin of the download.
+Now we can create a save link for downloading the pass.
+The save link encodes the pass data in a JWT and creates/updates the pass when the link is opened.
 
 ```python
 from edutap.wallet_google.models.datatypes.jwt import Reference
 
-# Option 1: Using the object directly (works with newly created object in same session)
+# Option 1: Embed the full object in the link (creates/updates on link open)
+# The object data is encoded in the JWT, so the pass is created when user clicks the link
 link = api.save_link(
     [new_object],
     origins=["www.example.com"],
 )
 
-# Option 2: Using a reference by ID (use this if you only have the ID, e.g., from a previous session)
+# Option 2: Reference an existing pass by ID (pass must already exist)
+# Only the ID is in the JWT, the pass must be created via api.create() first
 link = api.save_link(
     [Reference(id=object_id, model_name="GenericObject")],
     origins=["www.example.com"],
@@ -90,8 +92,12 @@ link = api.save_link(
 print(link)
 ```
 
-This prints a link, which can be opened on a mobile device to download the pass to the Google Wallet.
-It can be opened in the desktop browser too, given you are logged in with the same Google account as on your mobile device.
+**Important:**
+- **Option 1** encodes the full pass data in the link. When clicked, Google Wallet creates or updates the pass automatically. Use this for on-the-fly pass creation.
+- **Option 2** only references a pass ID. The pass must already exist (created via `api.create()` beforehand). Use this for passes that are managed server-side.
+
+The link can be opened on a mobile device to download the pass to the Google Wallet.
+It can also be opened in the desktop browser if logged in with the same Google account as on your mobile device.
 
 ## Update a class
 
