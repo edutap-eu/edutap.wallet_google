@@ -2,14 +2,18 @@
 
 ## API Functions
 
-Most tasks are done by import and using the sole `api` module:
+Most tasks are done by import and using the `api` module for synchronous operations or `api_async` for asynchronous operations:
 
 ```python
 from edutap.wallet_google import api
+# or for async:
+from edutap.wallet_google import api_async
 ```
 
 To tell the API functions what kind of item to deal with, the first parameter is the registered name of the model (except for `save_link`).
 Models can be the different top-level wallet-classes or -objects, but also issuers, permissions and such (see section models below).
+
+### Synchronous API
 
 ```{eval-rst}
 .. currentmodule:: edutap.wallet_google.api
@@ -18,6 +22,7 @@ Models can be the different top-level wallet-classes or -objects, but also issue
 .. autosummary::
    :toctree: _autosummary
 
+   new
    create
    read
    update
@@ -25,6 +30,28 @@ Models can be the different top-level wallet-classes or -objects, but also issue
    listing
    save_link
 ```
+
+### Asynchronous API
+
+The async API provides the same functionality as the synchronous API but uses `async`/`await` for non-blocking I/O operations.
+Use this when working with async frameworks like FastAPI or when making concurrent API calls.
+
+```{eval-rst}
+.. currentmodule:: edutap.wallet_google.api_async
+
+
+.. autosummary::
+   :toctree: _autosummary
+
+   new
+   create
+   read
+   update
+   message
+   listing
+```
+
+**Note:** `save_link` is only available in the synchronous API as it uses synchronous JWT signing.
 
 ## Models
 
@@ -145,6 +172,35 @@ Models can be the different top-level wallet-classes or -objects, but also issue
    JwtResource
    JwtResponse
    Resources
+
+```
+
+### Handler Models
+
+```{eval-rst}
+
+`edutap.wallet_google.models.handlers`
+
+.. currentmodule:: edutap.wallet_google.models.handlers
+
+.. rubric:: Callback Models
+
+.. autosummary::
+   :toctree: _autosummary
+
+   CallbackData
+   SignedMessage
+   IntermediateSigningKey
+   SignedKey
+   RootSigningPublicKey
+   RootSigningPublicKeys
+
+.. rubric:: Image Models
+
+.. autosummary::
+   :toctree: _autosummary
+
+   ImageData
 
 ```
 
@@ -290,8 +346,21 @@ This are models for "Data Types" as Google names them, the sub schemas for neste
    SecurityAnimation
    GroupingInfo
    Pagination
+   PaginatedResponse
    CallbackOptions
    SaveRestrictions
+
+.. rubric:: data-types: JWT
+
+`edutap.wallet_google.models.datatypes.jwt`
+
+.. currentmodule:: edutap.wallet_google.models.datatypes.jwt
+
+.. autosummary::
+   :toctree: _autosummary
+
+   JWTPayload
+   JWTClaims
 
 .. rubric:: data-types: Localized String
 
@@ -338,6 +407,18 @@ This are models for "Data Types" as Google names them, the sub schemas for neste
    :toctree: _autosummary
 
    Message
+
+.. rubric:: data-types: Module Data
+
+`edutap.wallet_google.models.datatypes.moduledata`
+
+.. currentmodule:: edutap.wallet_google.models.datatypes.moduledata
+
+.. autosummary::
+   :toctree: _autosummary
+
+   ModuleViewConstraints
+   ValueAddedModuleData
 
 .. rubric:: data-types: Money
 
@@ -439,5 +520,131 @@ This are models for "Data Types" as Google names them, the sub schemas for neste
 
    SessionManager
    HTTPRecorder
+
+
+.. rubric:: Async Session
+
+`edutap.wallet_google.session_async`
+
+.. currentmodule:: edutap.wallet_google.session_async
+
+.. autosummary::
+   :toctree: _autosummary
+
+   AsyncSessionManager
+
+
+.. rubric:: Settings
+
+`edutap.wallet_google.settings`
+
+.. currentmodule:: edutap.wallet_google.settings
+
+.. autosummary::
+   :toctree: _autosummary
+
+   Settings
+   KubernetesSettings
+
+
+.. rubric:: Utilities
+
+`edutap.wallet_google.utils`
+
+.. currentmodule:: edutap.wallet_google.utils
+
+.. autosummary::
+   :toctree: _autosummary
+
+   encrypt_data
+   decrypt_data
+   generate_fernet_key
+   validate_data
+   validate_data_and_convert_to_json
+   handle_response_errors
+   parse_response_json
+
+
+.. rubric:: Plugins
+
+`edutap.wallet_google.plugins`
+
+.. currentmodule:: edutap.wallet_google.plugins
+
+.. autosummary::
+   :toctree: _autosummary
+
+   register_callback_handler
+   get_callback_handlers
+   register_image_provider
+   get_image_providers
+
+
+.. rubric:: Protocols
+
+`edutap.wallet_google.protocols`
+
+.. currentmodule:: edutap.wallet_google.protocols
+
+.. autosummary::
+   :toctree: _autosummary
+
+   CallbackHandler
+   ImageProvider
+
+```
+
+## Exceptions
+
+```{eval-rst}
+
+`edutap.wallet_google.exceptions`
+
+.. currentmodule:: edutap.wallet_google.exceptions
+
+.. autosummary::
+   :toctree: _autosummary
+
+   WalletException
+   ObjectAlreadyExistsException
+   QuotaExceededException
+
+```
+
+## Handlers
+
+### FastAPI Integration
+
+```{eval-rst}
+
+`edutap.wallet_google.handlers.fastapi`
+
+.. currentmodule:: edutap.wallet_google.handlers.fastapi
+
+.. autosummary::
+   :toctree: _autosummary
+
+   router_callback
+   handle_callback
+   router_image
+   get_image
+
+```
+
+### Signature Validation
+
+```{eval-rst}
+
+`edutap.wallet_google.handlers.validate`
+
+.. currentmodule:: edutap.wallet_google.handlers.validate
+
+.. autosummary::
+   :toctree: _autosummary
+
+   google_root_signing_public_keys
+   verified_signed_message
+   google_root_signing_public_keys_async
+   verified_signed_message_async
 
 ```
