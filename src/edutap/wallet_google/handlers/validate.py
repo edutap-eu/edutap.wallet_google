@@ -161,7 +161,7 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
     ):
         raise ValueError("Invalid intermediate signing key")
 
-    # check intermediate signing keys expriration date
+    # check intermediate signing keys expiration date
     intermediate_signing_key = SignedKey.model_validate_json(
         data.intermediateSigningKey.signedKey
     )
@@ -239,7 +239,7 @@ async def verified_signed_message_async(data: CallbackData) -> SignedMessage:
     ):
         raise ValueError("Invalid intermediate signing key")
 
-    # check intermediate signing keys expriration date
+    # check intermediate signing keys expiration date
     intermediate_signing_key = SignedKey.model_validate_json(
         data.intermediateSigningKey.signedKey
     )

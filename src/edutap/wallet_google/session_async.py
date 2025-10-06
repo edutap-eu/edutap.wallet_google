@@ -10,6 +10,9 @@ class AsyncSessionManager:
     """Manages async sessions to the Google Wallet API and provides helper methods.
 
     Sessions are async-safe and use httpx.AsyncClient with OAuth2 service account authentication.
+
+    The session() method returns an AsyncAssertionClient that should be used as an async context manager
+    to ensure proper resource cleanup. All API functions in api_async.py use context managers automatically.
     """
 
     @property
@@ -54,6 +57,12 @@ class AsyncSessionManager:
         """
         Create and return an async authorized session.
 
+        The returned AsyncAssertionClient should be used as an async context manager:
+        async with session_manager.session() as session:
+            response = await session.get(url)
+
+        All API functions in api_async.py use context managers automatically for proper cleanup.
+
         :param credentials: Session credentials as dict. If not given, credentials
                             are read from file defined in settings.
         :return:            The async assertion client.
@@ -61,8 +70,6 @@ class AsyncSessionManager:
         if not credentials:
             credentials = self.credentials_from_file()
 
-        # For async, we create a new client each time
-        # Could cache by private_key_id if needed, but simpler to create fresh
         return self._make_session(credentials)
 
     def url(self, name: str, additional_path: str = "") -> str:

@@ -67,15 +67,15 @@ async def create(
     raise_when_operation_not_allowed(name, "create")
     model = model_metadata["model"]
     resource_id, verified_json = validate_data_and_convert_to_json(model, data)
-    session = session_manager_async.session(credentials=credentials)
     url = session_manager_async.url(name)
     headers = {"Content-Type": "application/json"}
 
-    response = await session.post(
-        url=url,
-        data=verified_json.encode("utf-8"),
-        headers=headers,
-    )
+    async with session_manager_async.session(credentials=credentials) as session:
+        response = await session.post(
+            url=url,
+            data=verified_json.encode("utf-8"),
+            headers=headers,
+        )
 
     handle_response_errors(
         response, "create", name, getattr(data, "id", "No ID"), allow_409=True
@@ -104,9 +104,10 @@ async def read(
     :return:                 The created model based on the data returned by the Restful API
     """
     raise_when_operation_not_allowed(name, "read")
-    session = session_manager_async.session(credentials=credentials)
     url = session_manager_async.url(name, f"/{resource_id}")
-    response = await session.get(url=url)
+
+    async with session_manager_async.session(credentials=credentials) as session:
+        response = await session.get(url=url)
 
     handle_response_errors(response, "read", name, resource_id)
     model = lookup_model_by_name(name)
@@ -138,18 +139,18 @@ async def update(
     resource_id, verified_json = validate_data_and_convert_to_json(
         model, data, existing=True, resource_id_key=model_metadata["resource_id"]
     )
-    session = session_manager_async.session(credentials=credentials)
 
-    if partial:
-        response = await session.patch(
-            url=session_manager_async.url(name, f"/{resource_id}"),
-            data=verified_json.encode("utf-8"),
-        )
-    else:
-        response = await session.put(
-            url=session_manager_async.url(name, f"/{resource_id}"),
-            data=verified_json.encode("utf-8"),
-        )
+    async with session_manager_async.session(credentials=credentials) as session:
+        if partial:
+            response = await session.patch(
+                url=session_manager_async.url(name, f"/{resource_id}"),
+                data=verified_json.encode("utf-8"),
+            )
+        else:
+            response = await session.put(
+                url=session_manager_async.url(name, f"/{resource_id}"),
+                data=verified_json.encode("utf-8"),
+            )
 
     logger.debug(verified_json.encode("utf-8"))
     handle_response_errors(response, "update", name, resource_id)
@@ -186,8 +187,9 @@ async def message(
         exclude_none=True,
     )
     url = session_manager_async.url(name, f"/{resource_id}/addMessage")
-    session = session_manager_async.session(credentials=credentials)
-    response = await session.post(url=url, data=verified_json.encode("utf-8"))
+
+    async with session_manager_async.session(credentials=credentials) as session:
+        response = await session.post(url=url, data=verified_json.encode("utf-8"))
 
     handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
@@ -264,43 +266,44 @@ async def listing(
             params["maxResults"] = "100"
 
     url = session_manager_async.url(name)
-    session = session_manager_async.session(credentials=credentials)
 
-    while True:
-        response = await session.get(url=url, params=params)
-        if response.status_code == 404:
-            raise LookupError(f"Error 404, {name} not found: - {response.text}")
+    async with session_manager_async.session(credentials=credentials) as session:
+        while True:
+            response = await session.get(url=url, params=params)
+            # Use shared error handling for consistent exception types
+            if name.endswith("Object"):
+                resource_identifier = resource_id if resource_id else ""
+            else:
+                resource_identifier = issuer_id if issuer_id else ""
+            handle_response_errors(response, "list", name, resource_identifier)
 
-        if response.status_code != 200:
-            raise Exception(f"Error: {response.status_code} - {response.text}")
+            data = json.loads(response.content)
+            data = PaginatedResponse.model_validate(data)
+            resources = data.resources
+            pagination = data.pagination
 
-        data = json.loads(response.content)
-        data = PaginatedResponse.model_validate(data)
-        resources = data.resources
-        pagination = data.pagination
-
-        if not resources:
-            logger.warning("Response does not contain 'resources'")
-            if pagination and pagination.resultsPerPage == 0:
-                logger.warning(
-                    "No results per page set, this might be an error in the API response."
-                )
+            if not resources:
+                logger.warning("Response does not contain 'resources'")
+                if pagination and pagination.resultsPerPage == 0:
+                    logger.warning(
+                        "No results per page set, this might be an error in the API response."
+                    )
+                    break
+            for count, record in enumerate(resources):
+                try:
+                    yield model.model_validate(record)
+                except Exception:
+                    logger.exception(f"Error validating record {count}:\n{record}")
+                    raise
+            if not is_pageable or not pagination:
                 break
-        for count, record in enumerate(resources):
-            try:
-                yield model.model_validate(record)
-            except Exception:
-                logger.exception(f"Error validating record {count}:\n{record}")
-                raise
-        if not is_pageable or not pagination:
+            if result_per_page > 0:
+                if pagination.nextPageToken:
+                    yield pagination.nextPageToken
+                    break
+            else:
+                if pagination.nextPageToken:
+                    params["token"] = pagination.nextPageToken
+                    continue
             break
-        if result_per_page > 0:
-            if pagination.nextPageToken:
-                yield pagination.nextPageToken
-                break
-        else:
-            if pagination.nextPageToken:
-                params["token"] = pagination.nextPageToken
-                continue
-        break
     return
