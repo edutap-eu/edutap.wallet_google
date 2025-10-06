@@ -1,3 +1,4 @@
+from .exceptions import ObjectAlreadyExistsException
 from .models.bases import Model
 from .models.datatypes.general import PaginatedResponse
 from .models.datatypes.jwt import JWTClaims
@@ -13,6 +14,7 @@ from .registry import lookup_metadata_by_name
 from .registry import lookup_model_by_name
 from .registry import raise_when_operation_not_allowed
 from .session import session_manager
+from .utils import handle_response_errors
 from collections.abc import Generator
 from google.auth import crypt
 from google.auth import jwt
@@ -72,18 +74,6 @@ def _validate_data_and_convert_to_json(
     return (identifier, verified_json)
 
 
-class WalletException(Exception):
-    pass
-
-
-class ObjectAlreadyExistsException(WalletException):
-    pass
-
-
-class QuotaExceededException(WalletException):
-    pass
-
-
 def new(
     name: str,
     data: dict[str, typing.Any] = {},
@@ -129,24 +119,12 @@ def create(
         data=verified_json.encode("utf-8"),
         headers=headers,
     )
-    if response.status_code == 403:
-        # Check response text to distinguish between quota and permission errors
-        response_lower = response.text.lower()
-        if "quota" in response_lower or "rate" in response_lower:
-            raise QuotaExceededException(
-                f"Quota exceeded while trying to create {name} {getattr(data, 'id', 'No ID')}"
-            )
-        # Permission/access denied error
-        raise WalletException(
-            f"Access denied while trying to create {name} {getattr(data, 'id', 'No ID')}: {response.text}"
-        )
-    elif response.status_code == 409:
+    handle_response_errors(
+        response, "create", name, getattr(data, "id", "No ID"), allow_409=True
+    )
+    if response.status_code == 409:
         raise ObjectAlreadyExistsException(
             f"{name} {getattr(data, 'id', 'No ID')} already exists\n{response.text}"
-        )
-    elif response.status_code != 200:
-        raise WalletException(
-            f"Error on create of {name} {getattr(data, 'id', 'No ID')} at {url}: {response.status_code} - {response.text}"
         )
 
     logger.debug(f"RAW-Response: {response.content!r}")
@@ -178,26 +156,10 @@ def read(
     url = session_manager.url(name, f"/{resource_id}")
     response = session.get(url=url)
 
-    if response.status_code == 403:
-        # Check response text to distinguish between quota and permission errors
-        response_lower = response.text.lower()
-        if "quota" in response_lower or "rate" in response_lower:
-            raise QuotaExceededException(
-                f"Quota exceeded while trying to read {name} {resource_id}"
-            )
-        # Permission/access denied error
-        raise WalletException(
-            f"Access denied while trying to read {name} {resource_id}: {response.text}"
-        )
-    elif response.status_code == 404:
-        raise LookupError(f"{url}: {name} not found")
-
-    if response.status_code == 200:
-        model = lookup_model_by_name(name)
-        logger.debug(f"RAW-Response: {response.content!r}")
-        return model.model_validate_json(response.content)
-
-    raise WalletException(f"{url} {response.status_code} - {response.text}")
+    handle_response_errors(response, "read", name, resource_id)
+    model = lookup_model_by_name(name)
+    logger.debug(f"RAW-Response: {response.content!r}")
+    return model.model_validate_json(response.content)
 
 
 def update(
@@ -237,24 +199,7 @@ def update(
             data=verified_json.encode("utf-8"),
         )
     logger.debug(verified_json.encode("utf-8"))
-    if response.status_code == 403:
-        # Check response text to distinguish between quota and permission errors
-        response_lower = response.text.lower()
-        if "quota" in response_lower or "rate" in response_lower:
-            raise QuotaExceededException(
-                f"Quota exceeded while trying to update {name} {resource_id}"
-            )
-        # Permission/access denied error
-        raise WalletException(
-            f"Access denied while trying to update {name} {resource_id}: {response.text}"
-        )
-    elif response.status_code == 404:
-        raise LookupError(
-            f"Error 404, {name} {getattr(data, 'id', 'No ID')} not found: - {response.text}"
-        )
-    if response.status_code != 200:
-        raise WalletException(f"Error: {response.status_code} - {response.text}")
-
+    handle_response_errors(response, "update", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
     return model.model_validate_json(response.content)
 
@@ -292,22 +237,7 @@ def message(
     session = session_manager.session(credentials=credentials)
     response = session.post(url=url, data=verified_json.encode("utf-8"))
 
-    if response.status_code == 403:
-        # Check response text to distinguish between quota and permission errors
-        response_lower = response.text.lower()
-        if "quota" in response_lower or "rate" in response_lower:
-            raise QuotaExceededException(
-                f"Quota exceeded while trying to send message to {name} {resource_id}"
-            )
-        # Permission/access denied error
-        raise WalletException(
-            f"Access denied while trying to send message to {name} {resource_id}: {response.text}"
-        )
-    elif response.status_code == 404:
-        raise LookupError(f"Error 404, {name} not found: - {response.text}")
-    elif response.status_code != 200:
-        raise WalletException(f"Error: {response.status_code} - {response.text}")
-
+    handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
     response_data = json.loads(response.content)
     return model.model_validate(response_data.get("resource"))
