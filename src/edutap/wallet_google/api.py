@@ -120,12 +120,8 @@ def create(
         headers=headers,
     )
     handle_response_errors(
-        response, "create", name, getattr(data, "id", "No ID"), allow_409=True
+        response, "create", name, getattr(data, "id", "No ID")
     )
-    if response.status_code == 409:
-        raise ObjectAlreadyExistsException(
-            f"{name} {getattr(data, 'id', 'No ID')} already exists\n{response.text}"
-        )
 
     logger.debug(f"RAW-Response: {response.content!r}")
     try:

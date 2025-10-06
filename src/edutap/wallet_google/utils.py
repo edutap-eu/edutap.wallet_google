@@ -1,3 +1,6 @@
+from .exceptions import ObjectAlreadyExistsException
+from .exceptions import QuotaExceededException
+from .exceptions import WalletException
 from .session import session_manager
 from cryptography.fernet import Fernet
 
@@ -45,7 +48,6 @@ def handle_response_errors(
     operation: str,
     name: str,
     resource_id: str = "",
-    allow_409: bool = False,
 ) -> None:
     """Handle HTTP response errors and raise appropriate exceptions.
 
@@ -59,32 +61,27 @@ def handle_response_errors(
     :raises ObjectAlreadyExistsException: When resource already exists (409)
     :raises WalletException:        For other errors
     """
-    from .exceptions import ObjectAlreadyExistsException
-    from .exceptions import QuotaExceededException
-    from .exceptions import WalletException
 
-    if response.status_code == 200:
-        return
-
-    if response.status_code == 403:
-        response_lower = response.text.lower()
-        if "quota" in response_lower or "rate" in response_lower:
-            raise QuotaExceededException(
-                f"Quota exceeded while trying to {operation} {name} {resource_id}"
-            )
-        raise WalletException(
-            f"Access denied while trying to {operation} {name} {resource_id}: {response.text}"
-        )
-
-    elif response.status_code == 404:
-        raise LookupError(f"{name} not found: {response.text}")
-
-    elif response.status_code == 409:
-        if allow_409:
+    match response.status_code:
+        case 200:
             return
-        raise ObjectAlreadyExistsException(
-            f"{name} {resource_id} already exists\n{response.text}"
-        )
+        case 403:
+            response_lower = response.text.lower()
+            if "quota" in response_lower or "rate" in response_lower:
+                raise QuotaExceededException(
+                    f"Quota exceeded while trying to {operation} {name} {resource_id}"
+                )
+            raise WalletException(
+                f"Access denied while trying to {operation} {name} {resource_id}: {response.text}"
+            )
 
-    elif response.status_code != 200:
-        raise WalletException(f"Error: {response.status_code} - {response.text}")
+        case 404:
+            raise LookupError(f"{name} not found: {response.text}")
+
+        case 409:
+            raise ObjectAlreadyExistsException(
+                f"{name} {resource_id} already exists\n{response.text}"
+            )
+
+        case _:
+            raise WalletException(f"Error: {response.status_code} - {response.text}")
