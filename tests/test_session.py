@@ -40,14 +40,25 @@ def test_session_manager_url(
 
 
 def test_session_creation(monkeypatch, clean_session_threadlocals):
+    from edutap.wallet_google.credentials import credentials_manager
     from edutap.wallet_google.session import SessionManager
+
+    # Clear the cache and settings before testing
+    credentials_manager.credentials_from_file.cache_clear()
+    if hasattr(credentials_manager, "_settings"):
+        delattr(credentials_manager, "_settings")
 
     monkeypatch.setenv(
         "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE",
         str(ROOT_DIR / "tests" / "data" / "credentials_non_existent.json"),
     )
     with pytest.raises(ValueError):
-        SessionManager().credentials_from_file()
+        credentials_manager.credentials_from_file()
+
+    # Clear cache and settings again before next test
+    credentials_manager.credentials_from_file.cache_clear()
+    if hasattr(credentials_manager, "_settings"):
+        delattr(credentials_manager, "_settings")
 
     monkeypatch.setenv(
         "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE",

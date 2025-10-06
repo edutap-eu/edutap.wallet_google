@@ -1,10 +1,10 @@
+from .credentials import credentials_manager
 from .registry import lookup_metadata_by_name
 from .settings import Settings
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials
 from requests.adapters import HTTPAdapter
 
-import functools
 import json
 import threading
 
@@ -59,14 +59,6 @@ class SessionManager:
             self._settings = Settings()
         return self._settings
 
-    @functools.cache
-    def credentials_from_file(self) -> dict:
-        credentials_file = self.settings.credentials_file
-        if not credentials_file.is_file():
-            raise ValueError(f"Credentials file {credentials_file} not exists")
-        with credentials_file.open() as fd:
-            return json.loads(fd.read())
-
     def _make_session(self, credentials: dict) -> AuthorizedSession:
         google_credentials = Credentials.from_service_account_info(
             credentials,
@@ -86,7 +78,7 @@ class SessionManager:
         :return:            The authorized session.
         """
         if not credentials:
-            credentials = self.credentials_from_file()
+            credentials = credentials_manager.credentials_from_file()
         cache_key = credentials["private_key_id"]
         if getattr(_THREADLOCAL, "sessions", None) is None:
             _THREADLOCAL.sessions = dict()

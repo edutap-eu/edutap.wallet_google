@@ -5,9 +5,12 @@ Use these functions when you need non-blocking I/O, such as in async web framewo
 like FastAPI, or when making multiple concurrent API calls.
 
 For synchronous code, use the regular `api` module instead.
+
+Note: save_link() is available from this module but requires google-auth to be installed.
 """
 
 from .exceptions import ObjectAlreadyExistsException
+from .jwt_utils import save_link  # noqa: F401
 from .models.bases import Model
 from .models.datatypes.general import PaginatedResponse
 from .models.datatypes.message import Message

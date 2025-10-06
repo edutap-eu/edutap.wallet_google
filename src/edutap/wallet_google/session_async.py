@@ -1,9 +1,7 @@
+from .credentials import credentials_manager
 from .registry import lookup_metadata_by_name
 from .settings import Settings
 from authlib.integrations.httpx_client import AsyncAssertionClient
-
-import functools
-import json
 
 
 class AsyncSessionManager:
@@ -21,14 +19,6 @@ class AsyncSessionManager:
         if settings is None:
             self._settings = Settings()
         return self._settings
-
-    @functools.cache
-    def credentials_from_file(self) -> dict:
-        credentials_file = self.settings.credentials_file
-        if not credentials_file.is_file():
-            raise ValueError(f"Credentials file {credentials_file} not exists")
-        with credentials_file.open() as fd:
-            return json.loads(fd.read())
 
     def _make_session(self, credentials: dict) -> AsyncAssertionClient:
         """Create an async OAuth2 service account client using Authlib.
@@ -68,7 +58,7 @@ class AsyncSessionManager:
         :return:            The async assertion client.
         """
         if not credentials:
-            credentials = self.credentials_from_file()
+            credentials = credentials_manager.credentials_from_file()
 
         return self._make_session(credentials)
 
