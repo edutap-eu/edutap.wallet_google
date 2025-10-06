@@ -55,7 +55,6 @@ def handle_response_errors(
     :param operation:    Operation name for error messages (e.g., "create", "read")
     :param name:         Resource name for error messages
     :param resource_id:  Resource ID for error messages
-    :param allow_409:    If True, don't raise exception on 409 (for create operations)
     :raises QuotaExceededException: When API quota exceeded
     :raises LookupError:            When resource not found (404)
     :raises ObjectAlreadyExistsException: When resource already exists (409)
