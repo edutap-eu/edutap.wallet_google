@@ -3,7 +3,6 @@ from .settings import Settings
 from authlib.integrations.httpx_client import AsyncAssertionClient
 
 import functools
-import httpx
 import json
 
 

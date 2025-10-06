@@ -2,7 +2,6 @@ from .models.bases import Model
 from .session import session_manager
 from cryptography.fernet import Fernet
 
-import json
 import logging
 import typing
 

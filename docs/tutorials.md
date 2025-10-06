@@ -4,12 +4,12 @@ We prepared several tutorials to get you started with the Google Wallet API.
 
 Before starting, follow the [installation and configuration instructions](installation.md).
 
-**Note:** All examples use the synchronous API (`api`). For async operations with FastAPI or other async frameworks, use `api_async` with the same function signatures but with `async`/`await`.
+**Note:** All examples use the synchronous API (`api`).
+For async operations with FastAPI or other async frameworks, use `api_async` with the same function signatures but with `async`/`await`.
 
 ## Create a pass and load it into the Google Wallet
 
-
-In this tutorial you will
+In this tutorial you will:
 - create a Wallet Class (a template),
 - a Wallet Object (the pass) based on the Wallet Class and
 - create a save link to download the pass to the Google Wallet form your mobile device.
@@ -93,15 +93,20 @@ print(link)
 ```
 
 **Important:**
-- **Option 1** encodes the full pass data in the link. When clicked, Google Wallet creates or updates the pass automatically. Use this for on-the-fly pass creation.
-- **Option 2** only references a pass ID. The pass must already exist (created via `api.create()` beforehand). Use this for passes that are managed server-side.
+- **Option 1** encodes the full pass data in the link.
+  When clicked, Google Wallet creates or updates the pass automatically.
+  Use this for on-the-fly pass creation.
+- **Option 2** only references a pass ID.
+  The pass must already exist (created via `api.create()` beforehand).
+  Use this for passes that are managed server-side.
 
 The link can be opened on a mobile device to download the pass to the Google Wallet.
 It can also be opened in the desktop browser if logged in with the same Google account as on your mobile device.
 
 ## Update a class
 
-To update an existing class, use the `update()` function. You can do a partial update (default) or a full replacement.
+To update an existing class, use the `update()` function.
+You can do a partial update (default) or a full replacement.
 
 ```python
 # Read the existing class
