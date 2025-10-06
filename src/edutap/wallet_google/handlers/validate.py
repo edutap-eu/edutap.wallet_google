@@ -40,14 +40,18 @@ from typing import cast
 
 import base64
 import httpx
+import logging
 import time
+
+
+logger = logging.getLogger(__name__)
 
 
 PROTOCOL_VERSION = "ECv2SigningOnly"
 ALGORITHM = ECDSA(hashes.SHA256())
 GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL = {
     # see https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions
-    "testing":"https://pay.google.com/gp/m/issuer/keys",
+    "testing": "https://pay.google.com/gp/m/issuer/keys",
     "production": "https://pay.google.com/gp/m/issuer/keys",
 }
 GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE: dict[str, RootSigningPublicKeys] = {}
@@ -143,7 +147,7 @@ def _verify_intermediate_signing_key(
                 public_key.verify(signature, signed_data, ALGORITHM)
             except (ValueError, InvalidSignature) as e:
                 # Invalid signature. Try the other signatures.
-                print(f"Invalid signature: {e}")
+                logger.debug(f"Invalid signature attempt: {e}")
             else:
                 # Valid signature was found
                 return True
@@ -195,11 +199,12 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
         PROTOCOL_VERSION,
         data.signedMessage,
     )
-    print(f"Signature: {data.signature}")
-    print(f"Signed data: {signed_data}")
+    logger.debug(f"Verifying signature: {data.signature}")
+    logger.debug(f"Signed data length: {len(signed_data)} bytes")
     try:
         intermediate_public_key.verify(signature, signed_data, ALGORITHM)
-    except (ValueError, InvalidSignature):
+    except (ValueError, InvalidSignature) as e:
+        logger.debug(f"Signature verification failed: {e}")
         raise ValueError("Invalid signature")
 
     return message
