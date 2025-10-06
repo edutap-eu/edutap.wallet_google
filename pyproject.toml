@@ -54,7 +54,7 @@ test = [
     "pytest",
     "requests-mock",
     "tox",
-    "freezegun"    # for freezing time for tests
+    "freezegun",    # for freezing time for tests
 ]
 typecheck  = [
     "google-auth-stubs",
