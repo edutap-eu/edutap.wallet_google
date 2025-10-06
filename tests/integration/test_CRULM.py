@@ -77,7 +77,7 @@ params_for_create = [
             "programName": "test program",
             "programLogo": {
                 "sourceUri": {
-                    "uri": "https://edutap.eu/static/3d642ea43b0bc1fb150510749f6c2333/084c2/eugloh-white.webp",
+                    "uri": "https://avatars.githubusercontent.com/u/142002169?s=48&v=4",
                 },
                 "contentDescription": {
                     "defaultValue": {
