@@ -10,6 +10,7 @@ Note: save_link() is available from this module but requires google-auth to be i
 """
 
 from .exceptions import ObjectAlreadyExistsException
+from .factory import new  # noqa: F401
 from .jwt_utils import save_link  # noqa: F401
 from .models.bases import Model
 from .models.datatypes.general import PaginatedResponse
@@ -21,7 +22,6 @@ from .registry import raise_when_operation_not_allowed
 from .session_async import session_manager_async
 from .utils import handle_response_errors
 from .utils import parse_response_json
-from .utils import validate_data
 from .utils import validate_data_and_convert_to_json
 from collections.abc import AsyncGenerator
 
@@ -31,23 +31,6 @@ import typing
 
 
 logger = logging.getLogger(__name__)
-
-
-def new(
-    name: str,
-    data: dict[str, typing.Any] = {},
-):
-    """
-    Factors a new registered Google Wallet Model by name, based on the given data.
-
-    :param name:       Registered name of the model to use
-    :param data:       Data to initialize the model with.
-                       A simple JSON compatible Python data structure using built-ins.
-    :raises Exception: When the data does not validate.
-    :return:           The created model instance.
-    """
-    model = lookup_model_by_name(name)
-    return validate_data(model, data)
 
 
 async def create(

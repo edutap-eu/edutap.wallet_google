@@ -1,4 +1,5 @@
 from .exceptions import ObjectAlreadyExistsException
+from .factory import new  # noqa: F401
 from .jwt_utils import _convert_str_or_datetime_to_str  # noqa: F401
 from .jwt_utils import _create_claims  # noqa: F401
 from .jwt_utils import _create_payload  # noqa: F401
@@ -13,7 +14,6 @@ from .registry import raise_when_operation_not_allowed
 from .session import session_manager
 from .utils import handle_response_errors
 from .utils import parse_response_json
-from .utils import validate_data
 from .utils import validate_data_and_convert_to_json
 from collections.abc import Generator
 
@@ -23,23 +23,6 @@ import typing
 
 
 logger = logging.getLogger(__name__)
-
-
-def new(
-    name: str,
-    data: dict[str, typing.Any] = {},
-):
-    """
-    Factors a new registered Google Wallet Model by name, based on the given data.
-
-    :param name:       Registered name of the model to use
-    :param data:       Data to initialize the model with.
-                       A simple JSON compatible Python data structure using built-ins.
-    :raises Exception: When the data does not validate.
-    :return:           The created model instance.
-    """
-    model = lookup_model_by_name(name)
-    return validate_data(model, data)
 
 
 def create(
