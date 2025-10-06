@@ -85,3 +85,34 @@ def test_verify_intermediate_signing_key(mock_settings):
     data = CallbackData.model_validate(callback_data)
     root_keys = google_root_signing_public_keys(mock_settings.google_environment)
     _verify_intermediate_signing_key(root_keys, data.intermediateSigningKey)
+
+
+def test_google_keys_include_protocol_version(mock_settings):
+    """Test that Google's root signing keys include protocolVersion field.
+
+    This is important because we filter keys by protocol version for security.
+    If this test fails, it means Google changed their key format and we need
+    to reconsider our protocol version filtering approach.
+    """
+    from edutap.wallet_google.handlers.validate import PROTOCOL_VERSION
+
+    root_keys = google_root_signing_public_keys(mock_settings.google_environment)
+
+    # Verify we got keys
+    assert len(root_keys.keys) > 0, "No keys returned from Google"
+
+    # Verify all keys have protocolVersion field
+    for idx, key in enumerate(root_keys.keys):
+        assert hasattr(
+            key, "protocolVersion"
+        ), f"Key {idx} missing protocolVersion field"
+        assert key.protocolVersion is not None, f"Key {idx} has None protocolVersion"
+        # Log what we found for debugging
+        print(f"Key {idx}: protocolVersion={key.protocolVersion}")
+
+    # Verify at least one key matches our expected protocol version
+    matching_keys = [k for k in root_keys.keys if k.protocolVersion == PROTOCOL_VERSION]
+    assert len(matching_keys) > 0, (
+        f"No keys found with protocol version '{PROTOCOL_VERSION}'. "
+        f"Found: {[k.protocolVersion for k in root_keys.keys]}"
+    )

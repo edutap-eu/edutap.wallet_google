@@ -125,6 +125,15 @@ def _verify_intermediate_signing_key(
 ) -> bool:
     """Check the intermediate signing keys signature against the Google root public keys.
 
+    This function filters keys by protocolVersion before attempting verification for:
+    - Security: Only uses keys explicitly designed for our protocol
+    - Performance: Skips incompatible keys early in the verification process
+    - Clarity: Provides clear logging when keys don't match expected protocol
+
+    The protocol version filtering was re-enabled after testing confirmed that
+    Google's callback signing keys consistently include the protocolVersion field
+    with value "ECv2SigningOnly".
+
     see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#verify-signature
     """
     signatures = [
@@ -137,9 +146,14 @@ def _verify_intermediate_signing_key(
         intermediate_signing_key.signedKey,
     )
     for pkey in public_keys.keys:
-
-        # if pkey.protocolVersion != PROTOCOL_VERSION:
-        #     continue
+        # Filter keys by protocol version for security and performance
+        # Only attempt verification with keys matching our protocol version
+        if pkey.protocolVersion != PROTOCOL_VERSION:
+            logger.debug(
+                f"Skipping key with protocol version '{pkey.protocolVersion}', "
+                f"expected '{PROTOCOL_VERSION}'"
+            )
+            continue
 
         public_key = _load_public_key(pkey.keyValue)
         for signature in signatures:
@@ -151,6 +165,12 @@ def _verify_intermediate_signing_key(
             else:
                 # Valid signature was found
                 return True
+
+    # No valid signature found after checking all compatible keys
+    logger.warning(
+        f"No valid signature found. Checked {len(public_keys.keys)} key(s) "
+        f"with protocol version '{PROTOCOL_VERSION}'"
+    )
     return False
 
 
