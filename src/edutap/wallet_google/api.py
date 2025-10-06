@@ -1,4 +1,3 @@
-from .exceptions import ObjectAlreadyExistsException
 from .models.bases import Model
 from .models.datatypes.general import PaginatedResponse
 from .models.datatypes.jwt import JWTClaims
@@ -119,9 +118,7 @@ def create(
         data=verified_json.encode("utf-8"),
         headers=headers,
     )
-    handle_response_errors(
-        response, "create", name, getattr(data, "id", "No ID")
-    )
+    handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
 
     logger.debug(f"RAW-Response: {response.content!r}")
     try:
