@@ -9,7 +9,13 @@
       "Bash(gh pr view:*)",
       "Bash(uvx pre-commit run:*)",
       "Bash(uvx mypy:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh api:*)",
+      "Bash(uvx:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []

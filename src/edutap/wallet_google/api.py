@@ -280,5 +280,5 @@ def listing(
     return
 
 
-# save_link and helper functions moved to jwt_utils.py
-# Re-exported above for backward compatibility
+# save_link and helper functions are in jwt_utils.py
+# Re-exported above as permanent part of the API
