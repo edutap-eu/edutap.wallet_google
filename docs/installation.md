@@ -7,15 +7,38 @@ Version 3.13 is recommended.
 
 ## Installation
 
-The package is hosted at the Python Package Index (PyPI) and can be installed using `pip install edutap.wallet_google`.
+The package is hosted at the Python Package Index (PyPI).
 
-We recommend working with `uv`
+We recommend working with `uv`:
 
 ```bash
 uv venv -p 3.13.0
 source .venv/bin/activate
-uv pip install edutap.wallet_google
 ```
+
+### Install with synchronous API support
+
+```bash
+uv pip install edutap.wallet_google[sync]
+```
+
+### Install with asynchronous API support
+
+```bash
+uv pip install edutap.wallet_google[async]
+```
+
+### Install with both sync and async support
+
+```bash
+uv pip install edutap.wallet_google[sync,async]
+```
+
+### Optional extras
+
+- `[sync]` - Synchronous API using `google-auth` and `requests`
+- `[async]` - Asynchronous API using `authlib` and `httpx`
+- `[callback]` - FastAPI endpoints for Google Wallet callbacks
 
 ## Configuration
 

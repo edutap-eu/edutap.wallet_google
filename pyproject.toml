@@ -32,8 +32,6 @@ classifiers = [
 ]
 dependencies = [
     "cryptography",
-    "google-auth[requests]",
-    "httpx",
     "pydantic-settings",
     "pydantic[email]>=2.0",
   ]
@@ -44,14 +42,18 @@ Issues = "https://github.com/edutap-eu/edutap.wallet_google/issues"
 Documentation = "https://docs.edutap.eu/packages/edutap_wallet_google/index.html"
 
 [project.optional-dependencies]
+sync = [
+    "google-auth[requests]",
+]
 async = [
     "authlib",
+    "httpx",
 ]
 callback = [
     "fastapi",
 ]
 test = [
-    "edutap.wallet-google[callback,async]",
+    "edutap.wallet-google[callback,sync,async]",
     "freezegun",
     "pytest-asyncio",
     "pytest-cov",

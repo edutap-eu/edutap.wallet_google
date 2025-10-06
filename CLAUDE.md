@@ -13,6 +13,14 @@ The package provides:
 - FastAPI endpoints for callbacks and image serving
 - Plugin system for business logic integration
 
+### Installation
+
+Install with optional extras based on your needs:
+- `pip install edutap.wallet_google[sync]` - Synchronous API (google-auth + requests)
+- `pip install edutap.wallet_google[async]` - Asynchronous API (authlib + httpx)
+- `pip install edutap.wallet_google[sync,async]` - Both APIs
+- `pip install edutap.wallet_google[callback]` - FastAPI callback endpoints
+
 ## Development Commands
 
 ### Setup and Testing
