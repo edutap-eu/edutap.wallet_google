@@ -54,22 +54,105 @@ GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL = {
     "testing": "https://pay.google.com/gp/m/issuer/keys",
     "production": "https://pay.google.com/gp/m/issuer/keys",
 }
-GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE: dict[str, RootSigningPublicKeys] = {}
+# Cache structure: {environment: (keys, cache_expiration_timestamp)}
+GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE: dict[
+    str, tuple[RootSigningPublicKeys, float]
+] = {}
+# Refresh cache 1 hour before first key expires (safety margin)
+CACHE_REFRESH_MARGIN_MS = 3600000  # 1 hour in milliseconds
+
+
+def _calculate_cache_expiration(keys: RootSigningPublicKeys) -> float:
+    """Calculate when the cache should expire based on key expiration times.
+
+    Returns the earliest key expiration timestamp (minus safety margin) as cache TTL.
+    If a key has no expiration or all keys are expired, returns current time + 1 hour.
+    """
+    current_time_ms = time.time() * 1000
+    valid_expirations = []
+
+    for key in keys.keys:
+        if hasattr(key, "keyExpiration") and key.keyExpiration:
+            exp_ms = float(key.keyExpiration)
+            # Only consider non-expired keys
+            if exp_ms > current_time_ms:
+                valid_expirations.append(exp_ms)
+
+    if not valid_expirations:
+        # No valid keys with expiration, cache for 1 hour
+        logger.warning("No valid key expirations found, using 1-hour cache TTL")
+        return (current_time_ms + CACHE_REFRESH_MARGIN_MS) / 1000
+
+    # Use earliest expiration minus safety margin
+    earliest_expiration = min(valid_expirations)
+    cache_until = (earliest_expiration - CACHE_REFRESH_MARGIN_MS) / 1000
+    logger.debug(
+        f"Cache will expire at {cache_until} "
+        f"(earliest key expires at {earliest_expiration / 1000})"
+    )
+    return cache_until
 
 
 def google_root_signing_public_keys(google_environment: str) -> RootSigningPublicKeys:
     """
-    Fetch Googles root signing keys once for the configured environment and return them or the cached value.
+    Fetch Googles root signing keys for the configured environment.
+
+    Keys are cached until the earliest key expires (with 1-hour safety margin).
+    Expired keys are filtered out. Cache is automatically refreshed when expired.
     """
-    if GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(google_environment, None) is not None:
-        return GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[google_environment]
-    # fetch once
+    current_time = time.time()
+    cached = GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(google_environment)
+
+    # Check if we have valid cached keys
+    if cached is not None:
+        keys, cache_expiration = cached
+        if current_time < cache_expiration:
+            logger.debug(
+                f"Using cached keys (expires in {cache_expiration - current_time:.0f}s)"
+            )
+            return keys
+        logger.info("Cache expired, refreshing Google root signing keys")
+
+    # Fetch from Google
+    logger.info(
+        f"Fetching Google root signing keys from {GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[google_environment]}"
+    )
     resp = httpx.get(GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[google_environment])
     resp.raise_for_status()
+    all_keys = RootSigningPublicKeys.model_validate_json(resp.text)
+
+    # Filter out expired keys
+    current_time_ms = time.time() * 1000
+    valid_keys = [
+        key
+        for key in all_keys.keys
+        if not hasattr(key, "keyExpiration")
+        or not key.keyExpiration
+        or float(key.keyExpiration) > current_time_ms
+    ]
+
+    if not valid_keys:
+        logger.error(f"All {len(all_keys.keys)} keys from Google are expired!")
+        raise ValueError("All Google root signing keys are expired")
+
+    if len(valid_keys) < len(all_keys.keys):
+        logger.warning(
+            f"Filtered out {len(all_keys.keys) - len(valid_keys)} expired keys, "
+            f"{len(valid_keys)} valid keys remaining"
+        )
+
+    # Create filtered keys object and calculate cache expiration
+    filtered_keys = RootSigningPublicKeys(keys=valid_keys)
+    cache_expiration = _calculate_cache_expiration(filtered_keys)
+
+    # Cache the filtered keys with expiration
     GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[google_environment] = (
-        RootSigningPublicKeys.model_validate_json(resp.text)
+        filtered_keys,
+        cache_expiration,
     )
-    return GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[google_environment]
+    logger.info(f"Cached {len(valid_keys)} valid keys until {cache_expiration}")
+
+    return filtered_keys
 
 
 def _raw_private_key(in_key: str) -> str:

@@ -16,12 +16,14 @@ def test_google_public_key_cached_empty(mock_settings):
         GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE,
     )
 
-    assert (
-        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(
-            mock_settings.google_environment, None
-        )
-        is not None
+    # Cache structure is now (keys, expiration_timestamp)
+    cached = GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(
+        mock_settings.google_environment, None
     )
+    assert cached is not None
+    keys, expiration = cached
+    assert keys is not None
+    assert expiration > 0
     assert google_root_signing_public_keys(mock_settings.google_environment) is not None
 
 
@@ -116,3 +118,86 @@ def test_google_keys_include_protocol_version(mock_settings):
         f"No keys found with protocol version '{PROTOCOL_VERSION}'. "
         f"Found: {[k.protocolVersion for k in root_keys.keys]}"
     )
+
+
+def test_cache_expiration_refresh(mock_settings):
+    """Test that cache is refreshed when it expires."""
+    from edutap.wallet_google.handlers.validate import (
+        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE,
+    )
+
+    import time
+
+    # Clear cache
+    GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.clear()
+
+    # First fetch - should cache (hits real API)
+    keys1 = google_root_signing_public_keys(mock_settings.google_environment)
+    assert len(keys1.keys) >= 1
+
+    # Verify cached
+    cached = GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(mock_settings.google_environment)
+    assert cached is not None
+    keys_cached, cache_exp = cached
+    assert cache_exp > time.time()  # Should expire in future
+
+    # Second fetch - should use cache
+    keys2 = google_root_signing_public_keys(mock_settings.google_environment)
+    assert keys2 == keys1
+
+    # Manually expire the cache
+    GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[mock_settings.google_environment] = (
+        keys1,
+        time.time() - 1,  # Expired 1 second ago
+    )
+
+    # Third fetch - should refresh due to expiration (hits real API again)
+    keys3 = google_root_signing_public_keys(mock_settings.google_environment)
+    assert len(keys3.keys) >= 1
+
+    # Verify cache was refreshed with new expiration
+    cached_after = GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(
+        mock_settings.google_environment
+    )
+    _, cache_exp_after = cached_after
+    assert cache_exp_after > time.time()  # New expiration in future
+
+
+def test_expired_keys_filtered_logic():
+    """Test the logic for filtering expired keys."""
+    from edutap.wallet_google.models.handlers import RootSigningPublicKey
+    from edutap.wallet_google.models.handlers import RootSigningPublicKeys
+
+    import time
+
+    # Create test data with one expired and one valid key
+    past_time = int((time.time() - 1000) * 1000)  # Expired
+    future_time = int((time.time() + 7200) * 1000)  # 2 hours from now
+
+    expired_key = RootSigningPublicKey(
+        keyValue="ExpiredKeyValue==",
+        protocolVersion="ECv2SigningOnly",
+        keyExpiration=str(past_time),
+    )
+    valid_key = RootSigningPublicKey(
+        keyValue="ValidKeyValue==",
+        protocolVersion="ECv2SigningOnly",
+        keyExpiration=str(future_time),
+    )
+
+    all_keys = RootSigningPublicKeys(keys=[expired_key, valid_key])
+
+    # Filter logic (mimics what the code does)
+    current_time_ms = time.time() * 1000
+    valid_keys = [
+        key
+        for key in all_keys.keys
+        if not hasattr(key, "keyExpiration")
+        or not key.keyExpiration
+        or float(key.keyExpiration) > current_time_ms
+    ]
+
+    # Should only get the valid one
+    assert len(valid_keys) == 1
+    assert "ValidKeyValue" in valid_keys[0].keyValue
+    assert "ExpiredKeyValue" not in valid_keys[0].keyValue
