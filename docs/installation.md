@@ -38,7 +38,7 @@ uv pip install edutap.wallet_google[sync,async]
 
 - `[sync]` - Synchronous API using `google-auth` and `requests`
 - `[async]` - Asynchronous API using `authlib` and `httpx`
-- `[callback]` - FastAPI endpoints for Google Wallet callbacks
+- `[callback]` - FastAPI endpoints for Google Wallet callbacks (requires `httpx` for signature verification)
 
 ## Configuration
 

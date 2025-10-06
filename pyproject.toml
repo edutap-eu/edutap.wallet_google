@@ -51,6 +51,7 @@ async = [
 ]
 callback = [
     "fastapi",
+    "httpx",
 ]
 test = [
     "edutap.wallet-google[callback,sync,async]",
