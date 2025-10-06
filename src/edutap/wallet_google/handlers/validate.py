@@ -343,7 +343,7 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
             f"Message signature verification failed: {e.__class__.__name__}: {e}"
         )
         raise ValueError(
-            f"Invalid message signature: verification failed with intermediate signing key"
+            "Invalid message signature: verification failed with intermediate signing key"
         )
 
     logger.info(
