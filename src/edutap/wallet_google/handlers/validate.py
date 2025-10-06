@@ -184,3 +184,81 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
         raise ValueError("Invalid signature")
 
     return message
+
+
+# Async versions for httpx
+
+
+async def google_root_signing_public_keys_async(
+    google_environment: str,
+) -> RootSigningPublicKeys:
+    """
+    Fetch Googles root signing keys once for the configured environment and return them or the cached value.
+
+    Async version using httpx.AsyncClient.
+    """
+    if GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(google_environment, None) is not None:
+        return GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[google_environment]
+    # fetch once
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[google_environment])
+        resp.raise_for_status()
+        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[google_environment] = (
+            RootSigningPublicKeys.model_validate_json(resp.text)
+        )
+    return GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[google_environment]
+
+
+async def verified_signed_message_async(data: CallbackData) -> SignedMessage:
+    """
+    Verifies the signature of the callback data asynchronously.
+    and returns the parsed SignedMessage
+
+    Async version using httpx.AsyncClient for fetching Google root signing keys.
+    """
+    # parse message
+    message = SignedMessage.model_validate_json(data.signedMessage)
+
+    # get issuer_id
+    if not message.classId or "." not in message.classId:
+        raise ValueError("Missing classId")
+    issuer_id = message.classId.split(".")[0]
+
+    # shortcut if signature validation is disabled
+    settings = session_manager.settings
+    if settings.handler_callback_verify_signature == "0":
+        return message
+
+    if data.protocolVersion != PROTOCOL_VERSION:
+        raise ValueError("Invalid protocolVersion")
+
+    # check intermediate signing keys signature
+    if not _verify_intermediate_signing_key(
+        await google_root_signing_public_keys_async(settings.google_environment),
+        data.intermediateSigningKey,
+    ):
+        raise ValueError("Invalid intermediate signing key")
+
+    # check intermediate signing keys expriration date
+    intermediate_signing_key = SignedKey.model_validate_json(
+        data.intermediateSigningKey.signedKey
+    )
+    if int(time.time() * 1000) > int(intermediate_signing_key.keyExpiration):
+        raise ValueError("Expired intermediate signing key")
+
+    # check signed message's signature
+    # https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions#verify-the-signature
+    intermediate_public_key = _load_public_key(intermediate_signing_key.keyValue)
+    signature = base64.decodebytes(bytes(data.signature, "utf-8"))
+    signed_data = _construct_signed_data(
+        "GooglePayWallet",
+        issuer_id,
+        PROTOCOL_VERSION,
+        data.signedMessage,
+    )
+    try:
+        intermediate_public_key.verify(signature, signed_data, ALGORITHM)
+    except (ValueError, InvalidSignature):
+        raise ValueError("Invalid signature")
+
+    return message
