@@ -2,7 +2,12 @@ from .models.bases import Model
 from .session import session_manager
 from cryptography.fernet import Fernet
 
+import json
+import logging
 import typing
+
+
+logger = logging.getLogger(__name__)
 
 
 def encrypt_data(data: str) -> str:
@@ -83,3 +88,71 @@ def validate_data_and_convert_to_json(
     )
     identifier = getattr(verified_data, resource_id_key)
     return (identifier, verified_json)
+
+
+# Response handling utilities
+
+
+def handle_response_errors(
+    response,
+    operation: str,
+    name: str,
+    resource_id: str = "",
+    allow_409: bool = False,
+) -> None:
+    """Handle HTTP response errors and raise appropriate exceptions.
+
+    :param response:     HTTP response object (from requests or httpx)
+    :param operation:    Operation name for error messages (e.g., "create", "read")
+    :param name:         Resource name for error messages
+    :param resource_id:  Resource ID for error messages
+    :param allow_409:    If True, don't raise exception on 409 (for create operations)
+    :raises QuotaExceededException: When API quota exceeded
+    :raises LookupError:            When resource not found (404)
+    :raises ObjectAlreadyExistsException: When resource already exists (409)
+    :raises WalletException:        For other errors
+    """
+    from .exceptions import ObjectAlreadyExistsException
+    from .exceptions import QuotaExceededException
+    from .exceptions import WalletException
+
+    if response.status_code == 200:
+        return
+
+    if response.status_code == 403:
+        response_lower = response.text.lower()
+        if "quota" in response_lower or "rate" in response_lower:
+            raise QuotaExceededException(
+                f"Quota exceeded while trying to {operation} {name} {resource_id}"
+            )
+        raise WalletException(f"Access denied: {response.text}")
+
+    elif response.status_code == 404:
+        raise LookupError(f"{name} not found: {response.text}")
+
+    elif response.status_code == 409:
+        if allow_409:
+            return
+        raise ObjectAlreadyExistsException(
+            f"{name} {resource_id} already exists\n{response.text}"
+        )
+
+    elif response.status_code != 200:
+        raise WalletException(f"Error: {response.status_code} - {response.text}")
+
+
+def parse_response_json(response, model: type[Model]) -> Model:
+    """Parse response JSON and return validated model instance.
+
+    :param response: HTTP response object
+    :param model:    Pydantic model class to validate against
+    :return:         Validated model instance
+    """
+    from pydantic import ValidationError
+
+    logger.debug(f"RAW-Response: {response.content!r}")
+    try:
+        return model.model_validate_json(response.content)
+    except ValidationError as e:
+        logger.error(f"Validation Error: {e.errors()}")
+        raise
