@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uvx tox:*)",
+      "Bash(git add:*)",
+      "WebSearch",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(gh pr view:*)",
+      "Bash(uvx pre-commit run:*)",
+      "Bash(uvx mypy:*)",
+      "Bash(xargs:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

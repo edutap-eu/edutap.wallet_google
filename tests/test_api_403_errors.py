@@ -1,10 +1,10 @@
 from edutap.wallet_google.api import create
 from edutap.wallet_google.api import message
 from edutap.wallet_google.api import new
-from edutap.wallet_google.api import QuotaExceededException
 from edutap.wallet_google.api import read
 from edutap.wallet_google.api import update
-from edutap.wallet_google.api import WalletException
+from edutap.wallet_google.exceptions import QuotaExceededException
+from edutap.wallet_google.exceptions import WalletException
 from edutap.wallet_google.models.datatypes import enums
 from edutap.wallet_google.session import session_manager
 
