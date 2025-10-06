@@ -75,13 +75,13 @@ To create a link to download the pass, we need to provide the pass object (or a 
 ```python
 from edutap.wallet_google.models.datatypes.jwt import Reference
 
-# Option 1: Using the object directly
+# Option 1: Using the object directly (works with newly created object in same session)
 link = api.save_link(
     [new_object],
     origins=["www.example.com"],
 )
 
-# Option 2: Using a reference by ID
+# Option 2: Using a reference by ID (use this if you only have the ID, e.g., from a previous session)
 link = api.save_link(
     [Reference(id=object_id, model_name="GenericObject")],
     origins=["www.example.com"],
