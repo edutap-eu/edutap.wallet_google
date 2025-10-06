@@ -39,8 +39,8 @@ from cryptography.hazmat.primitives.serialization import load_der_public_key
 from typing import cast
 
 import base64
-import httpx
 import logging
+import requests
 import time
 
 
@@ -117,7 +117,7 @@ def google_root_signing_public_keys(google_environment: str) -> RootSigningPubli
     logger.info(
         f"Fetching Google root signing keys from {GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[google_environment]}"
     )
-    resp = httpx.get(GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[google_environment])
+    resp = requests.get(GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[google_environment])
     resp.raise_for_status()
     all_keys = RootSigningPublicKeys.model_validate_json(resp.text)
 
@@ -267,30 +267,62 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
 
     # get issuer_id
     if not message.classId or "." not in message.classId:
-        raise ValueError("Missing classId")
+        raise ValueError("Missing classId in signed message")
     issuer_id = message.classId.split(".")[0]
 
     # shortcut if signature validation is disabled
     settings = session_manager.settings
     if settings.handler_callback_verify_signature == "0":
+        logger.debug("Signature verification disabled, skipping validation")
         return message
 
+    # check message expiration
+    current_time_ms = int(time.time() * 1000)
+    if message.expTimeMillis < current_time_ms:
+        time_diff = (current_time_ms - message.expTimeMillis) / 1000
+        logger.warning(
+            f"Message expired {time_diff:.0f}s ago "
+            f"(expTimeMillis: {message.expTimeMillis}, current: {current_time_ms})"
+        )
+        raise ValueError(
+            f"Expired message: expired {time_diff:.0f} seconds ago "
+            f"(expTimeMillis: {message.expTimeMillis})"
+        )
+
     if data.protocolVersion != PROTOCOL_VERSION:
-        raise ValueError("Invalid protocolVersion")
+        logger.error(
+            f"Invalid protocol version '{data.protocolVersion}', expected '{PROTOCOL_VERSION}'"
+        )
+        raise ValueError(
+            f"Invalid protocolVersion: got '{data.protocolVersion}', expected '{PROTOCOL_VERSION}'"
+        )
 
     # check intermediate signing keys signature
     if not _verify_intermediate_signing_key(
         google_root_signing_public_keys(settings.google_environment),
         data.intermediateSigningKey,
     ):
-        raise ValueError("Invalid intermediate signing key")
+        logger.error("Intermediate signing key signature verification failed")
+        raise ValueError(
+            "Invalid intermediate signing key: signature verification failed against Google root keys"
+        )
 
-    # check intermediate signing keys expriration date
+    # check intermediate signing keys expiration date
     intermediate_signing_key = SignedKey.model_validate_json(
         data.intermediateSigningKey.signedKey
     )
-    if int(time.time() * 1000) > int(intermediate_signing_key.keyExpiration):
-        raise ValueError("Expired intermediate signing key")
+    current_time_ms = int(time.time() * 1000)
+    key_expiration_ms = int(intermediate_signing_key.keyExpiration)
+    if current_time_ms > key_expiration_ms:
+        time_diff = (current_time_ms - key_expiration_ms) / 1000
+        logger.error(
+            f"Intermediate signing key expired {time_diff:.0f}s ago "
+            f"(keyExpiration: {key_expiration_ms}, current: {current_time_ms})"
+        )
+        raise ValueError(
+            f"Expired intermediate signing key: expired {time_diff:.0f} seconds ago "
+            f"(keyExpiration: {key_expiration_ms})"
+        )
 
     # check signed message's signature
     # https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions#verify-the-signature
@@ -302,12 +334,20 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
         PROTOCOL_VERSION,
         data.signedMessage,
     )
-    logger.debug(f"Verifying signature: {data.signature}")
+    logger.debug(f"Verifying message signature: {data.signature[:20]}...")
     logger.debug(f"Signed data length: {len(signed_data)} bytes")
     try:
         intermediate_public_key.verify(signature, signed_data, ALGORITHM)
     except (ValueError, InvalidSignature) as e:
-        logger.debug(f"Signature verification failed: {e}")
-        raise ValueError("Invalid signature")
+        logger.error(
+            f"Message signature verification failed: {e.__class__.__name__}: {e}"
+        )
+        raise ValueError(
+            f"Invalid message signature: verification failed with intermediate signing key"
+        )
 
+    logger.info(
+        f"Successfully verified callback for {message.classId}/{message.objectId} "
+        f"(eventType: {message.eventType})"
+    )
     return message

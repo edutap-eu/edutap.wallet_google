@@ -201,3 +201,51 @@ def test_expired_keys_filtered_logic():
     assert len(valid_keys) == 1
     assert "ValidKeyValue" in valid_keys[0].keyValue
     assert "ExpiredKeyValue" not in valid_keys[0].keyValue
+
+
+@freeze_time("2025-10-01 12:00:00")
+def test_message_expiration_valid(mock_settings):
+    """Test that a message with future expiration passes validation."""
+    from edutap.wallet_google.handlers.validate import verified_signed_message
+
+    mock_settings.handler_callback_verify_signature = "1"
+
+    # Use the valid callback data with expiration in the future
+    data = CallbackData.model_validate(callback_data)
+    message = verified_signed_message(data)
+    assert message.classId == "3388000000022141777.lib.edutap.eu"
+
+
+@freeze_time("2025-11-01 12:00:00")  # One month after the message expired
+def test_message_expiration_expired(mock_settings):
+    """Test that an expired message raises ValueError with descriptive error."""
+    from edutap.wallet_google.handlers.validate import verified_signed_message
+
+    mock_settings.handler_callback_verify_signature = "1"
+
+    # callback_data has expTimeMillis: 1759331348143 (Oct 1, 2025 10:02:28 UTC)
+    # We're frozen at Nov 1, 2025 12:00:00 UTC
+    data = CallbackData.model_validate(callback_data)
+
+    with pytest.raises(ValueError) as exc_info:
+        verified_signed_message(data)
+
+    # Verify error message contains expiration details
+    error_msg = str(exc_info.value)
+    assert "Expired message" in error_msg
+    assert "seconds ago" in error_msg
+    assert "expTimeMillis" in error_msg
+
+
+@freeze_time("2025-10-01 10:01:00")  # Just before the message expires
+def test_message_expiration_just_before_expiry(mock_settings):
+    """Test that a message just before expiration still passes."""
+    from edutap.wallet_google.handlers.validate import verified_signed_message
+
+    mock_settings.handler_callback_verify_signature = "1"
+
+    # callback_data expires at Oct 1, 2025 10:02:28 UTC
+    # We're at Oct 1, 2025 10:01:00 UTC (88 seconds before expiry)
+    data = CallbackData.model_validate(callback_data)
+    message = verified_signed_message(data)
+    assert message.classId == "3388000000022141777.lib.edutap.eu"
