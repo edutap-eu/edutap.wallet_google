@@ -26,6 +26,8 @@ class ClientPoolManager:
         self._sync_clients = {}  # {credentials_key: AssertionClient}
         self._async_clients = {}  # {credentials_key: AsyncAssertionClient}
         self._lock = threading.Lock()  # Thread-safe client creation
+        # Register cleanup handler to close sync clients on process exit
+        atexit.register(self.close_all_clients)
 
     def _get_credentials(self, credentials: dict | None) -> dict:
         """Get credentials from parameter or load from file.
@@ -160,12 +162,3 @@ class ClientPoolManager:
 
 # Singleton instance for both sync and async operations
 client_pool = ClientPoolManager()
-
-
-# Register cleanup handler to close clients on process exit
-def _cleanup_clients():
-    """Close all clients on process exit."""
-    client_pool.close_all_clients()
-
-
-atexit.register(_cleanup_clients)
