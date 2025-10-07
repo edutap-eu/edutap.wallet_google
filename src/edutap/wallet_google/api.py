@@ -304,10 +304,10 @@ def _prepare_listing(
     name: str,
     resource_id: str | None,
     issuer_id: str | None,
-) -> tuple[type[Model], dict, bool]:
+) -> tuple[type[Model], dict, bool, str]:
     """Prepare data for listing operation.
 
-    Returns: (model_type, params, is_pageable)
+    Returns: (model_type, params, is_pageable, resource_identifier)
     """
     raise_when_operation_not_allowed(name, "list")
     if resource_id and issuer_id:
@@ -322,15 +322,20 @@ def _prepare_listing(
         if not resource_id:
             raise ValueError("resource_id of a class must be given to list its objects")
         params["classId"] = resource_id
+        resource_identifier = resource_id if resource_id else ""
     elif name.endswith("Class"):
         is_pageable = True
         if not issuer_id:
             raise ValueError("issuer_id must be given to list classes")
         params["issuerId"] = issuer_id
+        resource_identifier = issuer_id if issuer_id else ""
     elif name == "Issuer":
         is_pageable = False
+        resource_identifier = ""
+    else:
+        resource_identifier = ""
 
-    return model, params, is_pageable
+    return model, params, is_pageable, resource_identifier
 
 
 def _process_listing_page(
@@ -545,19 +550,15 @@ def listing(
                                     Restful API. When result_per_page is given, the generator will return
                                     a next_page_token after the last model-instance result.
     """
-    model, params, is_pageable = _prepare_listing(name, resource_id, issuer_id)
+    model, params, is_pageable, resource_identifier = _prepare_listing(
+        name, resource_id, issuer_id
+    )
 
     # Setup pagination parameters
     pagination_params = _setup_pagination_params(
         is_pageable, result_per_page, next_page_token
     )
     params.update(pagination_params)
-
-    # Determine resource identifier for error messages (constant across loop iterations)
-    if name.endswith("Object"):
-        resource_identifier = resource_id if resource_id else ""
-    else:
-        resource_identifier = issuer_id if issuer_id else ""
 
     url = session_manager.url(name)
 
@@ -747,19 +748,15 @@ async def alisting(
                                     Restful API. When result_per_page is given, the generator will return
                                     a next_page_token after the last model-instance result.
     """
-    model, params, is_pageable = _prepare_listing(name, resource_id, issuer_id)
+    model, params, is_pageable, resource_identifier = _prepare_listing(
+        name, resource_id, issuer_id
+    )
 
     # Setup pagination parameters
     pagination_params = _setup_pagination_params(
         is_pageable, result_per_page, next_page_token
     )
     params.update(pagination_params)
-
-    # Determine resource identifier for error messages (constant across loop iterations)
-    if name.endswith("Object"):
-        resource_identifier = resource_id if resource_id else ""
-    else:
-        resource_identifier = issuer_id if issuer_id else ""
 
     url = session_manager_async.url(name)
 
