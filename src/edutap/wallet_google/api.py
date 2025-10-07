@@ -364,6 +364,26 @@ def _process_listing_page(
     return validated_models, pagination
 
 
+def _setup_pagination_params(
+    is_pageable: bool,
+    result_per_page: int,
+    next_page_token: str | None,
+) -> dict:
+    """Setup pagination parameters for listing operations.
+
+    Returns: params dict with pagination settings
+    """
+    params = {}
+    if is_pageable:
+        if next_page_token:
+            params["token"] = next_page_token
+        if result_per_page:
+            params["maxResults"] = f"{result_per_page}"
+        else:
+            params["maxResults"] = "100"
+    return params
+
+
 # Synchronous API
 
 
@@ -527,23 +547,23 @@ def listing(
     """
     model, params, is_pageable = _prepare_listing(name, resource_id, issuer_id)
 
-    if is_pageable:
-        if next_page_token:
-            params["token"] = next_page_token
-        if result_per_page:
-            params["maxResults"] = f"{result_per_page}"
-        else:
-            params["maxResults"] = "100"
+    # Setup pagination parameters
+    pagination_params = _setup_pagination_params(
+        is_pageable, result_per_page, next_page_token
+    )
+    params.update(pagination_params)
 
     url = session_manager.url(name)
 
     with session_manager.session(credentials=credentials) as session:
         while True:
             response = session.get(url=url, params=params)
-            if response.status_code == 404:
-                raise LookupError(f"Error 404, {name} not found: - {response.text}")
-            if response.status_code != 200:
-                raise Exception(f"Error: {response.status_code} - {response.text}")
+            # Use consistent error handling
+            if name.endswith("Object"):
+                resource_identifier = resource_id if resource_id else ""
+            else:
+                resource_identifier = issuer_id if issuer_id else ""
+            handle_response_errors(response, "list", name, resource_identifier)
 
             validated_models, pagination = _process_listing_page(
                 response.content, model
@@ -728,13 +748,11 @@ async def alisting(
     """
     model, params, is_pageable = _prepare_listing(name, resource_id, issuer_id)
 
-    if is_pageable:
-        if next_page_token:
-            params["token"] = next_page_token
-        if result_per_page:
-            params["maxResults"] = f"{result_per_page}"
-        else:
-            params["maxResults"] = "100"
+    # Setup pagination parameters
+    pagination_params = _setup_pagination_params(
+        is_pageable, result_per_page, next_page_token
+    )
+    params.update(pagination_params)
 
     url = session_manager_async.url(name)
 
