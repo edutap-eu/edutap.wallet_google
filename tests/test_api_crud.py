@@ -43,11 +43,16 @@ def test_read_generic_object(mock_session):
     object_id = "test.object.123"
     url = session_manager.url(name, f"/{object_id}")
 
-    respx.get(url).mock(return_value=httpx.Response(200, json={
-            "id": object_id,
-            "classId": "test.class.123",
-            "state": "ACTIVE",
-        }))
+    respx.get(url).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "id": object_id,
+                "classId": "test.class.123",
+                "state": "ACTIVE",
+            },
+        )
+    )
 
     result = read(name, object_id)
 
@@ -88,11 +93,16 @@ def test_update_generic_object_partial(mock_session):
     object_id = "test.object.123"
     url = session_manager.url(name, f"/{object_id}")
 
-    respx.patch(url).mock(return_value=httpx.Response(200, json={
-            "id": object_id,
-            "classId": "test.class.123",
-            "state": "EXPIRED",
-        }))
+    respx.patch(url).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "id": object_id,
+                "classId": "test.class.123",
+                "state": "EXPIRED",
+            },
+        )
+    )
 
     data = new(
         name,
@@ -115,11 +125,16 @@ def test_update_generic_object_full(mock_session):
     object_id = "test.object.123"
     url = session_manager.url(name, f"/{object_id}")
 
-    respx.put(url).mock(return_value=httpx.Response(200, json={
-            "id": object_id,
-            "classId": "test.class.123",
-            "state": "INACTIVE",
-        }))
+    respx.put(url).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "id": object_id,
+                "classId": "test.class.123",
+                "state": "INACTIVE",
+            },
+        )
+    )
 
     data = new(
         name,
@@ -146,12 +161,12 @@ def test_update_404_not_found(mock_session):
         return_value=httpx.Response(
             404,
             json={
-            "error": {
-                "code": 404,
-                "message": "Resource not found",
-                "status": "NOT_FOUND",
-            }
-        },
+                "error": {
+                    "code": 404,
+                    "message": "Resource not found",
+                    "status": "NOT_FOUND",
+                }
+            },
         )
     )
 
@@ -174,12 +189,12 @@ def test_message_generic_object(mock_session):
         return_value=httpx.Response(
             200,
             json={
-            "resource": {
-                "id": object_id,
-                "classId": "test.class.123",
-                "state": "ACTIVE",
-            }
-        },
+                "resource": {
+                    "id": object_id,
+                    "classId": "test.class.123",
+                    "state": "ACTIVE",
+                }
+            },
         )
     )
 
@@ -232,11 +247,11 @@ def test_listing_generic_objects(mock_session):
         return_value=httpx.Response(
             200,
             json={
-            "resources": [
-                {"id": "obj1", "classId": class_id},
-                {"id": "obj2", "classId": class_id},
-            ]
-        },
+                "resources": [
+                    {"id": "obj1", "classId": class_id},
+                    {"id": "obj2", "classId": class_id},
+                ]
+            },
         )
     )
 
@@ -273,12 +288,12 @@ def test_listing_with_pagination_token(mock_session):
         return_value=httpx.Response(
             200,
             json={
-            "resources": [
-                {"id": "obj1", "classId": class_id, "state": "ACTIVE"},
-                {"id": "obj2", "classId": class_id, "state": "ACTIVE"},
-            ],
-            "pagination": {"nextPageToken": "token123", "resultsPerPage": 2},
-        },
+                "resources": [
+                    {"id": "obj1", "classId": class_id, "state": "ACTIVE"},
+                    {"id": "obj2", "classId": class_id, "state": "ACTIVE"},
+                ],
+                "pagination": {"nextPageToken": "token123", "resultsPerPage": 2},
+            },
         )
     )
 
