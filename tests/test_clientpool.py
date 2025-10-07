@@ -76,19 +76,3 @@ def test_client_creation(monkeypatch):
     client2 = manager.client()
     assert client2 is not None
     assert client2 is client  # Same instance (cached)
-
-
-def test_client_with_HTTPRecorder(tmp_path, monkeypatch):
-    from edutap.wallet_google.clientpool import ClientPoolManager
-
-    manager = ClientPoolManager()
-    manager.settings.record_api_calls_dir = tmp_path
-    manager.settings.credentials_file = (
-        ROOT_DIR / "tests" / "data" / "credentials_fake.json"
-    )
-    client = manager.client()
-    # With httpx, HTTPRecorder is the client class used by AssertionClient
-    assert client.__class__.__name__ == "AssertionClient"
-    # When recording is enabled, AssertionClient is created with client_cls=HTTPRecorder
-    # We verify recording is configured by checking that the setting is set
-    assert manager.settings.record_api_calls_dir == tmp_path

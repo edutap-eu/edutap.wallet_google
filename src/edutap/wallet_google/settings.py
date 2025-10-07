@@ -32,7 +32,6 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    record_api_calls_dir: Path | None = None
     api_url: AnyHttpUrl = AnyHttpUrl(API_URL)
     save_url: AnyHttpUrl = AnyHttpUrl(SAVE_URL)
 

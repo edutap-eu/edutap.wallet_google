@@ -524,7 +524,6 @@ Clients are cached per credentials set and reused across multiple API calls for 
    :toctree: _autosummary
 
    ClientPoolManager
-   HTTPRecorder
    client_pool
 
 

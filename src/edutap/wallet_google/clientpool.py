@@ -5,69 +5,7 @@ from authlib.integrations.httpx_client import AssertionClient
 from authlib.integrations.httpx_client import AsyncAssertionClient
 
 import atexit
-import httpx
-import json
 import threading
-
-
-class HTTPRecorder(httpx.Client):
-    """Record the HTTP requests and responses to a file."""
-
-    def __init__(self, *args, record_dir=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.record_dir = record_dir
-
-    def request(self, method, url, *args, **kwargs):
-        # If no recording directory configured, just pass through
-        if self.record_dir is None:
-            return super().request(method, url, *args, **kwargs)
-
-        # Record request
-        body_data = kwargs.get("data") or kwargs.get("content") or kwargs.get("json")
-        if body_data:
-            if isinstance(body_data, bytes):
-                body_json = json.loads(body_data.decode("utf-8"))
-            elif isinstance(body_data, str):
-                body_json = json.loads(body_data)
-            else:
-                # Already a dict or other object (including json= parameter)
-                body_json = body_data
-        else:
-            body_json = None
-
-        req_record = {
-            "method": method,
-            "url": str(url),
-            "headers": dict(kwargs.get("headers", {})),
-            "body": body_json,
-        }
-        target_directory = self.record_dir
-        if not target_directory.exists():
-            target_directory.mkdir(parents=True)
-        filename = (
-            f"{target_directory}/{method}-{str(url).replace('/', '_')}.REQUEST.json"
-        )
-        with open(filename, "w") as fp:
-            json.dump(req_record, fp, indent=4)
-
-        # Make the actual request
-        response = super().request(method, url, *args, **kwargs)
-
-        # Record response
-        resp_record = {
-            "status_code": response.status_code,
-            "headers": dict(response.headers),
-            "body": (
-                response.json()
-                if response.headers.get("content-type", "").startswith(
-                    "application/json"
-                )
-                else response.text
-            ),
-        }
-        with open(filename.replace("REQUEST", "RESPONSE"), "w") as fp:
-            json.dump(resp_record, fp, indent=4)
-        return response
 
 
 class ClientPoolManager:
@@ -149,12 +87,6 @@ class ClientPoolManager:
         with self._lock:
             if key not in self._sync_clients:
                 config = self._build_client_config(credentials)
-
-                # Use HTTPRecorder if recording is enabled
-                if self.settings.record_api_calls_dir is not None:
-                    config["client_cls"] = HTTPRecorder
-                    config["record_dir"] = self.settings.record_api_calls_dir
-
                 self._sync_clients[key] = AssertionClient(**config)
 
         return self._sync_clients[key]
