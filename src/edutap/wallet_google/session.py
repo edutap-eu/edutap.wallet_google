@@ -16,14 +16,14 @@ class HTTPRecorder(httpx.Client):
 
     def request(self, method, url, *args, **kwargs):
         # Record request
-        body_data = kwargs.get("data") or kwargs.get("content")
+        body_data = kwargs.get("data") or kwargs.get("content") or kwargs.get("json")
         if body_data:
             if isinstance(body_data, bytes):
                 body_json = json.loads(body_data.decode("utf-8"))
             elif isinstance(body_data, str):
                 body_json = json.loads(body_data)
             else:
-                # Already a dict or other object
+                # Already a dict or other object (including json= parameter)
                 body_json = body_data
         else:
             body_json = None

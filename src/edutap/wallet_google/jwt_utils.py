@@ -137,7 +137,11 @@ def save_link(
     )
 
     # Use authlib to sign JWT with RS256
-    header = {"alg": "RS256", "typ": "JWT"}
+    header = {
+        "alg": "RS256",
+        "typ": "JWT",
+        "kid": credentials["private_key_id"],
+    }
     payload = claims.model_dump(
         mode="json",
         exclude_unset=False,

@@ -117,6 +117,7 @@ def test_api_save_link():
     header = json.loads(header_decoded)
     assert header["typ"] == "JWT"
     assert header["alg"] == "RS256"
+    assert header["kid"] == credentials["private_key_id"]
 
     # Decode and verify payload
     payload_decoded = base64.urlsafe_b64decode(parts[1] + "==")

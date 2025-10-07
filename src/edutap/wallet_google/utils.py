@@ -3,6 +3,7 @@ from .session import session_manager
 from cryptography.fernet import Fernet
 
 import logging
+import re
 import typing
 
 
@@ -120,7 +121,8 @@ def handle_response_errors(
 
     if response.status_code == 403:
         response_lower = response.text.lower()
-        if "quota" in response_lower or "rate" in response_lower:
+        # Use word boundaries to avoid false positives like "accurate", "separate"
+        if re.search(r"\b(quota|rate limit|rate-limit)\b", response_lower):
             raise QuotaExceededException(
                 f"Quota exceeded while trying to {operation} {name} {resource_id}"
             )

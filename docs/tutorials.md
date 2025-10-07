@@ -332,4 +332,4 @@ asyncio.run(create_pass())
 - Making multiple concurrent API calls
 - Need non-blocking I/O operations
 
-**Note:** `save_link()` is only available in the synchronous API as it uses synchronous JWT signing.
+**Note:** `save_link()` is available in both `api` and `api_async` modules but executes synchronously and should not be awaited (it uses synchronous JWT signing).
