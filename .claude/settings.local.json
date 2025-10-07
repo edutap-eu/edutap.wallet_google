@@ -31,7 +31,11 @@
       "Bash(uv run pytest:*)",
       "Bash(git mv:*)",
       "Bash(git rm:*)",
-      "WebFetch(domain:www.python-httpx.org)"
+      "WebFetch(domain:www.python-httpx.org)",
+      "Bash(.venv/bin/pytest tests/test_api_jwt.py -v)",
+      "Bash(.venv/bin/pytest tests/test_api_crud.py -v)",
+      "Bash(.venv/bin/pytest tests/test_api_create.py tests/test_api_403_errors.py -v)",
+      "Bash(.venv/bin/pytest tests/ -k \"not integration\" --tb=short)"
     ],
     "deny": [],
     "ask": []

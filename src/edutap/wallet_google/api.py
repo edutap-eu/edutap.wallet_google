@@ -155,7 +155,7 @@ def _create_claims(
 def save_link(
     models: list[ClassModel | ObjectModel | Reference],
     *,
-    origins: list[str] = [],
+    origins: list[str] | None = None,
     iat: str | datetime.datetime = "",
     exp: str | datetime.datetime = "",
     credentials: dict | None = None,
@@ -190,6 +190,8 @@ def save_link(
     :param credentials: Optional session credentials as dict.
     :return:            Link with JWT to save the resources to the wallet.
     """
+    if origins is None:
+        origins = []
     if credentials is None:
         credentials = credentials_manager.credentials_from_file()
 
@@ -247,7 +249,7 @@ def _prepare_create(data: Model) -> tuple[str, str, type[Model], dict]:
     name = model_metadata["name"]
     raise_when_operation_not_allowed(name, "create")
     model = model_metadata["model"]
-    resource_id, verified_json = validate_data_and_convert_to_json(model, data)
+    _, verified_json = validate_data_and_convert_to_json(model, data)
     headers = {"Content-Type": "application/json"}
     return name, verified_json, model, headers
 
