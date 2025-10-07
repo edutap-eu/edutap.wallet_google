@@ -8,6 +8,7 @@ from edutap.wallet_google.api import update
 from edutap.wallet_google.models.datatypes import enums
 from edutap.wallet_google.session import session_manager
 
+import httpx
 import pytest
 import respx
 
@@ -19,14 +20,14 @@ def test_read_generic_class(mock_session):
     class_id = "test.class.123"
     url = session_manager.url(name, f"/{class_id}")
 
-    mock_session.register_uri(
-        "GET",
-        url,
-        status_code=200,
-        json={
-            "id": class_id,
-            "enableSmartTap": True,
-        },
+    respx.get(url).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "id": class_id,
+                "enableSmartTap": True,
+            },
+        )
     )
 
     result = read(name, class_id)
@@ -42,16 +43,11 @@ def test_read_generic_object(mock_session):
     object_id = "test.object.123"
     url = session_manager.url(name, f"/{object_id}")
 
-    mock_session.register_uri(
-        "GET",
-        url,
-        status_code=200,
-        json={
+    respx.get(url).mock(return_value=httpx.Response(200, json={
             "id": object_id,
             "classId": "test.class.123",
             "state": "ACTIVE",
-        },
-    )
+        }))
 
     result = read(name, object_id)
 
@@ -66,17 +62,17 @@ def test_read_404_not_found(mock_session):
     class_id = "test.class.nonexistent"
     url = session_manager.url(name, f"/{class_id}")
 
-    mock_session.register_uri(
-        "GET",
-        url,
-        status_code=404,
-        json={
-            "error": {
-                "code": 404,
-                "message": "Resource not found",
-                "status": "NOT_FOUND",
-            }
-        },
+    respx.get(url).mock(
+        return_value=httpx.Response(
+            404,
+            json={
+                "error": {
+                    "code": 404,
+                    "message": "Resource not found",
+                    "status": "NOT_FOUND",
+                }
+            },
+        )
     )
 
     with pytest.raises(LookupError) as exc_info:
@@ -92,16 +88,11 @@ def test_update_generic_object_partial(mock_session):
     object_id = "test.object.123"
     url = session_manager.url(name, f"/{object_id}")
 
-    mock_session.register_uri(
-        "PATCH",
-        url,
-        status_code=200,
-        json={
+    respx.patch(url).mock(return_value=httpx.Response(200, json={
             "id": object_id,
             "classId": "test.class.123",
             "state": "EXPIRED",
-        },
-    )
+        }))
 
     data = new(
         name,
@@ -124,16 +115,11 @@ def test_update_generic_object_full(mock_session):
     object_id = "test.object.123"
     url = session_manager.url(name, f"/{object_id}")
 
-    mock_session.register_uri(
-        "PUT",
-        url,
-        status_code=200,
-        json={
+    respx.put(url).mock(return_value=httpx.Response(200, json={
             "id": object_id,
             "classId": "test.class.123",
             "state": "INACTIVE",
-        },
-    )
+        }))
 
     data = new(
         name,
@@ -156,17 +142,17 @@ def test_update_404_not_found(mock_session):
     object_id = "test.object.nonexistent"
     url = session_manager.url(name, f"/{object_id}")
 
-    mock_session.register_uri(
-        "PATCH",
-        url,
-        status_code=404,
-        json={
+    respx.patch(url).mock(
+        return_value=httpx.Response(
+            404,
+            json={
             "error": {
                 "code": 404,
                 "message": "Resource not found",
                 "status": "NOT_FOUND",
             }
         },
+        )
     )
 
     data = new(name, {"id": object_id, "classId": "test.class.123", "state": "ACTIVE"})
@@ -184,17 +170,17 @@ def test_message_generic_object(mock_session):
     object_id = "test.object.123"
     url = session_manager.url(name, f"/{object_id}/addMessage")
 
-    mock_session.register_uri(
-        "POST",
-        url,
-        status_code=200,
-        json={
+    respx.post(url).mock(
+        return_value=httpx.Response(
+            200,
+            json={
             "resource": {
                 "id": object_id,
                 "classId": "test.class.123",
                 "state": "ACTIVE",
             }
         },
+        )
     )
 
     result = message(
@@ -216,16 +202,16 @@ def test_listing_generic_classes(mock_session):
     issuer_id = "1234567890"
     url = session_manager.url(name)
 
-    mock_session.register_uri(
-        "GET",
-        url,
-        status_code=200,
-        json={
-            "resources": [
-                {"id": f"{issuer_id}.class1"},
-                {"id": f"{issuer_id}.class2"},
-            ]
-        },
+    respx.get(url).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "resources": [
+                    {"id": f"{issuer_id}.class1"},
+                    {"id": f"{issuer_id}.class2"},
+                ]
+            },
+        )
     )
 
     results = list(listing(name, issuer_id=issuer_id))
@@ -242,16 +228,16 @@ def test_listing_generic_objects(mock_session):
     class_id = "test.class.123"
     url = session_manager.url(name)
 
-    mock_session.register_uri(
-        "GET",
-        url,
-        status_code=200,
-        json={
+    respx.get(url).mock(
+        return_value=httpx.Response(
+            200,
+            json={
             "resources": [
                 {"id": "obj1", "classId": class_id},
                 {"id": "obj2", "classId": class_id},
             ]
         },
+        )
     )
 
     results = list(listing(name, resource_id=class_id))
@@ -268,12 +254,7 @@ def test_listing_empty_result(mock_session):
     class_id = "test.class.empty"
     url = session_manager.url(name)
 
-    mock_session.register_uri(
-        "GET",
-        url,
-        status_code=200,
-        json={"resources": []},
-    )
+    respx.get(url).mock(return_value=httpx.Response(200, json={"resources": []}))
 
     results = list(listing(name, resource_id=class_id))
 
@@ -288,17 +269,17 @@ def test_listing_with_pagination_token(mock_session):
     url = session_manager.url(name)
 
     # The API will add params: classId and maxResults
-    mock_session.register_uri(
-        "GET",
-        url,
-        status_code=200,
-        json={
+    respx.get(url).mock(
+        return_value=httpx.Response(
+            200,
+            json={
             "resources": [
                 {"id": "obj1", "classId": class_id, "state": "ACTIVE"},
                 {"id": "obj2", "classId": class_id, "state": "ACTIVE"},
             ],
             "pagination": {"nextPageToken": "token123", "resultsPerPage": 2},
         },
+        )
     )
 
     results = list(listing(name, resource_id=class_id, result_per_page=2))
@@ -320,30 +301,28 @@ def test_listing_auto_pagination(mock_session):
 
     # First request - with pagination token
     # Second request - without pagination token (last page)
-    mock_session.register_uri(
-        "GET",
-        url,
-        [
-            {
-                "status_code": 200,
-                "json": {
+    respx.get(url).mock(
+        side_effect=[
+            httpx.Response(
+                200,
+                json={
                     "resources": [
                         {"id": "obj1", "classId": class_id, "state": "ACTIVE"},
                         {"id": "obj2", "classId": class_id, "state": "ACTIVE"},
                     ],
                     "pagination": {"nextPageToken": "token123", "resultsPerPage": 2},
                 },
-            },
-            {
-                "status_code": 200,
-                "json": {
+            ),
+            httpx.Response(
+                200,
+                json={
                     "resources": [
                         {"id": "obj3", "classId": class_id, "state": "ACTIVE"},
                     ],
                     "pagination": {"resultsPerPage": 1},
                 },
-            },
-        ],
+            ),
+        ]
     )
 
     results = list(listing(name, resource_id=class_id))
@@ -357,7 +336,7 @@ def test_listing_auto_pagination(mock_session):
 
 
 @respx.mock
-def test_listing_validation_error_resource_and_issuer(mock_session):
+def test_listing_validation_error_resource_and_issuer():
     """Test that listing raises ValueError when both resource_id and issuer_id are provided."""
     with pytest.raises(ValueError) as exc_info:
         list(listing("GenericClass", resource_id="test", issuer_id="issuer"))
@@ -366,7 +345,7 @@ def test_listing_validation_error_resource_and_issuer(mock_session):
 
 
 @respx.mock
-def test_listing_validation_error_missing_resource_id(mock_session):
+def test_listing_validation_error_missing_resource_id():
     """Test that listing raises ValueError when resource_id is missing for objects."""
     with pytest.raises(ValueError) as exc_info:
         list(listing("GenericObject"))
@@ -375,7 +354,7 @@ def test_listing_validation_error_missing_resource_id(mock_session):
 
 
 @respx.mock
-def test_listing_validation_error_missing_issuer_id(mock_session):
+def test_listing_validation_error_missing_issuer_id():
     """Test that listing raises ValueError when issuer_id is missing for classes."""
     with pytest.raises(ValueError) as exc_info:
         list(listing("GenericClass"))
