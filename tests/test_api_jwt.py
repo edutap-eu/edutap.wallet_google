@@ -5,7 +5,7 @@ import pytest
 def test_create_payload():
 
     from edutap.wallet_google import api
-    from edutap.wallet_google.utils import _create_payload
+    from edutap.wallet_google.api import _create_payload
 
     payload = _create_payload(
         [
@@ -25,7 +25,7 @@ def test_create_payload():
 def test_create_claims():
 
     from edutap.wallet_google import api
-    from edutap.wallet_google.utils import _create_claims
+    from edutap.wallet_google.api import _create_claims
 
     models = [
         api.new("Reference", {"id": "test-1.edutap.eu", "model_name": "GenericObject"}),
@@ -155,7 +155,7 @@ def test_api_save_link():
 
 
 def test__convert_str_or_datetime_to_str__timestamp():
-    from edutap.wallet_google.utils import _convert_str_or_datetime_to_str
+    from edutap.wallet_google.api import _convert_str_or_datetime_to_str
 
     dt = datetime.datetime(2021, 1, 1, 12, 0, 0, 0, datetime.timezone.utc)
     expected = "1609502400"
@@ -164,21 +164,21 @@ def test__convert_str_or_datetime_to_str__timestamp():
 
 
 def test__convert_str_or_datetime_to_str__str_int_lt_zero():
-    from edutap.wallet_google.utils import _convert_str_or_datetime_to_str
+    from edutap.wallet_google.api import _convert_str_or_datetime_to_str
 
     with pytest.raises(ValueError):
         _convert_str_or_datetime_to_str("-1")
 
 
 def test__convert_str_or_datetime_to_str__str_int_tr_4bytes():
-    from edutap.wallet_google.utils import _convert_str_or_datetime_to_str
+    from edutap.wallet_google.api import _convert_str_or_datetime_to_str
 
     with pytest.raises(ValueError):
         _convert_str_or_datetime_to_str(f"{2**32 + 1}")
 
 
 def test__convert_str_or_datetime_to_str__not_decimal():
-    from edutap.wallet_google.utils import _convert_str_or_datetime_to_str
+    from edutap.wallet_google.api import _convert_str_or_datetime_to_str
 
     with pytest.raises(ValueError):
         _convert_str_or_datetime_to_str("x 100")
