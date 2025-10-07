@@ -37,22 +37,7 @@ def clean_registry_by_model():
 
 
 @pytest.fixture
-def clean_session_threadlocals():
-    from edutap.wallet_google.session import _THREADLOCAL
-
-    before = getattr(_THREADLOCAL, "sessions", {})
-    try:
-        delattr(_THREADLOCAL, "sessions")
-    except AttributeError:
-        pass
-
-    yield
-
-    _THREADLOCAL.sessions = before
-
-
-@pytest.fixture
-def mock_session(monkeypatch, clean_session_threadlocals):
+def mock_session(monkeypatch):
     """Fixture to provide a mock Google Wallet API session."""
     from edutap.wallet_google.session import SessionManager
 

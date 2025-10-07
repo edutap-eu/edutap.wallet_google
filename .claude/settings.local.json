@@ -17,7 +17,11 @@
       "Bash(git fetch:*)",
       "Bash(git merge:*)",
       "Bash(git pull:*)",
-      "WebFetch(domain:docs.authlib.org)"
+      "WebFetch(domain:docs.authlib.org)",
+      "Bash(.venv/bin/python:*)",
+      "Bash(make:*)",
+      "Bash(.venv/bin/pytest tests/test_api_crud.py::test_read_generic_class -v)",
+      "Bash(.venv/bin/pytest tests/test_session.py tests/test_api_403_errors.py tests/test_api_create.py tests/test_api_async_crud.py -v)"
     ],
     "deny": [],
     "ask": []

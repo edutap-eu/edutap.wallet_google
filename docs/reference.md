@@ -15,6 +15,9 @@ Models can be the different top-level wallet-classes or -objects, but also issue
 
 ### Synchronous API
 
+The synchronous API uses context managers for proper resource cleanup.
+All API functions (create, read, update, message, listing) automatically handle session lifecycle using httpx clients with connection pooling.
+
 ```{eval-rst}
 .. currentmodule:: edutap.wallet_google.api
 
@@ -512,6 +515,10 @@ This are models for "Data Types" as Google names them, the sub schemas for neste
 .. rubric:: Session
 
 `edutap.wallet_google.session`
+
+Sessions are managed using httpx clients with OAuth2 service account authentication.
+The SessionManager creates fresh client instances on each call, leveraging httpx's built-in connection pooling for efficiency.
+All sessions should be used as context managers for proper resource cleanup.
 
 .. currentmodule:: edutap.wallet_google.session
 

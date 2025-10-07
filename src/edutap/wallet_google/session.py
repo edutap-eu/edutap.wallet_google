@@ -5,10 +5,6 @@ from authlib.integrations.httpx_client import AssertionClient
 
 import httpx
 import json
-import threading
-
-
-_THREADLOCAL = threading.local()
 
 
 class HTTPRecorder(httpx.Client):
@@ -69,9 +65,10 @@ class HTTPRecorder(httpx.Client):
 
 
 class SessionManager:
-    """Manages the session to the Google Wallet API and provides helper methods.
+    """Manages sessions to the Google Wallet API and provides helper methods.
 
-    Sessions here are thread safe and use httpx with authlib for OAuth2.
+    The session() method returns an AssertionClient that should be used as a context manager
+    to ensure proper resource cleanup. All API functions in api.py use context managers automatically.
     """
 
     @property
@@ -115,18 +112,20 @@ class SessionManager:
         """
         Create and return an authorized session.
 
+        The returned AssertionClient should be used as a context manager:
+        with session_manager.session() as session:
+            response = session.get(url)
+
+        All API functions in api.py use context managers automatically for proper cleanup.
+
         :param credentials: Session credentials as dict. If not given, credentials
                             are read from file defined in settings.
         :return:            The assertion client (httpx-based).
         """
         if not credentials:
             credentials = credentials_manager.credentials_from_file()
-        cache_key = credentials["private_key_id"]
-        if getattr(_THREADLOCAL, "sessions", None) is None:
-            _THREADLOCAL.sessions = dict()
-        if cache_key not in _THREADLOCAL.sessions:
-            _THREADLOCAL.sessions[cache_key] = self._make_session(credentials)
-        return _THREADLOCAL.sessions[cache_key]
+
+        return self._make_session(credentials)
 
     def url(self, name: str, additional_path: str = "") -> str:
         """

@@ -9,8 +9,10 @@ from edutap.wallet_google.models.datatypes import enums
 from edutap.wallet_google.session import session_manager
 
 import pytest
+import respx
 
 
+@respx.mock
 def test_read_generic_class(mock_session):
     """Test reading a GenericClass."""
     name = "GenericClass"
@@ -33,6 +35,7 @@ def test_read_generic_class(mock_session):
     assert result.enableSmartTap is True
 
 
+@respx.mock
 def test_read_generic_object(mock_session):
     """Test reading a GenericObject."""
     name = "GenericObject"
@@ -56,6 +59,7 @@ def test_read_generic_object(mock_session):
     assert result.state == enums.State.ACTIVE
 
 
+@respx.mock
 def test_read_404_not_found(mock_session):
     """Test that read raises LookupError on 404."""
     name = "GenericClass"
@@ -81,6 +85,7 @@ def test_read_404_not_found(mock_session):
     assert "not found" in str(exc_info.value)
 
 
+@respx.mock
 def test_update_generic_object_partial(mock_session):
     """Test partial update of a GenericObject."""
     name = "GenericObject"
@@ -112,6 +117,7 @@ def test_update_generic_object_partial(mock_session):
     assert result.state == enums.State.EXPIRED
 
 
+@respx.mock
 def test_update_generic_object_full(mock_session):
     """Test full update of a GenericObject."""
     name = "GenericObject"
@@ -143,6 +149,7 @@ def test_update_generic_object_full(mock_session):
     assert result.state == enums.State.INACTIVE
 
 
+@respx.mock
 def test_update_404_not_found(mock_session):
     """Test that update raises LookupError on 404."""
     name = "GenericObject"
@@ -170,6 +177,7 @@ def test_update_404_not_found(mock_session):
     assert "not found" in str(exc_info.value)
 
 
+@respx.mock
 def test_message_generic_object(mock_session):
     """Test sending a message to a GenericObject."""
     name = "GenericObject"
@@ -201,6 +209,7 @@ def test_message_generic_object(mock_session):
     assert result.id == object_id
 
 
+@respx.mock
 def test_listing_generic_classes(mock_session):
     """Test listing GenericClasses."""
     name = "GenericClass"
@@ -226,6 +235,7 @@ def test_listing_generic_classes(mock_session):
     assert results[1].id == f"{issuer_id}.class2"
 
 
+@respx.mock
 def test_listing_generic_objects(mock_session):
     """Test listing GenericObjects for a class."""
     name = "GenericObject"
@@ -251,6 +261,7 @@ def test_listing_generic_objects(mock_session):
     assert results[1].id == "obj2"
 
 
+@respx.mock
 def test_listing_empty_result(mock_session):
     """Test listing with empty results."""
     name = "GenericObject"
@@ -269,6 +280,7 @@ def test_listing_empty_result(mock_session):
     assert len(results) == 0
 
 
+@respx.mock
 def test_listing_with_pagination_token(mock_session):
     """Test listing returns pagination token when result_per_page is set."""
     name = "GenericObject"
@@ -299,6 +311,7 @@ def test_listing_with_pagination_token(mock_session):
     assert results[2] == "token123"
 
 
+@respx.mock
 def test_listing_auto_pagination(mock_session):
     """Test listing automatically fetches all pages when result_per_page not set."""
     name = "GenericObject"
@@ -343,6 +356,7 @@ def test_listing_auto_pagination(mock_session):
     assert results[2].id == "obj3"
 
 
+@respx.mock
 def test_listing_validation_error_resource_and_issuer(mock_session):
     """Test that listing raises ValueError when both resource_id and issuer_id are provided."""
     with pytest.raises(ValueError) as exc_info:
@@ -351,6 +365,7 @@ def test_listing_validation_error_resource_and_issuer(mock_session):
     assert "mutually exclusive" in str(exc_info.value)
 
 
+@respx.mock
 def test_listing_validation_error_missing_resource_id(mock_session):
     """Test that listing raises ValueError when resource_id is missing for objects."""
     with pytest.raises(ValueError) as exc_info:
@@ -359,6 +374,7 @@ def test_listing_validation_error_missing_resource_id(mock_session):
     assert "resource_id" in str(exc_info.value)
 
 
+@respx.mock
 def test_listing_validation_error_missing_issuer_id(mock_session):
     """Test that listing raises ValueError when issuer_id is missing for classes."""
     with pytest.raises(ValueError) as exc_info:
