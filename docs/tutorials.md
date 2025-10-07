@@ -336,3 +336,32 @@ asyncio.run(create_pass())
 - Working with async frameworks (FastAPI, aiohttp, etc.)
 - Making multiple concurrent API calls
 - Need non-blocking I/O operations
+
+**Async Client Cleanup:**
+
+When using async operations, you should close async clients before shutting down your application:
+
+```python
+from edutap.wallet_google.clientpool import client_pool
+
+async def shutdown():
+    """Clean up async clients on application shutdown."""
+    await client_pool.aclose_all_clients()
+
+# In FastAPI:
+@app.on_event("shutdown")
+async def app_shutdown():
+    await client_pool.aclose_all_clients()
+
+# In asyncio:
+async def main():
+    try:
+        # Your async code here
+        pass
+    finally:
+        await client_pool.aclose_all_clients()
+
+asyncio.run(main())
+```
+
+Note: Sync clients are automatically closed on process exit via atexit handler.

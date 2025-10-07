@@ -518,6 +518,18 @@ HTTP client pooling is managed using httpx clients with OAuth2 service account a
 The ClientPoolManager handles both sync and async operations with persistent, pooled clients.
 Clients are cached per credentials set and reused across multiple API calls for optimal performance.
 
+**Cleanup:**
+
+- **Sync clients**: Automatically closed on process exit via atexit handler
+- **Async clients**: Must be manually closed before event loop shutdown:
+
+  .. code-block:: python
+
+     from edutap.wallet_google.clientpool import client_pool
+
+     # At application shutdown (in async context)
+     await client_pool.aclose_all_clients()
+
 .. currentmodule:: edutap.wallet_google.clientpool
 
 .. autosummary::
