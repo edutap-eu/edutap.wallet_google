@@ -24,8 +24,11 @@ class HTTPRecorder(httpx.Client):
         if body_data:
             if isinstance(body_data, bytes):
                 body_json = json.loads(body_data.decode("utf-8"))
-            else:
+            elif isinstance(body_data, str):
                 body_json = json.loads(body_data)
+            else:
+                # Already a dict or other object
+                body_json = body_data
         else:
             body_json = None
 
