@@ -25,7 +25,12 @@
       "Bash(gh run view:*)",
       "Bash(.venv/bin/pytest tests/test_api_save_link.py::test_api_save_link -v)",
       "Bash(git log:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(.venv/bin/pytest tests/test_handler_fastapi.py -v)",
+      "Bash(uv pip install:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(git mv:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []

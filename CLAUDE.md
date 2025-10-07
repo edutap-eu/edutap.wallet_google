@@ -195,3 +195,4 @@ Full documentation at: https://docs.edutap.eu/packages/edutap_wallet_google/inde
 - **Explanation**: Architecture and design decisions
 
 The docs follow the [Diátaxis](https://diataxis.fr/) framework.
+- always use uv instead of pip

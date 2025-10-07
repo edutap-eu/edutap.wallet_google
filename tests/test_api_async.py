@@ -1,6 +1,6 @@
 """Comprehensive tests for async API CRUD operations."""
 
-from edutap.wallet_google import api_async
+from edutap.wallet_google import api
 from edutap.wallet_google.exceptions import ObjectAlreadyExistsException
 from edutap.wallet_google.exceptions import QuotaExceededException
 from edutap.wallet_google.exceptions import WalletException
@@ -53,7 +53,7 @@ async def test_create_generic_class(mock_async_session):
         )
     )
 
-    data = api_async.new(
+    data = api.new(
         name,
         {
             "id": class_id,
@@ -62,7 +62,7 @@ async def test_create_generic_class(mock_async_session):
             "viewUnlockRequirement": enums.ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED,
         },
     )
-    result = await api_async.create(data)
+    result = await api.acreate(data)
 
     assert result.id == class_id
     assert result.enableSmartTap is False
@@ -89,7 +89,7 @@ async def test_create_generic_object(mock_async_session):
         )
     )
 
-    data = api_async.new(
+    data = api.new(
         name,
         {
             "id": object_id,
@@ -97,7 +97,7 @@ async def test_create_generic_object(mock_async_session):
             "state": enums.State.ACTIVE,
         },
     )
-    result = await api_async.create(data)
+    result = await api.acreate(data)
 
     assert result.id == object_id
     assert result.classId == class_id
@@ -126,10 +126,10 @@ async def test_create_409_already_exists(mock_async_session):
         )
     )
 
-    data = api_async.new(name, {"id": class_id})
+    data = api.new(name, {"id": class_id})
 
     with pytest.raises(ObjectAlreadyExistsException) as exc_info:
-        await api_async.create(data)
+        await api.acreate(data)
 
     assert class_id in str(exc_info.value)
 
@@ -153,7 +153,7 @@ async def test_read_generic_class(mock_async_session):
         )
     )
 
-    result = await api_async.read(name, class_id)
+    result = await api.aread(name, class_id)
 
     assert result.id == class_id
     assert result.enableSmartTap is True
@@ -182,7 +182,7 @@ async def test_read_404_not_found(mock_async_session):
     )
 
     with pytest.raises(LookupError) as exc_info:
-        await api_async.read(name, class_id)
+        await api.aread(name, class_id)
 
     assert "not found" in str(exc_info.value)
 
@@ -210,7 +210,7 @@ async def test_read_403_quota_exceeded(mock_async_session):
     )
 
     with pytest.raises(QuotaExceededException) as exc_info:
-        await api_async.read(name, resource_id)
+        await api.aread(name, resource_id)
 
     assert "Quota exceeded while trying to read" in str(exc_info.value)
     assert resource_id in str(exc_info.value)
@@ -239,7 +239,7 @@ async def test_read_403_permission_denied(mock_async_session):
     )
 
     with pytest.raises(WalletException) as exc_info:
-        await api_async.read(name, resource_id)
+        await api.aread(name, resource_id)
 
     # Should NOT be QuotaExceededException
     assert not isinstance(exc_info.value, QuotaExceededException)
@@ -266,7 +266,7 @@ async def test_update_generic_object_partial(mock_async_session):
         )
     )
 
-    data = api_async.new(
+    data = api.new(
         name,
         {
             "id": object_id,
@@ -274,7 +274,7 @@ async def test_update_generic_object_partial(mock_async_session):
             "state": enums.State.EXPIRED,
         },
     )
-    result = await api_async.update(data, partial=True)
+    result = await api.aupdate(data, partial=True)
 
     assert result.id == object_id
     assert result.state == enums.State.EXPIRED
@@ -300,7 +300,7 @@ async def test_update_generic_object_full(mock_async_session):
         )
     )
 
-    data = api_async.new(
+    data = api.new(
         name,
         {
             "id": object_id,
@@ -308,7 +308,7 @@ async def test_update_generic_object_full(mock_async_session):
             "state": enums.State.INACTIVE,
         },
     )
-    result = await api_async.update(data, partial=False)
+    result = await api.aupdate(data, partial=False)
 
     assert result.id == object_id
     assert result.state == enums.State.INACTIVE
@@ -336,7 +336,7 @@ async def test_message_generic_object(mock_async_session):
         )
     )
 
-    result = await api_async.message(
+    result = await api.amessage(
         name,
         object_id,
         {
@@ -370,7 +370,7 @@ async def test_listing_generic_classes(mock_async_session):
     )
 
     results = []
-    async for item in api_async.listing(name, issuer_id=issuer_id):
+    async for item in api.alisting(name, issuer_id=issuer_id):
         results.append(item)
 
     assert len(results) == 2
@@ -395,7 +395,7 @@ async def test_listing_empty_result(mock_async_session):
     )
 
     results = []
-    async for item in api_async.listing(name, resource_id=class_id):
+    async for item in api.alisting(name, resource_id=class_id):
         results.append(item)
 
     assert len(results) == 0

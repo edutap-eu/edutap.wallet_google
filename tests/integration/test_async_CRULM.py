@@ -119,7 +119,7 @@ params_for_create = [
 async def test_async_class_object_cru(
     type_base, class_data, object_data, integration_test_id
 ):
-    from edutap.wallet_google import api_async
+    from edutap.wallet_google import api
     from edutap.wallet_google.registry import lookup_metadata_by_name
     from edutap.wallet_google.session_async import session_manager_async
 
@@ -133,10 +133,10 @@ async def test_async_class_object_cru(
     )
     class_data["id"] = f"{session_manager_async.settings.test_issuer_id}.{class_base}"
 
-    data = api_async.new(class_type, class_data)
+    data = api.new(class_type, class_data)
 
     # create
-    result_create = await api_async.create(data)
+    result_create = await api.acreate(data)
     assert result_create is not None
     assert result_create.textModulesData[0].id == class_data["textModulesData"][0]["id"]
     assert (
@@ -148,7 +148,7 @@ async def test_async_class_object_cru(
     await asyncio.sleep(0.05)
 
     # read
-    result_read = await api_async.read(name=class_type, resource_id=class_data["id"])
+    result_read = await api.aread(name=class_type, resource_id=class_data["id"])
     assert result_read is not None
     assert (
         result_read.textModulesData[0].body == class_data["textModulesData"][0]["body"]
@@ -161,19 +161,19 @@ async def test_async_class_object_cru(
     if type_base != "Generic":
         # generic has no reviewState
         result_read.reviewStatus = "UNDER_REVIEW"
-    result_updated = await api_async.update(result_read)
+    result_updated = await api.aupdate(result_read)
     assert result_updated is not None
     assert result_updated.textModulesData[0].body == "updated body async"
 
     # read after update
-    result_read = await api_async.read(name=class_type, resource_id=class_data["id"])
+    result_read = await api.aread(name=class_type, resource_id=class_data["id"])
     assert result_read is not None
     assert result_read.textModulesData[0].body == "updated body async"
 
     model_metadata = lookup_metadata_by_name(class_type)
     if model_metadata["can_message"]:
         # send message to all
-        result_message = await api_async.message(
+        result_message = await api.amessage(
             name=class_type,
             resource_id=class_data["id"],
             message={
@@ -188,7 +188,7 @@ async def test_async_class_object_cru(
 
     # list all
     result_list = []
-    async for x in api_async.listing(
+    async for x in api.alisting(
         name=class_type, issuer_id=session_manager_async.settings.test_issuer_id
     ):
         result_list.append(x)
@@ -201,10 +201,10 @@ async def test_async_class_object_cru(
         f"{integration_test_id}.{object_type}.test_async_CRU.wallet_google.edutap"
     )
     object_data["id"] = f"{session_manager_async.settings.test_issuer_id}.{object_base}"
-    odata = api_async.new(object_type, object_data)
+    odata = api.new(object_type, object_data)
 
     # create
-    oresult_create = await api_async.create(odata)
+    oresult_create = await api.acreate(odata)
     assert oresult_create is not None
     assert oresult_create.state == "INACTIVE"
 
@@ -212,31 +212,31 @@ async def test_async_class_object_cru(
     await asyncio.sleep(0.05)
 
     # read
-    oresult_read = await api_async.read(name=object_type, resource_id=object_data["id"])
+    oresult_read = await api.aread(name=object_type, resource_id=object_data["id"])
     assert oresult_read is not None
     assert oresult_read.state == "INACTIVE"
 
     # update
     oresult_read.state = "ACTIVE"
-    oresult_updated = await api_async.update(oresult_read)
+    oresult_updated = await api.aupdate(oresult_read)
     assert oresult_updated is not None
     assert oresult_updated.state == "ACTIVE"
 
     # read after update
-    oresult_read = await api_async.read(name=object_type, resource_id=object_data["id"])
+    oresult_read = await api.aread(name=object_type, resource_id=object_data["id"])
     assert oresult_read is not None
     assert oresult_read.state == "ACTIVE"
 
     # list all
     result_list = []
-    async for x in api_async.listing(name=object_type, resource_id=class_data["id"]):
+    async for x in api.alisting(name=object_type, resource_id=class_data["id"]):
         result_list.append(x)
     assert len(result_list) == 1
 
     model_metadata = lookup_metadata_by_name(class_type)
     if model_metadata["can_message"]:
         # send message
-        result_message = await api_async.message(
+        result_message = await api.amessage(
             name=object_type,
             resource_id=object_data["id"],
             message={

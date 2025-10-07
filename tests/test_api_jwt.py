@@ -5,8 +5,9 @@ import pytest
 def test_create_payload():
 
     from edutap.wallet_google import api
+    from edutap.wallet_google.utils import _create_payload
 
-    payload = api._create_payload(
+    payload = _create_payload(
         [
             api.new(
                 "Reference", {"id": "test-1.edutap.eu", "model_name": "GenericObject"}
@@ -24,6 +25,7 @@ def test_create_payload():
 def test_create_claims():
 
     from edutap.wallet_google import api
+    from edutap.wallet_google.utils import _create_claims
 
     models = [
         api.new("Reference", {"id": "test-1.edutap.eu", "model_name": "GenericObject"}),
@@ -54,7 +56,7 @@ def test_create_claims():
         "origins": [],
     }
 
-    claims = api._create_claims(
+    claims = _create_claims(
         "test@example.com",
         [],
         models,

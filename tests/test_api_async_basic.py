@@ -6,25 +6,32 @@ import pytest
 @pytest.mark.asyncio
 async def test_new_is_sync():
     """Test that new() is still synchronous (no async needed for model creation)."""
-    from edutap.wallet_google import api_async
+    from edutap.wallet_google import api
 
     # new() should be synchronous - it just creates a model instance
-    result = api_async.new("GenericClass", {"id": "test.123"})
+    result = api.new("GenericClass", {"id": "test.123"})
     assert result.id == "test.123"
 
 
 @pytest.mark.asyncio
 async def test_imports_work():
-    """Test that async modules can be imported."""
-    from edutap.wallet_google import api_async
+    """Test that async API functions exist in the api module."""
+    from edutap.wallet_google import api
     from edutap.wallet_google import session_async
 
-    # Verify the modules exist and have expected attributes
-    assert hasattr(api_async, "create")
-    assert hasattr(api_async, "read")
-    assert hasattr(api_async, "update")
-    assert hasattr(api_async, "message")
-    assert hasattr(api_async, "listing")
+    # Verify sync functions exist
+    assert hasattr(api, "create")
+    assert hasattr(api, "read")
+    assert hasattr(api, "update")
+    assert hasattr(api, "message")
+    assert hasattr(api, "listing")
+
+    # Verify async functions exist with 'a' prefix
+    assert hasattr(api, "acreate")
+    assert hasattr(api, "aread")
+    assert hasattr(api, "aupdate")
+    assert hasattr(api, "amessage")
+    assert hasattr(api, "alisting")
 
     assert hasattr(session_async, "session_manager_async")
     assert hasattr(session_async, "AsyncSessionManager")
