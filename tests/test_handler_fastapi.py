@@ -1,26 +1,30 @@
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from freezegun import freeze_time
+
+from edutap.wallet_google.plugins import add_plugin, remove_plugins
 
 
 # this callback data can be verified given the credentials.json from demo.edutap.eu is provided.
 real_callback_data = {
-    "signature": "MEYCIQCyuBQo/Dao7yUBDUWK12ATFBDkUfJUnropjOaPbPiKEwIhAKXNiVrbNmydpEVIxXRz5z36f8HV2Meq/Td6tqt2+DYO",
+    "signature": "MEUCIQC+xKva1ydmNwJJiP2HJJWsteUe02ztTDKExzcWIpmlywIgJwD4HUYvZJg/cr1OL21vVKr0b2ZXt79NblCQ1V18zsc=",
     "intermediateSigningKey": {
-        "signedKey": '{"keyValue":"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE3JpSX3AU53vH+IpWBdsbqrL7Ey67QSERsDUztFt8q7t7PzVkh14SeYeokI1zSZiVAWnx4tXD1tCPbrvfFGB8OA\\u003d\\u003d","keyExpiration":"1735023986000"}',
+        "signedKey": '{"keyValue":"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKb256ssDdmf7DokZ7jsMtAvjiTX2HF1ay8QR1sSA+gFpC/ChhRwVdMEVJTaoAP1MIH38QWtqShiQ63zROaKtgQ\\u003d\\u003d","keyExpiration":"1759996807000"}',
         "signatures": [
-            "MEUCIQD3IBTpRM45gpno9Remtx/FiDCOJUp45+C+Qzw6IrgphwIgJijXISc+Ft8Sj9eXNowzuYyXyWlgKAE+tVnN24Sek5M="
+            "MEUCIDd7rXh7qgJZ7YSlQiXG2zOdZUT5XlMSUPu3RfyV3p2CAiEApxrIwTmRVig93FVJUC6bSWdQXMqata5sHenKsVYreUk="
         ],
     },
     "protocolVersion": "ECv2SigningOnly",
-    "signedMessage": '{"classId":"3388000000022141777.pass.gift.dev.edutap.eu","objectId":"3388000000022141777.9fd4e525-777c-4e0d-878a-b7993e211997","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":"c1359b53-f2bb-4e8f-b392-9a560a21a9a0"}',
+    "signedMessage": '{"classId":"3388000000022141777.lib.edutap.eu","objectId":"3388000000022141777.6b4cbd15-0de7-4fe8-95f6-995a51b4595e.object","eventType":"del","expTimeMillis":1759331348143,"count":1,"nonce":"1a9e3df0-ec10-4a17-8b39-89d2d7f48e3b"}',
 }
 
 
-def test_callback_disabled_signature_check_OK(mock_settings):
+@freeze_time("2025-10-01 12:00:00")
+def test_callback_disabled_signature_check_OK(mock_settings, dummy_plugins):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.handler_callback_verify_signature = "0"
+    mock_settings.handler_callback_verify_signature = "1"
 
     callback_data = CallbackData(**real_callback_data)
 
@@ -36,14 +40,17 @@ def test_callback_disabled_signature_check_OK(mock_settings):
     assert resp.json() == {"status": "success"}
 
 
-def test_callback_disabled_signature_check_ERROR(mock_settings):
+@freeze_time("2025-10-01 12:00:00")
+def test_callback_disabled_signature_check_ERROR(mock_settings, dummy_plugins):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.handler_callback_verify_signature = "0"
+    mock_settings.handler_callback_verify_signature = "0"   # since we tamper with the message
 
     callback_data = CallbackData(**real_callback_data)
-    callback_data.signedMessage = '{"classId":"1.x","objectId":"1.y","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":""}'
+
+    # dummy handler will raise ValueError if nonce is "ERROR"
+    callback_data.signedMessage = '{"classId":"1.x","objectId":"1.y","eventType":"save","expTimeMillis":1759331348143,"count":1,"nonce":"ERROR"}'
 
     from edutap.wallet_google.handlers.fastapi import router
 
@@ -100,6 +107,22 @@ def test_callback_disabled_signature_check_TIMEOUT(mock_settings):
 
     from edutap.wallet_google.handlers.fastapi import router
 
+    class NeverEndingCallbackHandler:
+        async def handle(
+            self,
+            class_id: str,
+            object_id: str,
+            event_type: str,
+            exp_time_millis: int,
+            count: int,
+            nonce: str,
+        ) -> None:
+            import asyncio
+
+            await asyncio.sleep(1000)
+
+    add_plugin("CallbackHandler", NeverEndingCallbackHandler)
+
     app = FastAPI()
     app.include_router(router)
     client = TestClient(app)
@@ -109,8 +132,10 @@ def test_callback_disabled_signature_check_TIMEOUT(mock_settings):
     assert resp.status_code == 500
     assert resp.text == '{"detail":"Error while handling the callbacks (timeout)."}'
 
+    remove_plugins(NeverEndingCallbackHandler)
 
-def test_image_OK(mock_fernet_encryption_key):
+
+def test_image_OK(mock_fernet_encryption_key, dummy_plugins):
     from edutap.wallet_google.handlers.fastapi import router
     from edutap.wallet_google.utils import encrypt_data
 
@@ -122,7 +147,7 @@ def test_image_OK(mock_fernet_encryption_key):
     assert resp.text == "mock-a-jepg"
 
 
-def test_image_ERROR(mock_fernet_encryption_key):
+def test_image_ERROR(mock_fernet_encryption_key, dummy_plugins):
     from edutap.wallet_google.handlers.fastapi import router
     from edutap.wallet_google.utils import encrypt_data
 
@@ -134,7 +159,7 @@ def test_image_ERROR(mock_fernet_encryption_key):
     assert resp.text == '{"detail":"Image not found."}'
 
 
-def test_image_TIMEOUT(mock_settings, mock_fernet_encryption_key):
+def test_image_TIMEOUT(mock_settings, mock_fernet_encryption_key, dummy_plugins):
     mock_settings.handlers_image_timeout = 0.1
 
     from edutap.wallet_google.handlers.fastapi import router
@@ -148,7 +173,7 @@ def test_image_TIMEOUT(mock_settings, mock_fernet_encryption_key):
     assert resp.text == '{"detail":"Error while handling the image (timeout)."}'
 
 
-def test_image_CANCEL(mock_fernet_encryption_key):
+def test_image_CANCEL(mock_fernet_encryption_key, dummy_plugins):
     from edutap.wallet_google.handlers.fastapi import router
     from edutap.wallet_google.utils import encrypt_data
 
@@ -160,7 +185,7 @@ def test_image_CANCEL(mock_fernet_encryption_key):
     assert resp.text == '{"detail":"Error while handling the image (cancel)."}'
 
 
-def test_image_UNEXPECTED(mock_fernet_encryption_key):
+def test_image_UNEXPECTED(mock_fernet_encryption_key, dummy_plugins):
     from edutap.wallet_google.handlers.fastapi import router
     from edutap.wallet_google.utils import encrypt_data
 

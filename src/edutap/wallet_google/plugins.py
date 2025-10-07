@@ -40,3 +40,14 @@ def get_image_providers() -> list[ImageProvider]:
 
 def get_callback_handlers() -> list[CallbackHandler]:
     return typing.cast(list[CallbackHandler], get_plugins("CallbackHandler"))
+
+
+def remove_plugins(*plugins: list[ImageProvider|CallbackHandler]) -> None:
+    """
+    Remove plugins from the registry. Not performant, but it is not called often.
+    """
+    for plugin in plugins:
+        for name, plugin_list in _PLUGIN_REGISTRY.items():
+            if plugin in plugin_list:
+                plugin_list.remove(plugin)
+                break

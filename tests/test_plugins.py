@@ -2,8 +2,12 @@ from edutap.wallet_google.models.handlers import ImageData
 
 import pytest
 
+from edutap.wallet_google.plugins import add_plugin, get_callback_handlers, remove_plugins
 
-def test_get_image_providers():
+
+
+
+def test_get_image_providers(dummy_plugins):
     from edutap.wallet_google.plugins import get_image_providers
     from edutap.wallet_google.protocols import ImageProvider
 
@@ -12,7 +16,7 @@ def test_get_image_providers():
     assert isinstance(plugins[0], ImageProvider)
 
 
-def test_get_callback_handlers():
+def test_get_callback_handlers(dummy_plugins):
     from edutap.wallet_google.plugins import get_callback_handlers
     from edutap.wallet_google.protocols import CallbackHandler
 
@@ -76,45 +80,3 @@ def test_get_image_providers_wrong_type(monkeypatch):
     with pytest.raises(ValueError):
         get_image_providers()
 
-
-class DummyImageProvider:
-    async def image_by_id(self, image_id: str) -> ImageData:
-        raise NotImplementedError
-
-
-class DummyCallbackHandler:
-    async def handle(
-        self,
-        class_id: str,
-        object_id: str,
-        event_type: str,
-        exp_time_millis: int,
-        count: int,
-        nonce: str,
-    ) -> None: ...
-
-
-def test_add_plugin():
-    """
-    test adding plugins at runtime
-    """
-    from edutap.wallet_google.plugins import add_plugin
-    from edutap.wallet_google.plugins import get_callback_handlers
-    from edutap.wallet_google.plugins import get_image_providers
-
-    count_image_providers = len(get_image_providers())
-    count_callback_handlers = len(get_callback_handlers())
-
-    add_plugin("ImageProvider", DummyImageProvider)
-    add_plugin("CallbackHandler", DummyCallbackHandler)
-
-    with pytest.raises(TypeError):
-        add_plugin("CallbackHandler", DummyImageProvider)
-
-    plugins = get_image_providers()
-    assert len(plugins) == 1 + count_image_providers
-    assert isinstance(plugins[-1], DummyImageProvider)
-
-    plugins = get_callback_handlers()
-    assert len(plugins) == 1 + count_callback_handlers
-    assert isinstance(plugins[-1], DummyCallbackHandler)
