@@ -1,10 +1,9 @@
 from .credentials import credentials_manager
 from .registry import lookup_metadata_by_name
 from .settings import Settings
-from google.auth.transport.requests import AuthorizedSession
-from google.oauth2.service_account import Credentials
-from requests.adapters import HTTPAdapter
+from authlib.integrations.httpx_client import AssertionClient
 
+import httpx
 import json
 import threading
 
@@ -12,34 +11,57 @@ import threading
 _THREADLOCAL = threading.local()
 
 
-class HTTPRecorder(HTTPAdapter):
+class HTTPRecorder(httpx.Client):
     """Record the HTTP requests and responses to a file."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._settings = Settings()
 
     @property
     def settings(self) -> Settings:
-        settings = getattr(self, "_settings", None)
-        if settings is None:
-            self._settings = Settings()
         return self._settings
 
-    def send(self, request, *args, **kwargs):
+    def request(self, method, url, *args, **kwargs):
+        # Record request
+        body_data = kwargs.get("data") or kwargs.get("content")
+        if body_data:
+            if isinstance(body_data, bytes):
+                body_json = json.loads(body_data.decode("utf-8"))
+            else:
+                body_json = json.loads(body_data)
+        else:
+            body_json = None
+
         req_record = {
-            "method": request.method,
-            "url": request.url,
-            "headers": dict(request.headers),
-            "body": json.loads(request.body.decode("utf-8")),
+            "method": method,
+            "url": str(url),
+            "headers": dict(kwargs.get("headers", {})),
+            "body": body_json,
         }
         target_directory = self.settings.record_api_calls_dir
-        if target_directory.is_dir() and not target_directory.exists():
+        if not target_directory.exists():
             target_directory.mkdir(parents=True)
-        filename = f"{target_directory}/{request.method}-{request.url.replace('/', '_')}.REQUEST.json"
+        filename = (
+            f"{target_directory}/{method}-{str(url).replace('/', '_')}.REQUEST.json"
+        )
         with open(filename, "w") as fp:
             json.dump(req_record, fp, indent=4)
-        response = super().send(request, *args, **kwargs)
+
+        # Make the actual request
+        response = super().request(method, url, *args, **kwargs)
+
+        # Record response
         resp_record = {
             "status_code": response.status_code,
             "headers": dict(response.headers),
-            "body": response.json(),
+            "body": (
+                response.json()
+                if response.headers.get("content-type", "").startswith(
+                    "application/json"
+                )
+                else response.text
+            ),
         }
         with open(filename.replace("REQUEST", "RESPONSE"), "w") as fp:
             json.dump(resp_record, fp, indent=4)
@@ -49,7 +71,7 @@ class HTTPRecorder(HTTPAdapter):
 class SessionManager:
     """Manages the session to the Google Wallet API and provides helper methods.
 
-    Sessions here are thread safe.
+    Sessions here are thread safe and use httpx with authlib for OAuth2.
     """
 
     @property
@@ -59,23 +81,43 @@ class SessionManager:
             self._settings = Settings()
         return self._settings
 
-    def _make_session(self, credentials: dict) -> AuthorizedSession:
-        google_credentials = Credentials.from_service_account_info(
-            credentials,
-            scopes=self.settings.credentials_scopes,
-        )
-        session = AuthorizedSession(google_credentials)
-        if self.settings.record_api_calls_dir is not None:
-            session.mount("https://", HTTPRecorder())
-        return session
+    def _make_session(self, credentials: dict) -> AssertionClient:
+        """Create an OAuth2 service account client using Authlib and httpx.
 
-    def session(self, credentials: dict | None = None) -> AuthorizedSession:
+        :param credentials: Service account credentials as dict.
+        :return:            The assertion client.
+        """
+        token_endpoint = "https://oauth2.googleapis.com/token"
+
+        # Use HTTPRecorder if recording is enabled
+        if self.settings.record_api_calls_dir is not None:
+            client_class = HTTPRecorder
+        else:
+            client_class = None
+
+        client = AssertionClient(
+            token_endpoint=token_endpoint,
+            issuer=credentials["client_email"],
+            subject=credentials["client_email"],
+            audience=token_endpoint,
+            claims={
+                "scope": " ".join(self.settings.credentials_scopes),
+            },
+            key=credentials["private_key"],
+            key_id=credentials["private_key_id"],
+            header={"alg": "RS256", "typ": "JWT"},
+            client_cls=client_class,
+        )
+
+        return client
+
+    def session(self, credentials: dict | None = None) -> AssertionClient:
         """
         Create and return an authorized session.
 
         :param credentials: Session credentials as dict. If not given, credentials
                             are read from file defined in settings.
-        :return:            The authorized session.
+        :return:            The assertion client (httpx-based).
         """
         if not credentials:
             credentials = credentials_manager.credentials_from_file()

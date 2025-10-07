@@ -1,7 +1,7 @@
 """JWT utilities for Google Wallet save links.
 
 This module provides JWT signing and save_link generation functionality.
-It requires google-auth to be installed but is independent of the sync/async API implementations.
+Uses authlib for JWT signing with RSA keys.
 """
 
 from .credentials import credentials_manager
@@ -14,8 +14,7 @@ from .registry import lookup_metadata_by_model_instance
 from .registry import lookup_metadata_by_model_type
 from .registry import lookup_metadata_by_name
 from .settings import Settings
-from google.auth import crypt
-from google.auth import jwt
+from authlib.jose import jwt
 
 import datetime
 import logging
@@ -93,7 +92,7 @@ def save_link(
     - https://developers.google.com/wallet/generic/web
     - https://developers.google.com/wallet/generic/use-cases/jwt
 
-    This function requires google-auth to be installed.
+    This function uses authlib for JWT signing with RSA keys.
     It can be used with both sync and async APIs:
 
     .. code-block:: python
@@ -102,7 +101,7 @@ def save_link(
         from edutap.wallet_google import api
         link = api.save_link([...])
 
-        # With async API (google-auth still required for JWT signing)
+        # With async API
         from edutap.wallet_google import api_async
         link = api_async.save_link([...])
 
@@ -136,16 +135,20 @@ def save_link(
             exclude_none=True,
         )
     )
-    signer = crypt.RSASigner.from_service_account_info(credentials)
-    jwt_string = jwt.encode(
-        signer,
-        claims.model_dump(
-            mode="json",
-            exclude_unset=False,
-            exclude_defaults=False,
-            exclude_none=True,
-        ),
-    ).decode("utf-8")
+
+    # Use authlib to sign JWT with RS256
+    header = {"alg": "RS256", "typ": "JWT"}
+    payload = claims.model_dump(
+        mode="json",
+        exclude_unset=False,
+        exclude_defaults=False,
+        exclude_none=True,
+    )
+
+    # authlib's jwt.encode returns bytes
+    jwt_bytes = jwt.encode(header, payload, credentials["private_key"])
+    jwt_string = jwt_bytes.decode("utf-8")
+
     logger.debug(jwt_string)
     if (jwt_len := len(jwt_string)) >= 1800:
         logger.debug(

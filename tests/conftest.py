@@ -52,18 +52,18 @@ def clean_session_threadlocals():
 
 
 @pytest.fixture
-def mock_session(monkeypatch, requests_mock, clean_session_threadlocals):
+def mock_session(monkeypatch, clean_session_threadlocals):
     """Fixture to provide a mock Google Wallet API session."""
     from edutap.wallet_google.session import SessionManager
 
-    import requests
+    import httpx
 
     def mock_make_session(self, credentials):
-        return requests.Session()
+        return httpx.Client()
 
     monkeypatch.setattr(SessionManager, "_make_session", mock_make_session)
 
-    yield requests_mock
+    yield
 
 
 @pytest.fixture
@@ -71,6 +71,8 @@ def mock_request_response(mock_session):
     """Fixture to load a mock request response from a json file.
     Prepares a mock response and status code for a given url and method.
     """
+    import httpx
+    import respx
 
     def _load_mock_request_response(
         name: str, url: str, method: str, code=200
@@ -79,8 +81,10 @@ def mock_request_response(mock_session):
         for postfix in {"REQUEST", "RESPONSE"}:
             with open(DATA_PATH / f"{name}.REQUEST.json") as f:
                 data[postfix.lower()] = json.load(f)
-        mock_session.register_uri(
-            method, url, json=data["response"]["body"], status_code=code
+
+        # Use respx to mock the request
+        respx.route(method=method, url=url).mock(
+            return_value=httpx.Response(code, json=data["response"]["body"])
         )
         return data
 

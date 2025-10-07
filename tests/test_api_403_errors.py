@@ -8,12 +8,15 @@ from edutap.wallet_google.exceptions import WalletException
 from edutap.wallet_google.models.datatypes import enums
 from edutap.wallet_google.session import session_manager
 
+import httpx
 import pytest
+import respx
 
 
 # this tests relates to reproduce issue https://github.com/edutap-eu/edutap.wallet_google/issues/36
 
 
+@respx.mock
 def test_read_403_quota_exceeded(mock_session):
     """Test that read() raises QuotaExceededException when quota is exceeded."""
     name = "GenericObject"
@@ -21,17 +24,17 @@ def test_read_403_quota_exceeded(mock_session):
     url = session_manager.url(name, f"/{resource_id}")
 
     # Mock a 403 response with quota error message
-    mock_session.register_uri(
-        "GET",
-        url,
-        status_code=403,
-        json={
-            "error": {
-                "code": 403,
-                "message": "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per day'",
-                "status": "RESOURCE_EXHAUSTED",
-            }
-        },
+    respx.get(url).mock(
+        return_value=httpx.Response(
+            403,
+            json={
+                "error": {
+                    "code": 403,
+                    "message": "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per day'",
+                    "status": "RESOURCE_EXHAUSTED",
+                }
+            },
+        )
     )
 
     with pytest.raises(QuotaExceededException) as exc_info:
@@ -41,6 +44,7 @@ def test_read_403_quota_exceeded(mock_session):
     assert resource_id in str(exc_info.value)
 
 
+@respx.mock
 def test_read_403_permission_denied(mock_session):
     """Test that read() raises WalletException with proper message when access is denied."""
     name = "GenericObject"
@@ -48,17 +52,17 @@ def test_read_403_permission_denied(mock_session):
     url = session_manager.url(name, f"/{resource_id}")
 
     # Mock a 403 response with permission denied message
-    mock_session.register_uri(
-        "GET",
-        url,
-        status_code=403,
-        json={
-            "error": {
-                "code": 403,
-                "message": "The caller does not have permission",
-                "status": "PERMISSION_DENIED",
-            }
-        },
+    respx.get(url).mock(
+        return_value=httpx.Response(
+            403,
+            json={
+                "error": {
+                    "code": 403,
+                    "message": "The caller does not have permission",
+                    "status": "PERMISSION_DENIED",
+                }
+            },
+        )
     )
 
     with pytest.raises(WalletException) as exc_info:
@@ -70,6 +74,7 @@ def test_read_403_permission_denied(mock_session):
     assert resource_id in str(exc_info.value)
 
 
+@respx.mock
 def test_create_403_quota_exceeded(mock_session):
     """Test that create() raises QuotaExceededException when quota is exceeded."""
     name = "GenericClass"
@@ -85,17 +90,17 @@ def test_create_403_quota_exceeded(mock_session):
     url = session_manager.url(name)
 
     # Mock a 403 response with quota error message
-    mock_session.register_uri(
-        "POST",
-        url,
-        status_code=403,
-        json={
-            "error": {
-                "code": 403,
-                "message": "Quota exceeded for quota metric 'Write requests'",
-                "status": "RESOURCE_EXHAUSTED",
-            }
-        },
+    respx.post(url).mock(
+        return_value=httpx.Response(
+            403,
+            json={
+                "error": {
+                    "code": 403,
+                    "message": "Quota exceeded for quota metric 'Write requests'",
+                    "status": "RESOURCE_EXHAUSTED",
+                }
+            },
+        )
     )
 
     with pytest.raises(QuotaExceededException) as exc_info:
@@ -104,6 +109,7 @@ def test_create_403_quota_exceeded(mock_session):
     assert "Quota exceeded while trying to create" in str(exc_info.value)
 
 
+@respx.mock
 def test_create_403_permission_denied(mock_session):
     """Test that create() raises WalletException when access is denied."""
     name = "GenericClass"
@@ -119,17 +125,17 @@ def test_create_403_permission_denied(mock_session):
     url = session_manager.url(name)
 
     # Mock a 403 response with permission denied message
-    mock_session.register_uri(
-        "POST",
-        url,
-        status_code=403,
-        json={
-            "error": {
-                "code": 403,
-                "message": "The caller does not have permission",
-                "status": "PERMISSION_DENIED",
-            }
-        },
+    respx.post(url).mock(
+        return_value=httpx.Response(
+            403,
+            json={
+                "error": {
+                    "code": 403,
+                    "message": "The caller does not have permission",
+                    "status": "PERMISSION_DENIED",
+                }
+            },
+        )
     )
 
     with pytest.raises(WalletException) as exc_info:
@@ -139,6 +145,7 @@ def test_create_403_permission_denied(mock_session):
     assert "Access denied while trying to create" in str(exc_info.value)
 
 
+@respx.mock
 def test_update_403_quota_exceeded(mock_session):
     """Test that update() raises QuotaExceededException when quota is exceeded."""
     name = "GenericClass"
@@ -154,17 +161,17 @@ def test_update_403_quota_exceeded(mock_session):
     url = session_manager.url(name, "/test.class.id")
 
     # Mock a 403 response with rate limit error message
-    mock_session.register_uri(
-        "PATCH",
-        url,
-        status_code=403,
-        json={
-            "error": {
-                "code": 403,
-                "message": "Rate limit exceeded",
-                "status": "RESOURCE_EXHAUSTED",
-            }
-        },
+    respx.patch(url).mock(
+        return_value=httpx.Response(
+            403,
+            json={
+                "error": {
+                    "code": 403,
+                    "message": "Rate limit exceeded",
+                    "status": "RESOURCE_EXHAUSTED",
+                }
+            },
+        )
     )
 
     with pytest.raises(QuotaExceededException) as exc_info:
@@ -173,6 +180,7 @@ def test_update_403_quota_exceeded(mock_session):
     assert "Quota exceeded while trying to update" in str(exc_info.value)
 
 
+@respx.mock
 def test_update_403_permission_denied(mock_session):
     """Test that update() raises WalletException when access is denied."""
     name = "GenericClass"
@@ -188,17 +196,17 @@ def test_update_403_permission_denied(mock_session):
     url = session_manager.url(name, "/test.class.id")
 
     # Mock a 403 response with permission denied message
-    mock_session.register_uri(
-        "PATCH",
-        url,
-        status_code=403,
-        json={
-            "error": {
-                "code": 403,
-                "message": "The caller does not have permission",
-                "status": "PERMISSION_DENIED",
-            }
-        },
+    respx.patch(url).mock(
+        return_value=httpx.Response(
+            403,
+            json={
+                "error": {
+                    "code": 403,
+                    "message": "The caller does not have permission",
+                    "status": "PERMISSION_DENIED",
+                }
+            },
+        )
     )
 
     with pytest.raises(WalletException) as exc_info:
@@ -208,6 +216,7 @@ def test_update_403_permission_denied(mock_session):
     assert "Access denied while trying to update" in str(exc_info.value)
 
 
+@respx.mock
 def test_message_403_quota_exceeded(mock_session):
     """Test that message() raises QuotaExceededException when quota is exceeded."""
     name = "GenericObject"
@@ -216,17 +225,17 @@ def test_message_403_quota_exceeded(mock_session):
     url = session_manager.url(name, f"/{resource_id}/addMessage")
 
     # Mock a 403 response with quota error message
-    mock_session.register_uri(
-        "POST",
-        url,
-        status_code=403,
-        json={
-            "error": {
-                "code": 403,
-                "message": "Quota exceeded",
-                "status": "RESOURCE_EXHAUSTED",
-            }
-        },
+    respx.post(url).mock(
+        return_value=httpx.Response(
+            403,
+            json={
+                "error": {
+                    "code": 403,
+                    "message": "Quota exceeded",
+                    "status": "RESOURCE_EXHAUSTED",
+                }
+            },
+        )
     )
 
     with pytest.raises(QuotaExceededException) as exc_info:
@@ -235,6 +244,7 @@ def test_message_403_quota_exceeded(mock_session):
     assert "Quota exceeded while trying to send message" in str(exc_info.value)
 
 
+@respx.mock
 def test_message_403_permission_denied(mock_session):
     """Test that message() raises WalletException when access is denied."""
     name = "GenericObject"
@@ -243,17 +253,17 @@ def test_message_403_permission_denied(mock_session):
     url = session_manager.url(name, f"/{resource_id}/addMessage")
 
     # Mock a 403 response with permission denied message
-    mock_session.register_uri(
-        "POST",
-        url,
-        status_code=403,
-        json={
-            "error": {
-                "code": 403,
-                "message": "The caller does not have permission",
-                "status": "PERMISSION_DENIED",
-            }
-        },
+    respx.post(url).mock(
+        return_value=httpx.Response(
+            403,
+            json={
+                "error": {
+                    "code": 403,
+                    "message": "The caller does not have permission",
+                    "status": "PERMISSION_DENIED",
+                }
+            },
+        )
     )
 
     with pytest.raises(WalletException) as exc_info:

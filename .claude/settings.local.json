@@ -15,7 +15,9 @@
       "Bash(gh api:*)",
       "Bash(uvx:*)",
       "Bash(git fetch:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(git pull:*)",
+      "WebFetch(domain:docs.authlib.org)"
     ],
     "deny": [],
     "ask": []

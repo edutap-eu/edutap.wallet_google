@@ -16,31 +16,25 @@ uv venv -p 3.13.0
 source .venv/bin/activate
 ```
 
-### Install with synchronous API support
+### Standard Installation
 
 ```bash
-uv pip install edutap.wallet_google[sync]
+uv pip install edutap.wallet_google
 ```
 
-### Install with asynchronous API support
+The base package includes everything needed for both sync and async APIs:
+- `httpx` - Modern HTTP client (used by both sync and async)
+- `authlib` - OAuth2 and JWT handling
+- `cryptography` - Cryptographic operations
+- `pydantic` - Data validation and settings
 
-```bash
-uv pip install edutap.wallet_google[async]
-```
-
-### Install with both sync and async support
-
-```bash
-uv pip install edutap.wallet_google[sync,async]
-```
+Both sync and async APIs are available by default with a unified set of dependencies.
 
 ### Optional extras
 
-The base package includes `google-auth` for JWT signing (required by both sync and async APIs).
+- `[callback]` - FastAPI endpoints for Google Wallet callbacks
 
-- `[sync]` - Adds synchronous HTTP client support using `requests` (via `google-auth[requests]`)
-- `[async]` - Adds asynchronous HTTP client support using `authlib` and `httpx`
-- `[callback]` - FastAPI endpoints for Google Wallet callbacks (requires `httpx` for signature verification)
+**Note:** The `[sync]` and `[async]` extras have been removed. Both APIs now use the same modern stack (httpx + authlib), eliminating the need for separate installation options.
 
 ## Configuration
 
