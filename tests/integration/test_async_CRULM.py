@@ -120,8 +120,8 @@ async def test_async_class_object_cru(
     type_base, class_data, object_data, integration_test_id
 ):
     from edutap.wallet_google import api
+    from edutap.wallet_google.clientpool import client_pool
     from edutap.wallet_google.registry import lookup_metadata_by_name
-    from edutap.wallet_google.session import session_manager
 
     class_type = f"{type_base}Class"
     object_type = f"{type_base}Object"
@@ -131,7 +131,7 @@ async def test_async_class_object_cru(
     class_base = (
         f"{integration_test_id}.{class_type}.test_async_CRU.wallet_google.edutap"
     )
-    class_data["id"] = f"{session_manager.settings.test_issuer_id}.{class_base}"
+    class_data["id"] = f"{client_pool.settings.test_issuer_id}.{class_base}"
 
     data = api.new(class_type, class_data)
 
@@ -189,7 +189,7 @@ async def test_async_class_object_cru(
     # list all
     result_list = []
     async for x in api.alisting(
-        name=class_type, issuer_id=session_manager.settings.test_issuer_id
+        name=class_type, issuer_id=client_pool.settings.test_issuer_id
     ):
         result_list.append(x)
     assert len(result_list) > 0
@@ -200,7 +200,7 @@ async def test_async_class_object_cru(
     object_base = (
         f"{integration_test_id}.{object_type}.test_async_CRU.wallet_google.edutap"
     )
-    object_data["id"] = f"{session_manager.settings.test_issuer_id}.{object_base}"
+    object_data["id"] = f"{client_pool.settings.test_issuer_id}.{object_base}"
     odata = api.new(object_type, object_data)
 
     # create

@@ -1,5 +1,5 @@
+from .clientpool import client_pool
 from .models.bases import Model
-from .session import session_manager
 from cryptography.fernet import Fernet
 
 import logging
@@ -19,7 +19,7 @@ def encrypt_data(data: str) -> str:
 
     see https://cryptography.io/en/latest/fernet/
     """
-    key = session_manager.settings.fernet_encryption_key.encode("utf8")
+    key = client_pool.settings.fernet_encryption_key.encode("utf8")
     fernet = Fernet(key)
     return fernet.encrypt(data.encode("utf8")).decode("utf8")
 
@@ -33,7 +33,7 @@ def decrypt_data(data: str) -> str:
 
     see https://cryptography.io/en/latest/fernet/
     """
-    key = session_manager.settings.fernet_encryption_key.encode("utf8")
+    key = client_pool.settings.fernet_encryption_key.encode("utf8")
     fernet = Fernet(key)
     return fernet.decrypt(data.encode("utf8")).decode("utf8")
 

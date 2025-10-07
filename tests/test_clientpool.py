@@ -3,7 +3,7 @@ from edutap.wallet_google.settings import ROOT_DIR
 import pytest
 
 
-def test_session_manager_url(
+def test_client_pool_url(
     clean_registry_by_name,
     clean_registry_by_model,
 ):  # noqa: F811
@@ -13,9 +13,9 @@ def test_session_manager_url(
     class Foo:
         pass
 
-    from edutap.wallet_google.session import SessionManager
+    from edutap.wallet_google.clientpool import ClientPoolManager
 
-    manager = SessionManager()
+    manager = ClientPoolManager()
     assert (
         manager.url("Foo")
         == "https://walletobjects.googleapis.com/walletobjects/v1/foo"
@@ -39,9 +39,9 @@ def test_session_manager_url(
     )
 
 
-def test_session_creation(monkeypatch):
+def test_client_creation(monkeypatch):
+    from edutap.wallet_google.clientpool import ClientPoolManager
     from edutap.wallet_google.credentials import credentials_manager
-    from edutap.wallet_google.session import SessionManager
 
     # Clear the cache and settings before testing
     credentials_manager.credentials_from_file.cache_clear()
@@ -65,30 +65,30 @@ def test_session_creation(monkeypatch):
         str(ROOT_DIR / "tests" / "data" / "credentials_fake.json"),
     )
 
-    manager = SessionManager()
-    session = manager.session()
-    assert session is not None
+    manager = ClientPoolManager()
+    client = manager.client()
+    assert client is not None
     assert manager.settings.credentials_file is not None
-    # With httpx/authlib AssertionClient, verify the session was created successfully
-    assert session.__class__.__name__ == "AssertionClient"
+    # With httpx/authlib AssertionClient, verify the client was created successfully
+    assert client.__class__.__name__ == "AssertionClient"
 
-    # Each call to session() now returns the SAME cached client (for connection pooling)
-    session2 = manager.session()
-    assert session2 is not None
-    assert session2 is session  # Same instance (cached)
+    # Each call to client() now returns the SAME cached client (for connection pooling)
+    client2 = manager.client()
+    assert client2 is not None
+    assert client2 is client  # Same instance (cached)
 
 
-def test_session_with_HTTPRecorder(tmp_path, monkeypatch):
-    from edutap.wallet_google.session import SessionManager
+def test_client_with_HTTPRecorder(tmp_path, monkeypatch):
+    from edutap.wallet_google.clientpool import ClientPoolManager
 
-    manager = SessionManager()
+    manager = ClientPoolManager()
     manager.settings.record_api_calls_dir = tmp_path
     manager.settings.credentials_file = (
         ROOT_DIR / "tests" / "data" / "credentials_fake.json"
     )
-    session = manager.session()
+    client = manager.client()
     # With httpx, HTTPRecorder is the client class used by AssertionClient
-    assert session.__class__.__name__ == "AssertionClient"
+    assert client.__class__.__name__ == "AssertionClient"
     # When recording is enabled, AssertionClient is created with client_cls=HTTPRecorder
     # We verify recording is configured by checking that the setting is set
     assert manager.settings.record_api_calls_dir == tmp_path

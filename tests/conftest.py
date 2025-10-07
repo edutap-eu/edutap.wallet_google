@@ -39,14 +39,14 @@ def clean_registry_by_model():
 @pytest.fixture
 def mock_session(monkeypatch):
     """Fixture to provide a mock Google Wallet API session."""
-    from edutap.wallet_google.session import SessionManager
+    from edutap.wallet_google.clientpool import ClientPoolManager
 
     import httpx
 
     def mock_session(self, credentials=None):
         return httpx.Client()
 
-    monkeypatch.setattr(SessionManager, "session", mock_session)
+    monkeypatch.setattr(ClientPoolManager, "client", mock_session)
 
     yield
 
@@ -89,13 +89,13 @@ def integration_test_id():
 
 @pytest.fixture
 def mock_settings():
-    from edutap.wallet_google.session import session_manager
+    from edutap.wallet_google.clientpool import client_pool
     from edutap.wallet_google.settings import Settings
 
-    original_settings = session_manager.settings
-    session_manager.settings = Settings()
-    yield session_manager.settings
-    session_manager.settings = original_settings
+    original_settings = client_pool.settings
+    client_pool.settings = Settings()
+    yield client_pool.settings
+    client_pool.settings = original_settings
 
 
 @pytest.fixture

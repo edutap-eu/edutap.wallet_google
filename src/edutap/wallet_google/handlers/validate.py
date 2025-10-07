@@ -22,12 +22,12 @@ The main differences/steps are:
 The main documentation for this is at https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions
 """
 
+from ..clientpool import client_pool
 from ..models.handlers import CallbackData
 from ..models.handlers import IntermediateSigningKey
 from ..models.handlers import RootSigningPublicKeys
 from ..models.handlers import SignedKey
 from ..models.handlers import SignedMessage
-from ..session import session_manager
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -230,7 +230,7 @@ def _verify_intermediate_signing_key(
         for sig in intermediate_signing_key.signatures
     ]
     signed_data = _construct_signed_data(
-        session_manager.settings.sender_id,
+        client_pool.settings.sender_id,
         PROTOCOL_VERSION,
         intermediate_signing_key.signedKey,
     )
@@ -277,7 +277,7 @@ def verified_signed_message(data: CallbackData) -> SignedMessage:
     issuer_id = message.classId.split(".")[0]
 
     # shortcut if signature validation is disabled
-    settings = session_manager.settings
+    settings = client_pool.settings
     if settings.handler_callback_verify_signature == "0":
         logger.debug("Signature verification disabled, skipping validation")
         return message
@@ -450,7 +450,7 @@ async def verified_signed_message_async(data: CallbackData) -> SignedMessage:
     issuer_id = message.classId.split(".")[0]
 
     # shortcut if signature validation is disabled
-    settings = session_manager.settings
+    settings = client_pool.settings
     if settings.handler_callback_verify_signature == "0":
         logger.debug("Signature verification disabled, skipping validation")
         return message

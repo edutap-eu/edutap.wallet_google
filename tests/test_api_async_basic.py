@@ -17,7 +17,7 @@ async def test_new_is_sync():
 async def test_imports_work():
     """Test that async API functions exist in the api module."""
     from edutap.wallet_google import api
-    from edutap.wallet_google import session
+    from edutap.wallet_google import clientpool
 
     # Verify sync functions exist
     assert hasattr(api, "create")
@@ -33,8 +33,8 @@ async def test_imports_work():
     assert hasattr(api, "amessage")
     assert hasattr(api, "alisting")
 
-    assert hasattr(session, "session_manager")
-    assert hasattr(session, "SessionManager")
+    assert hasattr(clientpool, "client_pool")
+    assert hasattr(clientpool, "ClientPoolManager")
 
 
 @pytest.mark.asyncio

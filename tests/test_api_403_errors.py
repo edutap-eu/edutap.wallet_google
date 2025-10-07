@@ -3,10 +3,10 @@ from edutap.wallet_google.api import message
 from edutap.wallet_google.api import new
 from edutap.wallet_google.api import read
 from edutap.wallet_google.api import update
+from edutap.wallet_google.clientpool import client_pool
 from edutap.wallet_google.exceptions import QuotaExceededException
 from edutap.wallet_google.exceptions import WalletException
 from edutap.wallet_google.models.datatypes import enums
-from edutap.wallet_google.session import session_manager
 
 import httpx
 import pytest
@@ -21,7 +21,7 @@ def test_read_403_quota_exceeded(mock_session):
     """Test that read() raises QuotaExceededException when quota is exceeded."""
     name = "GenericObject"
     resource_id = "test.resource.id"
-    url = session_manager.url(name, f"/{resource_id}")
+    url = client_pool.url(name, f"/{resource_id}")
 
     # Mock a 403 response with quota error message
     respx.get(url).mock(
@@ -49,7 +49,7 @@ def test_read_403_permission_denied(mock_session):
     """Test that read() raises WalletException with proper message when access is denied."""
     name = "GenericObject"
     resource_id = "test.resource.id"
-    url = session_manager.url(name, f"/{resource_id}")
+    url = client_pool.url(name, f"/{resource_id}")
 
     # Mock a 403 response with permission denied message
     respx.get(url).mock(
@@ -87,7 +87,7 @@ def test_create_403_quota_exceeded(mock_session):
             "viewUnlockRequirement": enums.ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED,
         },
     )
-    url = session_manager.url(name)
+    url = client_pool.url(name)
 
     # Mock a 403 response with quota error message
     respx.post(url).mock(
@@ -122,7 +122,7 @@ def test_create_403_permission_denied(mock_session):
             "viewUnlockRequirement": enums.ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED,
         },
     )
-    url = session_manager.url(name)
+    url = client_pool.url(name)
 
     # Mock a 403 response with permission denied message
     respx.post(url).mock(
@@ -158,7 +158,7 @@ def test_update_403_quota_exceeded(mock_session):
             "viewUnlockRequirement": enums.ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED,
         },
     )
-    url = session_manager.url(name, "/test.class.id")
+    url = client_pool.url(name, "/test.class.id")
 
     # Mock a 403 response with rate limit error message
     respx.patch(url).mock(
@@ -193,7 +193,7 @@ def test_update_403_permission_denied(mock_session):
             "viewUnlockRequirement": enums.ViewUnlockRequirement.VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED,
         },
     )
-    url = session_manager.url(name, "/test.class.id")
+    url = client_pool.url(name, "/test.class.id")
 
     # Mock a 403 response with permission denied message
     respx.patch(url).mock(
@@ -222,7 +222,7 @@ def test_message_403_quota_exceeded(mock_session):
     name = "GenericObject"
     resource_id = "test.object.id"
     msg = {"header": "Test", "body": "Test message"}
-    url = session_manager.url(name, f"/{resource_id}/addMessage")
+    url = client_pool.url(name, f"/{resource_id}/addMessage")
 
     # Mock a 403 response with quota error message
     respx.post(url).mock(
@@ -250,7 +250,7 @@ def test_message_403_permission_denied(mock_session):
     name = "GenericObject"
     resource_id = "test.object.id"
     msg = {"header": "Test", "body": "Test message"}
-    url = session_manager.url(name, f"/{resource_id}/addMessage")
+    url = client_pool.url(name, f"/{resource_id}/addMessage")
 
     # Mock a 403 response with permission denied message
     respx.post(url).mock(

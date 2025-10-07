@@ -510,22 +510,22 @@ This are models for "Data Types" as Google names them, the sub schemas for neste
    RegistryMetadataDict
 
 
-.. rubric:: Session
+.. rubric:: HTTP Client Pool
 
-`edutap.wallet_google.session`
+`edutap.wallet_google.clientpool`
 
-Sessions are managed using httpx clients with OAuth2 service account authentication.
-The SessionManager handles both sync and async operations with separate methods.
-All sessions should be used as context managers for proper resource cleanup.
+HTTP client pooling is managed using httpx clients with OAuth2 service account authentication.
+The ClientPoolManager handles both sync and async operations with persistent, pooled clients.
+Clients are cached per credentials set and reused across multiple API calls for optimal performance.
 
-.. currentmodule:: edutap.wallet_google.session
+.. currentmodule:: edutap.wallet_google.clientpool
 
 .. autosummary::
    :toctree: _autosummary
 
-   SessionManager
+   ClientPoolManager
    HTTPRecorder
-   session_manager
+   client_pool
 
 
 .. rubric:: Settings

@@ -5,8 +5,8 @@ from edutap.wallet_google.api import message
 from edutap.wallet_google.api import new
 from edutap.wallet_google.api import read
 from edutap.wallet_google.api import update
+from edutap.wallet_google.clientpool import client_pool
 from edutap.wallet_google.models.datatypes import enums
-from edutap.wallet_google.session import session_manager
 
 import httpx
 import pytest
@@ -18,7 +18,7 @@ def test_read_generic_class(mock_session):
     """Test reading a GenericClass."""
     name = "GenericClass"
     class_id = "test.class.123"
-    url = session_manager.url(name, f"/{class_id}")
+    url = client_pool.url(name, f"/{class_id}")
 
     respx.get(url).mock(
         return_value=httpx.Response(
@@ -41,7 +41,7 @@ def test_read_generic_object(mock_session):
     """Test reading a GenericObject."""
     name = "GenericObject"
     object_id = "test.object.123"
-    url = session_manager.url(name, f"/{object_id}")
+    url = client_pool.url(name, f"/{object_id}")
 
     respx.get(url).mock(
         return_value=httpx.Response(
@@ -65,7 +65,7 @@ def test_read_404_not_found(mock_session):
     """Test that read raises LookupError on 404."""
     name = "GenericClass"
     class_id = "test.class.nonexistent"
-    url = session_manager.url(name, f"/{class_id}")
+    url = client_pool.url(name, f"/{class_id}")
 
     respx.get(url).mock(
         return_value=httpx.Response(
@@ -91,7 +91,7 @@ def test_update_generic_object_partial(mock_session):
     """Test partial update of a GenericObject."""
     name = "GenericObject"
     object_id = "test.object.123"
-    url = session_manager.url(name, f"/{object_id}")
+    url = client_pool.url(name, f"/{object_id}")
 
     respx.patch(url).mock(
         return_value=httpx.Response(
@@ -123,7 +123,7 @@ def test_update_generic_object_full(mock_session):
     """Test full update of a GenericObject."""
     name = "GenericObject"
     object_id = "test.object.123"
-    url = session_manager.url(name, f"/{object_id}")
+    url = client_pool.url(name, f"/{object_id}")
 
     respx.put(url).mock(
         return_value=httpx.Response(
@@ -155,7 +155,7 @@ def test_update_404_not_found(mock_session):
     """Test that update raises LookupError on 404."""
     name = "GenericObject"
     object_id = "test.object.nonexistent"
-    url = session_manager.url(name, f"/{object_id}")
+    url = client_pool.url(name, f"/{object_id}")
 
     respx.patch(url).mock(
         return_value=httpx.Response(
@@ -183,7 +183,7 @@ def test_message_generic_object(mock_session):
     """Test sending a message to a GenericObject."""
     name = "GenericObject"
     object_id = "test.object.123"
-    url = session_manager.url(name, f"/{object_id}/addMessage")
+    url = client_pool.url(name, f"/{object_id}/addMessage")
 
     respx.post(url).mock(
         return_value=httpx.Response(
@@ -215,7 +215,7 @@ def test_listing_generic_classes(mock_session):
     """Test listing GenericClasses."""
     name = "GenericClass"
     issuer_id = "1234567890"
-    url = session_manager.url(name)
+    url = client_pool.url(name)
 
     respx.get(url).mock(
         return_value=httpx.Response(
@@ -241,7 +241,7 @@ def test_listing_generic_objects(mock_session):
     """Test listing GenericObjects for a class."""
     name = "GenericObject"
     class_id = "test.class.123"
-    url = session_manager.url(name)
+    url = client_pool.url(name)
 
     respx.get(url).mock(
         return_value=httpx.Response(
@@ -267,7 +267,7 @@ def test_listing_empty_result(mock_session):
     """Test listing with empty results."""
     name = "GenericObject"
     class_id = "test.class.empty"
-    url = session_manager.url(name)
+    url = client_pool.url(name)
 
     respx.get(url).mock(return_value=httpx.Response(200, json={"resources": []}))
 
@@ -281,7 +281,7 @@ def test_listing_with_pagination_token(mock_session):
     """Test listing returns pagination token when result_per_page is set."""
     name = "GenericObject"
     class_id = "test.class.123"
-    url = session_manager.url(name)
+    url = client_pool.url(name)
 
     # The API will add params: classId and maxResults
     respx.get(url).mock(
@@ -312,7 +312,7 @@ def test_listing_auto_pagination(mock_session):
     """Test listing automatically fetches all pages when result_per_page not set."""
     name = "GenericObject"
     class_id = "test.class.123"
-    url = session_manager.url(name)
+    url = client_pool.url(name)
 
     # First request - with pagination token
     # Second request - without pagination token (last page)

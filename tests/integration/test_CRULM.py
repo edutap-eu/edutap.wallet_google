@@ -113,12 +113,12 @@ params_for_create = [
 @pytest.mark.integration
 @pytest.mark.parametrize("type_base,class_data,object_data", params_for_create)
 def test_class_object_cru(type_base, class_data, object_data, integration_test_id):
+    from edutap.wallet_google.api import client_pool
     from edutap.wallet_google.api import create
     from edutap.wallet_google.api import listing
     from edutap.wallet_google.api import message
     from edutap.wallet_google.api import new
     from edutap.wallet_google.api import read
-    from edutap.wallet_google.api import session_manager
     from edutap.wallet_google.api import update
     from edutap.wallet_google.registry import lookup_metadata_by_name
 
@@ -130,7 +130,7 @@ def test_class_object_cru(type_base, class_data, object_data, integration_test_i
     ############################
     # test class
     class_base = f"{integration_test_id}.{class_type}.test_CRU.wallet_google.edutap"
-    class_data["id"] = f"{session_manager.settings.test_issuer_id}.{class_base}"
+    class_data["id"] = f"{client_pool.settings.test_issuer_id}.{class_base}"
 
     data = new(class_type, class_data)
 
@@ -188,9 +188,7 @@ def test_class_object_cru(type_base, class_data, object_data, integration_test_i
     # list all
     result_list = [
         x
-        for x in listing(
-            name=class_type, issuer_id=session_manager.settings.test_issuer_id
-        )
+        for x in listing(name=class_type, issuer_id=client_pool.settings.test_issuer_id)
     ]
     assert len(result_list) > 0
 
@@ -198,7 +196,7 @@ def test_class_object_cru(type_base, class_data, object_data, integration_test_i
     # test object
     object_data["classId"] = class_data["id"]
     object_base = f"{integration_test_id}.{object_type}.test_CRU.wallet_google.edutap"
-    object_data["id"] = f"{session_manager.settings.test_issuer_id}.{object_base}"
+    object_data["id"] = f"{client_pool.settings.test_issuer_id}.{object_base}"
     odata = new(object_type, object_data)
 
     # create

@@ -29,6 +29,7 @@ link = api.save_link([my_pass])  # save_link is sync, not awaited
 ```
 """
 
+from .clientpool import client_pool
 from .credentials import credentials_manager
 from .models.bases import Model
 from .models.datatypes.general import PaginatedResponse
@@ -44,7 +45,6 @@ from .registry import lookup_metadata_by_model_type
 from .registry import lookup_metadata_by_name
 from .registry import lookup_model_by_name
 from .registry import raise_when_operation_not_allowed
-from .session import session_manager
 from .settings import Settings
 from .utils import handle_response_errors
 from .utils import parse_response_json
@@ -409,10 +409,10 @@ def create(
     :return:                              The created model based on the data returned by the Restful API.
     """
     name, verified_json, model, headers = _prepare_create(data)
-    url = session_manager.url(name)
+    url = client_pool.url(name)
 
-    session = session_manager.session(credentials=credentials)
-    response = session.post(
+    client = client_pool.client(credentials=credentials)
+    response = client.post(
         url=url,
         data=verified_json.encode("utf-8"),
         headers=headers,
@@ -439,10 +439,10 @@ def read(
     :return:                 The created model based on the data returned by the Restful API
     """
     (model,) = _prepare_read(name, resource_id)
-    url = session_manager.url(name, f"/{resource_id}")
+    url = client_pool.url(name, f"/{resource_id}")
 
-    session = session_manager.session(credentials=credentials)
-    response = session.get(url=url)
+    client = client_pool.client(credentials=credentials)
+    response = client.get(url=url)
 
     handle_response_errors(response, "read", name, resource_id)
     return parse_response_json(response, model)
@@ -468,15 +468,15 @@ def update(
     """
     name, resource_id, verified_json, model = _prepare_update(data)
 
-    session = session_manager.session(credentials=credentials)
+    session = client_pool.client(credentials=credentials)
     if partial:
         response = session.patch(
-            url=session_manager.url(name, f"/{resource_id}"),
+            url=client_pool.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
         )
     else:
         response = session.put(
-            url=session_manager.url(name, f"/{resource_id}"),
+            url=client_pool.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
         )
 
@@ -503,10 +503,10 @@ def message(
     :return:                          The created Model object as returned by the Restful API
     """
     model, verified_json = _prepare_message(name, message)
-    url = session_manager.url(name, f"/{resource_id}/addMessage")
+    url = client_pool.url(name, f"/{resource_id}/addMessage")
 
-    session = session_manager.session(credentials=credentials)
-    response = session.post(url=url, data=verified_json.encode("utf-8"))
+    client = client_pool.client(credentials=credentials)
+    response = client.post(url=url, data=verified_json.encode("utf-8"))
 
     handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
@@ -561,11 +561,11 @@ def listing(
     )
     params.update(pagination_params)
 
-    url = session_manager.url(name)
+    url = client_pool.url(name)
 
-    session = session_manager.session(credentials=credentials)
+    client = client_pool.client(credentials=credentials)
     while True:
-        response = session.get(url=url, params=params)
+        response = client.get(url=url, params=params)
         handle_response_errors(response, "list", name, resource_identifier)
 
         validated_models, pagination = _process_listing_page(response.content, model)
@@ -605,10 +605,10 @@ async def acreate(
     :return:                              The created model based on the data returned by the Restful API.
     """
     name, verified_json, model, headers = _prepare_create(data)
-    url = session_manager.url(name)
+    url = client_pool.url(name)
 
-    session = session_manager.async_session(credentials=credentials)
-    response = await session.post(
+    client = client_pool.async_client(credentials=credentials)
+    response = await client.post(
         url=url,
         data=verified_json.encode("utf-8"),
         headers=headers,
@@ -635,10 +635,10 @@ async def aread(
     :return:                 The created model based on the data returned by the Restful API
     """
     (model,) = _prepare_read(name, resource_id)
-    url = session_manager.url(name, f"/{resource_id}")
+    url = client_pool.url(name, f"/{resource_id}")
 
-    session = session_manager.async_session(credentials=credentials)
-    response = await session.get(url=url)
+    client = client_pool.async_client(credentials=credentials)
+    response = await client.get(url=url)
 
     handle_response_errors(response, "read", name, resource_id)
     return parse_response_json(response, model)
@@ -664,15 +664,15 @@ async def aupdate(
     """
     name, resource_id, verified_json, model = _prepare_update(data)
 
-    session = session_manager.async_session(credentials=credentials)
+    session = client_pool.async_client(credentials=credentials)
     if partial:
         response = await session.patch(
-            url=session_manager.url(name, f"/{resource_id}"),
+            url=client_pool.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
         )
     else:
         response = await session.put(
-            url=session_manager.url(name, f"/{resource_id}"),
+            url=client_pool.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
         )
 
@@ -699,10 +699,10 @@ async def amessage(
     :return:                          The created Model object as returned by the Restful API
     """
     model, verified_json = _prepare_message(name, message)
-    url = session_manager.url(name, f"/{resource_id}/addMessage")
+    url = client_pool.url(name, f"/{resource_id}/addMessage")
 
-    session = session_manager.async_session(credentials=credentials)
-    response = await session.post(url=url, data=verified_json.encode("utf-8"))
+    client = client_pool.async_client(credentials=credentials)
+    response = await client.post(url=url, data=verified_json.encode("utf-8"))
 
     handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
@@ -757,11 +757,11 @@ async def alisting(
     )
     params.update(pagination_params)
 
-    url = session_manager.url(name)
+    url = client_pool.url(name)
 
-    session = session_manager.async_session(credentials=credentials)
+    client = client_pool.async_client(credentials=credentials)
     while True:
-        response = await session.get(url=url, params=params)
+        response = await client.get(url=url, params=params)
         handle_response_errors(response, "list", name, resource_identifier)
 
         validated_models, pagination = _process_listing_page(response.content, model)

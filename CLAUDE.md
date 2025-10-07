@@ -75,14 +75,14 @@ uv run generate-fernet-key
 - `message(name, resource_id, message)` / `amessage(...)` - Send notification to class/object holders
 - `save_link(models)` - Generate "Add to Wallet" JWT link (shared for sync/async)
 
-**Session Management** (`session.py`):
-- Single `SessionManager` class handles both sync and async operations with **persistent client pooling**
-- **Connection Pooling**: Clients are cached per credentials set and reused across API calls
-- Sync: `session_manager.session()` returns cached AssertionClient (thread-safe)
-- Async: `session_manager.async_session()` returns cached AsyncAssertionClient (task-safe)
+**HTTP Client Pooling** (`clientpool.py`):
+- Single `ClientPoolManager` class handles both sync and async operations with **persistent client pooling**
+- **Connection Pooling**: HTTP clients are cached per credentials set and reused across API calls
+- Sync: `client_pool.client()` returns cached AssertionClient (thread-safe)
+- Async: `client_pool.async_client()` returns cached AsyncAssertionClient (task-safe)
 - Clients persist for the application lifetime; call `close_all_clients()` or `aclose_all_clients()` at shutdown
 - Automatic cleanup via `atexit` handler for sync clients
-- Single `session_manager` singleton instance handles both sync and async
+- Single `client_pool` singleton instance handles both sync and async
 
 **Models** (`models/`):
 - `passes/` - Top-level wallet classes/objects (Generic, GiftCard, Loyalty, Offer, EventTicket, Transit, etc.)
@@ -127,7 +127,7 @@ Settings class: `src/edutap/wallet_google/settings.py`
 
 ### Unit Tests
 - Use `respx` for both sync and async API tests (see `test_api_sync.py` and `test_api_async.py`)
-- Mock `session_manager.session()` or `session_manager.async_session()` to avoid real credentials
+- Mock `client_pool.client()` or `client_pool.async_client()` to avoid real credentials
 - All tests require complete model data (e.g., GenericObject needs `id`, `classId`, `state`)
 - JWT tests are in `test_api_jwt.py`
 

@@ -1,7 +1,7 @@
+from ..clientpool import client_pool
 from ..models.handlers import CallbackData
 from ..plugins import get_callback_handlers
 from ..plugins import get_image_providers
-from ..session import session_manager
 from ..utils import decrypt_data
 from .validate import verified_signed_message_async
 from fastapi import APIRouter
@@ -16,11 +16,11 @@ import asyncio
 
 # define routers for all use cases: callback, images, and the combined router (at bottom of file)
 router_callback = APIRouter(
-    prefix=session_manager.settings.handler_prefix_callback,
+    prefix=client_pool.settings.handler_prefix_callback,
     tags=["edutap.wallet_google"],
 )
 router_images = APIRouter(
-    prefix=session_manager.settings.handler_prefix_images,
+    prefix=client_pool.settings.handler_prefix_images,
     tags=["edutap.wallet_google"],
 )
 
@@ -64,12 +64,12 @@ async def handle_callback(request: Request, callback_data: CallbackData):
                     ),
                     return_exceptions=True,
                 ),
-                timeout=session_manager.settings.handlers_callback_timeout,
+                timeout=client_pool.settings.handlers_callback_timeout,
             )
         )
     except asyncio.TimeoutError:
         logger.exception(
-            f"Timeout after {session_manager.settings.handlers_callback_timeout}s while handling the callbacks.",
+            f"Timeout after {client_pool.settings.handlers_callback_timeout}s while handling the callbacks.",
         )
         raise HTTPException(
             status_code=500, detail="Error while handling the callbacks (timeout)."
@@ -110,11 +110,11 @@ async def handle_image(request: Request, encrypted_image_id: str):
     try:
         result = await asyncio.wait_for(
             handler.image_by_id(image_id),
-            timeout=session_manager.settings.handlers_image_timeout,
+            timeout=client_pool.settings.handlers_image_timeout,
         )
     except asyncio.TimeoutError:
         logger.exception(
-            "Timeout Timeout after {session_manager.settings.handlers_image_timeout}s while handling the image.",
+            "Timeout Timeout after {client_pool.settings.handlers_image_timeout}s while handling the image.",
         )
         raise HTTPException(
             status_code=500, detail="Error while handling the image (timeout)."
@@ -135,7 +135,7 @@ async def handle_image(request: Request, encrypted_image_id: str):
         raise HTTPException(
             status_code=500, detail="Error while handling the image (exception)."
         )
-    cache_control = session_manager.settings.handler_image_cache_control.format(
+    cache_control = client_pool.settings.handler_image_cache_control.format(
         max_age=result.max_age
     )
     return Response(
@@ -147,7 +147,7 @@ async def handle_image(request: Request, encrypted_image_id: str):
 
 # needs to be included after the routers are defined
 router = APIRouter(
-    prefix=session_manager.settings.handler_prefix,
+    prefix=client_pool.settings.handler_prefix,
 )
 router.include_router(router_callback)
 router.include_router(router_images)
