@@ -553,16 +553,17 @@ def listing(
     )
     params.update(pagination_params)
 
+    # Determine resource identifier for error messages (constant across loop iterations)
+    if name.endswith("Object"):
+        resource_identifier = resource_id if resource_id else ""
+    else:
+        resource_identifier = issuer_id if issuer_id else ""
+
     url = session_manager.url(name)
 
     with session_manager.session(credentials=credentials) as session:
         while True:
             response = session.get(url=url, params=params)
-            # Use consistent error handling
-            if name.endswith("Object"):
-                resource_identifier = resource_id if resource_id else ""
-            else:
-                resource_identifier = issuer_id if issuer_id else ""
             handle_response_errors(response, "list", name, resource_identifier)
 
             validated_models, pagination = _process_listing_page(
@@ -754,16 +755,17 @@ async def alisting(
     )
     params.update(pagination_params)
 
+    # Determine resource identifier for error messages (constant across loop iterations)
+    if name.endswith("Object"):
+        resource_identifier = resource_id if resource_id else ""
+    else:
+        resource_identifier = issuer_id if issuer_id else ""
+
     url = session_manager_async.url(name)
 
     async with session_manager_async.async_session(credentials=credentials) as session:
         while True:
             response = await session.get(url=url, params=params)
-            # Use shared error handling for consistent exception types
-            if name.endswith("Object"):
-                resource_identifier = resource_id if resource_id else ""
-            else:
-                resource_identifier = issuer_id if issuer_id else ""
             handle_response_errors(response, "list", name, resource_identifier)
 
             validated_models, pagination = _process_listing_page(
