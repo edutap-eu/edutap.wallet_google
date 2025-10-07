@@ -11,7 +11,7 @@ import typing
 
 def new(
     name: str,
-    data: dict[str, typing.Any] = {},
+    data: dict[str, typing.Any] | None = None,
 ):
     """
     Factors a new registered Google Wallet Model by name, based on the given data.
@@ -22,5 +22,7 @@ def new(
     :raises Exception: When the data does not validate.
     :return:           The created model instance.
     """
+    if data is None:
+        data = {}
     model = lookup_model_by_name(name)
     return validate_data(model, data)
