@@ -13,11 +13,15 @@ import threading
 class HTTPRecorder(httpx.Client):
     """Record the HTTP requests and responses to a file."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, record_dir=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.settings = Settings()
+        self.record_dir = record_dir
 
     def request(self, method, url, *args, **kwargs):
+        # If no recording directory configured, just pass through
+        if self.record_dir is None:
+            return super().request(method, url, *args, **kwargs)
+
         # Record request
         body_data = kwargs.get("data") or kwargs.get("content") or kwargs.get("json")
         if body_data:
@@ -37,7 +41,7 @@ class HTTPRecorder(httpx.Client):
             "headers": dict(kwargs.get("headers", {})),
             "body": body_json,
         }
-        target_directory = self.settings.record_api_calls_dir
+        target_directory = self.record_dir
         if not target_directory.exists():
             target_directory.mkdir(parents=True)
         filename = (
@@ -98,13 +102,13 @@ class ClientPoolManager:
     def _get_credentials_key(self, credentials: dict) -> str:
         """Create a hashable key from credentials for client caching.
 
-        Uses client_email as the identifier since it uniquely identifies
-        the service account.
+        Uses client_email and private_key_id as the identifier to ensure
+        that key rotation results in a new client being cached.
 
         :param credentials: Credentials dict.
         :return:            String key for caching.
         """
-        return credentials["client_email"]
+        return f"{credentials['client_email']}:{credentials['private_key_id']}"
 
     def _build_client_config(self, credentials: dict) -> dict:
         """Build common client configuration for both sync and async clients.
@@ -149,6 +153,7 @@ class ClientPoolManager:
                 # Use HTTPRecorder if recording is enabled
                 if self.settings.record_api_calls_dir is not None:
                     config["client_cls"] = HTTPRecorder
+                    config["record_dir"] = self.settings.record_api_calls_dir
 
                 self._sync_clients[key] = AssertionClient(**config)
 

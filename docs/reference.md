@@ -25,7 +25,7 @@ Models can be the different top-level wallet-classes or -objects, but also issue
 ### API Module
 
 The `api` module provides all CRUD operations in both sync and async variants.
-All functions use context managers for proper resource cleanup and automatic session lifecycle management with httpx clients.
+All functions use persistent, pooled HTTP clients managed by the `ClientPoolManager` for optimal connection reuse.
 
 ```{eval-rst}
 .. currentmodule:: edutap.wallet_google.api
