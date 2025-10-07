@@ -33,7 +33,7 @@ async def test_imports_work():
     assert hasattr(api, "amessage")
     assert hasattr(api, "alisting")
 
-    assert hasattr(session, "session_manager_async")
+    assert hasattr(session, "session_manager")
     assert hasattr(session, "SessionManager")
 
 

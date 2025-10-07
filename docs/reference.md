@@ -526,7 +526,6 @@ All sessions should be used as context managers for proper resource cleanup.
    SessionManager
    HTTPRecorder
    session_manager
-   session_manager_async
 
 
 .. rubric:: Settings

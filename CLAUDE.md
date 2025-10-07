@@ -82,7 +82,7 @@ uv run generate-fernet-key
 - Async: `session_manager.async_session()` returns cached AsyncAssertionClient (task-safe)
 - Clients persist for the application lifetime; call `close_all_clients()` or `aclose_all_clients()` at shutdown
 - Automatic cleanup via `atexit` handler for sync clients
-- Both `session_manager` and `session_manager_async` singletons (same instance)
+- Single `session_manager` singleton instance handles both sync and async
 
 **Models** (`models/`):
 - `passes/` - Top-level wallet classes/objects (Generic, GiftCard, Loyalty, Offer, EventTicket, Transit, etc.)
@@ -126,8 +126,8 @@ Settings class: `src/edutap/wallet_google/settings.py`
 ## Testing Patterns
 
 ### Unit Tests
-- Use `respx` for both sync and async API tests (see `test_api_crud.py` and `test_api_async.py`)
-- Mock `session_manager.session()` or `session_manager_async.session()` to avoid real credentials
+- Use `respx` for both sync and async API tests (see `test_api_sync.py` and `test_api_async.py`)
+- Mock `session_manager.session()` or `session_manager.async_session()` to avoid real credentials
 - All tests require complete model data (e.g., GenericObject needs `id`, `classId`, `state`)
 - JWT tests are in `test_api_jwt.py`
 

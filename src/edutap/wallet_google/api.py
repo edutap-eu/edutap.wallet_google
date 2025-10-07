@@ -45,7 +45,6 @@ from .registry import lookup_metadata_by_name
 from .registry import lookup_model_by_name
 from .registry import raise_when_operation_not_allowed
 from .session import session_manager
-from .session import session_manager_async
 from .settings import Settings
 from .utils import handle_response_errors
 from .utils import parse_response_json
@@ -606,9 +605,9 @@ async def acreate(
     :return:                              The created model based on the data returned by the Restful API.
     """
     name, verified_json, model, headers = _prepare_create(data)
-    url = session_manager_async.url(name)
+    url = session_manager.url(name)
 
-    session = session_manager_async.async_session(credentials=credentials)
+    session = session_manager.async_session(credentials=credentials)
     response = await session.post(
         url=url,
         data=verified_json.encode("utf-8"),
@@ -636,9 +635,9 @@ async def aread(
     :return:                 The created model based on the data returned by the Restful API
     """
     (model,) = _prepare_read(name, resource_id)
-    url = session_manager_async.url(name, f"/{resource_id}")
+    url = session_manager.url(name, f"/{resource_id}")
 
-    session = session_manager_async.async_session(credentials=credentials)
+    session = session_manager.async_session(credentials=credentials)
     response = await session.get(url=url)
 
     handle_response_errors(response, "read", name, resource_id)
@@ -665,15 +664,15 @@ async def aupdate(
     """
     name, resource_id, verified_json, model = _prepare_update(data)
 
-    session = session_manager_async.async_session(credentials=credentials)
+    session = session_manager.async_session(credentials=credentials)
     if partial:
         response = await session.patch(
-            url=session_manager_async.url(name, f"/{resource_id}"),
+            url=session_manager.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
         )
     else:
         response = await session.put(
-            url=session_manager_async.url(name, f"/{resource_id}"),
+            url=session_manager.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
         )
 
@@ -700,9 +699,9 @@ async def amessage(
     :return:                          The created Model object as returned by the Restful API
     """
     model, verified_json = _prepare_message(name, message)
-    url = session_manager_async.url(name, f"/{resource_id}/addMessage")
+    url = session_manager.url(name, f"/{resource_id}/addMessage")
 
-    session = session_manager_async.async_session(credentials=credentials)
+    session = session_manager.async_session(credentials=credentials)
     response = await session.post(url=url, data=verified_json.encode("utf-8"))
 
     handle_response_errors(response, "send message to", name, resource_id)
@@ -758,9 +757,9 @@ async def alisting(
     )
     params.update(pagination_params)
 
-    url = session_manager_async.url(name)
+    url = session_manager.url(name)
 
-    session = session_manager_async.async_session(credentials=credentials)
+    session = session_manager.async_session(credentials=credentials)
     while True:
         response = await session.get(url=url, params=params)
         handle_response_errors(response, "list", name, resource_identifier)

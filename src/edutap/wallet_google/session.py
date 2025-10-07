@@ -221,10 +221,8 @@ class SessionManager:
         return f"{self.settings.api_url}/{model_metadata['url_part']}{additional_path}"
 
 
-# Singleton instances for both sync and async operations
+# Singleton instance for both sync and async operations
 session_manager = SessionManager()
-# Backward compatibility: both point to same instance
-session_manager_async = session_manager
 
 
 # Register cleanup handler to close clients on process exit

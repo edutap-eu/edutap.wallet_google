@@ -5,7 +5,7 @@ from edutap.wallet_google.exceptions import ObjectAlreadyExistsException
 from edutap.wallet_google.exceptions import QuotaExceededException
 from edutap.wallet_google.exceptions import WalletException
 from edutap.wallet_google.models.datatypes import enums
-from edutap.wallet_google.session import session_manager_async
+from edutap.wallet_google.session import session_manager
 
 import httpx
 import pytest
@@ -32,7 +32,7 @@ async def test_create_generic_class(mock_async_session):
     """Test creating a GenericClass via async API."""
     name = "GenericClass"
     class_id = "test.class.123"
-    url = session_manager_async.url(name)
+    url = session_manager.url(name)
 
     # Mock the POST request
     respx.post(url).mock(
@@ -69,7 +69,7 @@ async def test_create_generic_object(mock_async_session):
     name = "GenericObject"
     object_id = "test.object.123"
     class_id = "test.class.123"
-    url = session_manager_async.url(name)
+    url = session_manager.url(name)
 
     # Mock the POST request
     respx.post(url).mock(
@@ -104,7 +104,7 @@ async def test_create_409_already_exists(mock_async_session):
     """Test that create raises ObjectAlreadyExistsException on 409."""
     name = "GenericClass"
     class_id = "test.class.existing"
-    url = session_manager_async.url(name)
+    url = session_manager.url(name)
 
     # Mock a 409 response
     respx.post(url).mock(
@@ -134,7 +134,7 @@ async def test_read_generic_class(mock_async_session):
     """Test reading a GenericClass via async API."""
     name = "GenericClass"
     class_id = "test.class.123"
-    url = session_manager_async.url(name, f"/{class_id}")
+    url = session_manager.url(name, f"/{class_id}")
 
     # Mock the GET request
     respx.get(url).mock(
@@ -159,7 +159,7 @@ async def test_read_404_not_found(mock_async_session):
     """Test that read raises LookupError on 404."""
     name = "GenericClass"
     class_id = "test.class.nonexistent"
-    url = session_manager_async.url(name, f"/{class_id}")
+    url = session_manager.url(name, f"/{class_id}")
 
     # Mock a 404 response
     respx.get(url).mock(
@@ -187,7 +187,7 @@ async def test_read_403_quota_exceeded(mock_async_session):
     """Test that read raises QuotaExceededException when quota is exceeded."""
     name = "GenericObject"
     resource_id = "test.resource.id"
-    url = session_manager_async.url(name, f"/{resource_id}")
+    url = session_manager.url(name, f"/{resource_id}")
 
     # Mock a 403 response with quota error message
     respx.get(url).mock(
@@ -216,7 +216,7 @@ async def test_read_403_permission_denied(mock_async_session):
     """Test that read raises WalletException when access is denied."""
     name = "GenericObject"
     resource_id = "test.resource.id"
-    url = session_manager_async.url(name, f"/{resource_id}")
+    url = session_manager.url(name, f"/{resource_id}")
 
     # Mock a 403 response with permission denied message
     respx.get(url).mock(
@@ -246,7 +246,7 @@ async def test_update_generic_object_partial(mock_async_session):
     """Test partial update of a GenericObject via async API."""
     name = "GenericObject"
     object_id = "test.object.123"
-    url = session_manager_async.url(name, f"/{object_id}")
+    url = session_manager.url(name, f"/{object_id}")
 
     # Mock the PATCH request
     respx.patch(url).mock(
@@ -280,7 +280,7 @@ async def test_update_generic_object_full(mock_async_session):
     """Test full update of a GenericObject via async API."""
     name = "GenericObject"
     object_id = "test.object.123"
-    url = session_manager_async.url(name, f"/{object_id}")
+    url = session_manager.url(name, f"/{object_id}")
 
     # Mock the PUT request
     respx.put(url).mock(
@@ -314,7 +314,7 @@ async def test_message_generic_object(mock_async_session):
     """Test sending a message to a GenericObject via async API."""
     name = "GenericObject"
     object_id = "test.object.123"
-    url = session_manager_async.url(name, f"/{object_id}/addMessage")
+    url = session_manager.url(name, f"/{object_id}/addMessage")
 
     # Mock the POST request
     respx.post(url).mock(
@@ -348,7 +348,7 @@ async def test_listing_generic_classes(mock_async_session):
     """Test listing GenericClasses via async API."""
     name = "GenericClass"
     issuer_id = "1234567890"
-    url = session_manager_async.url(name)
+    url = session_manager.url(name)
 
     # Mock the GET request for listing
     respx.get(url, params={"issuerId": issuer_id}).mock(
@@ -378,7 +378,7 @@ async def test_listing_empty_result(mock_async_session):
     """Test listing with empty results via async API."""
     name = "GenericObject"
     class_id = "test.class.empty"
-    url = session_manager_async.url(name)
+    url = session_manager.url(name)
 
     # Mock empty result
     respx.get(url).mock(
