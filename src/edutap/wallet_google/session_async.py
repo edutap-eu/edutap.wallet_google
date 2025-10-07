@@ -13,12 +13,8 @@ class AsyncSessionManager:
     to ensure proper resource cleanup. All API functions in api_async.py use context managers automatically.
     """
 
-    @property
-    def settings(self) -> Settings:
-        settings = getattr(self, "_settings", None)
-        if settings is None:
-            self._settings = Settings()
-        return self._settings
+    def __init__(self):
+        self.settings = Settings()
 
     def _make_session(self, credentials: dict) -> AsyncAssertionClient:
         """Create an async OAuth2 service account client using Authlib.

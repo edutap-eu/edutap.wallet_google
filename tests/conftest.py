@@ -90,9 +90,12 @@ def integration_test_id():
 @pytest.fixture
 def mock_settings():
     from edutap.wallet_google.session import session_manager
+    from edutap.wallet_google.settings import Settings
 
+    original_settings = session_manager.settings
+    session_manager.settings = Settings()
     yield session_manager.settings
-    del session_manager._settings
+    session_manager.settings = original_settings
 
 
 @pytest.fixture

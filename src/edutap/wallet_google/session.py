@@ -12,11 +12,7 @@ class HTTPRecorder(httpx.Client):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._settings = Settings()
-
-    @property
-    def settings(self) -> Settings:
-        return self._settings
+        self.settings = Settings()
 
     def request(self, method, url, *args, **kwargs):
         # Record request
@@ -74,12 +70,8 @@ class SessionManager:
     to ensure proper resource cleanup. All API functions in api.py use context managers automatically.
     """
 
-    @property
-    def settings(self) -> Settings:
-        settings = getattr(self, "_settings", None)
-        if settings is None:
-            self._settings = Settings()
-        return self._settings
+    def __init__(self):
+        self.settings = Settings()
 
     def _make_session(self, credentials: dict) -> AssertionClient:
         """Create an OAuth2 service account client using Authlib and httpx.
