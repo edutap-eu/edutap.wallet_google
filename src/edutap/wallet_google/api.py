@@ -70,6 +70,135 @@ __all__ = [
 ]
 
 
+# Internal helper functions for shared logic
+
+
+def _prepare_create(data: Model) -> tuple[str, str, type[Model], dict]:
+    """Prepare data for create operation.
+
+    Returns: (name, verified_json, model_type, headers)
+    """
+    model_metadata = lookup_metadata_by_model_instance(data)
+    name = model_metadata["name"]
+    raise_when_operation_not_allowed(name, "create")
+    model = model_metadata["model"]
+    resource_id, verified_json = validate_data_and_convert_to_json(model, data)
+    headers = {"Content-Type": "application/json"}
+    return name, verified_json, model, headers
+
+
+def _prepare_read(name: str, resource_id: str) -> tuple[type[Model]]:
+    """Prepare data for read operation.
+
+    Returns: (model_type,)
+    """
+    raise_when_operation_not_allowed(name, "read")
+    model = lookup_model_by_name(name)
+    return (model,)
+
+
+def _prepare_update(
+    data: Model,
+) -> tuple[str, str, str, type[Model]]:
+    """Prepare data for update operation.
+
+    Returns: (name, resource_id, verified_json, model_type)
+    """
+    model_metadata = lookup_metadata_by_model_instance(data)
+    name = model_metadata["name"]
+    raise_when_operation_not_allowed(name, "update")
+    model = model_metadata["model"]
+    resource_id, verified_json = validate_data_and_convert_to_json(
+        model, data, existing=True, resource_id_key=model_metadata["resource_id"]
+    )
+    return name, resource_id, verified_json, model
+
+
+def _prepare_message(
+    name: str,
+    message: dict[str, typing.Any] | Message,
+) -> tuple[type[Model], str]:
+    """Prepare data for message operation.
+
+    Returns: (model_type, verified_json)
+    """
+    raise_when_operation_not_allowed(name, "message")
+    model = lookup_model_by_name(name)
+
+    if not isinstance(message, Message):
+        message_validated = Message.model_validate(message)
+    else:
+        message_validated = message
+
+    add_message = AddMessageRequest(message=message_validated)
+    verified_json = add_message.model_dump_json(exclude_none=True)
+    return model, verified_json
+
+
+def _prepare_listing(
+    name: str,
+    resource_id: str | None,
+    issuer_id: str | None,
+) -> tuple[type[Model], dict, bool]:
+    """Prepare data for listing operation.
+
+    Returns: (model_type, params, is_pageable)
+    """
+    raise_when_operation_not_allowed(name, "list")
+    if resource_id and issuer_id:
+        raise ValueError("resource_id and issuer_id are mutually exclusive")
+
+    model = lookup_model_by_name(name)
+
+    params = {}
+    is_pageable = False
+    if name.endswith("Object"):
+        is_pageable = True
+        if not resource_id:
+            raise ValueError("resource_id of a class must be given to list its objects")
+        params["classId"] = resource_id
+    elif name.endswith("Class"):
+        is_pageable = True
+        if not issuer_id:
+            raise ValueError("issuer_id must be given to list classes")
+        params["issuerId"] = issuer_id
+    elif name == "Issuer":
+        is_pageable = False
+
+    return model, params, is_pageable
+
+
+def _process_listing_page(
+    response_content: bytes,
+    model: type[Model],
+) -> tuple[list[Model], typing.Any]:
+    """Process a single page of listing results.
+
+    Returns: (validated_models, pagination_info)
+    """
+    data = json.loads(response_content)
+    data = PaginatedResponse.model_validate(data)
+    resources = data.resources
+    pagination = data.pagination
+
+    validated_models = []
+    if not resources:
+        logger.warning("Response does not contain 'resources'")
+        if pagination and pagination.resultsPerPage == 0:
+            logger.warning(
+                "No results per page set, this might be an error in the API response."
+            )
+    else:
+        for count, record in enumerate(resources):
+            try:
+                validated_models.append(model.model_validate(record))
+            except Exception:
+                logger.exception(f"Error validating record {count}:\n{record}")
+                raise
+
+    return validated_models, pagination
+
+
 # Synchronous API
 
 
@@ -88,13 +217,8 @@ def create(
     :raises WalletException:              When the response status code is not 200.
     :return:                              The created model based on the data returned by the Restful API.
     """
-    model_metadata = lookup_metadata_by_model_instance(data)
-    name = model_metadata["name"]
-    raise_when_operation_not_allowed(name, "create")
-    model = model_metadata["model"]
-    resource_id, verified_json = validate_data_and_convert_to_json(model, data)
+    name, verified_json, model, headers = _prepare_create(data)
     url = session_manager.url(name)
-    headers = {"Content-Type": "application/json"}
 
     with session_manager.session(credentials=credentials) as session:
         response = session.post(
@@ -123,14 +247,13 @@ def read(
     :raises WalletException  When the response status code is not 200 or 404.
     :return:                 The created model based on the data returned by the Restful API
     """
-    raise_when_operation_not_allowed(name, "read")
+    (model,) = _prepare_read(name, resource_id)
     url = session_manager.url(name, f"/{resource_id}")
 
     with session_manager.session(credentials=credentials) as session:
         response = session.get(url=url)
 
     handle_response_errors(response, "read", name, resource_id)
-    model = lookup_model_by_name(name)
     return parse_response_json(response, model)
 
 
@@ -152,13 +275,7 @@ def update(
     :raises WalletException:        When the response status code is not 200 or 404
     :return:                        The created model based on the data returned by the Restful API
     """
-    model_metadata = lookup_metadata_by_model_instance(data)
-    name = model_metadata["name"]
-    raise_when_operation_not_allowed(name, "update")
-    model = model_metadata["model"]
-    resource_id, verified_json = validate_data_and_convert_to_json(
-        model, data, existing=True, resource_id_key=model_metadata["resource_id"]
-    )
+    name, resource_id, verified_json, model = _prepare_update(data)
 
     with session_manager.session(credentials=credentials) as session:
         if partial:
@@ -194,18 +311,7 @@ def message(
     :raises WalletException:          When the response status code is not 200 or 404
     :return:                          The created Model object as returned by the Restful API
     """
-    raise_when_operation_not_allowed(name, "message")
-    model = lookup_model_by_name(name)
-
-    if not isinstance(message, Message):
-        message_validated = Message.model_validate(message)
-    else:
-        message_validated = message
-
-    add_message = AddMessageRequest(message=message_validated)
-    verified_json = add_message.model_dump_json(
-        exclude_none=True,
-    )
+    model, verified_json = _prepare_message(name, message)
     url = session_manager.url(name, f"/{resource_id}/addMessage")
 
     with session_manager.session(credentials=credentials) as session:
@@ -254,27 +360,7 @@ def listing(
                                     Restful API. When result_per_page is given, the generator will return
                                     a next_page_token after the last model-instance result.
     """
-    raise_when_operation_not_allowed(name, "list")
-    if resource_id and issuer_id:
-        raise ValueError("resource_id and issuer_id are mutually exclusive")
-
-    model = lookup_model_by_name(name)  # early, also to test if name is registered
-
-    params = {}
-    is_pageable = False
-    if name.endswith("Object"):
-        is_pageable = True
-        if not resource_id:
-            raise ValueError("resource_id of a class must be given to list its objects")
-        params["classId"] = resource_id
-
-    elif name.endswith("Class"):
-        is_pageable = True
-        if not issuer_id:
-            raise ValueError("issuer_id must be given to list classes")
-        params["issuerId"] = issuer_id
-    elif name == "Issuer":
-        is_pageable = False
+    model, params, is_pageable = _prepare_listing(name, resource_id, issuer_id)
 
     if is_pageable:
         if next_page_token:
@@ -282,7 +368,6 @@ def listing(
         if result_per_page:
             params["maxResults"] = f"{result_per_page}"
         else:
-            # default to 100, but this might need adjustment
             params["maxResults"] = "100"
 
     url = session_manager.url(name)
@@ -292,28 +377,15 @@ def listing(
             response = session.get(url=url, params=params)
             if response.status_code == 404:
                 raise LookupError(f"Error 404, {name} not found: - {response.text}")
-
             if response.status_code != 200:
                 raise Exception(f"Error: {response.status_code} - {response.text}")
 
-            data = json.loads(response.content)
-            data = PaginatedResponse.model_validate(data)
-            resources = data.resources
-            pagination = data.pagination
+            validated_models, pagination = _process_listing_page(
+                response.content, model
+            )
 
-            if not resources:
-                logger.warning("Response does not contain 'resources'")
-                if pagination and pagination.resultsPerPage == 0:
-                    logger.warning(
-                        "No results per page set, this might be an error in the API response."
-                    )
-                    break
-            for count, record in enumerate(resources):
-                try:
-                    yield model.model_validate(record)
-                except Exception:
-                    logger.exception(f"Error validating record {count}:\n{record}")
-                    raise
+            yield from validated_models
+
             if not is_pageable or not pagination:
                 break
             if result_per_page > 0:
@@ -325,7 +397,7 @@ def listing(
                     params["token"] = pagination.nextPageToken
                     continue
             break
-        return
+    return
 
 
 # Asynchronous API
@@ -346,13 +418,8 @@ async def acreate(
     :raises WalletException:              When the response status code is not 200.
     :return:                              The created model based on the data returned by the Restful API.
     """
-    model_metadata = lookup_metadata_by_model_instance(data)
-    name = model_metadata["name"]
-    raise_when_operation_not_allowed(name, "create")
-    model = model_metadata["model"]
-    resource_id, verified_json = validate_data_and_convert_to_json(model, data)
+    name, verified_json, model, headers = _prepare_create(data)
     url = session_manager_async.url(name)
-    headers = {"Content-Type": "application/json"}
 
     async with session_manager_async.session(credentials=credentials) as session:
         response = await session.post(
@@ -381,14 +448,13 @@ async def aread(
     :raises WalletException  When the response status code is not 200 or 404.
     :return:                 The created model based on the data returned by the Restful API
     """
-    raise_when_operation_not_allowed(name, "read")
+    (model,) = _prepare_read(name, resource_id)
     url = session_manager_async.url(name, f"/{resource_id}")
 
     async with session_manager_async.session(credentials=credentials) as session:
         response = await session.get(url=url)
 
     handle_response_errors(response, "read", name, resource_id)
-    model = lookup_model_by_name(name)
     return parse_response_json(response, model)
 
 
@@ -410,13 +476,7 @@ async def aupdate(
     :raises WalletException:        When the response status code is not 200 or 404
     :return:                        The created model based on the data returned by the Restful API
     """
-    model_metadata = lookup_metadata_by_model_instance(data)
-    name = model_metadata["name"]
-    raise_when_operation_not_allowed(name, "update")
-    model = model_metadata["model"]
-    resource_id, verified_json = validate_data_and_convert_to_json(
-        model, data, existing=True, resource_id_key=model_metadata["resource_id"]
-    )
+    name, resource_id, verified_json, model = _prepare_update(data)
 
     async with session_manager_async.session(credentials=credentials) as session:
         if partial:
@@ -452,18 +512,7 @@ async def amessage(
     :raises WalletException:          When the response status code is not 200 or 404
     :return:                          The created Model object as returned by the Restful API
     """
-    raise_when_operation_not_allowed(name, "message")
-    model = lookup_model_by_name(name)
-
-    if not isinstance(message, Message):
-        message_validated = Message.model_validate(message)
-    else:
-        message_validated = message
-
-    add_message = AddMessageRequest(message=message_validated)
-    verified_json = add_message.model_dump_json(
-        exclude_none=True,
-    )
+    model, verified_json = _prepare_message(name, message)
     url = session_manager_async.url(name, f"/{resource_id}/addMessage")
 
     async with session_manager_async.session(credentials=credentials) as session:
@@ -512,27 +561,7 @@ async def alisting(
                                     Restful API. When result_per_page is given, the generator will return
                                     a next_page_token after the last model-instance result.
     """
-    raise_when_operation_not_allowed(name, "list")
-    if resource_id and issuer_id:
-        raise ValueError("resource_id and issuer_id are mutually exclusive")
-
-    model = lookup_model_by_name(name)  # early, also to test if name is registered
-
-    params = {}
-    is_pageable = False
-    if name.endswith("Object"):
-        is_pageable = True
-        if not resource_id:
-            raise ValueError("resource_id of a class must be given to list its objects")
-        params["classId"] = resource_id
-
-    elif name.endswith("Class"):
-        is_pageable = True
-        if not issuer_id:
-            raise ValueError("issuer_id must be given to list classes")
-        params["issuerId"] = issuer_id
-    elif name == "Issuer":
-        is_pageable = False
+    model, params, is_pageable = _prepare_listing(name, resource_id, issuer_id)
 
     if is_pageable:
         if next_page_token:
@@ -540,7 +569,6 @@ async def alisting(
         if result_per_page:
             params["maxResults"] = f"{result_per_page}"
         else:
-            # default to 100, but this might need adjustment
             params["maxResults"] = "100"
 
     url = session_manager_async.url(name)
@@ -555,24 +583,13 @@ async def alisting(
                 resource_identifier = issuer_id if issuer_id else ""
             handle_response_errors(response, "list", name, resource_identifier)
 
-            data = json.loads(response.content)
-            data = PaginatedResponse.model_validate(data)
-            resources = data.resources
-            pagination = data.pagination
+            validated_models, pagination = _process_listing_page(
+                response.content, model
+            )
 
-            if not resources:
-                logger.warning("Response does not contain 'resources'")
-                if pagination and pagination.resultsPerPage == 0:
-                    logger.warning(
-                        "No results per page set, this might be an error in the API response."
-                    )
-                    break
-            for count, record in enumerate(resources):
-                try:
-                    yield model.model_validate(record)
-                except Exception:
-                    logger.exception(f"Error validating record {count}:\n{record}")
-                    raise
+            for validated_model in validated_models:
+                yield validated_model
+
             if not is_pageable or not pagination:
                 break
             if result_per_page > 0:
