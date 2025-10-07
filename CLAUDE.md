@@ -15,11 +15,11 @@ The package provides:
 
 ### Installation
 
-Install with optional extras based on your needs:
-- `pip install edutap.wallet_google[sync]` - Synchronous API (google-auth + requests)
-- `pip install edutap.wallet_google[async]` - Asynchronous API (authlib + httpx)
-- `pip install edutap.wallet_google[sync,async]` - Both APIs
-- `pip install edutap.wallet_google[callback]` - FastAPI callback endpoints (includes httpx for signature verification)
+Install the base package or with optional extras:
+- `pip install edutap.wallet_google` - Base package with both sync and async APIs (authlib + httpx)
+- `pip install edutap.wallet_google[callback]` - Includes FastAPI callback endpoints
+- `pip install edutap.wallet_google[test]` - Includes testing dependencies
+- `pip install edutap.wallet_google[develop]` - Includes development tools (pdbp debugger)
 
 ## Development Commands
 
