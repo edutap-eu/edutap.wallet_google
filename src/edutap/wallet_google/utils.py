@@ -138,7 +138,7 @@ def handle_response_errors(
             f"{name} {resource_id} already exists\n{response.text}"
         )
 
-    elif response.status_code != 200:
+    else:
         raise WalletException(f"Error: {response.status_code} - {response.text}")
 
 
