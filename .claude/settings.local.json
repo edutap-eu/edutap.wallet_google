@@ -30,7 +30,8 @@
       "Bash(uv pip install:*)",
       "Bash(uv run pytest:*)",
       "Bash(git mv:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "WebFetch(domain:www.python-httpx.org)"
     ],
     "deny": [],
     "ask": []

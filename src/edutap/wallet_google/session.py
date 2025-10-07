@@ -4,8 +4,10 @@ from .settings import Settings
 from authlib.integrations.httpx_client import AssertionClient
 from authlib.integrations.httpx_client import AsyncAssertionClient
 
+import atexit
 import httpx
 import json
+import threading
 
 
 class HTTPRecorder(httpx.Client):
@@ -67,16 +69,21 @@ class HTTPRecorder(httpx.Client):
 class SessionManager:
     """Manages both sync and async sessions to the Google Wallet API.
 
-    Provides session managers for both synchronous and asynchronous operations:
-    - session() returns AssertionClient (sync)
-    - async_session() returns AsyncAssertionClient (async)
+    Maintains persistent, pooled clients for efficient connection reuse:
+    - session() returns cached AssertionClient (sync) - one per credentials set
+    - async_session() returns cached AsyncAssertionClient (async) - one per credentials set
 
-    Both should be used as context managers for proper resource cleanup.
-    All API functions in api.py use context managers automatically.
+    Clients are reused across multiple API calls for optimal connection pooling.
+    All API functions in api.py reuse these persistent clients automatically.
+
+    Call close_all_clients() or aclose_all_clients() at application shutdown.
     """
 
     def __init__(self):
         self.settings = Settings()
+        self._sync_clients = {}  # {credentials_key: AssertionClient}
+        self._async_clients = {}  # {credentials_key: AsyncAssertionClient}
+        self._lock = threading.Lock()  # Thread-safe client creation
 
     def _get_credentials(self, credentials: dict | None) -> dict:
         """Get credentials from parameter or load from file.
@@ -87,6 +94,17 @@ class SessionManager:
         if not credentials:
             credentials = credentials_manager.credentials_from_file()
         return credentials
+
+    def _get_credentials_key(self, credentials: dict) -> str:
+        """Create a hashable key from credentials for client caching.
+
+        Uses client_email as the identifier since it uniquely identifies
+        the service account.
+
+        :param credentials: Credentials dict.
+        :return:            String key for caching.
+        """
+        return credentials["client_email"]
 
     def _build_session_config(self, credentials: dict) -> dict:
         """Build common session configuration for both sync and async clients.
@@ -109,44 +127,84 @@ class SessionManager:
         }
 
     def session(self, credentials: dict | None = None) -> AssertionClient:
-        """Create and return a sync authorized session.
+        """Get or create a persistent sync authorized session.
 
-        The returned AssertionClient should be used as a context manager:
-        with session_manager.session() as session:
-            response = session.get(url)
+        Returns a cached AssertionClient for the given credentials. The same client
+        instance is reused across multiple API calls for optimal connection pooling.
 
-        All API functions in api.py use context managers automatically for proper cleanup.
+        The client is thread-safe and can be shared across threads.
 
         :param credentials: Session credentials as dict. If not given, credentials
                             are read from file defined in settings.
-        :return:            The assertion client (httpx-based).
+        :return:            The assertion client (httpx-based, persistent).
         """
         credentials = self._get_credentials(credentials)
-        config = self._build_session_config(credentials)
+        key = self._get_credentials_key(credentials)
 
-        # Use HTTPRecorder if recording is enabled
-        if self.settings.record_api_calls_dir is not None:
-            config["client_cls"] = HTTPRecorder
+        # Thread-safe client creation (only create once per credentials)
+        with self._lock:
+            if key not in self._sync_clients:
+                config = self._build_session_config(credentials)
 
-        return AssertionClient(**config)
+                # Use HTTPRecorder if recording is enabled
+                if self.settings.record_api_calls_dir is not None:
+                    config["client_cls"] = HTTPRecorder
+
+                self._sync_clients[key] = AssertionClient(**config)
+
+        return self._sync_clients[key]
 
     def async_session(self, credentials: dict | None = None) -> AsyncAssertionClient:
-        """Create and return an async authorized session.
+        """Get or create a persistent async authorized session.
 
-        The returned AsyncAssertionClient should be used as an async context manager:
-        async with session_manager.async_session() as session:
-            response = await session.get(url)
+        Returns a cached AsyncAssertionClient for the given credentials. The same client
+        instance is reused across multiple API calls for optimal connection pooling.
 
-        All async API functions in api.py use context managers automatically for proper cleanup.
+        The client is task-safe and can be shared across async tasks (within same event loop).
 
         :param credentials: Session credentials as dict. If not given, credentials
                             are read from file defined in settings.
-        :return:            The async assertion client.
+        :return:            The async assertion client (persistent).
         """
         credentials = self._get_credentials(credentials)
-        config = self._build_session_config(credentials)
-        # Note: AsyncAssertionClient doesn't support client_cls parameter for custom clients
-        return AsyncAssertionClient(**config)
+        key = self._get_credentials_key(credentials)
+
+        # Thread-safe client creation (only create once per credentials)
+        with self._lock:
+            if key not in self._async_clients:
+                config = self._build_session_config(credentials)
+                # Note: AsyncAssertionClient doesn't support client_cls parameter for custom clients
+                self._async_clients[key] = AsyncAssertionClient(**config)
+
+        return self._async_clients[key]
+
+    def close_all_clients(self):
+        """Close all cached sync clients.
+
+        Call this method at application shutdown to properly close all
+        persistent clients and release resources.
+
+        This method is synchronous and closes only sync clients.
+        For async clients, use aclose_all_clients().
+        """
+        with self._lock:
+            for client in self._sync_clients.values():
+                client.close()
+            self._sync_clients.clear()
+
+    async def aclose_all_clients(self):
+        """Close all cached async clients.
+
+        Call this method at application shutdown to properly close all
+        persistent async clients and release resources.
+
+        This method must be called from an async context.
+        For sync clients, use close_all_clients().
+        """
+        # Don't need lock here since we're in async context
+        for client in list(self._async_clients.values()):
+            await client.aclose()
+        self._async_clients.clear()
 
     def url(self, name: str, additional_path: str = "") -> str:
         """
@@ -167,3 +225,12 @@ class SessionManager:
 session_manager = SessionManager()
 # Backward compatibility: both point to same instance
 session_manager_async = session_manager
+
+
+# Register cleanup handler to close clients on process exit
+def _cleanup_clients():
+    """Close all clients on process exit."""
+    session_manager.close_all_clients()
+
+
+atexit.register(_cleanup_clients)

@@ -410,12 +410,12 @@ def create(
     name, verified_json, model, headers = _prepare_create(data)
     url = session_manager.url(name)
 
-    with session_manager.session(credentials=credentials) as session:
-        response = session.post(
-            url=url,
-            data=verified_json.encode("utf-8"),
-            headers=headers,
-        )
+    session = session_manager.session(credentials=credentials)
+    response = session.post(
+        url=url,
+        data=verified_json.encode("utf-8"),
+        headers=headers,
+    )
 
     handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
     return parse_response_json(response, model)
@@ -440,8 +440,8 @@ def read(
     (model,) = _prepare_read(name, resource_id)
     url = session_manager.url(name, f"/{resource_id}")
 
-    with session_manager.session(credentials=credentials) as session:
-        response = session.get(url=url)
+    session = session_manager.session(credentials=credentials)
+    response = session.get(url=url)
 
     handle_response_errors(response, "read", name, resource_id)
     return parse_response_json(response, model)
@@ -467,17 +467,17 @@ def update(
     """
     name, resource_id, verified_json, model = _prepare_update(data)
 
-    with session_manager.session(credentials=credentials) as session:
-        if partial:
-            response = session.patch(
-                url=session_manager.url(name, f"/{resource_id}"),
-                data=verified_json.encode("utf-8"),
-            )
-        else:
-            response = session.put(
-                url=session_manager.url(name, f"/{resource_id}"),
-                data=verified_json.encode("utf-8"),
-            )
+    session = session_manager.session(credentials=credentials)
+    if partial:
+        response = session.patch(
+            url=session_manager.url(name, f"/{resource_id}"),
+            data=verified_json.encode("utf-8"),
+        )
+    else:
+        response = session.put(
+            url=session_manager.url(name, f"/{resource_id}"),
+            data=verified_json.encode("utf-8"),
+        )
 
     logger.debug(verified_json.encode("utf-8"))
     handle_response_errors(response, "update", name, resource_id)
@@ -504,8 +504,8 @@ def message(
     model, verified_json = _prepare_message(name, message)
     url = session_manager.url(name, f"/{resource_id}/addMessage")
 
-    with session_manager.session(credentials=credentials) as session:
-        response = session.post(url=url, data=verified_json.encode("utf-8"))
+    session = session_manager.session(credentials=credentials)
+    response = session.post(url=url, data=verified_json.encode("utf-8"))
 
     handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
@@ -562,28 +562,26 @@ def listing(
 
     url = session_manager.url(name)
 
-    with session_manager.session(credentials=credentials) as session:
-        while True:
-            response = session.get(url=url, params=params)
-            handle_response_errors(response, "list", name, resource_identifier)
+    session = session_manager.session(credentials=credentials)
+    while True:
+        response = session.get(url=url, params=params)
+        handle_response_errors(response, "list", name, resource_identifier)
 
-            validated_models, pagination = _process_listing_page(
-                response.content, model
-            )
+        validated_models, pagination = _process_listing_page(response.content, model)
 
-            yield from validated_models
+        yield from validated_models
 
-            if not is_pageable or not pagination:
-                break
-            if result_per_page > 0:
-                if pagination.nextPageToken:
-                    yield pagination.nextPageToken
-                    break
-            else:
-                if pagination.nextPageToken:
-                    params["token"] = pagination.nextPageToken
-                    continue
+        if not is_pageable or not pagination:
             break
+        if result_per_page > 0:
+            if pagination.nextPageToken:
+                yield pagination.nextPageToken
+                break
+        else:
+            if pagination.nextPageToken:
+                params["token"] = pagination.nextPageToken
+                continue
+        break
     return
 
 
@@ -608,12 +606,12 @@ async def acreate(
     name, verified_json, model, headers = _prepare_create(data)
     url = session_manager_async.url(name)
 
-    async with session_manager_async.async_session(credentials=credentials) as session:
-        response = await session.post(
-            url=url,
-            data=verified_json.encode("utf-8"),
-            headers=headers,
-        )
+    session = session_manager_async.async_session(credentials=credentials)
+    response = await session.post(
+        url=url,
+        data=verified_json.encode("utf-8"),
+        headers=headers,
+    )
 
     handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
     return parse_response_json(response, model)
@@ -638,8 +636,8 @@ async def aread(
     (model,) = _prepare_read(name, resource_id)
     url = session_manager_async.url(name, f"/{resource_id}")
 
-    async with session_manager_async.async_session(credentials=credentials) as session:
-        response = await session.get(url=url)
+    session = session_manager_async.async_session(credentials=credentials)
+    response = await session.get(url=url)
 
     handle_response_errors(response, "read", name, resource_id)
     return parse_response_json(response, model)
@@ -665,17 +663,17 @@ async def aupdate(
     """
     name, resource_id, verified_json, model = _prepare_update(data)
 
-    async with session_manager_async.async_session(credentials=credentials) as session:
-        if partial:
-            response = await session.patch(
-                url=session_manager_async.url(name, f"/{resource_id}"),
-                data=verified_json.encode("utf-8"),
-            )
-        else:
-            response = await session.put(
-                url=session_manager_async.url(name, f"/{resource_id}"),
-                data=verified_json.encode("utf-8"),
-            )
+    session = session_manager_async.async_session(credentials=credentials)
+    if partial:
+        response = await session.patch(
+            url=session_manager_async.url(name, f"/{resource_id}"),
+            data=verified_json.encode("utf-8"),
+        )
+    else:
+        response = await session.put(
+            url=session_manager_async.url(name, f"/{resource_id}"),
+            data=verified_json.encode("utf-8"),
+        )
 
     logger.debug(verified_json.encode("utf-8"))
     handle_response_errors(response, "update", name, resource_id)
@@ -702,8 +700,8 @@ async def amessage(
     model, verified_json = _prepare_message(name, message)
     url = session_manager_async.url(name, f"/{resource_id}/addMessage")
 
-    async with session_manager_async.async_session(credentials=credentials) as session:
-        response = await session.post(url=url, data=verified_json.encode("utf-8"))
+    session = session_manager_async.async_session(credentials=credentials)
+    response = await session.post(url=url, data=verified_json.encode("utf-8"))
 
     handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
@@ -760,27 +758,25 @@ async def alisting(
 
     url = session_manager_async.url(name)
 
-    async with session_manager_async.async_session(credentials=credentials) as session:
-        while True:
-            response = await session.get(url=url, params=params)
-            handle_response_errors(response, "list", name, resource_identifier)
+    session = session_manager_async.async_session(credentials=credentials)
+    while True:
+        response = await session.get(url=url, params=params)
+        handle_response_errors(response, "list", name, resource_identifier)
 
-            validated_models, pagination = _process_listing_page(
-                response.content, model
-            )
+        validated_models, pagination = _process_listing_page(response.content, model)
 
-            for validated_model in validated_models:
-                yield validated_model
+        for validated_model in validated_models:
+            yield validated_model
 
-            if not is_pageable or not pagination:
-                break
-            if result_per_page > 0:
-                if pagination.nextPageToken:
-                    yield pagination.nextPageToken
-                    break
-            else:
-                if pagination.nextPageToken:
-                    params["token"] = pagination.nextPageToken
-                    continue
+        if not is_pageable or not pagination:
             break
+        if result_per_page > 0:
+            if pagination.nextPageToken:
+                yield pagination.nextPageToken
+                break
+        else:
+            if pagination.nextPageToken:
+                params["token"] = pagination.nextPageToken
+                continue
+        break
     return

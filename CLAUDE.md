@@ -76,10 +76,12 @@ uv run generate-fernet-key
 - `save_link(models)` - Generate "Add to Wallet" JWT link (shared for sync/async)
 
 **Session Management** (`session.py`):
-- Single `SessionManager` class handles both sync and async operations
-- Sync: `session_manager.session()` returns AssertionClient
-- Async: `session_manager.async_session()` returns AsyncAssertionClient
-- Shared `url()` method for endpoint construction
+- Single `SessionManager` class handles both sync and async operations with **persistent client pooling**
+- **Connection Pooling**: Clients are cached per credentials set and reused across API calls
+- Sync: `session_manager.session()` returns cached AssertionClient (thread-safe)
+- Async: `session_manager.async_session()` returns cached AsyncAssertionClient (task-safe)
+- Clients persist for the application lifetime; call `close_all_clients()` or `aclose_all_clients()` at shutdown
+- Automatic cleanup via `atexit` handler for sync clients
 - Both `session_manager` and `session_manager_async` singletons (same instance)
 
 **Models** (`models/`):

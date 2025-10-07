@@ -72,10 +72,10 @@ def test_session_creation(monkeypatch):
     # With httpx/authlib AssertionClient, verify the session was created successfully
     assert session.__class__.__name__ == "AssertionClient"
 
-    # Each call to session() now returns a fresh client (no caching)
+    # Each call to session() now returns the SAME cached client (for connection pooling)
     session2 = manager.session()
     assert session2 is not None
-    assert session2 is not session  # Different instances
+    assert session2 is session  # Same instance (cached)
 
 
 def test_session_with_HTTPRecorder(tmp_path, monkeypatch):
