@@ -108,30 +108,6 @@ class SessionManager:
             "header": {"alg": "RS256", "typ": "JWT"},
         }
 
-    def _make_session(self, credentials: dict) -> AssertionClient:
-        """Create a sync OAuth2 service account client using Authlib and httpx.
-
-        :param credentials: Service account credentials as dict.
-        :return:            The assertion client.
-        """
-        config = self._build_session_config(credentials)
-
-        # Use HTTPRecorder if recording is enabled
-        if self.settings.record_api_calls_dir is not None:
-            config["client_cls"] = HTTPRecorder
-
-        return AssertionClient(**config)
-
-    def _make_async_session(self, credentials: dict) -> AsyncAssertionClient:
-        """Create an async OAuth2 service account client using Authlib and httpx.
-
-        :param credentials: Service account credentials as dict.
-        :return:            The async assertion client.
-        """
-        config = self._build_session_config(credentials)
-        # Note: AsyncAssertionClient doesn't support client_cls parameter for custom clients
-        return AsyncAssertionClient(**config)
-
     def session(self, credentials: dict | None = None) -> AssertionClient:
         """Create and return a sync authorized session.
 
@@ -146,7 +122,13 @@ class SessionManager:
         :return:            The assertion client (httpx-based).
         """
         credentials = self._get_credentials(credentials)
-        return self._make_session(credentials)
+        config = self._build_session_config(credentials)
+
+        # Use HTTPRecorder if recording is enabled
+        if self.settings.record_api_calls_dir is not None:
+            config["client_cls"] = HTTPRecorder
+
+        return AssertionClient(**config)
 
     def async_session(self, credentials: dict | None = None) -> AsyncAssertionClient:
         """Create and return an async authorized session.
@@ -162,7 +144,9 @@ class SessionManager:
         :return:            The async assertion client.
         """
         credentials = self._get_credentials(credentials)
-        return self._make_async_session(credentials)
+        config = self._build_session_config(credentials)
+        # Note: AsyncAssertionClient doesn't support client_cls parameter for custom clients
+        return AsyncAssertionClient(**config)
 
     def url(self, name: str, additional_path: str = "") -> str:
         """

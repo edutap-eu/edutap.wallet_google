@@ -43,10 +43,10 @@ def mock_session(monkeypatch):
 
     import httpx
 
-    def mock_make_session(self, credentials):
+    def mock_session(self, credentials=None):
         return httpx.Client()
 
-    monkeypatch.setattr(SessionManager, "_make_session", mock_make_session)
+    monkeypatch.setattr(SessionManager, "session", mock_session)
 
     yield
 

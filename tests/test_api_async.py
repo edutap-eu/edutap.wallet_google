@@ -17,16 +17,10 @@ def mock_async_session(monkeypatch):
     """Fixture to provide a mock async session that doesn't require real credentials."""
     from edutap.wallet_google.session import SessionManager
 
-    def mock_make_async_session(self, credentials):
-        # Return httpx.AsyncClient wrapped as AsyncAssertionClient without real auth
+    def mock_async_session(self, credentials=None):
+        # Return httpx.AsyncClient without real auth
         # We just need something that httpx/respx can mock
         return httpx.AsyncClient()
-
-    monkeypatch.setattr(SessionManager, "_make_async_session", mock_make_async_session)
-
-    # Also mock async_session() to return the client directly
-    def mock_async_session(self, credentials=None):
-        return self._make_async_session(credentials or {})
 
     monkeypatch.setattr(SessionManager, "async_session", mock_async_session)
     yield
