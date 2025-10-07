@@ -5,7 +5,7 @@ from edutap.wallet_google.exceptions import ObjectAlreadyExistsException
 from edutap.wallet_google.exceptions import QuotaExceededException
 from edutap.wallet_google.exceptions import WalletException
 from edutap.wallet_google.models.datatypes import enums
-from edutap.wallet_google.session_async import session_manager_async
+from edutap.wallet_google.session import session_manager_async
 
 import httpx
 import pytest
@@ -15,20 +15,20 @@ import respx
 @pytest.fixture
 def mock_async_session(monkeypatch):
     """Fixture to provide a mock async session that doesn't require real credentials."""
-    from edutap.wallet_google.session_async import AsyncSessionManager
+    from edutap.wallet_google.session import SessionManager
 
-    def mock_make_session(self, credentials):
+    def mock_make_async_session(self, credentials):
         # Return httpx.AsyncClient wrapped as AsyncAssertionClient without real auth
         # We just need something that httpx/respx can mock
         return httpx.AsyncClient()
 
-    monkeypatch.setattr(AsyncSessionManager, "_make_session", mock_make_session)
+    monkeypatch.setattr(SessionManager, "_make_async_session", mock_make_async_session)
 
-    # Also mock session() to return the client directly
-    def mock_session(self, credentials=None):
-        return self._make_session(credentials or {})
+    # Also mock async_session() to return the client directly
+    def mock_async_session(self, credentials=None):
+        return self._make_async_session(credentials or {})
 
-    monkeypatch.setattr(AsyncSessionManager, "session", mock_session)
+    monkeypatch.setattr(SessionManager, "async_session", mock_async_session)
     yield
 
 

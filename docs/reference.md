@@ -515,7 +515,7 @@ This are models for "Data Types" as Google names them, the sub schemas for neste
 `edutap.wallet_google.session`
 
 Sessions are managed using httpx clients with OAuth2 service account authentication.
-The SessionManager creates fresh client instances on each call, leveraging httpx's built-in connection pooling for efficiency.
+The SessionManager handles both sync and async operations with separate methods.
 All sessions should be used as context managers for proper resource cleanup.
 
 .. currentmodule:: edutap.wallet_google.session
@@ -525,18 +525,8 @@ All sessions should be used as context managers for proper resource cleanup.
 
    SessionManager
    HTTPRecorder
-
-
-.. rubric:: Async Session
-
-`edutap.wallet_google.session_async`
-
-.. currentmodule:: edutap.wallet_google.session_async
-
-.. autosummary::
-   :toctree: _autosummary
-
-   AsyncSessionManager
+   session_manager
+   session_manager_async
 
 
 .. rubric:: Settings

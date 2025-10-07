@@ -75,10 +75,12 @@ uv run generate-fernet-key
 - `message(name, resource_id, message)` / `amessage(...)` - Send notification to class/object holders
 - `save_link(models)` - Generate "Add to Wallet" JWT link (shared for sync/async)
 
-**Session Management**:
-- `session.py` - Synchronous session using `httpx` + `authlib` with AssertionClient
-- `session_async.py` - Async session using `httpx` + `authlib` with AsyncAssertionClient
-- Both provide `session_manager.url(name, path)` for endpoint construction
+**Session Management** (`session.py`):
+- Single `SessionManager` class handles both sync and async operations
+- Sync: `session_manager.session()` returns AssertionClient
+- Async: `session_manager.async_session()` returns AsyncAssertionClient
+- Shared `url()` method for endpoint construction
+- Both `session_manager` and `session_manager_async` singletons (same instance)
 
 **Models** (`models/`):
 - `passes/` - Top-level wallet classes/objects (Generic, GiftCard, Loyalty, Offer, EventTicket, Transit, etc.)

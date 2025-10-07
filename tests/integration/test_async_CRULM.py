@@ -121,7 +121,7 @@ async def test_async_class_object_cru(
 ):
     from edutap.wallet_google import api
     from edutap.wallet_google.registry import lookup_metadata_by_name
-    from edutap.wallet_google.session_async import session_manager_async
+    from edutap.wallet_google.session import session_manager_async
 
     class_type = f"{type_base}Class"
     object_type = f"{type_base}Object"

@@ -38,7 +38,7 @@ from .registry import lookup_metadata_by_model_instance
 from .registry import lookup_model_by_name
 from .registry import raise_when_operation_not_allowed
 from .session import session_manager
-from .session_async import session_manager_async
+from .session import session_manager_async
 from .utils import handle_response_errors
 from .utils import parse_response_json
 from .utils import save_link  # noqa: F401
@@ -421,7 +421,7 @@ async def acreate(
     name, verified_json, model, headers = _prepare_create(data)
     url = session_manager_async.url(name)
 
-    async with session_manager_async.session(credentials=credentials) as session:
+    async with session_manager_async.async_session(credentials=credentials) as session:
         response = await session.post(
             url=url,
             data=verified_json.encode("utf-8"),
@@ -451,7 +451,7 @@ async def aread(
     (model,) = _prepare_read(name, resource_id)
     url = session_manager_async.url(name, f"/{resource_id}")
 
-    async with session_manager_async.session(credentials=credentials) as session:
+    async with session_manager_async.async_session(credentials=credentials) as session:
         response = await session.get(url=url)
 
     handle_response_errors(response, "read", name, resource_id)
@@ -478,7 +478,7 @@ async def aupdate(
     """
     name, resource_id, verified_json, model = _prepare_update(data)
 
-    async with session_manager_async.session(credentials=credentials) as session:
+    async with session_manager_async.async_session(credentials=credentials) as session:
         if partial:
             response = await session.patch(
                 url=session_manager_async.url(name, f"/{resource_id}"),
@@ -515,7 +515,7 @@ async def amessage(
     model, verified_json = _prepare_message(name, message)
     url = session_manager_async.url(name, f"/{resource_id}/addMessage")
 
-    async with session_manager_async.session(credentials=credentials) as session:
+    async with session_manager_async.async_session(credentials=credentials) as session:
         response = await session.post(url=url, data=verified_json.encode("utf-8"))
 
     handle_response_errors(response, "send message to", name, resource_id)
@@ -573,7 +573,7 @@ async def alisting(
 
     url = session_manager_async.url(name)
 
-    async with session_manager_async.session(credentials=credentials) as session:
+    async with session_manager_async.async_session(credentials=credentials) as session:
         while True:
             response = await session.get(url=url, params=params)
             # Use shared error handling for consistent exception types

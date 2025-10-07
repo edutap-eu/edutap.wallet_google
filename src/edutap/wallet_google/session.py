@@ -2,6 +2,7 @@ from .credentials import credentials_manager
 from .registry import lookup_metadata_by_name
 from .settings import Settings
 from authlib.integrations.httpx_client import AssertionClient
+from authlib.integrations.httpx_client import AsyncAssertionClient
 
 import httpx
 import json
@@ -64,48 +65,75 @@ class HTTPRecorder(httpx.Client):
 
 
 class SessionManager:
-    """Manages sessions to the Google Wallet API and provides helper methods.
+    """Manages both sync and async sessions to the Google Wallet API.
 
-    The session() method returns an AssertionClient that should be used as a context manager
-    to ensure proper resource cleanup. All API functions in api.py use context managers automatically.
+    Provides session managers for both synchronous and asynchronous operations:
+    - session() returns AssertionClient (sync)
+    - async_session() returns AsyncAssertionClient (async)
+
+    Both should be used as context managers for proper resource cleanup.
+    All API functions in api.py use context managers automatically.
     """
 
     def __init__(self):
         self.settings = Settings()
 
+    def _get_credentials(self, credentials: dict | None) -> dict:
+        """Get credentials from parameter or load from file.
+
+        :param credentials: Optional credentials dict.
+        :return:            Credentials dict.
+        """
+        if not credentials:
+            credentials = credentials_manager.credentials_from_file()
+        return credentials
+
+    def _build_session_config(self, credentials: dict) -> dict:
+        """Build common session configuration for both sync and async clients.
+
+        :param credentials: Service account credentials dict.
+        :return:            Configuration dict for AssertionClient/AsyncAssertionClient.
+        """
+        token_endpoint = "https://oauth2.googleapis.com/token"
+        return {
+            "token_endpoint": token_endpoint,
+            "issuer": credentials["client_email"],
+            "subject": credentials["client_email"],
+            "audience": token_endpoint,
+            "claims": {
+                "scope": " ".join(self.settings.credentials_scopes),
+            },
+            "key": credentials["private_key"],
+            "key_id": credentials["private_key_id"],
+            "header": {"alg": "RS256", "typ": "JWT"},
+        }
+
     def _make_session(self, credentials: dict) -> AssertionClient:
-        """Create an OAuth2 service account client using Authlib and httpx.
+        """Create a sync OAuth2 service account client using Authlib and httpx.
 
         :param credentials: Service account credentials as dict.
         :return:            The assertion client.
         """
-        token_endpoint = "https://oauth2.googleapis.com/token"
+        config = self._build_session_config(credentials)
 
         # Use HTTPRecorder if recording is enabled
         if self.settings.record_api_calls_dir is not None:
-            client_class = HTTPRecorder
-        else:
-            client_class = None
+            config["client_cls"] = HTTPRecorder
 
-        client = AssertionClient(
-            token_endpoint=token_endpoint,
-            issuer=credentials["client_email"],
-            subject=credentials["client_email"],
-            audience=token_endpoint,
-            claims={
-                "scope": " ".join(self.settings.credentials_scopes),
-            },
-            key=credentials["private_key"],
-            key_id=credentials["private_key_id"],
-            header={"alg": "RS256", "typ": "JWT"},
-            client_cls=client_class,
-        )
+        return AssertionClient(**config)
 
-        return client
+    def _make_async_session(self, credentials: dict) -> AsyncAssertionClient:
+        """Create an async OAuth2 service account client using Authlib and httpx.
+
+        :param credentials: Service account credentials as dict.
+        :return:            The async assertion client.
+        """
+        config = self._build_session_config(credentials)
+        # Note: AsyncAssertionClient doesn't support client_cls parameter for custom clients
+        return AsyncAssertionClient(**config)
 
     def session(self, credentials: dict | None = None) -> AssertionClient:
-        """
-        Create and return an authorized session.
+        """Create and return a sync authorized session.
 
         The returned AssertionClient should be used as a context manager:
         with session_manager.session() as session:
@@ -117,10 +145,24 @@ class SessionManager:
                             are read from file defined in settings.
         :return:            The assertion client (httpx-based).
         """
-        if not credentials:
-            credentials = credentials_manager.credentials_from_file()
-
+        credentials = self._get_credentials(credentials)
         return self._make_session(credentials)
+
+    def async_session(self, credentials: dict | None = None) -> AsyncAssertionClient:
+        """Create and return an async authorized session.
+
+        The returned AsyncAssertionClient should be used as an async context manager:
+        async with session_manager.async_session() as session:
+            response = await session.get(url)
+
+        All async API functions in api.py use context managers automatically for proper cleanup.
+
+        :param credentials: Session credentials as dict. If not given, credentials
+                            are read from file defined in settings.
+        :return:            The async assertion client.
+        """
+        credentials = self._get_credentials(credentials)
+        return self._make_async_session(credentials)
 
     def url(self, name: str, additional_path: str = "") -> str:
         """
@@ -137,4 +179,7 @@ class SessionManager:
         return f"{self.settings.api_url}/{model_metadata['url_part']}{additional_path}"
 
 
+# Singleton instances for both sync and async operations
 session_manager = SessionManager()
+# Backward compatibility: both point to same instance
+session_manager_async = session_manager
