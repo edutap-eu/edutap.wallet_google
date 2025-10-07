@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The package provides:
 - CRUD API for Google Wallet classes (templates) and objects (passes)
-- Both synchronous (`api.py`) and asynchronous (`api_async.py`) API implementations
+- Single `api.py` module with both sync and async functions (async prefixed with `a`)
 - Pydantic models matching Google Wallet's data structures
 - FastAPI endpoints for callbacks and image serving
 - Plugin system for business logic integration
@@ -66,18 +66,18 @@ uv run generate-fernet-key
 
 ### Core Components
 
-**API Layer** (`api.py` and `api_async.py`):
-- `new(name, data)` - Create model instances from dict/Model
-- `create(data)` - POST new class/object to Google API
-- `read(name, resource_id)` - GET class/object by ID
-- `update(data, partial=True)` - PATCH/PUT existing class/object
-- `listing(name, issuer_id=..., resource_id=...)` - List classes by issuer or objects by class
-- `message(name, resource_id, message)` - Send notification to class/object holders
-- `save_link(models)` - Generate "Add to Wallet" JWT link
+**API Layer** (`api.py`):
+- `new(name, data)` - Create model instances from dict/Model (shared for sync/async)
+- `create(data)` / `acreate(data)` - POST new class/object to Google API
+- `read(name, resource_id)` / `aread(name, resource_id)` - GET class/object by ID
+- `update(data, partial=True)` / `aupdate(data, partial=True)` - PATCH/PUT existing class/object
+- `listing(name, issuer_id=..., resource_id=...)` / `alisting(...)` - List classes by issuer or objects by class
+- `message(name, resource_id, message)` / `amessage(...)` - Send notification to class/object holders
+- `save_link(models)` - Generate "Add to Wallet" JWT link (shared for sync/async)
 
 **Session Management**:
-- `session.py` - Synchronous session using `requests` + `google-auth`
-- `session_async.py` - Async session using `httpx` + `authlib`
+- `session.py` - Synchronous session using `httpx` + `authlib` with AssertionClient
+- `session_async.py` - Async session using `httpx` + `authlib` with AsyncAssertionClient
 - Both provide `session_manager.url(name, path)` for endpoint construction
 
 **Models** (`models/`):
@@ -98,6 +98,8 @@ uv run generate-fernet-key
 - `handle_response_errors()` - Unified HTTP error handling
 - `parse_response_json()` - Deserialize and validate API responses
 - `encrypt_data()` / `decrypt_data()` - Fernet symmetric encryption
+- `save_link(models)` - Generate "Add to Wallet" JWT link
+- JWT helper functions: `_create_payload()`, `_create_claims()`, `_convert_str_or_datetime_to_str()`
 
 **Handlers** (`handlers/`):
 - `validate.py` - Google Wallet callback signature verification (sync + async)
@@ -120,10 +122,10 @@ Settings class: `src/edutap/wallet_google/settings.py`
 ## Testing Patterns
 
 ### Unit Tests
-- Use `requests-mock` for sync API tests (see `test_api_crud.py`)
-- Use `respx` for async API tests (see `test_api_async_crud.py`)
+- Use `respx` for both sync and async API tests (see `test_api_crud.py` and `test_api_async.py`)
 - Mock `session_manager.session()` or `session_manager_async.session()` to avoid real credentials
 - All tests require complete model data (e.g., GenericObject needs `id`, `classId`, `state`)
+- JWT tests are in `test_api_jwt.py`
 
 ### Integration Tests
 - Marked with `@pytest.mark.integration`
@@ -165,11 +167,11 @@ for obj in listing(name="GenericObject", resource_id="issuer.class.id"):
 - `LookupError` - 404 not found
 
 ### Async vs Sync
-Both APIs have identical signatures except:
-- Sync: `from edutap.wallet_google.api import create, read, ...`
-- Async: `from edutap.wallet_google import api_async` then `await api_async.create(...)`
-- Sync uses `requests` + `google.auth`
-- Async uses `httpx` + `authlib`
+Both sync and async functions are in the same `api` module with consistent naming:
+- Sync: `from edutap.wallet_google import api` then `api.create(...)`, `api.read(...)`, etc.
+- Async: `from edutap.wallet_google import api` then `await api.acreate(...)`, `await api.aread(...)`, etc.
+- Shared: `api.new()` and `api.save_link()` work for both sync and async (no await needed)
+- Both implementations use `httpx` + `authlib` for consistency
 
 ## Important Constraints
 

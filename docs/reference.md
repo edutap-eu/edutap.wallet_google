@@ -2,21 +2,30 @@
 
 ## API Functions
 
-Most tasks are done by import and using the `api` module for synchronous operations or `api_async` for asynchronous operations:
+All API functions are in the `api` module, which provides both synchronous and asynchronous operations:
 
 ```python
 from edutap.wallet_google import api
-# or for async:
-from edutap.wallet_google import api_async
+
+# Synchronous usage
+result = api.create(my_pass)
+
+# Asynchronous usage
+result = await api.acreate(my_pass)
 ```
+
+**Naming Convention:**
+- **Sync functions**: `create()`, `read()`, `update()`, `message()`, `listing()`
+- **Async functions**: `acreate()`, `aread()`, `aupdate()`, `amessage()`, `alisting()`
+- **Shared functions**: `new()` and `save_link()` work for both sync and async
 
 To tell the API functions what kind of item to deal with, the first parameter is the registered name of the model (except for `save_link`).
 Models can be the different top-level wallet-classes or -objects, but also issuers, permissions and such (see section models below).
 
-### Synchronous API
+### API Module
 
-The synchronous API uses context managers for proper resource cleanup.
-All API functions (create, read, update, message, listing) automatically handle session lifecycle using httpx clients with connection pooling.
+The `api` module provides all CRUD operations in both sync and async variants.
+All functions use context managers for proper resource cleanup and automatic session lifecycle management with httpx clients.
 
 ```{eval-rst}
 .. currentmodule:: edutap.wallet_google.api
@@ -26,35 +35,24 @@ All API functions (create, read, update, message, listing) automatically handle 
    :toctree: _autosummary
 
    new
-   create
-   read
-   update
-   message
-   listing
    save_link
-```
-
-### Asynchronous API
-
-The async API provides the same functionality as the synchronous API but uses `async`/`await` for non-blocking I/O operations.
-Use this when working with async frameworks like FastAPI or when making concurrent API calls.
-
-```{eval-rst}
-.. currentmodule:: edutap.wallet_google.api_async
-
-
-.. autosummary::
-   :toctree: _autosummary
-
-   new
    create
    read
    update
    message
    listing
+   acreate
+   aread
+   aupdate
+   amessage
+   alisting
 ```
 
-**Note:** `save_link` is available in both `api` and `api_async` modules but executes synchronously and should not be awaited (it uses synchronous JWT signing).
+**Usage Notes:**
+- Sync functions use regular function calls: `result = api.create(data)`
+- Async functions use `async`/`await`: `result = await api.acreate(data)`
+- `new()` is synchronous for both - it just creates model instances
+- `save_link()` is synchronous for both - it uses synchronous JWT signing and should not be awaited
 
 ## Models
 

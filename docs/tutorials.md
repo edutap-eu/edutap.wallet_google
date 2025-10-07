@@ -4,8 +4,8 @@ We prepared several tutorials to get you started with the Google Wallet API.
 
 Before starting, follow the [installation and configuration instructions](installation.md).
 
-**Note:** All examples use the synchronous API (`api`).
-For async operations with FastAPI or other async frameworks, use `api_async` with the same function signatures but with `async`/`await`.
+**Note:** All examples use the synchronous API (`api.create`, `api.read`, etc.).
+For async operations with FastAPI or other async frameworks, use the async versions with `a` prefix (`api.acreate`, `api.aread`, etc.) with `async`/`await`.
 
 ## Create a pass and load it into the Google Wallet
 
@@ -275,25 +275,25 @@ while True:
 
 ## Using the Async API
 
-All the examples above can be used with the async API by replacing `api` with `api_async` and adding `async`/`await`:
+All the examples above can be used with the async API by using the `a`-prefixed functions (`acreate`, `aread`, `aupdate`, etc.) with `async`/`await`:
 
 ```python
-from edutap.wallet_google import api_async
+from edutap.wallet_google import api
 import asyncio
 
 async def create_pass():
     """Example async function to create a pass."""
     class_id = f"{os.environ.get('EDUTAP_WALLET_GOOGLE_ISSUER_ID')}.async_example"
 
-    # Create class
-    new_class = await api_async.create(
-        api_async.new("GenericClass", {"id": class_id})
+    # Create class (new() is still sync)
+    new_class = await api.acreate(
+        api.new("GenericClass", {"id": class_id})
     )
 
     # Create object
     object_id = f"{class_id}.object01"
-    new_object = await api_async.create(
-        api_async.new("GenericObject", {
+    new_object = await api.acreate(
+        api.new("GenericObject", {
             "id": object_id,
             "classId": class_id,
             "state": "ACTIVE"
@@ -301,11 +301,11 @@ async def create_pass():
     )
 
     # Read
-    fetched = await api_async.read("GenericObject", object_id)
+    fetched = await api.aread("GenericObject", object_id)
 
     # Update
-    updated = await api_async.update(
-        api_async.new("GenericObject", {
+    updated = await api.aupdate(
+        api.new("GenericObject", {
             "id": object_id,
             "state": "EXPIRED"
         }),
@@ -313,23 +313,26 @@ async def create_pass():
     )
 
     # Send message
-    result = await api_async.message(
+    result = await api.amessage(
         "GenericObject",
         object_id,
         {"header": "Test", "body": "Async message"}
     )
 
     # List (using async generator)
-    async for obj in api_async.listing("GenericObject", resource_id=class_id):
+    async for obj in api.alisting("GenericObject", resource_id=class_id):
         print(f"Found: {obj.id}")
 
 # Run the async function
 asyncio.run(create_pass())
 ```
 
+**Async Function Naming:**
+- Sync: `api.create()`, `api.read()`, `api.update()`, `api.message()`, `api.listing()`
+- Async: `api.acreate()`, `api.aread()`, `api.aupdate()`, `api.amessage()`, `api.alisting()`
+- Shared: `api.new()` and `api.save_link()` are synchronous and work for both
+
 **Use async API when:**
 - Working with async frameworks (FastAPI, aiohttp, etc.)
 - Making multiple concurrent API calls
 - Need non-blocking I/O operations
-
-**Note:** `save_link()` is available in both `api` and `api_async` modules but executes synchronously and should not be awaited (it uses synchronous JWT signing).
