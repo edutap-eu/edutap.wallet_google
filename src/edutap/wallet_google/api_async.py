@@ -9,7 +9,6 @@ For synchronous code, use the regular `api` module instead.
 Note: save_link() is a permanent part of both sync and async APIs.
 """
 
-from .exceptions import ObjectAlreadyExistsException
 from .factory import new  # noqa: F401
 from .jwt_utils import save_link  # noqa: F401
 from .models.bases import Model
@@ -63,13 +62,7 @@ async def create(
             headers=headers,
         )
 
-    handle_response_errors(
-        response, "create", name, getattr(data, "id", "No ID"), allow_409=True
-    )
-    if response.status_code == 409:
-        raise ObjectAlreadyExistsException(
-            f"{name} {getattr(data, 'id', 'No ID')} already exists\n{response.text}"
-        )
+    handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
     return parse_response_json(response, model)
 
 

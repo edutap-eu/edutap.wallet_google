@@ -1,4 +1,3 @@
-from .exceptions import ObjectAlreadyExistsException
 from .factory import new  # noqa: F401
 from .jwt_utils import _convert_str_or_datetime_to_str  # noqa: F401
 from .jwt_utils import _create_claims  # noqa: F401
@@ -55,13 +54,7 @@ def create(
             headers=headers,
         )
 
-    handle_response_errors(
-        response, "create", name, getattr(data, "id", "No ID"), allow_409=True
-    )
-    if response.status_code == 409:
-        raise ObjectAlreadyExistsException(
-            f"{name} {getattr(data, 'id', 'No ID')} already exists\n{response.text}"
-        )
+    handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
     return parse_response_json(response, model)
 
 
