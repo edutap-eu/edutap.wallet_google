@@ -21,16 +21,17 @@ jobs:
           enable-cache: true
           cache-dependency-glob: |
             pyproject.toml
-      - name: Install dependencies
-        run: uv tool install --with "tox-uv,tox-gh-actions" tox
       - name: Prepare test environment
         run: |
           cp tests/data/credentials_fake.json credentials.json
           echo "EDUTAP_WALLET_GOOGLE_ISSUER_ID=1234567890123456789" > .env
 
+    #   - name: Install dependencies
+    #     run: uv tool install --with "tox-uv,tox-gh-actions" tox
     #   - name: Test with tox
     #     run: tox
-
+      - name: Install dependencies
+        run: uv pip install -e .[dev,test,typecheck]
       - name: Run Model Check Tests
         run: |
           pytest tests/test_check_models.py
