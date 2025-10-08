@@ -39,15 +39,9 @@ from cryptography.hazmat.primitives.serialization import load_der_public_key
 from typing import cast
 
 import base64
+import httpx
 import logging
-import requests
 import time
-
-
-try:
-    import httpx
-except ImportError:
-    httpx = None  # type: ignore
 
 
 logger = logging.getLogger(__name__)
@@ -123,9 +117,10 @@ def google_root_signing_public_keys(google_environment: str) -> RootSigningPubli
     logger.info(
         f"Fetching Google root signing keys from {GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[google_environment]}"
     )
-    resp = requests.get(GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[google_environment])
-    resp.raise_for_status()
-    all_keys = RootSigningPublicKeys.model_validate_json(resp.text)
+    with httpx.Client() as client:
+        resp = client.get(GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[google_environment])
+        resp.raise_for_status()
+        all_keys = RootSigningPublicKeys.model_validate_json(resp.text)
 
     # Filter out expired keys
     current_time_ms = time.time() * 1000
@@ -373,11 +368,6 @@ async def google_root_signing_public_keys_async(
 
     Async version using httpx.AsyncClient.
     """
-    if httpx is None:
-        raise ImportError(
-            "httpx is required for async operations. Install with: "
-            "pip install 'edutap.wallet-google[async]'"
-        )
     current_time = time.time()
     cached = GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(google_environment)
 
