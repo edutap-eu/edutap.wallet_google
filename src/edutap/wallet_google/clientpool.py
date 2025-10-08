@@ -84,14 +84,15 @@ class ClientPoolManager:
         """
         credentials = self._get_credentials(credentials)
         key = self._get_credentials_key(credentials)
+        if client := self._sync_clients.get(key, None):
+            return client
 
         # Thread-safe client creation (only create once per credentials)
         with self._lock:
-            if key not in self._sync_clients:
-                config = self._build_client_config(credentials)
-                self._sync_clients[key] = AssertionClient(**config)
-
-        return self._sync_clients[key]
+            config = self._build_client_config(credentials)
+            client = AssertionClient(**config)
+            self._sync_clients[key] = client
+        return client
 
     def async_client(self, credentials: dict | None = None) -> AsyncAssertionClient:
         """Get or create a persistent async HTTP client from the pool.
@@ -107,15 +108,16 @@ class ClientPoolManager:
         """
         credentials = self._get_credentials(credentials)
         key = self._get_credentials_key(credentials)
+        if client := self._async_clients.get(key, None):
+            return client
 
         # Thread-safe client creation (only create once per credentials)
         with self._lock:
-            if key not in self._async_clients:
-                config = self._build_client_config(credentials)
-                # Note: AsyncAssertionClient doesn't support client_cls parameter for custom clients
-                self._async_clients[key] = AsyncAssertionClient(**config)
-
-        return self._async_clients[key]
+            config = self._build_client_config(credentials)
+            # Note: AsyncAssertionClient doesn't support client_cls parameter for custom clients
+            client = AsyncAssertionClient(**config)
+            self._async_clients[key] = client
+        return client
 
     def close_all_clients(self):
         """Close all cached sync clients.
