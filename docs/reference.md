@@ -631,8 +631,8 @@ Clients are cached per credentials set and reused across multiple API calls for 
 
    router_callback
    handle_callback
-   router_image
-   get_image
+   router_images
+   handle_image
 
 ```
 

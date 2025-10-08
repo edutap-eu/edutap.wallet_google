@@ -114,7 +114,7 @@ async def handle_image(request: Request, encrypted_image_id: str):
         )
     except asyncio.TimeoutError:
         logger.exception(
-            "Timeout Timeout after {client_pool.settings.handlers_image_timeout}s while handling the image.",
+            f"Timeout after {client_pool.settings.handlers_image_timeout}s while handling the image.",
         )
         raise HTTPException(
             status_code=500, detail="Error while handling the image (timeout)."

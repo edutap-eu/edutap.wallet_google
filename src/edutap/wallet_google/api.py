@@ -45,7 +45,6 @@ from .registry import lookup_metadata_by_model_type
 from .registry import lookup_metadata_by_name
 from .registry import lookup_model_by_name
 from .registry import raise_when_operation_not_allowed
-from .settings import Settings
 from .utils import handle_response_errors
 from .utils import parse_response_json
 from .utils import validate_data
@@ -194,7 +193,7 @@ def save_link(
     if credentials is None:
         credentials = credentials_manager.credentials_from_file()
 
-    settings = Settings()
+    settings = client_pool.settings
     claims = _create_claims(
         credentials["client_email"],
         origins,
