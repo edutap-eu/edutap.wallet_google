@@ -248,3 +248,6 @@ async def test_async_class_object_cru(
         )
         assert result_message is not None
         assert result_message.id == object_data["id"]
+
+    # Clean up async clients to avoid event loop closed errors
+    await client_pool.aclose_all_clients()
