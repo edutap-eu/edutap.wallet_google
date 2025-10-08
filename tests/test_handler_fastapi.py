@@ -28,6 +28,7 @@ real_callback_data = {
     "signedMessage": '{"classId":"3388000000022141777.lib.edutap.eu","objectId":"3388000000022141777.6b4cbd15-0de7-4fe8-95f6-995a51b4595e.object","eventType":"del","expTimeMillis":1759331348143,"count":1,"nonce":"1a9e3df0-ec10-4a17-8b39-89d2d7f48e3b"}',
 }
 
+
 @freeze_time("2025-10-01 10:01:00")  # Just before the message expires
 def test_callback_disabled_signature_check_OK(mock_settings):
     from edutap.wallet_google.models.handlers import CallbackData

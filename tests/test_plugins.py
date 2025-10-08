@@ -107,9 +107,9 @@ def test_add_plugin():
     except NotImplementedError:
         count_image_providers = 0
     try:
-        count_callback_handlers = len(get_callback_handlers())  
+        count_callback_handlers = len(get_callback_handlers())
     except NotImplementedError:
-        count_callback_handlers = 0 
+        count_callback_handlers = 0
 
     add_plugin("ImageProvider", DummyImageProvider)
     add_plugin("CallbackHandler", DummyCallbackHandler)
