@@ -122,6 +122,37 @@ There are two routers available for callback and images, plus one combined provi
 
   Defaults to `testing`.
 
+- `EDUTAP_WALLET_GOOGLE_HANDLER_CALLBACK_VERIFY_SIGNATURE`
+
+  Controls whether callback signatures from Google Wallet are cryptographically verified.
+  When enabled (`"1"`), the handler performs two-tier signature verification:
+  1. Verifies intermediate signing key against Google's root signing keys
+  2. Verifies message signature using the intermediate key
+
+  **Security Warning:** Only disable this in development/testing environments.
+  Disabling signature verification in production exposes your application to forged callbacks.
+
+  Set to `"1"` to enable (recommended), `"0"` to disable.
+
+  Defaults to `"1"` (enabled).
+
+- `EDUTAP_WALLET_GOOGLE_HANDLER_CALLBACK_VERIFY_EXPIRY`
+
+  Controls whether expiration timestamps are validated for:
+  - Google Wallet callback messages (`expTimeMillis`)
+  - Intermediate signing keys (`keyExpiration`)
+  - Root signing keys (filtered by expiration)
+
+  This setting is primarily useful for testing with expired test data or replaying
+  old callbacks during development.
+
+  **Testing Note:** When set to `"0"`, allows using expired test signatures without
+  constantly regenerating them. Useful when working with frozen time in tests.
+
+  Set to `"1"` to enable expiration checks (recommended), `"0"` to disable.
+
+  Defaults to `"1"` (enabled).
+
 - `EDUTAP_WALLET_GOOGLE_HANDLER_PREFIX_IMAGES`
 
   Images handler prefix.

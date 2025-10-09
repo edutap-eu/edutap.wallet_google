@@ -15,44 +15,59 @@ The package provides:
 
 ### Installation
 
-Install the base package or with optional extras:
-- `pip install edutap.wallet_google` - Base package with both sync and async APIs (authlib + httpx)
-- `pip install edutap.wallet_google[callback]` - Includes FastAPI callback endpoints
-- `pip install edutap.wallet_google[test]` - Includes testing dependencies
-- `pip install edutap.wallet_google[develop]` - Includes development tools (pdbp debugger)
+Install with uv (preferred):
+- `uv pip install edutap.wallet_google` - Base package with both sync and async APIs (authlib + httpx)
+- `uv pip install edutap.wallet_google[callback]` - Adds FastAPI for callback endpoints
+- `uv pip install edutap.wallet_google[test]` - Adds pytest, respx, and testing tools
+- `uv pip install edutap.wallet_google[typecheck]` - Adds mypy and type stubs
+- `uv pip install edutap.wallet_google[develop]` - Adds pdbp debugger for development
 
 ## Development Commands
 
 ### Setup and Testing
 
 ```bash
-# Run all tests
+# Run all tests via tox
 uvx tox -e py313
 
 # Run specific test file
-uvx tox -e py313 -- tests/test_api_crud.py -v
+uvx tox -e py313 -- tests/test_api_sync.py -v
 
 # Run single test
-uvx tox -e py313 -- tests/test_api_crud.py::test_read_generic_class -v
+uvx tox -e py313 -- tests/test_api_sync.py::test_read_generic_class -v
 
 # Run with coverage
-uvx tox -e py313 -- --cov=src/edutap/wallet_google/api --cov-report=term-missing tests/
+uvx tox -e py313 -- --cov=src/edutap/wallet_google --cov-report=term-missing
 
 # Run integration tests (requires credentials)
 uvx tox -e py313 -- tests/integration/ -v --run-integration
+
+# Fast iteration: Run tests directly (no tox overhead)
+# First: uv venv && source .venv/bin/activate && uv pip install -e .[test,develop]
+pytest tests/test_api_sync.py -v
+pytest tests/test_api_async.py::test_acreate -v --tb=short
+pytest -k "not integration" --tb=short  # Skip integration tests
 ```
 
 ### Code Quality
 
 ```bash
-# Run all pre-commit hooks
+# Run all pre-commit hooks (includes all checks below)
 uvx pre-commit run --all-files
 
-# Auto-format code
-uvx ruff format src tests
+# Format code (tox environment)
+uvx tox -e format
 
-# Type checking
+# Lint code (tox environment - runs all pre-commit hooks)
+uvx tox -e lint
+
+# Individual tools
+uvx pyupgrade --py310-plus src/**/*.py tests/**/*.py
+uvx isort src tests
+uvx black src tests
+uvx flake8 src tests
 uvx mypy src tests
+uvx codespell --skip "tests/data/*.json"
 ```
 
 ### Utilities
@@ -107,7 +122,16 @@ uv run generate-fernet-key
 
 **Handlers** (`handlers/`):
 - `validate.py` - Google Wallet callback signature verification (sync + async)
+- `fastapi.py` - FastAPI endpoints for callbacks and image serving
 - Uses elliptic curve cryptography to verify signed messages from Google
+
+**Plugin System** (`plugins.py`, `protocols.py`):
+- Two plugin types: `ImageProvider` and `CallbackHandler` (defined as runtime-checkable Protocols)
+- Plugins discovered via entry points: `edutap.wallet_google.plugins`
+- `ImageProvider`: Provides images by ID for wallet passes (async method `image_by_id()`)
+- `CallbackHandler`: Handles Google Wallet callback events (async method `handle()`)
+- Register plugins via `add_plugin()` or setuptools entry points
+- See `tests/data/test_wallet_google_plugins/` for example plugin implementation
 
 ### Configuration
 
@@ -177,6 +201,14 @@ Both sync and async functions are in the same `api` module with consistent namin
 - Shared: `api.new()` and `api.save_link()` work for both sync and async (no await needed)
 - Both implementations use `httpx` + `authlib` for consistency
 
+### Client Lifecycle Management
+The `ClientPoolManager` pools HTTP clients for connection reuse:
+- Clients are cached per credentials set (keyed by `client_email:private_key_id`)
+- Sync clients are automatically cleaned up via `atexit` handler
+- For explicit cleanup: call `client_pool.close_all_clients()` (sync) or `await client_pool.aclose_all_clients()` (async)
+- In long-running applications (FastAPI, etc.), consider cleanup on shutdown
+- Thread-safe for sync operations, task-safe for async operations (within same event loop)
+
 ## Important Constraints
 
 1. **No Delete Operation**: Google Wallet doesn't support deletion. Expire passes by updating with past `validTimeInterval.end`.
@@ -201,4 +233,26 @@ Full documentation at: https://docs.edutap.eu/packages/edutap_wallet_google/inde
 - **Explanation**: Architecture and design decisions
 
 The docs follow the [Diátaxis](https://diataxis.fr/) framework.
-- always use uv instead of pip
+
+## Development Workflow
+
+1. **Local setup**: `uv venv && source .venv/bin/activate && uv pip install -e .[test,develop,typecheck]`
+2. **Install pre-commit**: `uvx pre-commit install` (runs checks on every commit)
+3. **Make changes**: Edit code, add tests
+4. **Run tests**: `pytest tests/ -k "not integration"` (fast iteration)
+5. **Run checks**: `uvx pre-commit run --all-files` (before committing)
+6. **Integration test**: Set environment variables and run `pytest tests/integration/ --run-integration`
+
+## Code Quality Tools
+
+Pre-commit hooks enforce:
+- **pyupgrade**: Python 3.10+ syntax modernization
+- **isort**: Import sorting (plone profile)
+- **black**: Code formatting
+- **flake8**: Linting
+- **mypy**: Type checking (with explicit-package-bases)
+- **codespell**: Spell checking (ignores test data JSONs)
+- **check-manifest**: Package manifest validation
+- **pyroma**: PyPI metadata quality checks
+
+Always use `uv` instead of `pip` for package management.
