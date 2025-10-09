@@ -400,7 +400,7 @@ async def google_root_signing_public_keys_async(
         if not hasattr(key, "keyExpiration")
         or not key.keyExpiration
         or float(key.keyExpiration) > current_time_ms
-    ]
+    ] if client_pool.settings.handler_callback_verify_expiry == "1" else all_keys.keys
 
     if not valid_keys:
         logger.error(f"All {len(all_keys.keys)} keys from Google are expired!")
@@ -448,17 +448,18 @@ async def verified_signed_message_async(data: CallbackData) -> SignedMessage:
         return message
 
     # check message expiration
-    current_time_ms = int(time.time() * 1000)
-    if message.expTimeMillis < current_time_ms:
-        time_diff = (current_time_ms - message.expTimeMillis) / 1000
-        logger.warning(
-            f"Message expired {time_diff:.0f}s ago "
-            f"(expTimeMillis: {message.expTimeMillis}, current: {current_time_ms})"
-        )
-        raise ValueError(
-            f"Expired message: expired {time_diff:.0f} seconds ago "
-            f"(expTimeMillis: {message.expTimeMillis})"
-        )
+    if settings.handler_callback_verify_expiry == "1":
+        current_time_ms = int(time.time() * 1000)
+        if message.expTimeMillis < current_time_ms:
+            time_diff = (current_time_ms - message.expTimeMillis) / 1000
+            logger.warning(
+                f"Message expired {time_diff:.0f}s ago "
+                f"(expTimeMillis: {message.expTimeMillis}, current: {current_time_ms})"
+            )
+            raise ValueError(
+                f"Expired message: expired {time_diff:.0f} seconds ago "
+                f"(expTimeMillis: {message.expTimeMillis})"
+            )
 
     if data.protocolVersion != PROTOCOL_VERSION:
         logger.error(
@@ -484,16 +485,17 @@ async def verified_signed_message_async(data: CallbackData) -> SignedMessage:
     )
     current_time_ms = int(time.time() * 1000)
     key_expiration_ms = int(intermediate_signing_key.keyExpiration)
-    if current_time_ms > key_expiration_ms:
-        time_diff = (current_time_ms - key_expiration_ms) / 1000
-        logger.error(
-            f"Intermediate signing key expired {time_diff:.0f}s ago "
-            f"(keyExpiration: {key_expiration_ms}, current: {current_time_ms})"
-        )
-        raise ValueError(
-            f"Expired intermediate signing key: expired {time_diff:.0f} seconds ago "
-            f"(keyExpiration: {key_expiration_ms})"
-        )
+    if settings.handler_callback_verify_expiry == "1":
+        if current_time_ms > key_expiration_ms:
+            time_diff = (current_time_ms - key_expiration_ms) / 1000
+            logger.error(
+                f"Intermediate signing key expired {time_diff:.0f}s ago "
+                f"(keyExpiration: {key_expiration_ms}, current: {current_time_ms})"
+            )
+            raise ValueError(
+                f"Expired intermediate signing key: expired {time_diff:.0f} seconds ago "
+                f"(keyExpiration: {key_expiration_ms})"
+            )
 
     # check signed message's signature
     # https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions#verify-the-signature
