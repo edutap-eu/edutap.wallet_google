@@ -124,13 +124,17 @@ def google_root_signing_public_keys(google_environment: str) -> RootSigningPubli
 
     # Filter out expired keys
     current_time_ms = time.time() * 1000
-    valid_keys = [
-        key
-        for key in all_keys.keys
-        if not hasattr(key, "keyExpiration")
-        or not key.keyExpiration
-        or float(key.keyExpiration) > current_time_ms
-    ] if client_pool.settings.handler_callback_verify_expiry == "1" else all_keys.keys
+    valid_keys = (
+        [
+            key
+            for key in all_keys.keys
+            if not hasattr(key, "keyExpiration")
+            or not key.keyExpiration
+            or float(key.keyExpiration) > current_time_ms
+        ]
+        if client_pool.settings.handler_callback_verify_expiry == "1"
+        else all_keys.keys
+    )
 
     if not valid_keys:
         logger.error(f"All {len(all_keys.keys)} keys from Google are expired!")
@@ -394,13 +398,17 @@ async def google_root_signing_public_keys_async(
 
     # Filter out expired keys
     current_time_ms = time.time() * 1000
-    valid_keys = [
-        key
-        for key in all_keys.keys
-        if not hasattr(key, "keyExpiration")
-        or not key.keyExpiration
-        or float(key.keyExpiration) > current_time_ms
-    ] if client_pool.settings.handler_callback_verify_expiry == "1" else all_keys.keys
+    valid_keys = (
+        [
+            key
+            for key in all_keys.keys
+            if not hasattr(key, "keyExpiration")
+            or not key.keyExpiration
+            or float(key.keyExpiration) > current_time_ms
+        ]
+        if client_pool.settings.handler_callback_verify_expiry == "1"
+        else all_keys.keys
+    )
 
     if not valid_keys:
         logger.error(f"All {len(all_keys.keys)} keys from Google are expired!")

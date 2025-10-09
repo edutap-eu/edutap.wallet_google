@@ -2,6 +2,7 @@
 
 These tests verify the async versions of the signature validation functions.
 """
+
 from edutap.wallet_google.models.handlers import CallbackData
 from freezegun import freeze_time
 
@@ -85,7 +86,10 @@ async def test_handler_validate_ok_async(mock_settings):
     data = CallbackData.model_validate(callback_data)
     message = await verified_signed_message_async(data)
     assert message.classId == "3388000000022141777.lib.edutap.eu"
-    assert message.objectId == "3388000000022141777.6b4cbd15-0de7-4fe8-95f6-995a51b4595e.object"
+    assert (
+        message.objectId
+        == "3388000000022141777.6b4cbd15-0de7-4fe8-95f6-995a51b4595e.object"
+    )
     assert message.eventType == "del"
 
 
@@ -176,10 +180,10 @@ async def test_message_expiration_expiry_check_ignored_async(mock_settings):
 async def test_cache_expiration_refresh_async(mock_settings):
     """Test that cache is refreshed when it expires (async)."""
     from edutap.wallet_google.handlers.validate import (
-        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE,
+        google_root_signing_public_keys_async,
     )
     from edutap.wallet_google.handlers.validate import (
-        google_root_signing_public_keys_async,
+        GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE,
     )
 
     import time
