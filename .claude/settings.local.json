@@ -39,7 +39,8 @@
       "Bash(.venv/bin/pytest tests/ -k \"not integration\" --tb=short -x)",
       "Bash(.venv/bin/pytest tests/ -k \"not integration\" --tb=short -q)",
       "Bash(.venv/bin/pytest tests/test_api_403_errors.py -v --tb=short)",
-      "Bash(.venv/bin/pytest tests/integration/ -v --run-integration --tb=short)"
+      "Bash(.venv/bin/pytest tests/integration/ -v --run-integration --tb=short)",
+      "Bash(git shortlog:*)"
     ],
     "deny": [],
     "ask": []

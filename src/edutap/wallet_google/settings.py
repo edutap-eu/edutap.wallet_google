@@ -38,8 +38,12 @@ class Settings(BaseSettings):
     handler_prefix: str = "/wallet/google"
     handler_prefix_callback: str = ""
     handler_prefix_images: str = ""
-    handler_callback_verify_signature: str = "1"  # "1" enables, "0" disables signature verification
-    handler_callback_verify_expiry: str = "1"  # "1" enables, "0" disables expiration checks (useful for testing with expired data)
+    handler_callback_verify_signature: str = (
+        "1"  # "1" enables, "0" disables signature verification
+    )
+    handler_callback_verify_expiry: str = (
+        "1"  # "1" enables, "0" disables expiration checks (useful for testing with expired data)
+    )
     handler_image_cache_control: str = (
         "no-cache"  # "no-cache", "public, immutable, max-age={max_age}", etc.
     )
