@@ -249,3 +249,35 @@ def test_message_expiration_just_before_expiry(mock_settings):
     data = CallbackData.model_validate(callback_data)
     message = verified_signed_message(data)
     assert message.classId == "3388000000022141777.lib.edutap.eu"
+
+
+@freeze_time("2025-10-15 10:01:00")  # Just before the message expires
+def test_message_expiration_expiry_check_ignored(mock_settings):
+    """
+    Test that the handler_callback_verify_expiry set to 0 disables 
+    check for key expiration (needed for testing).
+    """
+    from edutap.wallet_google.handlers.validate import verified_signed_message
+
+    mock_settings.handler_callback_verify_signature = "1"
+    mock_settings.handler_callback_verify_expiry = "0"
+
+    # callback_data expires at Oct 1, 2025 10:02:28 UTC
+    # We're at Oct 1, 2026 10:01:00 UTC (data are expired for almost a year)
+    data = CallbackData.model_validate(callback_data)
+
+    message = verified_signed_message(data)
+
+
+@freeze_time("2025-10-01 10:01:00")  # Just before the message expires
+def test_message_expiration_just_before_expiry(mock_settings):
+    """Test that a message just before expiration still passes."""
+    from edutap.wallet_google.handlers.validate import verified_signed_message
+
+    mock_settings.handler_callback_verify_signature = "1"
+
+    # callback_data expires at Oct 1, 2025 10:02:28 UTC
+    # We're at Oct 1, 2025 10:01:00 UTC (88 seconds before expiry)
+    data = CallbackData.model_validate(callback_data)
+    message = verified_signed_message(data)
+    assert message.classId == "3388000000022141777.lib.edutap.eu"
