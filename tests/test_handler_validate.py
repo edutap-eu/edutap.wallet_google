@@ -48,9 +48,7 @@ callback_data = {
 @pytest.mark.asyncio
 async def test_google_public_key_cached_empty(mock_settings):
     """Test that Google public keys can be fetched and cached (async)."""
-    from edutap.wallet_google.handlers.validate import (
-        google_root_signing_public_keys,
-    )
+    from edutap.wallet_google.handlers.validate import google_root_signing_public_keys
 
     keys = await google_root_signing_public_keys(mock_settings.google_environment)
     assert keys is not None
@@ -69,9 +67,7 @@ async def test_google_public_key_cached_empty(mock_settings):
     assert expiration > 0
 
     # Second fetch should use cache
-    keys2 = await google_root_signing_public_keys(
-        mock_settings.google_environment
-    )
+    keys2 = await google_root_signing_public_keys(mock_settings.google_environment)
     assert keys2 is not None
 
 
@@ -179,9 +175,7 @@ async def test_message_expiration_expiry_check_ignored(mock_settings):
 @pytest.mark.asyncio
 async def test_cache_expiration_refresh(mock_settings):
     """Test that cache is refreshed when it expires (async)."""
-    from edutap.wallet_google.handlers.validate import (
-        google_root_signing_public_keys,
-    )
+    from edutap.wallet_google.handlers.validate import google_root_signing_public_keys
     from edutap.wallet_google.handlers.validate import (
         GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE,
     )
@@ -192,9 +186,7 @@ async def test_cache_expiration_refresh(mock_settings):
     GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.clear()
 
     # First fetch - should cache (hits real API)
-    keys1 = await google_root_signing_public_keys(
-        mock_settings.google_environment
-    )
+    keys1 = await google_root_signing_public_keys(mock_settings.google_environment)
     assert len(keys1.keys) >= 1
 
     # Verify cached
@@ -204,9 +196,7 @@ async def test_cache_expiration_refresh(mock_settings):
     assert cache_exp > time.time()  # Should expire in future
 
     # Second fetch - should use cache
-    keys2 = await google_root_signing_public_keys(
-        mock_settings.google_environment
-    )
+    keys2 = await google_root_signing_public_keys(mock_settings.google_environment)
     assert keys2 == keys1
 
     # Manually expire the cache
@@ -216,9 +206,7 @@ async def test_cache_expiration_refresh(mock_settings):
     )
 
     # Third fetch - should refresh due to expiration (hits real API again)
-    keys3 = await google_root_signing_public_keys(
-        mock_settings.google_environment
-    )
+    keys3 = await google_root_signing_public_keys(mock_settings.google_environment)
     assert len(keys3.keys) >= 1
 
     # Verify cache was refreshed with new expiration
