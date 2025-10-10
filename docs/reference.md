@@ -649,7 +649,5 @@ Clients are cached per credentials set and reused across multiple API calls for 
 
    google_root_signing_public_keys
    verified_signed_message
-   google_root_signing_public_keys_async
-   verified_signed_message_async
 
 ```

@@ -32,9 +32,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.ec import ECDSA
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
-from cryptography.hazmat.primitives.serialization import load_der_private_key
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 from typing import cast
 
@@ -93,87 +91,6 @@ def _calculate_cache_expiration(keys: RootSigningPublicKeys) -> float:
     return cache_until
 
 
-def google_root_signing_public_keys(google_environment: str) -> RootSigningPublicKeys:
-    """
-    Fetch Googles root signing keys for the configured environment.
-
-    Keys are cached until the earliest key expires (with 1-hour safety margin).
-    Expired keys are filtered out. Cache is automatically refreshed when expired.
-    """
-    current_time = time.time()
-    cached = GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(google_environment)
-
-    # Check if we have valid cached keys
-    if cached is not None:
-        keys, cache_expiration = cached
-        if current_time < cache_expiration:
-            logger.debug(
-                f"Using cached keys (expires in {cache_expiration - current_time:.0f}s)"
-            )
-            return keys
-        logger.info("Cache expired, refreshing Google root signing keys")
-
-    # Fetch from Google
-    logger.info(
-        f"Fetching Google root signing keys from {GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[google_environment]}"
-    )
-    with httpx.Client() as client:
-        resp = client.get(GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_URL[google_environment])
-        resp.raise_for_status()
-        all_keys = RootSigningPublicKeys.model_validate_json(resp.text)
-
-    # Filter out expired keys
-    current_time_ms = time.time() * 1000
-    valid_keys = (
-        [
-            key
-            for key in all_keys.keys
-            if not hasattr(key, "keyExpiration")
-            or not key.keyExpiration
-            or float(key.keyExpiration) > current_time_ms
-        ]
-        if client_pool.settings.handler_callback_verify_expiry == "1"
-        else all_keys.keys
-    )
-
-    if not valid_keys:
-        logger.error(f"All {len(all_keys.keys)} keys from Google are expired!")
-        raise ValueError("All Google root signing keys are expired")
-
-    if len(valid_keys) < len(all_keys.keys):
-        logger.warning(
-            f"Filtered out {len(all_keys.keys) - len(valid_keys)} expired keys, "
-            f"{len(valid_keys)} valid keys remaining"
-        )
-
-    # Create filtered keys object and calculate cache expiration
-    filtered_keys = RootSigningPublicKeys(keys=valid_keys)
-    cache_expiration = _calculate_cache_expiration(filtered_keys)
-
-    # Cache the filtered keys with expiration
-    GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE[google_environment] = (
-        filtered_keys,
-        cache_expiration,
-    )
-    logger.info(f"Cached {len(valid_keys)} valid keys until {cache_expiration}")
-
-    return filtered_keys
-
-
-def _raw_private_key(in_key: str) -> str:
-    """
-    Returns the raw private key.
-    """
-    result = ""
-    for line in in_key.splitlines():
-        if "BEGIN PRIVATE KEY" in line:
-            continue
-        if "END PRIVATE KEY" in line:
-            break
-        result += line.strip()
-    return result
-
-
 def _construct_signed_data(*args: str) -> bytes:
     """
     Construct the signed message from the list of its components by concatenating the
@@ -196,14 +113,6 @@ def _load_public_key(key: str) -> EllipticCurvePublicKey:
     return cast(
         EllipticCurvePublicKey,
         load_der_public_key(derdata, default_backend()),
-    )
-
-
-def _load_private_key(key: str) -> EllipticCurvePrivateKey:
-    derdata = base64.b64decode(key)
-    return cast(
-        EllipticCurvePrivateKey,
-        load_der_private_key(derdata, None, default_backend()),
     )
 
 
@@ -262,108 +171,7 @@ def _verify_intermediate_signing_key(
     return False
 
 
-def verified_signed_message(data: CallbackData) -> SignedMessage:
-    """
-    Verifies the signature of the callback data.
-    and returns the parsed SignedMessage
-    """
-    # parse message
-    message = SignedMessage.model_validate_json(data.signedMessage)
-
-    # get issuer_id
-    if not message.classId or "." not in message.classId:
-        raise ValueError("Missing classId in signed message")
-    issuer_id = message.classId.split(".")[0]
-
-    # shortcut if signature validation is disabled
-    settings = client_pool.settings
-    if settings.handler_callback_verify_signature == "0":
-        logger.debug("Signature verification disabled, skipping validation")
-        return message
-
-    # check message expiration
-    current_time_ms = int(time.time() * 1000)
-    if settings.handler_callback_verify_expiry == "1":
-        if message.expTimeMillis < current_time_ms:
-            time_diff = (current_time_ms - message.expTimeMillis) / 1000
-            logger.warning(
-                f"Message expired {time_diff:.0f}s ago "
-                f"(expTimeMillis: {message.expTimeMillis}, current: {current_time_ms})"
-            )
-            raise ValueError(
-                f"Expired message: expired {time_diff:.0f} seconds ago "
-                f"(expTimeMillis: {message.expTimeMillis})"
-            )
-
-    if data.protocolVersion != PROTOCOL_VERSION:
-        logger.error(
-            f"Invalid protocol version '{data.protocolVersion}', expected '{PROTOCOL_VERSION}'"
-        )
-        raise ValueError(
-            f"Invalid protocolVersion: got '{data.protocolVersion}', expected '{PROTOCOL_VERSION}'"
-        )
-
-    # check intermediate signing keys signature
-    if not _verify_intermediate_signing_key(
-        google_root_signing_public_keys(settings.google_environment),
-        data.intermediateSigningKey,
-    ):
-        logger.error("Intermediate signing key signature verification failed")
-        raise ValueError(
-            "Invalid intermediate signing key: signature verification failed against Google root keys"
-        )
-
-    # check intermediate signing keys expiration date
-    intermediate_signing_key = SignedKey.model_validate_json(
-        data.intermediateSigningKey.signedKey
-    )
-    current_time_ms = int(time.time() * 1000)
-    key_expiration_ms = int(intermediate_signing_key.keyExpiration)
-    if settings.handler_callback_verify_expiry == "1":
-        if current_time_ms > key_expiration_ms:
-            time_diff = (current_time_ms - key_expiration_ms) / 1000
-            logger.error(
-                f"Intermediate signing key expired {time_diff:.0f}s ago "
-                f"(keyExpiration: {key_expiration_ms}, current: {current_time_ms})"
-            )
-            raise ValueError(
-                f"Expired intermediate signing key: expired {time_diff:.0f} seconds ago "
-                f"(keyExpiration: {key_expiration_ms})"
-            )
-
-    # check signed message's signature
-    # https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions#verify-the-signature
-    intermediate_public_key = _load_public_key(intermediate_signing_key.keyValue)
-    signature = base64.decodebytes(bytes(data.signature, "utf-8"))
-    signed_data = _construct_signed_data(
-        settings.sender_id,
-        issuer_id,
-        PROTOCOL_VERSION,
-        data.signedMessage,
-    )
-    logger.debug(f"Verifying message signature: {data.signature[:20]}...")
-    logger.debug(f"Signed data length: {len(signed_data)} bytes")
-    try:
-        intermediate_public_key.verify(signature, signed_data, ALGORITHM)
-    except (ValueError, InvalidSignature) as e:
-        logger.error(
-            f"Message signature verification failed: {e.__class__.__name__}: {e}"
-        )
-        raise ValueError(
-            "Invalid message signature: verification failed with intermediate signing key"
-        )
-
-    logger.info(
-        f"Successfully verified callback for {message.classId}/{message.objectId} "
-        f"(eventType: {message.eventType})"
-    )
-    return message
-
-
-# Async versions for httpx
-
-
-async def google_root_signing_public_keys_async(
+async def google_root_signing_public_keys(
     google_environment: str,
 ) -> RootSigningPublicKeys:
     """
@@ -434,7 +242,7 @@ async def google_root_signing_public_keys_async(
     return filtered_keys
 
 
-async def verified_signed_message_async(data: CallbackData) -> SignedMessage:
+async def verified_signed_message(data: CallbackData) -> SignedMessage:
     """
     Verifies the signature of the callback data asynchronously.
     and returns the parsed SignedMessage
@@ -479,7 +287,7 @@ async def verified_signed_message_async(data: CallbackData) -> SignedMessage:
 
     # check intermediate signing keys signature
     if not _verify_intermediate_signing_key(
-        await google_root_signing_public_keys_async(settings.google_environment),
+        await google_root_signing_public_keys(settings.google_environment),
         data.intermediateSigningKey,
     ):
         logger.error("Intermediate signing key signature verification failed")

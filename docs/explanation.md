@@ -46,21 +46,21 @@ The verification happens in multiple stages:
 3. **Verify Message Signature**: The callback message signature is verified using the intermediate key
 4. **Check Expirations**: Both message and key expiration timestamps are validated
 
-### Sync and Async Support
+### Async Implementation
 
-Both synchronous and asynchronous implementations are available:
+The validation functions are async-only (as they're used by the FastAPI handlers):
 
 ```python
 from edutap.wallet_google.handlers.validate import (
-    verified_signed_message,           # Sync
-    verified_signed_message_async,     # Async
+    google_root_signing_public_keys,
+    verified_signed_message,
 )
 
-# Sync usage
-message = verified_signed_message(callback_data)
+# Fetch Google's root signing keys
+keys = await google_root_signing_public_keys(google_environment)
 
-# Async usage
-message = await verified_signed_message_async(callback_data)
+# Verify callback message
+message = await verified_signed_message(callback_data)
 ```
 
 ### Configuration for Testing

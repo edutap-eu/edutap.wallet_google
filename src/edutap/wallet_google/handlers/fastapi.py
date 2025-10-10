@@ -3,7 +3,7 @@ from ..models.handlers import CallbackData
 from ..plugins import get_callback_handlers
 from ..plugins import get_image_providers
 from ..utils import decrypt_data
-from .validate import verified_signed_message_async
+from .validate import verified_signed_message
 from fastapi import APIRouter
 from fastapi import Request
 from fastapi import Response
@@ -41,7 +41,7 @@ async def handle_callback(request: Request, callback_data: CallbackData):
         )
 
     # extract and verify message (given verification is not disabled)
-    callback_message = await verified_signed_message_async(callback_data)
+    callback_message = await verified_signed_message(callback_data)
     logger.debug(f"Got message {callback_message}")
 
     # call each handler asynchronously
