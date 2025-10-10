@@ -104,6 +104,42 @@ print(link)
 The link can be opened on a mobile device to download the pass to the Google Wallet.
 It can also be opened in the desktop browser if logged in with the same Google account as on your mobile device.
 
+## Create a Reference from an existing Object
+
+A `Reference` points to an existing wallet object by ID, allowing you to create "Add to Wallet" links without embedding the full object data in the JWT.
+This is useful when you want to generate links for passes that are already stored in Google's system.
+
+There are several ways to create a Reference:
+
+```python
+from edutap.wallet_google import api
+from edutap.wallet_google.models.passes.bases import Reference
+
+# Option 1: From an existing object instance using model_type
+obj = api.read("GenericObject", object_id)
+ref = api.new("Reference", {"id": obj.id, "model_type": type(obj)})
+
+# Option 2: From an object ID using model_name
+ref = api.new("Reference", {"id": object_id, "model_name": "GenericObject"})
+
+# Option 3: Create Reference directly (useful when you only have the ID)
+ref = Reference(id=object_id, model_name="GenericObject")
+
+# Option 4: From a minimal object created with api.new()
+obj = api.new("GenericObject", {"id": object_id, "classId": class_id})
+ref = api.new("Reference", {"id": obj.id, "model_type": type(obj)})
+
+# All References can be used with save_link()
+link = api.save_link([ref], origins=["www.example.com"])
+```
+
+**Key Points:**
+- A Reference must have either `model_name` (string) OR `model_type` (class type), but not both
+- The referenced object must already exist in Google Wallet
+- `model_name` examples: `"GenericObject"`, `"LoyaltyObject"`, `"EventTicketObject"`, etc.
+- References are lightweight - they only store the object ID and type information
+- Multiple References can be combined in a single `save_link()` call
+
 ## Update a class
 
 To update an existing class, use the `update()` function.
