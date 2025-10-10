@@ -2,7 +2,7 @@
 name = "edutap_wallet_google_example_callback"
 version = "1.0"
 dependencies = [
-    "edutap.wallet_google[fastapi]",
+    "edutap.wallet_google[callback]",
     "fastapi[standard]",
 ]
 

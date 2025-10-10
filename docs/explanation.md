@@ -32,6 +32,48 @@ This is checked by the API function at runtime based on the registry record of t
 Each constraint origins in the Google API and is mirrored here.
 
 
+## Callback Signature Verification
+
+Google Wallet sends signed callbacks when passes are saved, updated, or deleted.
+The package includes comprehensive signature verification following Google's ECv2SigningOnly protocol.
+
+### Verification Process
+
+The verification happens in multiple stages:
+
+1. **Fetch Google's Root Signing Keys**: Retrieved from Google's public endpoint and cached with automatic expiration based on key lifetimes
+2. **Verify Intermediate Signing Key**: The intermediate key in the callback is verified against Google's root keys
+3. **Verify Message Signature**: The callback message signature is verified using the intermediate key
+4. **Check Expirations**: Both message and key expiration timestamps are validated
+
+### Async Implementation
+
+The validation functions are async-only (as they're used by the FastAPI handlers):
+
+```python
+from edutap.wallet_google.handlers.validate import (
+    google_root_signing_public_keys,
+    verified_signed_message,
+)
+
+# Fetch Google's root signing keys
+keys = await google_root_signing_public_keys(google_environment)
+
+# Verify callback message
+message = await verified_signed_message(callback_data)
+```
+
+### Configuration for Testing
+
+For development and testing, verification can be controlled via environment variables:
+
+- `EDUTAP_WALLET_GOOGLE_HANDLER_CALLBACK_VERIFY_SIGNATURE="0"` - Disables all signature verification
+- `EDUTAP_WALLET_GOOGLE_HANDLER_CALLBACK_VERIFY_EXPIRY="0"` - Allows expired messages and keys
+
+These settings enable testing with expired test data without regenerating signatures.
+
+**Important:** Never disable signature verification in production environments.
+
 ## Contributing
 
 The sources are in a Git version control system with its main branches at [GitHub](https://github.com/edutap-eu/edutap.wallet_google).

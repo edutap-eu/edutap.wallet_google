@@ -41,6 +41,8 @@ var/
 .env*
 keys/
 *.ipynb
+*-*.json
+credential_file.json
 
 # IDE
 .idea

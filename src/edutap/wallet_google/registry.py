@@ -1,11 +1,15 @@
-from .models.bases import Model
+from typing import TYPE_CHECKING
 from typing import TypedDict
+
+
+if TYPE_CHECKING:
+    from .models.bases import Model
 
 
 class RegistryMetadataDict(TypedDict, total=False):
     """TypedDict for the metadata of a registered model."""
 
-    model: type[Model]
+    model: "type[Model]"
     name: str
     url_part: str
     plural: str
@@ -18,7 +22,7 @@ class RegistryMetadataDict(TypedDict, total=False):
 
 
 _MODEL_REGISTRY_BY_NAME: dict[str, RegistryMetadataDict] = {}
-_MODEL_REGISTRY_BY_MODEL: dict[type[Model], RegistryMetadataDict] = {}
+_MODEL_REGISTRY_BY_MODEL: "dict[type[Model], RegistryMetadataDict]" = {}
 
 
 class register_model:
@@ -72,8 +76,8 @@ class register_model:
 
     def __call__(
         self,
-        cls: type[Model],
-    ) -> type[Model]:
+        cls: "type[Model]",
+    ) -> "type[Model]":
         """
         Registers the given class in the registry.
         """
@@ -86,14 +90,14 @@ class register_model:
         return cls
 
 
-def lookup_model_by_name(name: str) -> type[Model]:
+def lookup_model_by_name(name: str) -> "type[Model]":
     """
     Returns the model with the given name.
     """
     return _MODEL_REGISTRY_BY_NAME[name]["model"]
 
 
-def lookup_model_by_plural_name(plural_name: str) -> type[Model]:
+def lookup_model_by_plural_name(plural_name: str) -> "type[Model]":
     """
     Returns the model with the given plural name.
     """
@@ -110,14 +114,14 @@ def lookup_metadata_by_name(name: str) -> RegistryMetadataDict:
     return _MODEL_REGISTRY_BY_NAME[name]
 
 
-def lookup_metadata_by_model_instance(model: Model) -> RegistryMetadataDict:
+def lookup_metadata_by_model_instance(model: "Model") -> RegistryMetadataDict:
     """
     Returns the registry metadata by a given instance of a model
     """
     return _MODEL_REGISTRY_BY_MODEL[type(model)]
 
 
-def lookup_metadata_by_model_type(model_type: type[Model]) -> RegistryMetadataDict:
+def lookup_metadata_by_model_type(model_type: "type[Model]") -> RegistryMetadataDict:
     """
     Returns the registry metadata by a given model type
     """

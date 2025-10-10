@@ -7,15 +7,34 @@ Version 3.13 is recommended.
 
 ## Installation
 
-The package is hosted at the Python Package Index (PyPI) and can be installed using `pip install edutap.wallet_google`.
+The package is hosted at the Python Package Index (PyPI).
 
-We recommend working with `uv`
+We recommend working with `uv`:
 
 ```bash
 uv venv -p 3.13.0
 source .venv/bin/activate
+```
+
+### Standard Installation
+
+```bash
 uv pip install edutap.wallet_google
 ```
+
+The base package includes everything needed for both sync and async APIs:
+- `httpx` - Modern HTTP client (used by both sync and async)
+- `authlib` - OAuth2 and JWT handling
+- `cryptography` - Cryptographic operations
+- `pydantic` - Data validation and settings
+
+Both sync and async APIs are available by default with a unified set of dependencies.
+
+### Optional extras
+
+- `[callback]` - FastAPI endpoints for Google Wallet callbacks
+
+**Note:** The `[sync]` and `[async]` extras have been removed. Both APIs now use the same modern stack (httpx + authlib), eliminating the need for separate installation options.
 
 ## Configuration
 
@@ -102,6 +121,37 @@ There are two routers available for callback and images, plus one combined provi
   One out of `production` or `testing`.
 
   Defaults to `testing`.
+
+- `EDUTAP_WALLET_GOOGLE_HANDLER_CALLBACK_VERIFY_SIGNATURE`
+
+  Controls whether callback signatures from Google Wallet are cryptographically verified.
+  When enabled (`"1"`), the handler performs two-tier signature verification:
+  1. Verifies intermediate signing key against Google's root signing keys
+  2. Verifies message signature using the intermediate key
+
+  **Security Warning:** Only disable this in development/testing environments.
+  Disabling signature verification in production exposes your application to forged callbacks.
+
+  Set to `"1"` to enable (recommended), `"0"` to disable.
+
+  Defaults to `"1"` (enabled).
+
+- `EDUTAP_WALLET_GOOGLE_HANDLER_CALLBACK_VERIFY_EXPIRY`
+
+  Controls whether expiration timestamps are validated for:
+  - Google Wallet callback messages (`expTimeMillis`)
+  - Intermediate signing keys (`keyExpiration`)
+  - Root signing keys (filtered by expiration)
+
+  This setting is primarily useful for testing with expired test data or replaying
+  old callbacks during development.
+
+  **Testing Note:** When set to `"0"`, allows using expired test signatures without
+  constantly regenerating them. Useful when working with frozen time in tests.
+
+  Set to `"1"` to enable expiration checks (recommended), `"0"` to disable.
+
+  Defaults to `"1"` (enabled).
 
 - `EDUTAP_WALLET_GOOGLE_HANDLER_PREFIX_IMAGES`
 

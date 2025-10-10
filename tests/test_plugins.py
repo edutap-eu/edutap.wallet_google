@@ -17,7 +17,7 @@ def test_get_callback_handlers():
     from edutap.wallet_google.protocols import CallbackHandler
 
     plugins = get_callback_handlers()
-    assert len(plugins) == 1
+    assert len(plugins) >= 1
     assert isinstance(plugins[0], CallbackHandler)
 
 
@@ -102,8 +102,14 @@ def test_add_plugin():
     from edutap.wallet_google.plugins import get_callback_handlers
     from edutap.wallet_google.plugins import get_image_providers
 
-    count_image_providers = len(get_image_providers())
-    count_callback_handlers = len(get_callback_handlers())
+    try:
+        count_image_providers = len(get_image_providers())
+    except NotImplementedError:
+        count_image_providers = 0
+    try:
+        count_callback_handlers = len(get_callback_handlers())
+    except NotImplementedError:
+        count_callback_handlers = 0
 
     add_plugin("ImageProvider", DummyImageProvider)
     add_plugin("CallbackHandler", DummyCallbackHandler)

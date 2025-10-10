@@ -1,6 +1,6 @@
 [project]
 name = "edutap.wallet-google"
-version = "2.0.0b9-dev07"
+version = "3.0.0b1"
 description = "Library for Google Wallet Communication"
 keywords = ["wallet", "google", "api", "pass", 'fastapi', 'digital identity']
 readme = "README.md"
@@ -24,6 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -31,8 +32,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "authlib",
     "cryptography",
-    "google-auth[requests]",
+    "httpx",
     "pydantic-settings",
     "pydantic[email]>=2.0",
   ]
@@ -45,26 +47,24 @@ Documentation = "https://docs.edutap.eu/packages/edutap_wallet_google/index.html
 [project.optional-dependencies]
 callback = [
     "fastapi",
-    "httpx",
 ]
 test = [
     "edutap.wallet-google[callback]",
+    "freezegun",
+    "pytest-asyncio",
     "pytest-cov",
     "pytest-explicit",
     "pytest",
-    "requests-mock",
+    "respx",
     "tox",
-    "freezegun",    # for freezing time for tests
 ]
 typecheck  = [
-    "google-auth-stubs",
     "mypy",
     "pytest-stub",
     "types-cryptography",
 ]
 develop = [
     "pdbp>=1.7.1", # the maintained successor to pdbpp
-    "jupyter",
     # "ipython",  not recommended with pdpb, better use ipdb then
 ]
 
@@ -99,6 +99,8 @@ explicit_package_bases = true
 [[tool.mypy.overrides]]
 module = [
     "cryptography.*",
+    "authlib.*",
+    "respx.*",
 ]
 ignore_missing_imports = true
 
