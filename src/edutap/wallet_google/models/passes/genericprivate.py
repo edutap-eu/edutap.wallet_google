@@ -26,7 +26,7 @@ class GenericPrivatePassType(enum.StrEnum):
 
 class SmartTapInfo(WithIdModel):
     enableSmartTap: bool = False
-    redemptionIssuers: list[str] | None = None  # string (int64 format)
+    redemptionIssuers: list[str] | None = None  # list of strings (each string in int64 format)
     smartTapRedemptionValue: str | None = None
 
 
