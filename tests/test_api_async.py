@@ -12,20 +12,6 @@ import pytest
 import respx
 
 
-@pytest.fixture
-def mock_async_session(monkeypatch):
-    """Fixture to provide a mock async session that doesn't require real credentials."""
-    from edutap.wallet_google.clientpool import ClientPoolManager
-
-    def mock_async_session(self, credentials=None):
-        # Return httpx.AsyncClient without real auth
-        # We just need something that httpx/respx can mock
-        return httpx.AsyncClient()
-
-    monkeypatch.setattr(ClientPoolManager, "async_client", mock_async_session)
-    yield
-
-
 @pytest.mark.asyncio
 @respx.mock
 async def test_create_generic_class(mock_async_session):
