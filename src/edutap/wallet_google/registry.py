@@ -246,16 +246,13 @@ def _get_fields_for_name(name: str) -> list[str]:
     return _get_fields_for_model(model)
 
 
-@functools.cache
+# @functools.cache
 def _get_fields_for_(name, definition: dict) -> list[str]:
     """Returns the list of valid fields for the given schema object."""
     fields: set[str] = set()
     if definition in ("string", "boolean"):
         fields.add(name)
-    if name == "kind":
-        breakpoint()
     if definition.get("deprecated") is True:
-        breakpoint()
         pass
     elif definition.get("type") in ("string", "boolean"):
         fields.add(name)

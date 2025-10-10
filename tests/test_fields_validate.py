@@ -17,22 +17,22 @@ def test_get_fields_for_model(name):
     fields = _get_fields_for_name(name)
     print("\n".join(fields))
     # breakpoint()
-    assert "kind" in fields
+
     assert "id" in fields
+    assert "classId" in fields
 
 
 def test_validate_fields_for_name():
     assert validate_fields_for_name(
         "LoyaltyObject",
         [
-            "kind",
             "id",
+            "classId",
         ],
     ) == (True, [])
     assert validate_fields_for_name(
         "LoyaltyObject",
         [
-            "kind",
             "id",
             "spam",
         ],
@@ -44,7 +44,6 @@ def test_validate_fields_for_name():
     assert validate_fields_for_name(
         "LoyaltyObject",
         [
-            "kind",
             "id",
             "imageModulesData/*",
         ],
