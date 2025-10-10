@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from freezegun import freeze_time
 
 
 # this callback data can be verified given the credentials.json from demo.edutap.eu is provided.
@@ -15,12 +16,25 @@ real_callback_data = {
     "signedMessage": '{"classId":"3388000000022141777.pass.gift.dev.edutap.eu","objectId":"3388000000022141777.9fd4e525-777c-4e0d-878a-b7993e211997","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":"c1359b53-f2bb-4e8f-b392-9a560a21a9a0"}',
 }
 
+real_callback_data = {
+    "signature": "MEUCIQC+xKva1ydmNwJJiP2HJJWsteUe02ztTDKExzcWIpmlywIgJwD4HUYvZJg/cr1OL21vVKr0b2ZXt79NblCQ1V18zsc=",
+    "intermediateSigningKey": {
+        "signedKey": '{"keyValue":"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKb256ssDdmf7DokZ7jsMtAvjiTX2HF1ay8QR1sSA+gFpC/ChhRwVdMEVJTaoAP1MIH38QWtqShiQ63zROaKtgQ\\u003d\\u003d","keyExpiration":"1759996807000"}',
+        "signatures": [
+            "MEUCIDd7rXh7qgJZ7YSlQiXG2zOdZUT5XlMSUPu3RfyV3p2CAiEApxrIwTmRVig93FVJUC6bSWdQXMqata5sHenKsVYreUk="
+        ],
+    },
+    "protocolVersion": "ECv2SigningOnly",
+    "signedMessage": '{"classId":"3388000000022141777.lib.edutap.eu","objectId":"3388000000022141777.6b4cbd15-0de7-4fe8-95f6-995a51b4595e.object","eventType":"del","expTimeMillis":1759331348143,"count":1,"nonce":"1a9e3df0-ec10-4a17-8b39-89d2d7f48e3b"}',
+}
 
+
+@freeze_time("2025-10-01 10:01:00")  # Just before the message expires
 def test_callback_disabled_signature_check_OK(mock_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 
     # test callback handler without signature check
-    mock_settings.handler_callback_verify_signature = "0"
+    mock_settings.handler_callback_verify_signature = "1"
 
     callback_data = CallbackData(**real_callback_data)
 
@@ -36,6 +50,7 @@ def test_callback_disabled_signature_check_OK(mock_settings):
     assert resp.json() == {"status": "success"}
 
 
+@freeze_time("2025-10-01 10:01:00")  # Just before the message expires
 def test_callback_disabled_signature_check_ERROR(mock_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 
@@ -43,7 +58,7 @@ def test_callback_disabled_signature_check_ERROR(mock_settings):
     mock_settings.handler_callback_verify_signature = "0"
 
     callback_data = CallbackData(**real_callback_data)
-    callback_data.signedMessage = '{"classId":"1.x","objectId":"1.y","eventType":"save","expTimeMillis":1734366082269,"count":1,"nonce":""}'
+    callback_data.signedMessage = '{"classId":"1.x","objectId":"1.y","eventType":"save","expTimeMillis":1759331348143,"count":1,"nonce":""}'
 
     from edutap.wallet_google.handlers.fastapi import router
 
@@ -57,6 +72,7 @@ def test_callback_disabled_signature_check_ERROR(mock_settings):
     assert resp.text == '{"detail":"Error while handling the callbacks (exception)."}'
 
 
+@freeze_time("2025-10-01 10:01:00")  # Just before the message expires
 def test_callback_disabled_signature_check_NOTIMPLEMENTED(monkeypatch, mock_settings):
     from edutap.wallet_google.models.handlers import CallbackData
 

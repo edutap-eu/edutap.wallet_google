@@ -32,14 +32,18 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    record_api_calls_dir: Path | None = None
     api_url: AnyHttpUrl = AnyHttpUrl(API_URL)
     save_url: AnyHttpUrl = AnyHttpUrl(SAVE_URL)
 
     handler_prefix: str = "/wallet/google"
     handler_prefix_callback: str = ""
     handler_prefix_images: str = ""
-    handler_callback_verify_signature: str = "1"
+    handler_callback_verify_signature: str = (
+        "1"  # "1" enables, "0" disables signature verification
+    )
+    handler_callback_verify_expiry: str = (
+        "1"  # "1" enables, "0" disables expiration checks (useful for testing with expired data)
+    )
     handler_image_cache_control: str = (
         "no-cache"  # "no-cache", "public, immutable, max-age={max_age}", etc.
     )
@@ -49,6 +53,7 @@ class Settings(BaseSettings):
     credentials_file: Path = ROOT_DIR / "tests" / "data" / "credentials_fake.json"
     credentials_scopes: list[str] = SCOPES
     test_issuer_id: str = Field(default="")
+    sender_id: str = "GooglePayPasses"
 
     fernet_encryption_key: str = ""
 

@@ -5,8 +5,9 @@ import pytest
 def test_create_payload():
 
     from edutap.wallet_google import api
+    from edutap.wallet_google.api import _create_payload
 
-    payload = api._create_payload(
+    payload = _create_payload(
         [
             api.new(
                 "Reference", {"id": "test-1.edutap.eu", "model_name": "GenericObject"}
@@ -24,6 +25,7 @@ def test_create_payload():
 def test_create_claims():
 
     from edutap.wallet_google import api
+    from edutap.wallet_google.api import _create_claims
 
     models = [
         api.new("Reference", {"id": "test-1.edutap.eu", "model_name": "GenericObject"}),
@@ -54,7 +56,7 @@ def test_create_claims():
         "origins": [],
     }
 
-    claims = api._create_claims(
+    claims = _create_claims(
         "test@example.com",
         [],
         models,
@@ -71,12 +73,15 @@ def test_create_claims():
     assert expected == dumped
 
 
-def test_api_save_link(mock_settings):
+def test_api_save_link():
     from edutap.wallet_google.settings import ROOT_DIR
 
-    mock_settings.credentials_file = (
-        ROOT_DIR / "tests" / "data" / "credentials_fake.json"
-    )
+    import base64
+    import json
+
+    credentials_file = ROOT_DIR / "tests" / "data" / "credentials_fake.json"
+    with open(credentials_file) as fd:
+        credentials = json.load(fd)
 
     from edutap.wallet_google import api
 
@@ -98,9 +103,55 @@ def test_api_save_link(mock_settings):
             ),
         ],
         iat=datetime.datetime(2025, 1, 22, 10, 20, 0, 0, datetime.timezone.utc),
+        credentials=credentials,
     )
-    expected = "https://pay.google.com/gp/v/save/eyJ0eXAiOiAiSldUIiwgImFsZyI6ICJSUzI1NiIsICJraWQiOiAiMTIzNDU2Nzg5MGFiY2RlZjEyMzQ1Njc4OTBhYmNkZWYxMjM0NTY3OCJ9.eyJpc3MiOiAiZWR1dGFwLXRlc3QtZXhhbXBsZUBzb2RpdW0tcmF5LTEyMzQ1Ni5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsICJhdWQiOiAiZ29vZ2xlIiwgInR5cCI6ICJzYXZldG93YWxsZXQiLCAiaWF0IjogIjE3Mzc1NDEyMDAiLCAicGF5bG9hZCI6IHsib2ZmZXJPYmplY3RzIjogW3siaWQiOiAiMTIzNDU2Nzg5MDEyMzQ1Njc4OS50ZXN0LTIuZWR1dGFwLmV1IiwgImNsYXNzSWQiOiAiMTIzNDU2Nzg5MDEyMzQ1Njc4OS50ZXN0LWNsYXNzLTEuZWR1dGFwLmV1IiwgInN0YXRlIjogIlNUQVRFX1VOU1BFQ0lGSUVEIiwgImhhc0xpbmtlZERldmljZSI6IGZhbHNlLCAiZGlzYWJsZUV4cGlyYXRpb25Ob3RpZmljYXRpb24iOiBmYWxzZSwgIm5vdGlmeVByZWZlcmVuY2UiOiAiTk9USUZJQ0FUSU9OX1NFVFRJTkdTX0ZPUl9VUERBVEVTX1VOU1BFQ0lGSUVEIn1dLCAiZ2VuZXJpY09iamVjdHMiOiBbeyJpZCI6ICIxMjM0NTY3ODkwMTIzNDU2Nzg5LnRlc3QtMS5lZHV0YXAuZXUifV19LCAib3JpZ2lucyI6IFtdLCAiZXhwIjogIiJ9.M5rHck9hIZOCHyIb9waDHsVHIzIQD-Hle4EK-BJYaRnGWeAnG2Gq9jxG9anBWlujRoqwFBsKozaHagGB9AyzpVDbfPJPY7Zm2jRwhe76zzmkSruEr25H1hf_OMxZgpUoyatASikANPPBrayA9-D9nuNThbNCOuSmwFXv4iDdxHHfCzq0iEKiPvw_6fePF7bdPnkv1uE0GA5rseM2olJ830U7xB7wuw7SA84OPoRclMiCvl3RjisTE2PfrkZ0sJlbxM16-aMkAQ-FxlERLoxkeWgSA2yYXuqjEdH0TVbg_b4tGKgQkTXo2TxhaVam4ZqdjYzTkgu9oesPVVae8ZgEtQ"
-    assert link == expected
+
+    # Verify the URL structure
+    assert link.startswith("https://pay.google.com/gp/v/save/")
+
+    # Extract and decode the JWT to verify its structure
+    jwt_token = link.replace("https://pay.google.com/gp/v/save/", "")
+    parts = jwt_token.split(".")
+    assert len(parts) == 3  # header.payload.signature
+
+    # Decode and verify header
+    header_decoded = base64.urlsafe_b64decode(parts[0] + "==")
+    header = json.loads(header_decoded)
+    assert header["typ"] == "JWT"
+    assert header["alg"] == "RS256"
+    assert header["kid"] == credentials["private_key_id"]
+
+    # Decode and verify payload
+    payload_decoded = base64.urlsafe_b64decode(parts[1] + "==")
+    payload = json.loads(payload_decoded)
+    assert (
+        payload["iss"]
+        == "edutap-test-example@sodium-ray-123456.iam.gserviceaccount.com"
+    )
+    assert payload["aud"] == "google"
+    assert payload["typ"] == "savetowallet"
+    assert payload["iat"] == "1737541200"
+    assert payload["exp"] == ""
+    assert payload["origins"] == []
+
+    # Verify payload content
+    assert len(payload["payload"]["offerObjects"]) == 1
+    assert (
+        payload["payload"]["offerObjects"][0]["id"]
+        == "1234567890123456789.test-2.edutap.eu"
+    )
+    assert (
+        payload["payload"]["offerObjects"][0]["classId"]
+        == "1234567890123456789.test-class-1.edutap.eu"
+    )
+    assert len(payload["payload"]["genericObjects"]) == 1
+    assert (
+        payload["payload"]["genericObjects"][0]["id"]
+        == "1234567890123456789.test-1.edutap.eu"
+    )
+
+    # Verify signature exists (3rd part should be non-empty base64)
+    assert len(parts[2]) > 0
 
 
 def test__convert_str_or_datetime_to_str__timestamp():

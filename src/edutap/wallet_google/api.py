@@ -1,22 +1,57 @@
+"""Google Wallet API for both synchronous and asynchronous operations.
+
+This module provides the complete API for Google Wallet pass management.
+It includes both sync and async versions of all CRUD operations.
+
+**Naming Convention:**
+- Synchronous functions: `create()`, `read()`, `update()`, `message()`, `listing()`
+- Asynchronous functions: `acreate()`, `aread()`, `aupdate()`, `amessage()`, `alisting()`
+- Shared functions (work with both): `new()`, `save_link()`
+
+**Usage:**
+
+Synchronous API:
+```python
+from edutap.wallet_google import api
+
+my_pass = api.new("GenericObject", {...})
+result = api.create(my_pass)
+link = api.save_link([my_pass])
+```
+
+Asynchronous API:
+```python
+from edutap.wallet_google import api
+
+my_pass = api.new("GenericObject", {...})
+result = await api.acreate(my_pass)
+link = api.save_link([my_pass])  # save_link is sync, not awaited
+```
+"""
+
+from .clientpool import client_pool
+from .credentials import credentials_manager
 from .models.bases import Model
 from .models.datatypes.general import PaginatedResponse
 from .models.datatypes.jwt import JWTClaims
 from .models.datatypes.jwt import JWTPayload
-from .models.datatypes.jwt import Reference
 from .models.datatypes.message import Message
 from .models.misc import AddMessageRequest
 from .models.passes.bases import ClassModel
 from .models.passes.bases import ObjectModel
+from .models.passes.bases import Reference
 from .registry import lookup_metadata_by_model_instance
 from .registry import lookup_metadata_by_model_type
 from .registry import lookup_metadata_by_name
 from .registry import lookup_model_by_name
 from .registry import raise_when_operation_not_allowed
-from .session import session_manager
+from .utils import handle_response_errors
+from .utils import parse_response_json
+from .utils import validate_data
+from .utils import validate_data_and_convert_to_json
+from authlib.jose import jwt
+from collections.abc import AsyncGenerator
 from collections.abc import Generator
-from google.auth import crypt
-from google.auth import jwt
-from pydantic import ValidationError
 
 import datetime
 import json
@@ -27,66 +62,28 @@ import typing
 logger = logging.getLogger(__name__)
 
 
-def _validate_data(model: type[Model], data: dict[str, typing.Any] | Model) -> Model:
-    """Takes a model and data, validates it and convert to a json string.
-
-    :param model:      Pydantic model class to use for validation.
-    :param data:       Data to pass to the Google RESTful API.
-                       Either a simple python data structure using built-ins,
-                       or a Pydantic model instance.
-    :return:           data as an instance of the given model.
-    """
-    if not isinstance(data, (Model)):
-        return model.model_validate(data)
-    if not isinstance(data, model):
-        raise ValueError(
-            f"Model of given data mismatches given name. Expected {model}, got {type(data)}."
-        )
-    return data
+__all__ = [
+    "new",
+    "save_link",
+    "create",
+    "read",
+    "update",
+    "message",
+    "listing",
+    "acreate",
+    "aread",
+    "aupdate",
+    "amessage",
+    "alisting",
+]
 
 
-def _validate_data_and_convert_to_json(
-    model: type[Model],
-    data: dict[str, typing.Any] | Model,
-    *,
-    existing: bool = False,
-    resource_id_key: str = "id",
-) -> tuple[str, str]:
-    """Takes a model and data, validates it and convert to a json string.
-
-    :param model:      Pydantic model class to use for validation.
-    :param data:       Data to pass to the Google RESTful API.
-                       Either a simple python data structure using built-ins,
-                       or a Pydantic model instance.
-    :param existing:   If True, the data is expected to be an existing object (i.e. on update).
-    :return:           Tuple of resource-id and JSON string.
-    """
-    verified_data = _validate_data(model, data)
-    verified_json = verified_data.model_dump_json(
-        exclude_none=not existing,  # exclude None values when we create something new
-        exclude_unset=True,  # exclude unset values - this are values not set explicitly by the code
-        by_alias=True,
-    )
-    identifier = getattr(verified_data, resource_id_key)
-    # nice to have: if existing: check if this is a valid identifier using read
-    return (identifier, verified_json)
-
-
-class WalletException(Exception):
-    pass
-
-
-class ObjectAlreadyExistsException(WalletException):
-    pass
-
-
-class QuotaExceededException(WalletException):
-    pass
+# Shared API functions
 
 
 def new(
     name: str,
-    data: dict[str, typing.Any] = {},
+    data: dict[str, typing.Any] | None = None,
 ):
     """
     Factors a new registered Google Wallet Model by name, based on the given data.
@@ -97,290 +94,10 @@ def new(
     :raises Exception: When the data does not validate.
     :return:           The created model instance.
     """
+    if data is None:
+        data = {}
     model = lookup_model_by_name(name)
-    return _validate_data(model, data)
-
-
-def create(
-    data: Model,
-) -> Model:
-    """
-    Creates a Google Wallet items. `C` in CRUD.
-
-    :param data:                          Data to pass to the Google RESTful API.
-                                          A model instance, has to be a registered model.
-    :raises QuotaExceededException:       When the quota was exceeded.
-    :raises ObjectAlreadyExistsException: When the id to be created already exists at Google.
-    :raises WalletException:              When the response status code is not 200.
-    :return:                              The created model based on the data returned by the Restful API.
-    """
-    model_metadata = lookup_metadata_by_model_instance(data)
-    name = model_metadata["name"]
-    raise_when_operation_not_allowed(name, "create")
-    model = model_metadata["model"]
-    resource_id, verified_json = _validate_data_and_convert_to_json(model, data)
-    session = session_manager.session
-    url = session_manager.url(name)
-    headers = {"Content-Type": "application/json"}
-    response = session.post(
-        url=url,
-        data=verified_json.encode("utf-8"),
-        headers=headers,
-    )
-    if response.status_code == 403:
-        raise QuotaExceededException(
-            f"Quota exceeded while trying to create {name} {getattr(data, 'id', 'No ID')}"
-        )
-    elif response.status_code == 409:
-        raise ObjectAlreadyExistsException(
-            f"{name} {getattr(data, 'id', 'No ID')} already exists\n{response.text}"
-        )
-    elif response.status_code != 200:
-        raise WalletException(
-            f"Error on create of {name} {getattr(data, 'id', 'No ID')} at {url}: {response.status_code} - {response.text}"
-        )
-
-    logger.debug(f"RAW-Response: {response.content!r}")
-    try:
-        return model.model_validate_json(response.content)
-    except ValidationError as e:
-        logger.error(f"Validation Error: {e.errors()}")
-        raise
-
-
-def read(
-    name: str,
-    resource_id: str,
-) -> Model:
-    """
-    Reads a Google Wallet Class or Object. `R` in CRUD.
-
-    :param name:                      Registered name of the model to use
-    :param resource_id:               Identifier of the resource to read from the Google RESTful API
-    :QuotaExceededException:          When the quota was exceeded.
-    :raises LookupError:              When the resource was not found (404).
-    :raises WalletException           When the response status code is not 200 or 404.
-    :return:                          the created model based on the data returned by the Restful API
-    """
-    raise_when_operation_not_allowed(name, "read")
-    session = session_manager.session
-    url = session_manager.url(name, f"/{resource_id}")
-    response = session.get(url=url)
-
-    if response.status_code == 403:
-        raise QuotaExceededException(
-            f"Quota exceeded while trying to read {name} {resource_id}"
-        )
-    elif response.status_code == 404:
-        raise LookupError(f"{url}: {name} not found")
-
-    if response.status_code == 200:
-        model = lookup_model_by_name(name)
-        logger.debug(f"RAW-Response: {response.content!r}")
-        return model.model_validate_json(response.content)
-
-    raise WalletException(f"{url} {response.status_code} - {response.text}")
-
-
-def update(
-    data: Model,
-    *,
-    partial: bool = True,
-) -> Model:
-    """
-    Updates a Google Wallet Class or Object. `U` in CRUD.
-
-    :param data:                    Data to pass to the Google RESTful API.
-                                    A model instance, has to be a registered model.
-    :param partial:                 Whether a partial update is executed or a full replacement.
-    :raises QuotaExceededException: When the quota was exceeded
-    :raises LookupError:            When the resource was not found (404)
-    :raises WalletException:        When the response status code is not 200 or 404
-    :return:                        The created model based on the data returned by the Restful API
-    """
-    model_metadata = lookup_metadata_by_model_instance(data)
-    name = model_metadata["name"]
-    raise_when_operation_not_allowed(name, "update")
-    model = model_metadata["model"]
-    resource_id, verified_json = _validate_data_and_convert_to_json(
-        model, data, existing=True, resource_id_key=model_metadata["resource_id"]
-    )
-    session = session_manager.session
-    if partial:
-        response = session.patch(
-            url=session_manager.url(name, f"/{resource_id}"),
-            data=verified_json.encode("utf-8"),
-        )
-    else:
-        response = session.put(
-            url=session_manager.url(name, f"/{resource_id}"),
-            data=verified_json.encode("utf-8"),
-        )
-    logger.debug(verified_json.encode("utf-8"))
-    if response.status_code == 403:
-        raise QuotaExceededException(
-            f"Quota exceeded while trying to read {name} {resource_id}"
-        )
-    elif response.status_code == 404:
-        raise LookupError(
-            f"Error 404, {name} {getattr(data, 'id', 'No ID')} not found: - {response.text}"
-        )
-    if response.status_code != 200:
-        raise WalletException(f"Error: {response.status_code} - {response.text}")
-
-    logger.debug(f"RAW-Response: {response.content!r}")
-    return model.model_validate_json(response.content)
-
-
-def message(
-    name: str,
-    resource_id: str,
-    message: dict[str, typing.Any] | Message,
-) -> Model:
-    """Sends a message to a Google Wallet Class or Object.
-
-    :param name:                      Registered name of the model to use
-    :param resource_id:               Identifier of the resource to send to
-    :raises QuotaExceededException:   When the quota was exceeded
-    :raises LookupError:              When the resource was not found (404)
-    :raises WalletException:          When the response status code is not 200 or 404
-    :return:                          The created Model object as returned by the Restful API
-    """
-    raise_when_operation_not_allowed(name, "message")
-    model = lookup_model_by_name(name)
-
-    if not isinstance(message, Message):
-        message_validated = Message.model_validate(message)
-    else:
-        message_validated = message
-
-    add_message = AddMessageRequest(message=message_validated)
-    verified_json = add_message.model_dump_json(
-        exclude_none=True,
-    )
-    url = session_manager.url(name, f"/{resource_id}/addMessage")
-    response = session_manager.session.post(url=url, data=verified_json.encode("utf-8"))
-
-    if response.status_code == 403:
-        raise QuotaExceededException(
-            f"Quota exceeded while trying to read {name} {resource_id}"
-        )
-    elif response.status_code == 404:
-        raise LookupError(f"Error 404, {name} not found: - {response.text}")
-
-    elif response.status_code != 200:
-        raise WalletException(f"Error: {response.status_code} - {response.text}")
-
-    logger.debug(f"RAW-Response: {response.content!r}")
-    response_data = json.loads(response.content)
-    return model.model_validate(response_data.get("resource"))
-
-
-def listing(
-    name: str,
-    *,
-    resource_id: str | None = None,
-    issuer_id: str | None = None,
-    result_per_page: int = 0,
-    next_page_token: str | None = None,
-) -> Generator[Model | str, None, None]:
-    """Lists wallet related resources.
-
-    It is possible to list all classes of an issuer. Parameter 'name' has to end with 'Class',
-    all objects of a registered object type by it's classes resource id,
-    Parameter 'name' has to end with 'Object'.
-    To get all issuers, parameter 'name' has to be 'Issuer' and no further parameters are allowed.
-
-    :param name:                    Registered name to base the listing on.
-    :param resource_id:             Id of the class to list objects of.
-                                    Only for object listings`
-                                    Mutually exclusive with issuer_id.
-    :param issuer_id:               Identifier of the issuer to list classes of.
-                                    Only for class listings.
-                                    If no resource_id is given and issuer_id is None, it will
-                                    be fetched from the environment variable EDUTAP_WALLET_GOOGLE_ISSUER_ID.
-                                    Mutually exclusive with resource_id.
-    :param result_per_page:         Number of results per page to fetch.
-                                    If omitted all results will be fetched and provided by the generator.
-    :param next_page_token:         Token to get the next page of results.
-    :raises QuotaExceededException: When the quota was exceeded
-    :raises ValueError:             When input was invalid.
-    :raises LookupError:            When the resource was not found (404)
-    :raises WalletException:        When the response status code is not 200 or 404
-    :return:                        Generator of the data as model-instances based on the data returned by the
-                                    Restful API. When result_per_page is given, the generator will return
-                                    a next_page_token after the last model-instance result.
-    """
-    raise_when_operation_not_allowed(name, "list")
-    if resource_id and issuer_id:
-        raise ValueError("resource_id and issuer_id are mutually exclusive")
-
-    model = lookup_model_by_name(name)  # early, also to test if name is registered
-
-    params = {}
-    is_pageable = False
-    if name.endswith("Object"):
-        is_pageable = True
-        if not resource_id:
-            raise ValueError("resource_id of a class must be given to list its objects")
-        params["classId"] = resource_id
-    elif name.endswith("Class"):
-        is_pageable = True
-        if not issuer_id:
-            raise ValueError("issuer_id must be given to list classes")
-        params["issuerId"] = issuer_id
-    elif name == "Issuer":
-        is_pageable = False
-
-    if is_pageable:
-        if next_page_token:
-            params["token"] = next_page_token
-        if result_per_page:
-            params["maxResults"] = f"{result_per_page}"
-        else:
-            # default to 100, but this might need adjustment
-            params["maxResults"] = "100"
-
-    url = session_manager.url(name)
-    session = session_manager.session
-    while True:
-        response = session.get(url=url, params=params)
-        if response.status_code == 404:
-            raise LookupError(f"Error 404, {name} not found: - {response.text}")
-
-        if response.status_code != 200:
-            raise Exception(f"Error: {response.status_code} - {response.text}")
-
-        data = json.loads(response.content)
-        data = PaginatedResponse.model_validate(data)
-        resources = data.resources
-        pagination = data.pagination
-
-        if not resources:
-            logger.warning("Response does not contain 'resources'")
-            if pagination and pagination.resultsPerPage == 0:
-                logger.warning(
-                    "No results per page set, this might be an error in the API response."
-                )
-                break
-        for count, record in enumerate(resources):
-            try:
-                yield model.model_validate(record)
-            except Exception:
-                logger.exception(f"Error validating record {count}:\n{record}")
-                raise
-        if not is_pageable or not pagination:
-            break
-        if result_per_page > 0:
-            if pagination.nextPageToken:
-                yield pagination.nextPageToken
-                break
-        else:
-            if pagination.nextPageToken:
-                params["token"] = pagination.nextPageToken
-                continue
-        break
-    return
+    return validate_data(model, data)
 
 
 def _create_payload(models: list[ClassModel | ObjectModel | Reference]) -> JWTPayload:
@@ -436,9 +153,10 @@ def _create_claims(
 def save_link(
     models: list[ClassModel | ObjectModel | Reference],
     *,
-    origins: list[str] = [],
+    origins: list[str] | None = None,
     iat: str | datetime.datetime = "",
     exp: str | datetime.datetime = "",
+    credentials: dict | None = None,
 ) -> str:
     """
     Creates a link to save a Google Wallet Object to the wallet on the device.
@@ -451,6 +169,14 @@ def save_link(
     - https://developers.google.com/wallet/generic/web
     - https://developers.google.com/wallet/generic/use-cases/jwt
 
+    This function uses authlib for JWT signing with RSA keys.
+    It can be used with both sync and async APIs:
+
+    .. code-block:: python
+
+        from edutap.wallet_google import api
+        link = api.save_link([...])
+
     :param models:      List of ObjectModels or ClassModels to save.
                         A resource can be an ObjectReference instance too.
     :param origins:     List of domains to approve for JWT saving functionality.
@@ -459,10 +185,17 @@ def save_link(
                         messages in the browser console when the origins field is not defined.
     :param: iat:        Issued At Time. The time when the JWT was issued.
     :param: exp:        Expiration Time. The time when the JWT expires.
+    :param credentials: Optional session credentials as dict.
     :return:            Link with JWT to save the resources to the wallet.
     """
+    if origins is None:
+        origins = []
+    if credentials is None:
+        credentials = credentials_manager.credentials_from_file()
+
+    settings = client_pool.settings
     claims = _create_claims(
-        session_manager.settings.credentials_info["client_email"],
+        credentials["client_email"],
         origins,
         models,
         iat=iat,
@@ -477,21 +210,573 @@ def save_link(
         )
     )
 
-    signer = crypt.RSASigner.from_service_account_file(
-        session_manager.settings.credentials_file
+    # Use authlib to sign JWT with RS256
+    header = {
+        "alg": "RS256",
+        "typ": "JWT",
+        "kid": credentials["private_key_id"],
+    }
+    payload = claims.model_dump(
+        mode="json",
+        exclude_unset=False,
+        exclude_defaults=False,
+        exclude_none=True,
     )
-    jwt_string = jwt.encode(
-        signer,
-        claims.model_dump(
-            mode="json",
-            exclude_unset=False,
-            exclude_defaults=False,
-            exclude_none=True,
-        ),
-    ).decode("utf-8")
+
+    # authlib's jwt.encode returns bytes
+    jwt_bytes = jwt.encode(header, payload, credentials["private_key"])
+    jwt_string = jwt_bytes.decode("utf-8")
+
     logger.debug(jwt_string)
     if (jwt_len := len(jwt_string)) >= 1800:
         logger.debug(
             f"JWT-Length: {jwt_len} is larger than recommended 1800 bytes",
         )
-    return f"{session_manager.settings.save_url}/{jwt_string}"
+    return f"{settings.save_url}/{jwt_string}"
+
+
+# Internal helper functions for CRUD operations
+
+
+def _prepare_create(data: Model) -> tuple[str, str, type[Model], dict]:
+    """Prepare data for create operation.
+
+    Returns: (name, verified_json, model_type, headers)
+    """
+    model_metadata = lookup_metadata_by_model_instance(data)
+    name = model_metadata["name"]
+    raise_when_operation_not_allowed(name, "create")
+    model = model_metadata["model"]
+    _, verified_json = validate_data_and_convert_to_json(model, data)
+    headers = {"Content-Type": "application/json"}
+    return name, verified_json, model, headers
+
+
+def _prepare_read(name: str, resource_id: str) -> tuple[type[Model]]:
+    """Prepare data for read operation.
+
+    Returns: (model_type,)
+    """
+    raise_when_operation_not_allowed(name, "read")
+    model = lookup_model_by_name(name)
+    return (model,)
+
+
+def _prepare_update(
+    data: Model,
+) -> tuple[str, str, str, type[Model]]:
+    """Prepare data for update operation.
+
+    Returns: (name, resource_id, verified_json, model_type)
+    """
+    model_metadata = lookup_metadata_by_model_instance(data)
+    name = model_metadata["name"]
+    raise_when_operation_not_allowed(name, "update")
+    model = model_metadata["model"]
+    resource_id, verified_json = validate_data_and_convert_to_json(
+        model, data, existing=True, resource_id_key=model_metadata["resource_id"]
+    )
+    return name, resource_id, verified_json, model
+
+
+def _prepare_message(
+    name: str,
+    message: dict[str, typing.Any] | Message,
+) -> tuple[type[Model], str]:
+    """Prepare data for message operation.
+
+    Returns: (model_type, verified_json)
+    """
+    raise_when_operation_not_allowed(name, "message")
+    model = lookup_model_by_name(name)
+
+    if not isinstance(message, Message):
+        message_validated = Message.model_validate(message)
+    else:
+        message_validated = message
+
+    add_message = AddMessageRequest(message=message_validated)
+    verified_json = add_message.model_dump_json(exclude_none=True)
+    return model, verified_json
+
+
+def _prepare_listing(
+    name: str,
+    resource_id: str | None,
+    issuer_id: str | None,
+) -> tuple[type[Model], dict, bool, str]:
+    """Prepare data for listing operation.
+
+    Returns: (model_type, params, is_pageable, resource_identifier)
+    """
+    raise_when_operation_not_allowed(name, "list")
+    if resource_id and issuer_id:
+        raise ValueError("resource_id and issuer_id are mutually exclusive")
+
+    model = lookup_model_by_name(name)
+
+    params = {}
+    is_pageable = False
+    if name.endswith("Object"):
+        is_pageable = True
+        if not resource_id:
+            raise ValueError("resource_id of a class must be given to list its objects")
+        params["classId"] = resource_id
+        resource_identifier = resource_id if resource_id else ""
+    elif name.endswith("Class"):
+        is_pageable = True
+        if not issuer_id:
+            raise ValueError("issuer_id must be given to list classes")
+        params["issuerId"] = issuer_id
+        resource_identifier = issuer_id if issuer_id else ""
+    elif name == "Issuer":
+        is_pageable = False
+        resource_identifier = ""
+    else:
+        resource_identifier = ""
+
+    return model, params, is_pageable, resource_identifier
+
+
+def _process_listing_page(
+    response_content: bytes,
+    model: type[Model],
+) -> tuple[list[Model], typing.Any]:
+    """Process a single page of listing results.
+
+    Returns: (validated_models, pagination_info)
+    """
+    data = json.loads(response_content)
+    data = PaginatedResponse.model_validate(data)
+    resources = data.resources
+    pagination = data.pagination
+
+    validated_models = []
+    if not resources:
+        logger.warning("Response does not contain 'resources'")
+        if pagination and pagination.resultsPerPage == 0:
+            logger.warning(
+                "No results per page set, this might be an error in the API response."
+            )
+    else:
+        for count, record in enumerate(resources):
+            try:
+                validated_models.append(model.model_validate(record))
+            except Exception:
+                logger.exception(f"Error validating record {count}:\n{record}")
+                raise
+
+    return validated_models, pagination
+
+
+def _setup_pagination_params(
+    is_pageable: bool,
+    result_per_page: int,
+    next_page_token: str | None,
+) -> dict:
+    """Setup pagination parameters for listing operations.
+
+    Returns: params dict with pagination settings
+    """
+    params = {}
+    if is_pageable:
+        if next_page_token:
+            params["token"] = next_page_token
+        if result_per_page:
+            params["maxResults"] = f"{result_per_page}"
+        else:
+            params["maxResults"] = "100"
+    return params
+
+
+# Synchronous API
+
+
+def create(
+    data: Model,
+    credentials: dict | None = None,
+) -> Model:
+    """
+    Creates a Google Wallet items. `C` in CRUD.
+
+    :param data:                          Data to pass to the Google RESTful API.
+                                          A model instance, has to be a registered model.
+    :param credentials:                   Optional session credentials as dict.
+    :raises QuotaExceededException:       When the quota was exceeded.
+    :raises ObjectAlreadyExistsException: When the id to be created already exists at Google.
+    :raises WalletException:              When the response status code is not 200.
+    :return:                              The created model based on the data returned by the Restful API.
+    """
+    name, verified_json, model, headers = _prepare_create(data)
+    url = client_pool.url(name)
+
+    client = client_pool.client(credentials=credentials)
+    response = client.post(
+        url=url,
+        data=verified_json.encode("utf-8"),
+        headers=headers,
+    )
+
+    handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
+    return parse_response_json(response, model)
+
+
+def read(
+    name: str,
+    resource_id: str,
+    credentials: dict | None = None,
+) -> Model:
+    """
+    Reads a Google Wallet Class or Object. `R` in CRUD.
+
+    :param name:             Registered name of the model to use
+    :param resource_id:      Identifier of the resource to read from the Google RESTful API
+    :param credentials:      Optional session credentials as dict.
+    :QuotaExceededException: When the quota was exceeded.
+    :raises LookupError:     When the resource was not found (404).
+    :raises WalletException  When the response status code is not 200 or 404.
+    :return:                 The created model based on the data returned by the Restful API
+    """
+    (model,) = _prepare_read(name, resource_id)
+    url = client_pool.url(name, f"/{resource_id}")
+
+    client = client_pool.client(credentials=credentials)
+    response = client.get(url=url)
+
+    handle_response_errors(response, "read", name, resource_id)
+    return parse_response_json(response, model)
+
+
+def update(
+    data: Model,
+    *,
+    partial: bool = True,
+    credentials: dict | None = None,
+) -> Model:
+    """
+    Updates a Google Wallet Class or Object. `U` in CRUD.
+
+    :param data:                    Data to pass to the Google RESTful API.
+                                    A model instance, has to be a registered model.
+    :param credentials:             Optional session credentials as dict.
+    :param partial:                 Whether a partial update is executed or a full replacement.
+    :raises QuotaExceededException: When the quota was exceeded
+    :raises LookupError:            When the resource was not found (404)
+    :raises WalletException:        When the response status code is not 200 or 404
+    :return:                        The created model based on the data returned by the Restful API
+    """
+    name, resource_id, verified_json, model = _prepare_update(data)
+
+    session = client_pool.client(credentials=credentials)
+    if partial:
+        response = session.patch(
+            url=client_pool.url(name, f"/{resource_id}"),
+            data=verified_json.encode("utf-8"),
+        )
+    else:
+        response = session.put(
+            url=client_pool.url(name, f"/{resource_id}"),
+            data=verified_json.encode("utf-8"),
+        )
+
+    logger.debug(verified_json.encode("utf-8"))
+    handle_response_errors(response, "update", name, resource_id)
+    return parse_response_json(response, model)
+
+
+def message(
+    name: str,
+    resource_id: str,
+    message: dict[str, typing.Any] | Message,
+    credentials: dict | None = None,
+) -> Model:
+    """Sends a message to a Google Wallet Class or Object.
+
+    :param name:                      Registered name of the model to use
+    :param resource_id:               Identifier of the resource to send to
+    :param message:                   Message to send.
+    :param credentials:               Optional session credentials as dict.
+    :raises QuotaExceededException:   When the quota was exceeded
+    :raises LookupError:              When the resource was not found (404)
+    :raises WalletException:          When the response status code is not 200 or 404
+    :return:                          The created Model object as returned by the Restful API
+    """
+    model, verified_json = _prepare_message(name, message)
+    url = client_pool.url(name, f"/{resource_id}/addMessage")
+
+    client = client_pool.client(credentials=credentials)
+    response = client.post(url=url, data=verified_json.encode("utf-8"))
+
+    handle_response_errors(response, "send message to", name, resource_id)
+    logger.debug(f"RAW-Response: {response.content!r}")
+    response_data = json.loads(response.content)
+    return model.model_validate(response_data.get("resource"))
+
+
+def listing(
+    name: str,
+    *,
+    resource_id: str | None = None,
+    issuer_id: str | None = None,
+    result_per_page: int = 0,
+    next_page_token: str | None = None,
+    credentials: dict | None = None,
+) -> Generator[Model | str, None, None]:
+    """Lists wallet related resources.
+
+    It is possible to list all classes of an issuer. Parameter 'name' has to end with 'Class',
+    all objects of a registered object type by it's classes resource id,
+    Parameter 'name' has to end with 'Object'.
+    To get all issuers, parameter 'name' has to be 'Issuer' and no further parameters are allowed.
+
+    :param name:                    Registered name to base the listing on.
+    :param resource_id:             Id of the class to list objects of.
+                                    Only for object listings`
+                                    Mutually exclusive with issuer_id.
+    :param issuer_id:               Identifier of the issuer to list classes of.
+                                    Only for class listings.
+                                    If no resource_id is given and issuer_id is None, it will
+                                    be fetched from the environment variable EDUTAP_WALLET_GOOGLE_ISSUER_ID.
+                                    Mutually exclusive with resource_id.
+    :param result_per_page:         Number of results per page to fetch.
+                                    If omitted all results will be fetched and provided by the generator.
+    :param next_page_token:         Token to get the next page of results.
+    :param credentials:             Optional session credentials as dict.
+    :raises QuotaExceededException: When the quota was exceeded
+    :raises ValueError:             When input was invalid.
+    :raises LookupError:            When the resource was not found (404)
+    :raises WalletException:        When the response status code is not 200 or 404
+    :return:                        Generator of the data as model-instances based on the data returned by the
+                                    Restful API. When result_per_page is given, the generator will return
+                                    a next_page_token after the last model-instance result.
+    """
+    model, params, is_pageable, resource_identifier = _prepare_listing(
+        name, resource_id, issuer_id
+    )
+
+    # Setup pagination parameters
+    pagination_params = _setup_pagination_params(
+        is_pageable, result_per_page, next_page_token
+    )
+    params.update(pagination_params)
+
+    url = client_pool.url(name)
+
+    client = client_pool.client(credentials=credentials)
+    while True:
+        response = client.get(url=url, params=params)
+        handle_response_errors(response, "list", name, resource_identifier)
+
+        validated_models, pagination = _process_listing_page(response.content, model)
+
+        yield from validated_models
+
+        if not is_pageable or not pagination:
+            break
+        if result_per_page > 0:
+            if pagination.nextPageToken:
+                yield pagination.nextPageToken
+                break
+        else:
+            if pagination.nextPageToken:
+                params["token"] = pagination.nextPageToken
+                continue
+        break
+    return
+
+
+# Asynchronous API
+
+
+async def acreate(
+    data: Model,
+    credentials: dict | None = None,
+) -> Model:
+    """
+    Creates a Google Wallet item asynchronously. `C` in CRUD.
+
+    :param data:                          Data to pass to the Google RESTful API.
+                                          A model instance, has to be a registered model.
+    :param credentials:                   Optional session credentials as dict.
+    :raises QuotaExceededException:       When the quota was exceeded.
+    :raises ObjectAlreadyExistsException: When the id to be created already exists at Google.
+    :raises WalletException:              When the response status code is not 200.
+    :return:                              The created model based on the data returned by the Restful API.
+    """
+    name, verified_json, model, headers = _prepare_create(data)
+    url = client_pool.url(name)
+
+    client = client_pool.async_client(credentials=credentials)
+    response = await client.post(
+        url=url,
+        data=verified_json.encode("utf-8"),
+        headers=headers,
+    )
+
+    handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
+    return parse_response_json(response, model)
+
+
+async def aread(
+    name: str,
+    resource_id: str,
+    credentials: dict | None = None,
+) -> Model:
+    """
+    Reads a Google Wallet Class or Object asynchronously. `R` in CRUD.
+
+    :param name:             Registered name of the model to use
+    :param resource_id:      Identifier of the resource to read from the Google RESTful API
+    :param credentials:      Optional session credentials as dict.
+    :QuotaExceededException: When the quota was exceeded.
+    :raises LookupError:     When the resource was not found (404).
+    :raises WalletException  When the response status code is not 200 or 404.
+    :return:                 The created model based on the data returned by the Restful API
+    """
+    (model,) = _prepare_read(name, resource_id)
+    url = client_pool.url(name, f"/{resource_id}")
+
+    client = client_pool.async_client(credentials=credentials)
+    response = await client.get(url=url)
+
+    handle_response_errors(response, "read", name, resource_id)
+    return parse_response_json(response, model)
+
+
+async def aupdate(
+    data: Model,
+    *,
+    partial: bool = True,
+    credentials: dict | None = None,
+) -> Model:
+    """
+    Updates a Google Wallet Class or Object asynchronously. `U` in CRUD.
+
+    :param data:                    Data to pass to the Google RESTful API.
+                                    A model instance, has to be a registered model.
+    :param credentials:             Optional session credentials as dict.
+    :param partial:                 Whether a partial update is executed or a full replacement.
+    :raises QuotaExceededException: When the quota was exceeded
+    :raises LookupError:            When the resource was not found (404)
+    :raises WalletException:        When the response status code is not 200 or 404
+    :return:                        The created model based on the data returned by the Restful API
+    """
+    name, resource_id, verified_json, model = _prepare_update(data)
+
+    session = client_pool.async_client(credentials=credentials)
+    if partial:
+        response = await session.patch(
+            url=client_pool.url(name, f"/{resource_id}"),
+            data=verified_json.encode("utf-8"),
+        )
+    else:
+        response = await session.put(
+            url=client_pool.url(name, f"/{resource_id}"),
+            data=verified_json.encode("utf-8"),
+        )
+
+    logger.debug(verified_json.encode("utf-8"))
+    handle_response_errors(response, "update", name, resource_id)
+    return parse_response_json(response, model)
+
+
+async def amessage(
+    name: str,
+    resource_id: str,
+    message: dict[str, typing.Any] | Message,
+    credentials: dict | None = None,
+) -> Model:
+    """Sends a message to a Google Wallet Class or Object asynchronously.
+
+    :param name:                      Registered name of the model to use
+    :param resource_id:               Identifier of the resource to send to
+    :param message:                   Message to send.
+    :param credentials:               Optional session credentials as dict.
+    :raises QuotaExceededException:   When the quota was exceeded
+    :raises LookupError:              When the resource was not found (404)
+    :raises WalletException:          When the response status code is not 200 or 404
+    :return:                          The created Model object as returned by the Restful API
+    """
+    model, verified_json = _prepare_message(name, message)
+    url = client_pool.url(name, f"/{resource_id}/addMessage")
+
+    client = client_pool.async_client(credentials=credentials)
+    response = await client.post(url=url, data=verified_json.encode("utf-8"))
+
+    handle_response_errors(response, "send message to", name, resource_id)
+    logger.debug(f"RAW-Response: {response.content!r}")
+    response_data = json.loads(response.content)
+    return model.model_validate(response_data.get("resource"))
+
+
+async def alisting(
+    name: str,
+    *,
+    resource_id: str | None = None,
+    issuer_id: str | None = None,
+    result_per_page: int = 0,
+    next_page_token: str | None = None,
+    credentials: dict | None = None,
+) -> AsyncGenerator[Model | str, None]:
+    """Lists wallet related resources asynchronously.
+
+    It is possible to list all classes of an issuer. Parameter 'name' has to end with 'Class',
+    all objects of a registered object type by it's classes resource id,
+    Parameter 'name' has to end with 'Object'.
+    To get all issuers, parameter 'name' has to be 'Issuer' and no further parameters are allowed.
+
+    :param name:                    Registered name to base the listing on.
+    :param resource_id:             Id of the class to list objects of.
+                                    Only for object listings`
+                                    Mutually exclusive with issuer_id.
+    :param issuer_id:               Identifier of the issuer to list classes of.
+                                    Only for class listings.
+                                    If no resource_id is given and issuer_id is None, it will
+                                    be fetched from the environment variable EDUTAP_WALLET_GOOGLE_ISSUER_ID.
+                                    Mutually exclusive with resource_id.
+    :param result_per_page:         Number of results per page to fetch.
+                                    If omitted all results will be fetched and provided by the generator.
+    :param next_page_token:         Token to get the next page of results.
+    :param credentials:             Optional session credentials as dict.
+    :raises QuotaExceededException: When the quota was exceeded
+    :raises ValueError:             When input was invalid.
+    :raises LookupError:            When the resource was not found (404)
+    :raises WalletException:        When the response status code is not 200 or 404
+    :return:                        AsyncGenerator of the data as model-instances based on the data returned by the
+                                    Restful API. When result_per_page is given, the generator will return
+                                    a next_page_token after the last model-instance result.
+    """
+    model, params, is_pageable, resource_identifier = _prepare_listing(
+        name, resource_id, issuer_id
+    )
+
+    # Setup pagination parameters
+    pagination_params = _setup_pagination_params(
+        is_pageable, result_per_page, next_page_token
+    )
+    params.update(pagination_params)
+
+    url = client_pool.url(name)
+
+    client = client_pool.async_client(credentials=credentials)
+    while True:
+        response = await client.get(url=url, params=params)
+        handle_response_errors(response, "list", name, resource_identifier)
+
+        validated_models, pagination = _process_listing_page(response.content, model)
+
+        for validated_model in validated_models:
+            yield validated_model
+
+        if not is_pageable or not pagination:
+            break
+        if result_per_page > 0:
+            if pagination.nextPageToken:
+                yield pagination.nextPageToken
+                break
+        else:
+            if pagination.nextPageToken:
+                params["token"] = pagination.nextPageToken
+                continue
+        break
+    return

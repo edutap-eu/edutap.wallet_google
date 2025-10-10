@@ -1,52 +1,89 @@
 # edutap.wallet_google
 
-<p style="text-align:center;">
-
-![PyPI - Version](https://img.shields.io/pypi/v/edutap.wallet_google?logo=python)
+[![PyPI - Version](https://img.shields.io/pypi/v/edutap.wallet_google?logo=python)](https://pypi.org/project/edutap.wallet-google/)
 [![CI Tests](https://github.com/edutap-eu/edutap.wallet_google/actions/workflows/tests.yaml/badge.svg)](https://github.com/edutap-eu/edutap.wallet_google/actions/workflows/tests.yaml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/edutap-eu/edutap.wallet_google/main.svg)](https://results.pre-commit.ci/latest/github/edutap-eu/edutap.wallet_google/main)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-![GitHub Repo stars](https://img.shields.io/github/stars/edutap-eu/edutap.wallet_google)
 
-</p>
+**Python library for creating and managing digital passes in Google Wallet.**
 
-This package provides a Python API to interact with the Google Wallet Restful API to issue and manage digital passes.
+Digital passes are mobile tickets, membership cards, event tickets, loyalty cards, or coupons that users store in their smartphone's Google Wallet app—like a digital version of the cards in your physical wallet.
 
-It contains:
+## What This Library Does
 
-- an API to create, read, update, list and send messages to Google Wallet classes and objects;
-- FastAPI endpoints to receive Google Wallet callback requests and to deliver pass images.
+This package lets you:
 
-This is supported by
-- Pydantic models of the classes, objects, and their data-types according to the Google Wallet documentation;
-- an extensible registry for models of these classes and objects;
-- a session manager for authorized HTTPS communication with the Google Restful API;
-- a plugin system with protocols to decouple the actual business logic for the callback/ image provider.
+- **Create** digital passes (event tickets, membership cards, loyalty cards, etc.)
+- **Update** passes already in users' wallets
+- **Send** notifications to pass holders
+- **List** and manage your issued passes
+- **Handle** callbacks when users save or delete passes
+
+**Both sync and async APIs** are supported out of the box.
+
+## Quick Start
+
+```bash
+pip install edutap.wallet_google
+```
+
+```python
+from edutap.wallet_google import api
+
+# Create a pass class (template)
+my_class = api.new("GenericClass", {
+    "id": "your-issuer-id.your-class-name",
+    "classTemplateInfo": {"cardTemplateOverride": {"cardRowTemplateInfos": [...]}}
+})
+api.create(my_class)
+
+# Create a pass object (the actual pass)
+my_pass = api.new("GenericObject", {
+    "id": "your-issuer-id.unique-pass-id",
+    "classId": "your-issuer-id.your-class-name",
+    "state": "ACTIVE"
+})
+api.create(my_pass)
+
+# Generate "Add to Google Wallet" link
+link = api.save_link([my_pass])
+```
 
 ## Documentation
 
-Read the [complete edutap.wallet_google documentation](https://docs.edutap.eu/packages/edutap_wallet_google/index.html) to get started.
+**[Complete Documentation](https://docs.edutap.eu/packages/edutap_wallet_google/index.html)**
 
-## Source Code
+## Features
 
-The sources are in a GIT DVCS with its main branches at the [GitHub edutap-eu/edutap.wallet_google repository](https://github.com/edutap-eu/edutap.wallet_google) .
+- **Complete Google Wallet API coverage** - All pass types supported
+- **Type-safe** - Full Pydantic models matching Google's schema
+- **Sync + Async** - Use the API style that fits your application
+- **FastAPI integration** - Ready-made endpoints for callbacks and images
+- **Signature verification** - Cryptographic validation of Google's callbacks
+- **Modern Python** - Built with httpx, Pydantic v2, and Python 3.10+
 
-We are looking forward to see many issue reports, forks and pull requests to make the package even better.
+## Requirements
 
-## Credits
-
-This project was initiated and initially financed by [LMU München](https://www.lmu.de).
-
-Contributors:
-
-- Alexander Loechel (LMU) - vision, consulting, prototype,
-- Philipp Auersperg-Castell (BlueDynamics Alliance) - prototype, make it work and fiddling with Google Wallet internals
-- Jens Klein (BlueDynamics Alliance) - API design, cleanup/refactoring, endpoints, tests/CI, release
-- Robert Niederreiter (BlueDynamics Alliance) - plugin system
-- Simon Lund (LMU) - support for deprecated properties
+- Python 3.10 or later (3.13 recommended)
+- Google Cloud Project with Google Wallet API enabled
+- Service account credentials (see [documentation](https://docs.edutap.eu/packages/edutap_wallet_google/installation.html))
 
 ## License
 
-The code is copyright by eduTAP - EUGLOH Working Package - Campus Life and contributors.
+[EUPL 1.2](https://opensource.org/license/eupl-1-2/) (European Union Public Licence)
 
-It is licensed under the [EUROPEAN UNION PUBLIC LICENCE v. 1.2](https://opensource.org/license/eupl-1-2/), a free and OpenSource software license.
+## Credits
+
+Developed by the **eduTAP - EUGLOH Working Package - Campus Life** team:
+
+- **Alexander Loechel** (LMU München) - Vision & consulting
+- **Philipp Auersperg-Castell** (BlueDynamics Alliance) - Core implementation
+- **Jens Klein** (BlueDynamics Alliance) - API design & testing
+- **Robert Niederreiter** (BlueDynamics Alliance) - Plugin architecture
+- **Simon Lund** (LMU München) - Maintenance
+
+Initial financing: [LMU München](https://www.lmu.de)
+
+Parts of the refactoring and code modernization were assisted by AI with Claude Code.
+
+**Contributing?** We welcome issues and pull requests at [github.com/edutap-eu/edutap.wallet_google](https://github.com/edutap-eu/edutap.wallet_google)

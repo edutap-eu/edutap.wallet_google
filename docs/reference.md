@@ -2,14 +2,30 @@
 
 ## API Functions
 
-Most tasks are done by import and using the sole `api` module:
+All API functions are in the `api` module, which provides both synchronous and asynchronous operations:
 
 ```python
 from edutap.wallet_google import api
+
+# Synchronous usage
+result = api.create(my_pass)
+
+# Asynchronous usage
+result = await api.acreate(my_pass)
 ```
+
+**Naming Convention:**
+- **Sync functions**: `create()`, `read()`, `update()`, `message()`, `listing()`
+- **Async functions**: `acreate()`, `aread()`, `aupdate()`, `amessage()`, `alisting()`
+- **Shared functions**: `new()` and `save_link()` work for both sync and async
 
 To tell the API functions what kind of item to deal with, the first parameter is the registered name of the model (except for `save_link`).
 Models can be the different top-level wallet-classes or -objects, but also issuers, permissions and such (see section models below).
+
+### API Module
+
+The `api` module provides all CRUD operations in both sync and async variants.
+All functions use persistent, pooled HTTP clients managed by the `ClientPoolManager` for optimal connection reuse.
 
 ```{eval-rst}
 .. currentmodule:: edutap.wallet_google.api
@@ -18,13 +34,25 @@ Models can be the different top-level wallet-classes or -objects, but also issue
 .. autosummary::
    :toctree: _autosummary
 
+   new
+   save_link
    create
    read
    update
    message
    listing
-   save_link
+   acreate
+   aread
+   aupdate
+   amessage
+   alisting
 ```
+
+**Usage Notes:**
+- Sync functions use regular function calls: `result = api.create(data)`
+- Async functions use `async`/`await`: `result = await api.acreate(data)`
+- `new()` is synchronous for both - it just creates model instances
+- `save_link()` is synchronous for both - it uses synchronous JWT signing and should not be awaited
 
 ## Models
 
@@ -145,6 +173,35 @@ Models can be the different top-level wallet-classes or -objects, but also issue
    JwtResource
    JwtResponse
    Resources
+
+```
+
+### Handler Models
+
+```{eval-rst}
+
+`edutap.wallet_google.models.handlers`
+
+.. currentmodule:: edutap.wallet_google.models.handlers
+
+.. rubric:: Callback Models
+
+.. autosummary::
+   :toctree: _autosummary
+
+   CallbackData
+   SignedMessage
+   IntermediateSigningKey
+   SignedKey
+   RootSigningPublicKey
+   RootSigningPublicKeys
+
+.. rubric:: Image Models
+
+.. autosummary::
+   :toctree: _autosummary
+
+   ImageData
 
 ```
 
@@ -290,8 +347,21 @@ This are models for "Data Types" as Google names them, the sub schemas for neste
    SecurityAnimation
    GroupingInfo
    Pagination
+   PaginatedResponse
    CallbackOptions
    SaveRestrictions
+
+.. rubric:: data-types: JWT
+
+`edutap.wallet_google.models.datatypes.jwt`
+
+.. currentmodule:: edutap.wallet_google.models.datatypes.jwt
+
+.. autosummary::
+   :toctree: _autosummary
+
+   JWTPayload
+   JWTClaims
 
 .. rubric:: data-types: Localized String
 
@@ -338,6 +408,18 @@ This are models for "Data Types" as Google names them, the sub schemas for neste
    :toctree: _autosummary
 
    Message
+
+.. rubric:: data-types: Module Data
+
+`edutap.wallet_google.models.datatypes.moduledata`
+
+.. currentmodule:: edutap.wallet_google.models.datatypes.moduledata
+
+.. autosummary::
+   :toctree: _autosummary
+
+   ModuleViewConstraints
+   ValueAddedModuleData
 
 .. rubric:: data-types: Money
 
@@ -428,16 +510,144 @@ This are models for "Data Types" as Google names them, the sub schemas for neste
    RegistryMetadataDict
 
 
-.. rubric:: Session
+.. rubric:: HTTP Client Pool
 
-`edutap.wallet_google.session`
+`edutap.wallet_google.clientpool`
 
-.. currentmodule:: edutap.wallet_google.session
+HTTP client pooling is managed using httpx clients with OAuth2 service account authentication.
+The ClientPoolManager handles both sync and async operations with persistent, pooled clients.
+Clients are cached per credentials set and reused across multiple API calls for optimal performance.
+
+**Cleanup:**
+
+- **Sync clients**: Automatically closed on process exit via atexit handler
+- **Async clients**: Must be manually closed before event loop shutdown:
+
+  .. code-block:: python
+
+     from edutap.wallet_google.clientpool import client_pool
+
+     # At application shutdown (in async context)
+     await client_pool.aclose_all_clients()
+
+.. currentmodule:: edutap.wallet_google.clientpool
 
 .. autosummary::
    :toctree: _autosummary
 
-   SessionManager
-   HTTPRecorder
+   ClientPoolManager
+   client_pool
+
+
+.. rubric:: Settings
+
+`edutap.wallet_google.settings`
+
+.. currentmodule:: edutap.wallet_google.settings
+
+.. autosummary::
+   :toctree: _autosummary
+
+   Settings
+   KubernetesSettings
+
+
+.. rubric:: Utilities
+
+`edutap.wallet_google.utils`
+
+.. currentmodule:: edutap.wallet_google.utils
+
+.. autosummary::
+   :toctree: _autosummary
+
+   encrypt_data
+   decrypt_data
+   generate_fernet_key
+   validate_data
+   validate_data_and_convert_to_json
+   handle_response_errors
+   parse_response_json
+
+
+.. rubric:: Plugins
+
+`edutap.wallet_google.plugins`
+
+.. currentmodule:: edutap.wallet_google.plugins
+
+.. autosummary::
+   :toctree: _autosummary
+
+   register_callback_handler
+   get_callback_handlers
+   register_image_provider
+   get_image_providers
+
+
+.. rubric:: Protocols
+
+`edutap.wallet_google.protocols`
+
+.. currentmodule:: edutap.wallet_google.protocols
+
+.. autosummary::
+   :toctree: _autosummary
+
+   CallbackHandler
+   ImageProvider
+
+```
+
+## Exceptions
+
+```{eval-rst}
+
+`edutap.wallet_google.exceptions`
+
+.. currentmodule:: edutap.wallet_google.exceptions
+
+.. autosummary::
+   :toctree: _autosummary
+
+   WalletException
+   ObjectAlreadyExistsException
+   QuotaExceededException
+
+```
+
+## Handlers
+
+### FastAPI Integration
+
+```{eval-rst}
+
+`edutap.wallet_google.handlers.fastapi`
+
+.. currentmodule:: edutap.wallet_google.handlers.fastapi
+
+.. autosummary::
+   :toctree: _autosummary
+
+   router_callback
+   handle_callback
+   router_images
+   handle_image
+
+```
+
+### Signature Validation
+
+```{eval-rst}
+
+`edutap.wallet_google.handlers.validate`
+
+.. currentmodule:: edutap.wallet_google.handlers.validate
+
+.. autosummary::
+   :toctree: _autosummary
+
+   google_root_signing_public_keys
+   verified_signed_message
 
 ```
