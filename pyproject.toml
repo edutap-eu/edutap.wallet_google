@@ -63,7 +63,7 @@ typecheck  = [
 ]
 develop = [
     "pdbp>=1.7.1", # the maintained successor to pdbpp
-    # "ipython",  not recommended with pdpb, better use ipdb then
+    # "ipython",  # not recommended with pdpb, better use ipdb then
 ]
 
 [project.scripts]
