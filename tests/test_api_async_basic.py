@@ -42,5 +42,5 @@ async def test_validate_async_functions_exist():
     """Test that async validation functions exist."""
     from edutap.wallet_google.handlers import validate
 
-    assert hasattr(validate, "google_root_signing_public_keys_async")
-    assert hasattr(validate, "verified_signed_message_async")
+    assert hasattr(validate, "google_root_signing_public_keys")
+    assert hasattr(validate, "verified_signed_message")
