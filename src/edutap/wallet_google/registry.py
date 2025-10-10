@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
-from typing import Dict
 from typing import TYPE_CHECKING
 from typing import TypedDict
 
@@ -186,7 +185,7 @@ def _find_enums() -> list[str]:
     return enums
 
 
-def validate_fields_for_name(name: str, fields: list[str]) -> bool:
+def validate_fields_for_name(name: str, fields: list[str]) -> tuple[bool, list[str]]:
     """Verifies that the given fields are valid for the given registered name.
 
     :raises: ValueError when any of the fields is not valid.
@@ -208,8 +207,8 @@ def validate_fields_for_name(name: str, fields: list[str]) -> bool:
     if non_valid_fields:
         # raise ValueError(f"Fields {non_valid_fields} not valid for '{name}'")
         print(f"Fields {', '.join(non_valid_fields)} not valid for '{name}'")
-        return False
-    return True
+        return (False, non_valid_fields)
+    return (True, [])
 
 
 @functools.cache
@@ -253,7 +252,12 @@ def _get_fields_for_(name, definition: dict) -> list[str]:
     fields: set[str] = set()
     if definition in ("string", "boolean"):
         fields.add(name)
-    if definition.get("type") in ("string", "boolean"):
+    if name == "kind":
+        breakpoint()
+    if definition.get("deprecated") is True:
+        breakpoint()
+        pass
+    elif definition.get("type") in ("string", "boolean"):
         fields.add(name)
     elif definition.get("type") == "array":
         fields.add(name)

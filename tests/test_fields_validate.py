@@ -22,22 +22,33 @@ def test_get_fields_for_model(name):
 
 
 def test_validate_fields_for_name():
-    assert (
-        validate_fields_for_name(
-            "LoyaltyObject",
-            [
-                "kind",
-                "id",
-            ],
-        )
-        is True
+    assert validate_fields_for_name(
+        "LoyaltyObject",
+        [
+            "kind",
+            "id",
+        ],
+    ) == (True, [])
+    assert validate_fields_for_name(
+        "LoyaltyObject",
+        [
+            "kind",
+            "id",
+            "spam",
+        ],
+    ) == (
+        False,
+        ["spam"],
     )
-    assert validate_fields_for_name("LoyaltyObject", ["kind", "id", "spam"]) is False
 
-    assert (
-        validate_fields_for_name("LoyaltyObject", ["kind", "id", "imageModulesData/*"])
-        is True
-    )
+    assert validate_fields_for_name(
+        "LoyaltyObject",
+        [
+            "kind",
+            "id",
+            "imageModulesData/*",
+        ],
+    ) == (True, [])
 
     # assert validate_fields_for_name("LoyaltyObject", ["kind", "id", "imageModulesData(items)"]) is False
 

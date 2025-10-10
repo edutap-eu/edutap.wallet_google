@@ -45,6 +45,7 @@ from .registry import lookup_metadata_by_model_type
 from .registry import lookup_metadata_by_name
 from .registry import lookup_model_by_name
 from .registry import raise_when_operation_not_allowed
+from .registry import validate_fields_for_name
 from .utils import handle_response_errors
 from .utils import parse_response_json
 from .utils import validate_data
@@ -426,7 +427,7 @@ def create(
     handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
     if fields:
         logger.debug(f"RAW-Response with fields {fields}: {response.content!r}")
-        breakpoint()
+        return json.loads(response.content)
     return parse_response_json(response, model)
 
 
@@ -452,6 +453,11 @@ def read(
     url = client_pool.url(name, f"/{resource_id}")
     params: dict[str, str] | None = None
     if fields:
+        valid, non_valid_fields = validate_fields_for_name(name, fields)
+        if not valid:
+            raise ValueError(
+                f"The following fields are not valid for model {name}: {", ".join(non_valid_fields)}"
+            )
         params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
@@ -637,8 +643,10 @@ async def acreate(
 async def aread(
     name: str,
     resource_id: str,
+    *,
+    fields: list[str] | None = None,
     credentials: dict | None = None,
-) -> Model:
+) -> Model | dict[str, typing.Any]:
     """
     Reads a Google Wallet Class or Object asynchronously. `R` in CRUD.
 
@@ -652,11 +660,22 @@ async def aread(
     """
     (model,) = _prepare_read(name, resource_id)
     url = client_pool.url(name, f"/{resource_id}")
+    params: dict[str, str] | None = None
+    if fields:
+        valid, non_valid_fields = validate_fields_for_name(name, fields)
+        if not valid:
+            raise ValueError(
+                f"The following fields are not valid for model {name}: {", ".join(non_valid_fields)}"
+            )
+        params = {"fields": ",".join(fields)}
 
     client = client_pool.async_client(credentials=credentials)
-    response = await client.get(url=url)
+    response = await client.get(url=url, params=params)
 
     handle_response_errors(response, "read", name, resource_id)
+    if fields:
+        logger.debug(f"RAW-Response with fields {fields}: {response.content!r}")
+        return json.loads(response.content)
     return parse_response_json(response, model)
 
 
