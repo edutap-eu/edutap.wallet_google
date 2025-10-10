@@ -394,6 +394,8 @@ def _setup_pagination_params(
 
 def create(
     data: Model,
+    *,
+    fields: list[str] | None = None,
     credentials: dict | None = None,
 ) -> Model:
     """
@@ -409,23 +411,32 @@ def create(
     """
     name, verified_json, model, headers = _prepare_create(data)
     url = client_pool.url(name)
+    params: dict[str, str] | None = None
+    if fields:
+        params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
     response = client.post(
         url=url,
         data=verified_json.encode("utf-8"),
         headers=headers,
+        params=params,
     )
 
     handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
+    if fields:
+        logger.debug(f"RAW-Response with fields {fields}: {response.content!r}")
+        breakpoint()
     return parse_response_json(response, model)
 
 
 def read(
     name: str,
     resource_id: str,
+    *,
+    fields: list[str] | None = None,
     credentials: dict | None = None,
-) -> Model:
+) -> Model | dict[str, typing.Any]:
     """
     Reads a Google Wallet Class or Object. `R` in CRUD.
 
@@ -439,11 +450,17 @@ def read(
     """
     (model,) = _prepare_read(name, resource_id)
     url = client_pool.url(name, f"/{resource_id}")
+    params: dict[str, str] | None = None
+    if fields:
+        params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
-    response = client.get(url=url)
+    response = client.get(url=url, params=params)
 
     handle_response_errors(response, "read", name, resource_id)
+    if fields:
+        logger.debug(f"RAW-Response with fields {fields}: {response.content!r}")
+        return json.loads(response.content)
     return parse_response_json(response, model)
 
 

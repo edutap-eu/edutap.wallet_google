@@ -1,4 +1,3 @@
-from .models.bases import Model
 from pydantic import BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
 from typing import Dict
@@ -143,35 +142,6 @@ def raise_when_operation_not_allowed(name: str, operation: str) -> None:
     """
     if not _MODEL_REGISTRY_BY_NAME[name][f"can_{operation}"]:  # type: ignore
         raise ValueError(f"Operation '{operation}' not allowed for '{name}'")
-
-
-@functools.cache
-def _find_models() -> Dict[str, ModelMetaclass]:
-    models: Dict[str, ModelMetaclass] = {}
-    pkg = importlib.import_module("edutap.wallet_google")
-    datatypes_module = pkg.models.datatypes
-    deprecated_module = pkg.models.deprecated
-    enums_module = pkg.models.datatypes.enums
-
-    for cls_name, cls in inspect.getmembers(deprecated_module, inspect.isclass):
-        if (
-            cls.__module__.startswith("edutap.wallet_google.models.deprecated")
-            and issubclass(cls, BaseModel)
-            and cls is not BaseModel
-        ):
-            models[cls_name] = cls
-    for enum_name, enum in inspect.getmembers(enums_module, inspect.isclass):
-        models[enum_name] = BaseModel
-    for name, module in inspect.getmembers(datatypes_module, inspect.ismodule):
-        for cls_name, cls in inspect.getmembers(module, inspect.isclass):
-            if (
-                cls.__module__.startswith("edutap.wallet_google.models.datatypes")
-                and issubclass(cls, BaseModel)
-                and cls is not BaseModel
-            ):
-                models[cls_name] = cls
-
-    return models
 
 
 @functools.cache
