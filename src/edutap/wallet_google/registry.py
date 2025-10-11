@@ -193,14 +193,24 @@ def validate_fields_for_name(name: str, fields: list[str]) -> tuple[bool, list[s
     non_valid_fields = []
 
     model = lookup_model_by_name(name)
+    model_fields = _get_fields_for_model(model)
     for field in fields:
         if field == "*":
             continue
         elif "/" in field:
-            # nested field, only check the first part
-            first_part = field.split("/")[0]
-            if first_part not in model.model_fields:
+            if "*" in field:
+                first_part = field.split("*")[0][:-1]
+
+                if first_part not in model_fields:
+                    non_valid_fields.append(field)
+                    continue
+            elif field not in model_fields:
                 non_valid_fields.append(field)
+        elif "(" in field and ")" in field:
+            first_part = field.split("(")[0]
+            if first_part[:-1] not in model_fields:
+                non_valid_fields.append(field)
+                continue
         elif field not in model.model_fields:
             non_valid_fields.append(field)
 

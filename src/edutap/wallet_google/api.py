@@ -456,7 +456,7 @@ def read(
         valid, non_valid_fields = validate_fields_for_name(name, fields)
         if not valid:
             raise ValueError(
-                f"The following fields are not valid for model {name}: {", ".join(non_valid_fields)}"
+                f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
             )
         params = {"fields": ",".join(fields)}
 
@@ -665,7 +665,7 @@ async def aread(
         valid, non_valid_fields = validate_fields_for_name(name, fields)
         if not valid:
             raise ValueError(
-                f"The following fields are not valid for model {name}: {", ".join(non_valid_fields)}"
+                f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
             )
         params = {"fields": ",".join(fields)}
 

@@ -51,6 +51,7 @@ def test_get_partial_read(mock_session) -> None:
 
 
 @pytest.mark.asyncio
+@respx.mock
 async def test_get_partial_aread(mock_async_session) -> None:
     fields = [
         "id",

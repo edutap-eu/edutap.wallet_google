@@ -57,6 +57,7 @@ test = [
     "pytest",
     "respx",
     "tox",
+    "tox-uv",
 ]
 typecheck  = [
     "mypy",
