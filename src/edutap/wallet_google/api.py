@@ -453,11 +453,23 @@ def read(
     url = client_pool.url(name, f"/{resource_id}")
     params: dict[str, str] | None = None
     if fields:
+        # Accept fields that are prefixed with 'resource.' by stripping the
+        # prefix for validation but keeping the original field names when
+        # building the HTTP params (Google supports nested selectors like
+        # 'resource.id').
         valid, non_valid_fields = validate_fields_for_name(name, fields)
         if not valid:
-            raise ValueError(
-                f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
+            # try stripping 'resource.' prefix where present and validate again
+            stripped = [
+                f.split(".", 1)[1] if f.startswith("resource.") else f for f in fields
+            ]
+            valid_stripped, non_valid_stripped = validate_fields_for_name(
+                name, stripped
             )
+            if not valid_stripped:
+                raise ValueError(
+                    f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
+                )
         params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
@@ -493,11 +505,23 @@ def update(
     name, resource_id, verified_json, model = _prepare_update(data)
     params: dict[str, str] | None = None
     if fields:
+        # Accept fields that are prefixed with 'resource.' by stripping the
+        # prefix for validation but keeping the original field names when
+        # building the HTTP params (Google supports nested selectors like
+        # 'resource.id').
         valid, non_valid_fields = validate_fields_for_name(name, fields)
         if not valid:
-            raise ValueError(
-                f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
+            # try stripping 'resource.' prefix where present and validate again
+            stripped = [
+                f.split(".", 1)[1] if f.startswith("resource.") else f for f in fields
+            ]
+            valid_stripped, non_valid_stripped = validate_fields_for_name(
+                name, stripped
             )
+            if not valid_stripped:
+                raise ValueError(
+                    f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
+                )
         params = {"fields": ",".join(fields)}
 
     session = client_pool.client(credentials=credentials)
@@ -546,11 +570,22 @@ def message(
     url = client_pool.url(name, f"/{resource_id}/addMessage")
     params: dict[str, str] | None = None
     if fields:
+        # Accept fields that are prefixed with 'resource.' by stripping the
+        # prefix for validation but keeping the original field names when
+        # building the HTTP params (Google supports nested selectors like
+        # 'resource.id').
         valid, non_valid_fields = validate_fields_for_name(name, fields)
         if not valid:
-            raise ValueError(
-                f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
+            stripped = [
+                f.split(".", 1)[1] if f.startswith("resource.") else f for f in fields
+            ]
+            valid_stripped, non_valid_stripped = validate_fields_for_name(
+                name, stripped
             )
+            if not valid_stripped:
+                raise ValueError(
+                    f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
+                )
         params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
@@ -640,7 +675,7 @@ def listing(
                 yield from response_data
             else:
                 yield response_data
-            
+
             # Handle pagination for partial responses
             if result_per_page > 0 and "nextPageToken" in response_data:
                 yield response_data["nextPageToken"]
@@ -650,7 +685,9 @@ def listing(
                 continue
             break
         else:
-            validated_models, pagination = _process_listing_page(response.content, model)
+            validated_models, pagination = _process_listing_page(
+                response.content, model
+            )
 
             yield from validated_models
 
@@ -833,7 +870,9 @@ async def amessage(
         params = {"fields": ",".join(fields)}
 
     client = client_pool.async_client(credentials=credentials)
-    response = await client.post(url=url, data=verified_json.encode("utf-8"), params=params)
+    response = await client.post(
+        url=url, data=verified_json.encode("utf-8"), params=params
+    )
 
     handle_response_errors(response, "send message to", name, resource_id)
     if fields:
@@ -921,7 +960,7 @@ async def alisting(
                     yield resource
             else:
                 yield response_data
-            
+
             # Handle pagination for partial responses
             if result_per_page > 0 and "nextPageToken" in response_data:
                 yield response_data["nextPageToken"]
@@ -931,7 +970,9 @@ async def alisting(
                 continue
             break
         else:
-            validated_models, pagination = _process_listing_page(response.content, model)
+            validated_models, pagination = _process_listing_page(
+                response.content, model
+            )
 
             for validated_model in validated_models:
                 yield validated_model
