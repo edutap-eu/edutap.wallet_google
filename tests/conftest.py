@@ -2,6 +2,7 @@ from pathlib import Path
 
 import copy
 import datetime
+import httpx
 import json
 import os
 import pytest
@@ -34,6 +35,20 @@ def clean_registry_by_model():
     yield _MODEL_REGISTRY_BY_MODEL
     _MODEL_REGISTRY_BY_MODEL.clear()
     _MODEL_REGISTRY_BY_MODEL.update(OLD_MODEL_REGISTRY_BY_MODEL)
+
+
+@pytest.fixture
+def mock_async_session(monkeypatch):
+    """Fixture to provide a mock async session that doesn't require real credentials."""
+    from edutap.wallet_google.clientpool import ClientPoolManager
+
+    def mock_async_session(self, credentials=None):
+        # Return httpx.AsyncClient without real auth
+        # We just need something that httpx/respx can mock
+        return httpx.AsyncClient()
+
+    monkeypatch.setattr(ClientPoolManager, "async_client", mock_async_session)
+    yield
 
 
 @pytest.fixture
