@@ -1,15 +1,11 @@
+from .models.bases import Model
 from pydantic import BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
-from typing import TYPE_CHECKING
 from typing import TypedDict
 
 import functools
 import importlib
 import inspect
-
-
-if TYPE_CHECKING:
-    from .models.bases import Model
 
 
 class RegistryMetadataDict(TypedDict, total=False):
