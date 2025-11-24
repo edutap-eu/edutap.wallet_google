@@ -14,7 +14,7 @@ jobs:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -40,7 +40,7 @@ jobs:
       name: Integration-Tests
       url: https://pypi.org/edutap-eu/edutap.wallet_google/
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       # - name: Check for changed models or API
       #   id: changed-models-or-api
       #   uses: tj-actions/changed-files@v45
