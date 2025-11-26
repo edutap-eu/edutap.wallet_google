@@ -52,7 +52,7 @@ class Issuer(Model):
     see: https://developers.google.com/wallet/generic/rest/v1/issuer
     """
 
-    issuerId: str
+    issuerId: str | None = None
     name: str
     contactInfo: IssuerContactInfo | None = None
     homepageUrl: AnyHttpUrl | None = None
