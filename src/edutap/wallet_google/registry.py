@@ -14,6 +14,7 @@ class RegistryMetadataDict(TypedDict, total=False):
     url_part: str
     plural: str
     resource_id: str
+    pass_resource_id_on_create: bool
     can_create: bool
     can_read: bool
     can_update: bool
@@ -38,6 +39,7 @@ class register_model:
         *,
         plural: str | None = None,
         resource_id: str = "id",
+        pass_resource_id_on_create=True,
         can_create: bool = True,
         can_read: bool = True,
         can_update: bool = True,
@@ -67,6 +69,7 @@ class register_model:
             "url_part": url_part,
             "plural": plural or f"{url_part}s",
             "resource_id": resource_id,
+            "pass_resource_id_on_create": pass_resource_id_on_create,
             "can_create": can_create,
             "can_read": can_read,
             "can_update": can_update,
