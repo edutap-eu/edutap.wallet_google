@@ -16,6 +16,7 @@ def test_decorator(clean_registry_by_name, clean_registry_by_model):
         "can_update": True,
         "model": Foo,
         "name": "Foo",
+        "pass_resource_id_on_create": True,
         "plural": "foos",
         "resource_id": "id",
         "url_part": "foo",
@@ -50,6 +51,7 @@ def test_decorator(clean_registry_by_name, clean_registry_by_model):
         "can_update": False,
         "model": Bar,
         "name": "Bar",
+        "pass_resource_id_on_create": True,
         "plural": "barses",
         "resource_id": "id",
         "url_part": "baar",
@@ -85,6 +87,7 @@ def test_lookup_metadata_by_name(clean_registry_by_name, clean_registry_by_model
     assert lookup_metadata_by_name("Foo") == {
         "plural": "foos",
         "resource_id": "id",
+        "pass_resource_id_on_create": True,
         "can_create": True,
         "can_list": True,
         "can_message": True,
@@ -115,6 +118,7 @@ def test_lookup_metadata_by_model_instance(
     assert lookup_metadata_by_model_instance(foo) == {
         "plural": "foos",
         "resource_id": "id",
+        "pass_resource_id_on_create": True,
         "can_create": True,
         "can_list": True,
         "can_message": True,
