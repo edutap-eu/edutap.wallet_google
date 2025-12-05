@@ -17,6 +17,7 @@
     jobs:
       tests:
         uses: "./.github/workflows/tests.yaml"
+        secrets: inherit
 
       # Always build & lint package.
       build-package:
