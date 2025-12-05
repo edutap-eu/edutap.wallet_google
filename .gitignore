@@ -3,6 +3,7 @@
 *.pyc
 *.pyo
 .python-version
+_version.py
 
 # translation related
 *.mo

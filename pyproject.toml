@@ -1,6 +1,6 @@
 [project]
 name = "edutap.wallet-google"
-version = "3.0.0b1"
+dynamic = ["version"]
 description = "Library for Google Wallet Communication"
 keywords = ["wallet", "google", "api", "pass", 'fastapi', 'digital identity']
 readme = "README.md"
@@ -72,8 +72,15 @@ develop = [
 generate-fernet-key = "edutap.wallet_google.utils:generate_fernet_key"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+raw-options = { local_scheme = "no-local-version" }
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/edutap/wallet_google/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/edutap"]
