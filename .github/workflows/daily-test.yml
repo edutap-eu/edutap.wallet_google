@@ -2,41 +2,31 @@ name: Run Model Check daily
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # Täglich um 6:00 UTC
-  workflow_dispatch:      # Optional: manueller Start über GitHub-Oberfläche
+    - cron: '0 6 * * *'  # Daily at 6:00 UTC
+  workflow_dispatch:
 
 concurrency:
   group: daily-test-${{ github.ref }}
   cancel-in-progress: false  # Don't cancel scheduled runs
 
 jobs:
-  unit-tests:
+  model-check:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.13']
     steps:
       - uses: actions/checkout@v6
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.13'
           enable-cache: true
-          activate-environment: true
           cache-dependency-glob: |
             pyproject.toml
+      - name: Install dependencies
+        run: uv tool install --with "tox-uv,tox-gh-actions" tox
       - name: Prepare test environment
         run: |
           cp tests/data/credentials_fake.json credentials.json
           echo "EDUTAP_WALLET_GOOGLE_ISSUER_ID=1234567890123456789" > .env
-
-    #   - name: Install dependencies
-    #     run: uv tool install --with "tox-uv,tox-gh-actions" tox
-    #   - name: Test with tox
-    #     run: tox
-      - name: Install dependencies
-        run: uv pip install -e .[dev,test,typecheck]
       - name: Run Model Check Tests
-        run: |
-          pytest tests/test_check_models.py
+        run: tox -- tests/test_check_models.py
