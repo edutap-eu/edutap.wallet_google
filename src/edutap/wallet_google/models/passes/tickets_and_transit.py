@@ -44,6 +44,7 @@ from .bases import HeroImageMixin
 from .bases import ObjectModel
 from .bases import StyleableMixin
 from pydantic import Field
+from pydantic import model_validator
 
 
 # Attribute order as in Google's documentation to make future updates easier!
@@ -273,13 +274,10 @@ class TransitObject(
         ConcessionCategory.CONCESSION_CATEGORY_UNSPECIFIED
     )
     customConcessionCategory: LocalizedString | None = None
-    # TODO: validator: Only one of the two fields should be set, i.e. either customConcessionCategory or concessionCategory
     ticketRestrictions: TicketRestrictions | None = None
     purchaseDetails: PurchaseDetails | None = None
     ticketLeg: TicketLeg | None = None
     ticketLegs: list[TicketLeg] | None = None
-    # TODO: validator: If more than one leg is to be specified then use the ticketLegs field instead.
-    #                  Both ticketLeg and ticketLegs may not be set.
     # inherits hexBackgroundColor
     tripType: TripType = TripType.TRIP_TYPE_UNSPECIFIED
     # inherits id
@@ -311,6 +309,26 @@ class TransitObject(
         NotificationSettingsForUpdates.NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED
     )
     # inherits valueAddedModuleData
+
+    @model_validator(mode="after")
+    def check_concession_category_exclusivity(self) -> "TransitObject":
+        """Only one of concessionCategory or customConcessionCategory can be set."""
+        if (
+            self.customConcessionCategory is not None
+            and self.concessionCategory
+            != ConcessionCategory.CONCESSION_CATEGORY_UNSPECIFIED
+        ):
+            raise ValueError(
+                "Only one of [customConcessionCategory, concessionCategory] can be set"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def check_ticket_leg_exclusivity(self) -> "TransitObject":
+        """Both ticketLeg and ticketLegs cannot be set."""
+        if self.ticketLeg is not None and self.ticketLegs is not None:
+            raise ValueError("Both ticketLeg and ticketLegs cannot be set")
+        return self
 
 
 @register_model("FlightClass", url_part="flightClass", plural="flightClasses")
