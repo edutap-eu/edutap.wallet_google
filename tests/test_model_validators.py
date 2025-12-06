@@ -59,3 +59,104 @@ def test_loyality_LoyaltyPointsBalance_validator_failures():
                 currencyCode="USD",
             ),
         )
+
+
+# TransitObject validators tests
+
+
+def test_transit_object_concession_category_ok():
+    """Test valid cases for concession category fields."""
+    from edutap.wallet_google.models.datatypes.enums import ConcessionCategory
+    from edutap.wallet_google.models.datatypes.general import LocalizedString
+    from edutap.wallet_google.models.passes.tickets_and_transit import TransitObject
+
+    # Only default concessionCategory (UNSPECIFIED), no customConcessionCategory
+    obj = TransitObject(id="issuer.obj1", classId="issuer.class1")
+    assert obj.concessionCategory == ConcessionCategory.CONCESSION_CATEGORY_UNSPECIFIED
+    assert obj.customConcessionCategory is None
+
+    # Only concessionCategory set (non-default), no customConcessionCategory
+    obj = TransitObject(
+        id="issuer.obj2",
+        classId="issuer.class1",
+        concessionCategory=ConcessionCategory.ADULT,
+    )
+    assert obj.concessionCategory == ConcessionCategory.ADULT
+    assert obj.customConcessionCategory is None
+
+    # Only customConcessionCategory set, concessionCategory stays UNSPECIFIED
+    obj = TransitObject(
+        id="issuer.obj3",
+        classId="issuer.class1",
+        customConcessionCategory=LocalizedString(
+            defaultValue={"language": "en", "value": "Student"}
+        ),
+    )
+    assert obj.concessionCategory == ConcessionCategory.CONCESSION_CATEGORY_UNSPECIFIED
+    assert obj.customConcessionCategory is not None
+
+
+def test_transit_object_concession_category_fails():
+    """Test that setting both concessionCategory and customConcessionCategory raises error."""
+    from edutap.wallet_google.models.datatypes.enums import ConcessionCategory
+    from edutap.wallet_google.models.datatypes.general import LocalizedString
+    from edutap.wallet_google.models.passes.tickets_and_transit import TransitObject
+
+    import pydantic
+
+    # Both concessionCategory (non-default) and customConcessionCategory set
+    with pytest.raises(pydantic.ValidationError):
+        TransitObject(
+            id="issuer.obj1",
+            classId="issuer.class1",
+            concessionCategory=ConcessionCategory.ADULT,
+            customConcessionCategory=LocalizedString(
+                defaultValue={"language": "en", "value": "Student"}
+            ),
+        )
+
+
+def test_transit_object_ticket_leg_ok():
+    """Test valid cases for ticketLeg/ticketLegs fields."""
+    from edutap.wallet_google.models.datatypes.transit import TicketLeg
+    from edutap.wallet_google.models.passes.tickets_and_transit import TransitObject
+
+    # Neither ticketLeg nor ticketLegs set
+    obj = TransitObject(id="issuer.obj1", classId="issuer.class1")
+    assert obj.ticketLeg is None
+    assert obj.ticketLegs is None
+
+    # Only ticketLeg set
+    obj = TransitObject(
+        id="issuer.obj2",
+        classId="issuer.class1",
+        ticketLeg=TicketLeg(),
+    )
+    assert obj.ticketLeg is not None
+    assert obj.ticketLegs is None
+
+    # Only ticketLegs set
+    obj = TransitObject(
+        id="issuer.obj3",
+        classId="issuer.class1",
+        ticketLegs=[TicketLeg(), TicketLeg()],
+    )
+    assert obj.ticketLeg is None
+    assert obj.ticketLegs is not None
+
+
+def test_transit_object_ticket_leg_fails():
+    """Test that setting both ticketLeg and ticketLegs raises error."""
+    from edutap.wallet_google.models.datatypes.transit import TicketLeg
+    from edutap.wallet_google.models.passes.tickets_and_transit import TransitObject
+
+    import pydantic
+
+    # Both ticketLeg and ticketLegs set
+    with pytest.raises(pydantic.ValidationError):
+        TransitObject(
+            id="issuer.obj1",
+            classId="issuer.class1",
+            ticketLeg=TicketLeg(),
+            ticketLegs=[TicketLeg()],
+        )
