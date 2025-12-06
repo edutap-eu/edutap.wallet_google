@@ -21,7 +21,7 @@ jobs:
           cache-dependency-glob: |
             pyproject.toml
       - name: Install dependencies
-        run: uv tool install --with "tox-uv,tox-gh-actions" tox
+        run: uv tool install --with "tox-uv,tox-gh" tox
       - name: Prepare test environment
         run: |
           cp tests/data/credentials_fake.json credentials.json
@@ -47,7 +47,7 @@ jobs:
           cache-dependency-glob: |
             pyproject.toml
       - name: Install dependencies
-        run: uv tool install --with "tox-uv,tox-gh-actions" tox
+        run: uv tool install --with "tox-uv,tox-gh" tox
       - name: Prepare test environment
         run: |
           echo "${{ secrets.SERVICE_ACCOUNT_JSON }}" > /tmp/edutap-wallet-google-credentials.json

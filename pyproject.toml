@@ -127,61 +127,41 @@ ignore = [
     ".editorconfig",
     ".pre-commit-config.yaml",
     ".flake8",
+    "worktrees/**",
+    "src/edutap/wallet_google/_version.py",
 ]
 
 [tool.tox]
-legacy_tox_ini = """
-# Generated from:
-# https://github.com/plone/meta/tree/master/config/default
-# See the inline comments on how to expand/tweak this configuration file
-[tox]
-# We need 4.4.0 for constrain_package_deps.
-min_version = 4.4.0
-envlist =
-    py310
-    py311
-    py312
-    py313
-    py314
-    test
-    lint
+min_version = "4.4.0"
+env_list = ["py310", "py311", "py312", "py313", "py314", "lint"]
 
-[gh-actions]
-python =
-    3.10: py310
-    3.11: py311
-    3.12: py312
-    3.13: py313
-    3.14: py314
+[tool.tox.gh.python]
+"3.10" = ["py310"]
+"3.11" = ["py311"]
+"3.12" = ["py312"]
+"3.13" = ["py313"]
+"3.14" = ["py314"]
 
-[testenv]
+[tool.tox.env_run_base]
+description = "run tests"
 use_develop = true
 skip_install = false
-deps =
-    -e tests/data/test_wallet_google_plugins
+deps = ["-e tests/data/test_wallet_google_plugins"]
+commands = [["pytest", { replace = "posargs", extend = true }]]
+extras = ["test", "develop"]
 
-commands =
-    pytest {posargs}
-extras =
-    test
-    develop
-
-[testenv:format]
-description = automatically reformats code
+[tool.tox.env.format]
+description = "automatically reformats code"
 skip_install = true
-deps =
-    pre-commit
-commands =
-    pre-commit run -a pyupgrade
-    pre-commit run -a isort
-    pre-commit run -a black
+deps = ["pre-commit"]
+commands = [
+    ["pre-commit", "run", "-a", "pyupgrade"],
+    ["pre-commit", "run", "-a", "isort"],
+    ["pre-commit", "run", "-a", "black"],
+]
 
-[testenv:lint]
-description = run linters that will help improve the code style
+[tool.tox.env.lint]
+description = "run linters that will help improve the code style"
 skip_install = true
-# extras for type-checking go into .pre-commit-config.yaml
-deps =
-    pre-commit
-commands =
-    pre-commit run -a
-"""
+deps = ["pre-commit"]
+commands = [["pre-commit", "run", "-a"]]
