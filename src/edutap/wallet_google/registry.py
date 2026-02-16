@@ -264,7 +264,10 @@ def _get_fields_for_(name, definition: dict) -> list[str]:
         fields.add(name)
     if definition.get("deprecated") is True:
         pass
-    elif definition.get("type") in ("string", "boolean", "array") or definition.get("type") is None:
+    elif (
+        definition.get("type") in ("string", "boolean", "array")
+        or definition.get("type") is None
+    ):
         fields.add(name)
     elif definition.get("$ref") is not None:
         ref = definition["$ref"].replace("#/$defs/", "")
