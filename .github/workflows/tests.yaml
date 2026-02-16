@@ -27,7 +27,9 @@ jobs:
           cp tests/data/credentials_fake.json credentials.json
           echo "EDUTAP_WALLET_GOOGLE_ISSUER_ID=1234567890123456789" > .env
       - name: Test with tox
-        run: tox -e py${{ matrix.python-version }} -- --run-unit
+        env:
+          TOX_ENV: py${{ matrix.python-version//./ }}
+        run: tox
 
   integration-tests:
     needs:
