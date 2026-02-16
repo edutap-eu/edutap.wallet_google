@@ -6,6 +6,10 @@ from typing import TypedDict
 import functools
 import importlib
 import inspect
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class RegistryMetadataDict(TypedDict, total=False):
@@ -212,7 +216,7 @@ def validate_fields_for_name(name: str, fields: list[str]) -> tuple[bool, list[s
 
     if non_valid_fields:
         # raise ValueError(f"Fields {non_valid_fields} not valid for '{name}'")
-        print(f"Fields {', '.join(non_valid_fields)} not valid for '{name}'")
+        logger.debug(f"Fields {', '.join(non_valid_fields)} not valid for '{name}'")
         return (False, non_valid_fields)
     return (True, [])
 
