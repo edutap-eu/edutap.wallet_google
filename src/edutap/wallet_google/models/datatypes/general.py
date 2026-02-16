@@ -1,12 +1,15 @@
-from typing import Annotated
-
-from pydantic import AnyHttpUrl, AnyUrl, Field
-from typing_extensions import deprecated
-
 from ..bases import Model
 from ..deprecated import DeprecatedKindFieldMixin
-from .enums import AnimationType, NfcConstraint, ScreenshotEligibility
+from .enums import AnimationType
+from .enums import NfcConstraint
+from .enums import ScreenshotEligibility
 from .localized_string import LocalizedString
+from pydantic import AnyHttpUrl
+from pydantic import AnyUrl
+from pydantic import Field
+from typing import Annotated
+from typing_extensions import deprecated
+
 
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22

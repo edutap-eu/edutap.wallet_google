@@ -1,8 +1,8 @@
+from edutap.wallet_google.settings import ROOT_DIR
+from edutap.wallet_google.settings import Settings
+
 import pathlib
-
 import pytest
-
-from edutap.wallet_google.settings import ROOT_DIR, Settings
 
 
 def test_base_settings():

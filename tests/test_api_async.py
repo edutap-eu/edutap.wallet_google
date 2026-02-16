@@ -1,17 +1,15 @@
 """Comprehensive tests for async API CRUD operations."""
 
+from edutap.wallet_google import api
+from edutap.wallet_google.clientpool import client_pool
+from edutap.wallet_google.exceptions import ObjectAlreadyExistsException
+from edutap.wallet_google.exceptions import QuotaExceededException
+from edutap.wallet_google.exceptions import WalletException
+from edutap.wallet_google.models.datatypes import enums
+
 import httpx
 import pytest
 import respx
-
-from edutap.wallet_google import api
-from edutap.wallet_google.clientpool import client_pool
-from edutap.wallet_google.exceptions import (
-    ObjectAlreadyExistsException,
-    QuotaExceededException,
-    WalletException,
-)
-from edutap.wallet_google.models.datatypes import enums
 
 
 @pytest.mark.asyncio

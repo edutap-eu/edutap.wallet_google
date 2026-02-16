@@ -1,56 +1,51 @@
-from pydantic import Field, model_validator
-
 from ...registry import register_model
-from ..datatypes.enums import (
-    ConcessionCategory,
-    ConfirmationCodeLabel,
-    FlightStatus,
-    GateLabel,
-    NotificationSettingsForUpdates,
-    PassengerType,
-    ReviewStatus,
-    RowLabel,
-    SeatLabel,
-    SectionLabel,
-    TicketStatus,
-    TransitType,
-    TripType,
-)
-from ..datatypes.event import EventDateTime, EventReservationInfo, EventSeat, EventVenue
-from ..datatypes.flight import (
-    AirportInfo,
-    BoardingAndSeatingInfo,
-    BoardingAndSeatingPolicy,
-    FlightHeader,
-    ReservationInfo,
-)
-from ..datatypes.general import Image, Uri
+from ..datatypes.enums import ConcessionCategory
+from ..datatypes.enums import ConfirmationCodeLabel
+from ..datatypes.enums import FlightStatus
+from ..datatypes.enums import GateLabel
+from ..datatypes.enums import NotificationSettingsForUpdates
+from ..datatypes.enums import PassengerType
+from ..datatypes.enums import ReviewStatus
+from ..datatypes.enums import RowLabel
+from ..datatypes.enums import SeatLabel
+from ..datatypes.enums import SectionLabel
+from ..datatypes.enums import TicketStatus
+from ..datatypes.enums import TransitType
+from ..datatypes.enums import TripType
+from ..datatypes.event import EventDateTime
+from ..datatypes.event import EventReservationInfo
+from ..datatypes.event import EventSeat
+from ..datatypes.event import EventVenue
+from ..datatypes.flight import AirportInfo
+from ..datatypes.flight import BoardingAndSeatingInfo
+from ..datatypes.flight import BoardingAndSeatingPolicy
+from ..datatypes.flight import FlightHeader
+from ..datatypes.flight import ReservationInfo
+from ..datatypes.general import Image
+from ..datatypes.general import Uri
 from ..datatypes.localized_string import LocalizedString
 from ..datatypes.money import Money
 from ..datatypes.review import Review
-from ..datatypes.transit import (
-    ActivationOptions,
-    ActivationStatus,
-    DeviceContext,
-    PurchaseDetails,
-    TicketLeg,
-    TicketRestrictions,
-)
-from ..deprecated import (
-    DeprecatedAllowMultipleUsersPerObjectMixin,
-    DeprecatedInfoModuleDataFieldMixin,
-    DeprecatedKindFieldMixin,
-    DeprecatedLocationsFieldMixin,
-    DeprecatedVersionFieldMixin,
-    DeprecatedWordMarkFieldMixin,
-)
-from .bases import (
-    ClassModel,
-    CommonLogosMixin,
-    HeroImageMixin,
-    ObjectModel,
-    StyleableMixin,
-)
+from ..datatypes.transit import ActivationOptions
+from ..datatypes.transit import ActivationStatus
+from ..datatypes.transit import DeviceContext
+from ..datatypes.transit import PurchaseDetails
+from ..datatypes.transit import TicketLeg
+from ..datatypes.transit import TicketRestrictions
+from ..deprecated import DeprecatedAllowMultipleUsersPerObjectMixin
+from ..deprecated import DeprecatedInfoModuleDataFieldMixin
+from ..deprecated import DeprecatedKindFieldMixin
+from ..deprecated import DeprecatedLocationsFieldMixin
+from ..deprecated import DeprecatedVersionFieldMixin
+from ..deprecated import DeprecatedWordMarkFieldMixin
+from .bases import ClassModel
+from .bases import CommonLogosMixin
+from .bases import HeroImageMixin
+from .bases import ObjectModel
+from .bases import StyleableMixin
+from pydantic import Field
+from pydantic import model_validator
+
 
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22

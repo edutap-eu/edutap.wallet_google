@@ -1,7 +1,7 @@
-from pydantic import Field
-
 from ..bases import Model
 from ..deprecated import DeprecatedKindFieldMixin
+from pydantic import Field
+
 
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22

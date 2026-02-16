@@ -1,13 +1,19 @@
 """Comprehensive tests for synchronous API CRUD operations (beyond basic create tests)."""
 
+from edutap.wallet_google.api import create
+from edutap.wallet_google.api import listing
+from edutap.wallet_google.api import message
+from edutap.wallet_google.api import new
+from edutap.wallet_google.api import read
+from edutap.wallet_google.api import update
+from edutap.wallet_google.clientpool import client_pool
+from edutap.wallet_google.models.datatypes import enums
+from edutap.wallet_google.models.passes import GenericClass
+from edutap.wallet_google.models.passes import GenericObject
+
 import httpx
 import pytest
 import respx
-
-from edutap.wallet_google.api import create, listing, message, new, read, update
-from edutap.wallet_google.clientpool import client_pool
-from edutap.wallet_google.models.datatypes import enums
-from edutap.wallet_google.models.passes import GenericClass, GenericObject
 
 
 @respx.mock

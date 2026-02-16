@@ -1,8 +1,10 @@
 from enum import Enum
+from pydantic import BaseModel
+from pydantic import ConfigDict
+from pydantic import create_model
+
 import functools
 import typing
-
-from pydantic import BaseModel, ConfigDict, create_model
 
 
 class Model(BaseModel):

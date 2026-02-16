@@ -1,6 +1,6 @@
-from typing import Protocol, runtime_checkable
-
 from .models.handlers import ImageData
+from typing import Protocol
+from typing import runtime_checkable
 
 
 @runtime_checkable

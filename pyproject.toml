@@ -106,9 +106,12 @@ select = ["E", "F", "W", "I", "UP"]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["edutap"]
-force-sort-within-sections = true
+force-single-line = true
 from-first = true
+lines-after-imports = 2
+lines-between-types = 1
+no-sections = true
+order-by-type = false
 
 [tool.ty.src]
 exclude = ["worktrees/"]

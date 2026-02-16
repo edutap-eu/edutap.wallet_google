@@ -1,6 +1,6 @@
-import pytest
-
 from edutap.wallet_google.models.handlers import ImageData
+
+import pytest
 
 
 def test_get_image_providers():
@@ -98,11 +98,9 @@ def test_add_plugin():
     """
     test adding plugins at runtime
     """
-    from edutap.wallet_google.plugins import (
-        add_plugin,
-        get_callback_handlers,
-        get_image_providers,
-    )
+    from edutap.wallet_google.plugins import add_plugin
+    from edutap.wallet_google.plugins import get_callback_handlers
+    from edutap.wallet_google.plugins import get_image_providers
 
     try:
         count_image_providers = len(get_image_providers())

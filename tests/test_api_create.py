@@ -1,7 +1,8 @@
+from edutap.wallet_google.models.datatypes import enums
+
 import pytest
 import respx
 
-from edutap.wallet_google.models.datatypes import enums
 
 testdata = [
     (
@@ -31,7 +32,8 @@ testdata = [
 @respx.mock
 @pytest.mark.parametrize("prefix,name,method,checkdata", testdata)
 def test_api_create(mock_request_response, prefix, name, method, checkdata):
-    from edutap.wallet_google.api import create, new
+    from edutap.wallet_google.api import create
+    from edutap.wallet_google.api import new
     from edutap.wallet_google.clientpool import client_pool
     from edutap.wallet_google.registry import lookup_model_by_name
 
@@ -50,13 +52,12 @@ def test_api_create(mock_request_response, prefix, name, method, checkdata):
 @respx.mock
 def test_api_create_issuer_without_issuer_id(mock_session):
     """Test that Issuer create works with pass_resource_id_on_create=False."""
-    import json
-
-    import httpx
-
     from edutap.wallet_google.api import create
     from edutap.wallet_google.clientpool import client_pool
     from edutap.wallet_google.models.misc import Issuer
+
+    import httpx
+    import json
 
     url = client_pool.url("Issuer")
 

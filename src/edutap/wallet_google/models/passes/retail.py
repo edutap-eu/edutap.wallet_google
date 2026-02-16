@@ -1,26 +1,28 @@
 from ...registry import register_model
 from ..datatypes.datetime import DateTime
-from ..datatypes.enums import (
-    NotificationSettingsForUpdates,
-    RedemptionChannel,
-    ReviewStatus,
-)
-from ..datatypes.general import GroupingInfo, Image, PassConstraints, Uri
+from ..datatypes.enums import NotificationSettingsForUpdates
+from ..datatypes.enums import RedemptionChannel
+from ..datatypes.enums import ReviewStatus
+from ..datatypes.general import GroupingInfo
+from ..datatypes.general import Image
+from ..datatypes.general import PassConstraints
+from ..datatypes.general import Uri
 from ..datatypes.localized_string import LocalizedString
 from ..datatypes.location import MerchantLocation
 from ..datatypes.loyalty import LoyaltyPoints
 from ..datatypes.money import Money
 from ..datatypes.retail import DiscoverableProgram
 from ..datatypes.review import Review
-from ..deprecated import (
-    DeprecatedAllowMultipleUsersPerObjectMixin,
-    DeprecatedInfoModuleDataFieldMixin,
-    DeprecatedKindFieldMixin,
-    DeprecatedLocationsFieldMixin,
-    DeprecatedVersionFieldMixin,
-    DeprecatedWordMarkFieldMixin,
-)
-from .bases import ClassModel, ObjectModel, StyleableMixin
+from ..deprecated import DeprecatedAllowMultipleUsersPerObjectMixin
+from ..deprecated import DeprecatedInfoModuleDataFieldMixin
+from ..deprecated import DeprecatedKindFieldMixin
+from ..deprecated import DeprecatedLocationsFieldMixin
+from ..deprecated import DeprecatedVersionFieldMixin
+from ..deprecated import DeprecatedWordMarkFieldMixin
+from .bases import ClassModel
+from .bases import ObjectModel
+from .bases import StyleableMixin
+
 
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-06-19

@@ -1,15 +1,18 @@
-import asyncio
-
-from fastapi import APIRouter, Request, Response
+from ..clientpool import client_pool
+from ..models.handlers import CallbackData
+from ..plugins import get_callback_handlers
+from ..plugins import get_image_providers
+from ..utils import decrypt_data
+from .validate import verified_signed_message
+from fastapi import APIRouter
+from fastapi import Request
+from fastapi import Response
 from fastapi.exceptions import HTTPException
 from fastapi.logger import logger
 from fastapi.responses import JSONResponse
 
-from ..clientpool import client_pool
-from ..models.handlers import CallbackData
-from ..plugins import get_callback_handlers, get_image_providers
-from ..utils import decrypt_data
-from .validate import verified_signed_message
+import asyncio
+
 
 # define routers for all use cases: callback, images, and the combined router (at bottom of file)
 router_callback = APIRouter(

@@ -1,17 +1,16 @@
+from edutap.wallet_google.registry import _MODEL_REGISTRY_BY_NAME
+from edutap.wallet_google.registry import lookup_metadata_by_name
+from httpx import get
+from httpx import HTTPError
+from pydantic._internal._model_construction import ModelMetaclass
+from typing import Any
+
 import importlib
 import inspect
 import json
 import pathlib
-from typing import Any
-
-from httpx import HTTPError, get
-from pydantic._internal._model_construction import ModelMetaclass
 import pytest
 
-from edutap.wallet_google.registry import (
-    _MODEL_REGISTRY_BY_NAME,
-    lookup_metadata_by_name,
-)
 
 MODEL_ALIAS_DICT = {
     "AppLinkInfo": "AppLinkDataAppLinkInfo",

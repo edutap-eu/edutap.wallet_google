@@ -5,14 +5,16 @@ return proper Model instances (with missing required fields set to None)
 rather than raw dicts.
 """
 
+from edutap.wallet_google import api
+from edutap.wallet_google.clientpool import client_pool
+from edutap.wallet_google.models.datatypes import enums
+from edutap.wallet_google.models.passes import GenericClass
+from edutap.wallet_google.models.passes import GenericObject
+
 import httpx
 import pytest
 import respx
 
-from edutap.wallet_google import api
-from edutap.wallet_google.clientpool import client_pool
-from edutap.wallet_google.models.datatypes import enums
-from edutap.wallet_google.models.passes import GenericClass, GenericObject
 
 # --- Sync tests ---
 

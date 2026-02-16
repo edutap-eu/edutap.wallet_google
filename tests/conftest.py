@@ -1,12 +1,13 @@
+from pathlib import Path
+
 import copy
 import datetime
 import json
 import os
-from pathlib import Path
+import pytest
 import socket
 import typing
 
-import pytest
 
 DATA_PATH = Path(__file__).parent / "data"
 
@@ -38,9 +39,9 @@ def clean_registry_by_model():
 @pytest.fixture
 def mock_session(monkeypatch):
     """Fixture to provide a mock Google Wallet API session."""
-    import httpx
-
     from edutap.wallet_google.clientpool import ClientPoolManager
+
+    import httpx
 
     def mock_session(self, credentials=None):
         return httpx.Client()
@@ -100,9 +101,9 @@ def mock_settings():
 @pytest.fixture
 def mock_async_session(monkeypatch):
     """Fixture to provide a mock async session that doesn't require real credentials."""
-    import httpx
-
     from edutap.wallet_google.clientpool import ClientPoolManager
+
+    import httpx
 
     def mock_async_session(self, credentials=None):
         return httpx.AsyncClient()

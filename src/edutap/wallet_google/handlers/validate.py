@@ -22,26 +22,25 @@ The main differences/steps are:
 The main documentation for this is at https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions
 """
 
-import base64
-import logging
-import time
-from typing import cast
-
+from ..clientpool import client_pool
+from ..models.handlers import CallbackData
+from ..models.handlers import IntermediateSigningKey
+from ..models.handlers import RootSigningPublicKeys
+from ..models.handlers import SignedKey
+from ..models.handlers import SignedMessage
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric.ec import ECDSA, EllipticCurvePublicKey
+from cryptography.hazmat.primitives.asymmetric.ec import ECDSA
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.serialization import load_der_public_key
-import httpx
+from typing import cast
 
-from ..clientpool import client_pool
-from ..models.handlers import (
-    CallbackData,
-    IntermediateSigningKey,
-    RootSigningPublicKeys,
-    SignedKey,
-    SignedMessage,
-)
+import base64
+import httpx
+import logging
+import time
+
 
 logger = logging.getLogger(__name__)
 

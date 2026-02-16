@@ -1,11 +1,17 @@
+from edutap.wallet_google.api import create
+from edutap.wallet_google.api import message
+from edutap.wallet_google.api import new
+from edutap.wallet_google.api import read
+from edutap.wallet_google.api import update
+from edutap.wallet_google.clientpool import client_pool
+from edutap.wallet_google.exceptions import QuotaExceededException
+from edutap.wallet_google.exceptions import WalletException
+from edutap.wallet_google.models.datatypes import enums
+
 import httpx
 import pytest
 import respx
 
-from edutap.wallet_google.api import create, message, new, read, update
-from edutap.wallet_google.clientpool import client_pool
-from edutap.wallet_google.exceptions import QuotaExceededException, WalletException
-from edutap.wallet_google.models.datatypes import enums
 
 # this tests relates to reproduce issue https://github.com/edutap-eu/edutap.wallet_google/issues/36
 

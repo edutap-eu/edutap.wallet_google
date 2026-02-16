@@ -1,7 +1,7 @@
+from .settings import Settings
+
 import functools
 import json
-
-from .settings import Settings
 
 
 class CredentialsManager:

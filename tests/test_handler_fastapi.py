@@ -1,9 +1,9 @@
+from edutap.wallet_google.handlers.fastapi import router
+from edutap.wallet_google.utils import encrypt_data
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from freezegun import freeze_time
 
-from edutap.wallet_google.handlers.fastapi import router
-from edutap.wallet_google.utils import encrypt_data
 
 # this callback data can be verified given the credentials.json from demo.edutap.eu is provided.
 real_callback_data = {

@@ -29,36 +29,38 @@ link = api.save_link([my_pass])  # save_link is sync, not awaited
 ```
 """
 
-from collections.abc import AsyncGenerator, Generator
+from .clientpool import client_pool
+from .credentials import credentials_manager
+from .models.bases import make_partial_model
+from .models.bases import Model
+from .models.datatypes.general import PaginatedResponse
+from .models.datatypes.general import Pagination
+from .models.datatypes.jwt import JWTClaims
+from .models.datatypes.jwt import JWTPayload
+from .models.datatypes.message import Message
+from .models.misc import AddMessageRequest
+from .models.passes.bases import ClassModel
+from .models.passes.bases import ObjectModel
+from .models.passes.bases import Reference
+from .registry import lookup_metadata_by_model_instance
+from .registry import lookup_metadata_by_model_type
+from .registry import lookup_metadata_by_name
+from .registry import lookup_model_by_name
+from .registry import raise_when_operation_not_allowed
+from .registry import validate_fields_for_name
+from .utils import handle_response_errors
+from .utils import parse_response_json
+from .utils import validate_data
+from .utils import validate_data_and_convert_to_json
+from authlib.jose import jwt
+from collections.abc import AsyncGenerator
+from collections.abc import Generator
+
 import datetime
 import json
 import logging
 import typing
 
-from authlib.jose import jwt
-
-from .clientpool import client_pool
-from .credentials import credentials_manager
-from .models.bases import Model, make_partial_model
-from .models.datatypes.general import PaginatedResponse, Pagination
-from .models.datatypes.jwt import JWTClaims, JWTPayload
-from .models.datatypes.message import Message
-from .models.misc import AddMessageRequest
-from .models.passes.bases import ClassModel, ObjectModel, Reference
-from .registry import (
-    lookup_metadata_by_model_instance,
-    lookup_metadata_by_model_type,
-    lookup_metadata_by_name,
-    lookup_model_by_name,
-    raise_when_operation_not_allowed,
-    validate_fields_for_name,
-)
-from .utils import (
-    handle_response_errors,
-    parse_response_json,
-    validate_data,
-    validate_data_and_convert_to_json,
-)
 
 logger = logging.getLogger(__name__)
 

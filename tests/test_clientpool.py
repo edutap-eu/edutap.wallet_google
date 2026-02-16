@@ -1,6 +1,6 @@
-import pytest
-
 from edutap.wallet_google.settings import ROOT_DIR
+
+import pytest
 
 
 def test_client_pool_url(

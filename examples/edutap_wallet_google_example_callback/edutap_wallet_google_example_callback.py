@@ -1,10 +1,10 @@
-import os
-import pathlib
-
+from edutap.wallet_google.handlers.fastapi import router_callback
 from fastapi import FastAPI
 from fastapi.logger import logger
 
-from edutap.wallet_google.handlers.fastapi import router_callback
+import os
+import pathlib
+
 
 app = FastAPI()
 app.include_router(router_callback)

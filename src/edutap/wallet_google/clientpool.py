@@ -1,11 +1,11 @@
-import atexit
-import threading
-
-from authlib.integrations.httpx_client import AssertionClient, AsyncAssertionClient
-
 from .credentials import credentials_manager
 from .registry import lookup_metadata_by_name
 from .settings import Settings
+from authlib.integrations.httpx_client import AssertionClient
+from authlib.integrations.httpx_client import AsyncAssertionClient
+
+import atexit
+import threading
 
 
 class ClientPoolManager:

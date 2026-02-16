@@ -36,9 +36,9 @@ def test_action_enum():
 
 
 def test_pydantic_constraints():
-    import pydantic
-
     from edutap.wallet_google.models.bases import CamelCaseAliasEnum
+
+    import pydantic
 
     class TestFoo(CamelCaseAliasEnum):
         FOO_BAR_BAZ = "FOO_BAR_BAZ"
