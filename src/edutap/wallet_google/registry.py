@@ -249,7 +249,7 @@ def _get_fields_for_model(model: "type[Model]") -> list[str]:
     if schema is not None:
         properties = schema.get("properties", {})
         for name, definition in properties.items():
-            sub_fields = _get_fields_for_(name, definition)
+            sub_fields = _get_fields_from_definition(name, definition)
             fields.update(sub_fields)
     return list(fields)
 
@@ -283,7 +283,7 @@ def _get_fields_for_name(name: str) -> list[str]:
 
 
 # @functools.cache
-def _get_fields_for_(name, definition: dict) -> list[str]:
+def _get_fields_from_definition(name, definition: dict) -> list[str]:
     """Returns the list of valid fields for the given schema object."""
     fields: set[str] = set()
     if definition in ("string", "boolean"):
@@ -306,7 +306,7 @@ def _get_fields_for_(name, definition: dict) -> list[str]:
             if any_of.get("type") == "null":
                 fields.add(name)
             elif any_of.get("type") == "array":
-                sub_fields = _get_fields_for_(name, any_of["items"])
+                sub_fields = _get_fields_from_definition(name, any_of["items"])
                 for sub_field in sub_fields:
                     fields.add(f"{name}/{sub_field}")
             elif any_of.get("type") in ("string", "boolean"):
