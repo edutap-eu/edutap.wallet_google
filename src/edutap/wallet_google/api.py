@@ -649,12 +649,12 @@ def listing(
     while True:
         response = client.get(url=url, params=params)
         handle_response_errors(response, "list", name, resource_identifier)
-        pagiganted_response = PaginatedResponse.model_validate_json(response.content)
-        pagination: Pagination | None = pagiganted_response.pagination
+        paginated_response = PaginatedResponse.model_validate_json(response.content)
+        pagination: Pagination | None = paginated_response.pagination
 
         if "fields" in params:
             # Return the partial response as dict when fields were requested
-            resources = pagiganted_response.resources
+            resources = paginated_response.resources
             yield from resources
         else:
             # Return the full response as model instances when fields were not requested
@@ -900,12 +900,12 @@ async def alisting(
     while True:
         response = await client.get(url=url, params=params)
         handle_response_errors(response, "list", name, resource_identifier)
-        pagiganted_response = PaginatedResponse.model_validate_json(response.content)
-        pagination: Pagination | None = pagiganted_response.pagination
+        paginated_response = PaginatedResponse.model_validate_json(response.content)
+        pagination: Pagination | None = paginated_response.pagination
 
         if "fields" in params:
             # Return the partial response as dict when fields were requested
-            resources = pagiganted_response.resources
+            resources = paginated_response.resources
             for resource in resources:
                 yield resource
         else:
