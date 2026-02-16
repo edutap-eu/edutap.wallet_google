@@ -238,6 +238,7 @@ def save_link(
 
 # Internal helper functions for CRUD operations
 
+
 def _validate_partial_response_fields(
     fields: list[str],
     name: str,
@@ -256,9 +257,7 @@ def _validate_partial_response_fields(
         stripped = [
             f.split(".", 1)[1] if f.startswith("resource.") else f for f in fields
         ]
-        valid_stripped, non_valid_stripped = validate_fields_for_name(
-            name, stripped
-        )
+        valid_stripped, non_valid_stripped = validate_fields_for_name(name, stripped)
         if not valid_stripped:
             # raise ValueError(
             #     f"The following fields are not valid for model {name}: {', '.join(non_valid_stripped)}"
@@ -376,18 +375,28 @@ def _prepare_listing(
     return model, params, is_pageable, resource_identifier
 
 
+def _process_pagination_info(response: bytes) -> PaginatedResponse | None:
+    """Process pagination info from a listing response.
+
+    Returns: PaginatedResponse instance or None if pagination info is not present.
+    """
+    data = json.loads(response.content)
+    if "pagination" in data:
+        return PaginatedResponse.model_validate(data["pagination"])
+    return None
+
+
 def _process_listing_page(
     response_content: bytes,
     model: type[Model],
-) -> tuple[list[Model], typing.Any]:
+) -> list[Model]:
     """Process a single page of listing results.
 
-    Returns: (validated_models, pagination_info)
+    Returns: list of validated models
     """
     data = json.loads(response_content)
-    data = PaginatedResponse.model_validate(data)
-    resources = data.resources
-    pagination = data.pagination
+    resources = data.get("resources", [])
+    pagination = _process_pagination_info(response_content)
 
     validated_models = []
     if not resources:
@@ -404,7 +413,7 @@ def _process_listing_page(
                 logger.exception(f"Error validating record {count}:\n{record}")
                 raise
 
-    return validated_models, pagination
+    return validated_models
 
 
 def _setup_pagination_params(
@@ -442,7 +451,7 @@ def create(
     :param data:                          Data to pass to the Google RESTful API.
                                           A model instance, has to be a registered model.
     :param credentials:                   Optional session credentials as dict.
-    :param fields:                        List of fields to include in the response for partial responses.
+    :param fields:                        Optional list of fields to include in the response for partial responses.
     :raises QuotaExceededException:       When the quota was exceeded.
     :raises ObjectAlreadyExistsException: When the id to be created already exists at Google.
     :raises WalletException:              When the response status code is not 200.
@@ -486,11 +495,11 @@ def read(
     :param name:             Registered name of the model to use
     :param resource_id:      Identifier of the resource to read from the Google RESTful API
     :param credentials:      Optional session credentials as dict.
-    :param fields:           List of fields to include in the response for partial responses.
+    :param fields:           Optional list of fields to include in the response for partial responses.
     :QuotaExceededException: When the quota was exceeded.
     :raises LookupError:     When the resource was not found (404).
     :raises WalletException  When the response status code is not 200 or 404.
-    :return:                 The created model based on the data returned by the Restful API
+    :return:                 The created model based on the data, or a dict with the partial requested response data returned by the Restful API.
     """
     (model,) = _prepare_read(name, resource_id)
     url = client_pool.url(name, f"/{resource_id}")
@@ -522,12 +531,12 @@ def update(
     :param data:                    Data to pass to the Google RESTful API.
                                     A model instance, has to be a registered model.
     :param credentials:             Optional session credentials as dict.
-    :param fields:                  List of fields to include in the response for partial responses.
-    :param partial:                 Whether a partial update is executed or a full replacement.
+    :param fields:                  Optional list of fields to include in the response for partial responses.
+    :param partial:                 Optional Flag, whether a partial update is executed or a full replacement.
     :raises QuotaExceededException: When the quota was exceeded
     :raises LookupError:            When the resource was not found (404)
     :raises WalletException:        When the response status code is not 200 or 404
-    :return:                        The created model based on the data returned by the Restful API
+    :return:                        The created model based on the data, or a dict with the partial requested response data returned by the Restful API.
     """
     name, resource_id, verified_json, model = _prepare_update(data)
 
@@ -552,7 +561,9 @@ def message(
     name: str,
     resource_id: str,
     message: dict[str, typing.Any] | Message,
+    *,
     credentials: dict | None = None,
+    fields: list[str] | None = None,
 ) -> Model:
     """Sends a message to a Google Wallet Class or Object.
 
@@ -560,21 +571,28 @@ def message(
     :param resource_id:               Identifier of the resource to send to
     :param message:                   Message to send.
     :param credentials:               Optional session credentials as dict.
+    :param fields:                    Optional list of fields to include in the response for partial responses.
     :raises QuotaExceededException:   When the quota was exceeded
     :raises LookupError:              When the resource was not found (404)
     :raises WalletException:          When the response status code is not 200 or 404
-    :return:                          The created Model object as returned by the Restful API
+    :return:                          The created model based on the data, or a dict with the partial requested response data returned by the Restful API.
     """
     model, verified_json = _prepare_message(name, message)
     url = client_pool.url(name, f"/{resource_id}/addMessage")
+    params: dict[str, str] | None = None
+    if fields:
+        if _validate_partial_response_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
-    response = client.post(url=url, data=verified_json.encode("utf-8"))
+    response = client.post(url=url, data=verified_json.encode("utf-8"), params=params)
 
     handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
-    response_data = json.loads(response.content)
-    return model.model_validate(response_data.get("resource"))
+    if fields:
+        # Return the partial response as dict when fields were requested
+        return json.loads(response.content)
+    return parse_response_json(response, model)
 
 
 def listing(
@@ -585,7 +603,8 @@ def listing(
     result_per_page: int = 0,
     next_page_token: str | None = None,
     credentials: dict | None = None,
-) -> Generator[Model | str, None, None]:
+    fields: list[str] | None = None,
+) -> Generator[Model | dict[str, typing.Any] | str, None, None]:
     """Lists wallet related resources.
 
     It is possible to list all classes of an issuer. Parameter 'name' has to end with 'Class',
@@ -606,17 +625,21 @@ def listing(
                                     If omitted all results will be fetched and provided by the generator.
     :param next_page_token:         Token to get the next page of results.
     :param credentials:             Optional session credentials as dict.
+    :param fields:                  Optional list of fields to include in the response for partial responses.
     :raises QuotaExceededException: When the quota was exceeded
     :raises ValueError:             When input was invalid.
     :raises LookupError:            When the resource was not found (404)
     :raises WalletException:        When the response status code is not 200 or 404
-    :return:                        Generator of the data as model-instances based on the data returned by the
+    :return:                        Generator of the data as model-instances or dict based on the data returned by the
                                     Restful API. When result_per_page is given, the generator will return
                                     a next_page_token after the last model-instance result.
     """
     model, params, is_pageable, resource_identifier = _prepare_listing(
         name, resource_id, issuer_id
     )
+    if fields:
+        if _validate_partial_response_fields(fields, name):
+            params["fields"] = ",".join(fields)
 
     # Setup pagination parameters
     pagination_params = _setup_pagination_params(
@@ -630,10 +653,17 @@ def listing(
     while True:
         response = client.get(url=url, params=params)
         handle_response_errors(response, "list", name, resource_identifier)
+        pagination = _process_pagination_info(response)
 
-        validated_models, pagination = _process_listing_page(response.content, model)
-
-        yield from validated_models
+        if fields:
+            # Return the partial response as dict when fields were requested
+            data = json.loads(response.content)
+            resources = data.get("resources", [])
+            yield from resources
+        else:
+            # Return the full response as model instances when fields were not requested
+            validated_models = _process_listing_page(response.content, model)
+            yield from validated_models
 
         if not is_pageable or not pagination:
             break
@@ -654,7 +684,9 @@ def listing(
 
 async def acreate(
     data: Model,
+    *,
     credentials: dict | None = None,
+    fields: list[str] | None = None,
 ) -> Model:
     """
     Creates a Google Wallet item asynchronously. `C` in CRUD.
@@ -662,29 +694,40 @@ async def acreate(
     :param data:                          Data to pass to the Google RESTful API.
                                           A model instance, has to be a registered model.
     :param credentials:                   Optional session credentials as dict.
+    :param fields:                        Optional list of fields to include in the response for partial responses.
     :raises QuotaExceededException:       When the quota was exceeded.
     :raises ObjectAlreadyExistsException: When the id to be created already exists at Google.
     :raises WalletException:              When the response status code is not 200.
-    :return:                              The created model based on the data returned by the Restful API.
+    :return:                              The created model based on the data, or a dict with the partial requested response data returned by the Restful API..
     """
     name, verified_json, model, headers = _prepare_create(data)
     url = client_pool.url(name)
+    params: dict[str, str] | None = None
+    if fields:
+        if _validate_partial_response_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     client = client_pool.async_client(credentials=credentials)
     response = await client.post(
         url=url,
         data=verified_json.encode("utf-8"),
         headers=headers,
+        params=params,
     )
 
     handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
+    if fields:
+        # Return the partial response as dict when fields were requested
+        return json.loads(response.content)
     return parse_response_json(response, model)
 
 
 async def aread(
     name: str,
     resource_id: str,
+    *,
     credentials: dict | None = None,
+    fields: list[str] | None = None,
 ) -> Model:
     """
     Reads a Google Wallet Class or Object asynchronously. `R` in CRUD.
@@ -692,26 +735,35 @@ async def aread(
     :param name:             Registered name of the model to use
     :param resource_id:      Identifier of the resource to read from the Google RESTful API
     :param credentials:      Optional session credentials as dict.
+    :param fields:           Optional list of fields to include in the response for partial responses.
     :QuotaExceededException: When the quota was exceeded.
     :raises LookupError:     When the resource was not found (404).
     :raises WalletException  When the response status code is not 200 or 404.
-    :return:                 The created model based on the data returned by the Restful API
+    :return:                 The created model based on the data, or a dict with the partial requested response data returned by the Restful API.
     """
     (model,) = _prepare_read(name, resource_id)
     url = client_pool.url(name, f"/{resource_id}")
+    params: dict[str, str] | None = None
+    if fields:
+        if _validate_partial_response_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     client = client_pool.async_client(credentials=credentials)
-    response = await client.get(url=url)
+    response = await client.get(url=url, params=params)
 
     handle_response_errors(response, "read", name, resource_id)
+    if fields:
+        # Return the partial response as dict when fields were requested
+        return json.loads(response.content)
     return parse_response_json(response, model)
 
 
 async def aupdate(
     data: Model,
     *,
-    partial: bool = True,
     credentials: dict | None = None,
+    fields: list[str] | None = None,
+    partial: bool = True,
 ) -> Model:
     """
     Updates a Google Wallet Class or Object asynchronously. `U` in CRUD.
@@ -719,28 +771,38 @@ async def aupdate(
     :param data:                    Data to pass to the Google RESTful API.
                                     A model instance, has to be a registered model.
     :param credentials:             Optional session credentials as dict.
-    :param partial:                 Whether a partial update is executed or a full replacement.
+    :param fields:                  Optional list of fields to include in the response for partial responses.
+    :param partial:                 Optional boolean indicating whether a partial update is executed or a full replacement.
     :raises QuotaExceededException: When the quota was exceeded
     :raises LookupError:            When the resource was not found (404)
     :raises WalletException:        When the response status code is not 200 or 404
-    :return:                        The created model based on the data returned by the Restful API
+    :return:                        The created model based on the data, or a dict with the partial requested response data returned by the Restful API.
     """
     name, resource_id, verified_json, model = _prepare_update(data)
+    params: dict[str, str] | None = None
+    if fields:
+        if _validate_partial_response_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     session = client_pool.async_client(credentials=credentials)
     if partial:
         response = await session.patch(
             url=client_pool.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
+            params=params,
         )
     else:
         response = await session.put(
             url=client_pool.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
+            params=params,
         )
 
     logger.debug(verified_json.encode("utf-8"))
     handle_response_errors(response, "update", name, resource_id)
+    if fields:
+        # Return the partial response as dict when fields were requested
+        return json.loads(response.content)
     return parse_response_json(response, model)
 
 
@@ -748,7 +810,9 @@ async def amessage(
     name: str,
     resource_id: str,
     message: dict[str, typing.Any] | Message,
+    *,
     credentials: dict | None = None,
+    fields: list[str] | None = None,
 ) -> Model:
     """Sends a message to a Google Wallet Class or Object asynchronously.
 
@@ -756,21 +820,28 @@ async def amessage(
     :param resource_id:               Identifier of the resource to send to
     :param message:                   Message to send.
     :param credentials:               Optional session credentials as dict.
+    :param fields:                    Optional list of fields to include in the response for partial responses.
     :raises QuotaExceededException:   When the quota was exceeded
     :raises LookupError:              When the resource was not found (404)
     :raises WalletException:          When the response status code is not 200 or 404
-    :return:                          The created Model object as returned by the Restful API
+    :return:                          The created model based on the data, or a dict with the partial requested response data returned by the Restful API.
     """
     model, verified_json = _prepare_message(name, message)
     url = client_pool.url(name, f"/{resource_id}/addMessage")
+    params: dict[str, str] | None = None
+    if fields:
+        if _validate_partial_response_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     client = client_pool.async_client(credentials=credentials)
-    response = await client.post(url=url, data=verified_json.encode("utf-8"))
+    response = await client.post(url=url, data=verified_json.encode("utf-8"), params=params)
 
     handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
-    response_data = json.loads(response.content)
-    return model.model_validate(response_data.get("resource"))
+    if fields:
+        # Return the partial response as dict when fields were requested
+        return json.loads(response.content)
+    return parse_response_json(response, model)
 
 
 async def alisting(
@@ -781,6 +852,7 @@ async def alisting(
     result_per_page: int = 0,
     next_page_token: str | None = None,
     credentials: dict | None = None,
+    fields: list[str] | None = None,
 ) -> AsyncGenerator[Model | str, None]:
     """Lists wallet related resources asynchronously.
 
@@ -802,6 +874,7 @@ async def alisting(
                                     If omitted all results will be fetched and provided by the generator.
     :param next_page_token:         Token to get the next page of results.
     :param credentials:             Optional session credentials as dict.
+    :param fields:                  Optional list of fields to include in the response for partial responses.
     :raises QuotaExceededException: When the quota was exceeded
     :raises ValueError:             When input was invalid.
     :raises LookupError:            When the resource was not found (404)
@@ -813,6 +886,9 @@ async def alisting(
     model, params, is_pageable, resource_identifier = _prepare_listing(
         name, resource_id, issuer_id
     )
+    if fields:
+        if _validate_partial_response_fields(fields, name):
+            params["fields"] = ",".join(fields)
 
     # Setup pagination parameters
     pagination_params = _setup_pagination_params(
@@ -826,11 +902,18 @@ async def alisting(
     while True:
         response = await client.get(url=url, params=params)
         handle_response_errors(response, "list", name, resource_identifier)
+        pagination = _process_pagination_info(response)
 
-        validated_models, pagination = _process_listing_page(response.content, model)
-
-        for validated_model in validated_models:
-            yield validated_model
+        if fields:
+            # Return the partial response as dict when fields were requested
+            data = json.loads(response.content)
+            resources = data.get("resources", [])
+            for resource in resources:
+                 yield resource
+        else:
+            validated_models = _process_listing_page(response.content, model)
+            for validated_model in validated_models:
+                yield validated_model
 
         if not is_pageable or not pagination:
             break
