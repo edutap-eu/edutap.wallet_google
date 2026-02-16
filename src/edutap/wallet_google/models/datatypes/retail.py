@@ -1,6 +1,5 @@
 from ..bases import Model
-from .enums import RetailState
-from .enums import SharedDataType
+from .enums import RetailState, SharedDataType
 from .general import Uri
 
 # Attribute order as in Google's documentation to make future updates easier!

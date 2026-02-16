@@ -2,8 +2,9 @@
 see https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions
 """
 
-from .datatypes.enums import CamelCaseAliasEnum
 from pydantic import BaseModel
+
+from .datatypes.enums import CamelCaseAliasEnum
 
 # image fetching from data provider
 

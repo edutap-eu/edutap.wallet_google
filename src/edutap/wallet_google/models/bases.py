@@ -1,8 +1,7 @@
 from enum import Enum
-from pydantic import BaseModel
-from pydantic import ConfigDict
-
 import typing
+
+from pydantic import BaseModel, ConfigDict
 
 
 class Model(BaseModel):
@@ -50,7 +49,7 @@ class CamelCaseAliasEnum(Enum):
     """
 
     def __new__(cls: type["CamelCaseAliasEnum"], value: str) -> "CamelCaseAliasEnum":
-        obj: "CamelCaseAliasEnum" = object.__new__(cls)
+        obj: CamelCaseAliasEnum = object.__new__(cls)
         obj._name_ = f"{cls.__name__} snake case literal"
         camel = _snake_to_camel(value)
 

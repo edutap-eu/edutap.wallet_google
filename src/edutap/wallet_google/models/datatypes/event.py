@@ -1,9 +1,9 @@
+import datetime
+
 from ..bases import Model
 from ..deprecated import DeprecatedKindFieldMixin
 from .enums import DoorsOpenLabel
 from .general import LocalizedString
-
-import datetime
 
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22

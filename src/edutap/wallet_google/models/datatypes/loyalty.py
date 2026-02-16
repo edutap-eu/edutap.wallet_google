@@ -1,8 +1,8 @@
+from pydantic import Field, model_validator
+
 from ..bases import Model
 from ..datatypes.localized_string import LocalizedString
 from ..datatypes.money import Money
-from pydantic import Field
-from pydantic import model_validator
 
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22

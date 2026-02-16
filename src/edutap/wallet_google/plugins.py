@@ -1,8 +1,7 @@
-from .protocols import CallbackHandler
-from .protocols import ImageProvider
 from importlib.metadata import entry_points
-
 import typing
+
+from .protocols import CallbackHandler, ImageProvider
 
 _POSSIBLE_PLUGINS = {
     "ImageProvider": ImageProvider,

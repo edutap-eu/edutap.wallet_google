@@ -1,18 +1,17 @@
-from edutap.wallet_google.registry import _MODEL_REGISTRY_BY_NAME
-from edutap.wallet_google.registry import lookup_metadata_by_name
-from httpx import get
-from httpx import HTTPError
-from pydantic._internal._model_construction import ModelMetaclass
-from typing import Any
-from typing import Dict
-from typing import Set
-from typing import Type
-
 import importlib
 import inspect
 import json
 import pathlib
+from typing import Any
+
+from httpx import HTTPError, get
+from pydantic._internal._model_construction import ModelMetaclass
 import pytest
+
+from edutap.wallet_google.registry import (
+    _MODEL_REGISTRY_BY_NAME,
+    lookup_metadata_by_name,
+)
 
 MODEL_ALIAS_DICT = {
     "AppLinkInfo": "AppLinkDataAppLinkInfo",
@@ -23,12 +22,11 @@ MODEL_ALIAS_DICT = {
 }
 
 
-def find_models() -> Dict[str, Type]:
-    models: Dict[str, Type] = {}
+def find_models() -> dict[str, type]:
+    models: dict[str, type] = {}
     pkg = importlib.import_module("edutap.wallet_google")
     datatypes_module = pkg.models.datatypes
     for name, module in inspect.getmembers(datatypes_module, inspect.ismodule):
-
         # print(f"Module: 'name', '{module}'")
         for cls_name, cls in inspect.getmembers(module, inspect.isclass):
             if (
@@ -114,7 +112,7 @@ def test_load_data(discovery_api_data, wallet_api_data):
     assert isinstance(wallet_api_data, dict)
 
 
-def test_discovery_api(discovery_api_data: Dict[str, Any]):
+def test_discovery_api(discovery_api_data: dict[str, Any]):
     assert discovery_api_data["kind"] == "discovery#directoryList"
     assert discovery_api_data["discoveryVersion"] == "v1"
     assert len(discovery_api_data["items"]) == 1
@@ -135,15 +133,15 @@ def test_discovery_api(discovery_api_data: Dict[str, Any]):
     assert "discoveryRestUrl" in api_description
 
 
-def test_wallet_api(wallet_api_data: Dict[str, Any]):
+def test_wallet_api(wallet_api_data: dict[str, Any]):
     assert isinstance(wallet_api_data, dict)
     assert wallet_api_data["kind"] == "discovery#restDescription"
     assert wallet_api_data["discoveryVersion"] == "v1"
     assert wallet_api_data["version"] == "v1"
     # this is subject to change over time
-    assert (
-        "revision" in wallet_api_data
-    ), "Expected 'revision' field in wallet_api_data API response"
+    assert "revision" in wallet_api_data, (
+        "Expected 'revision' field in wallet_api_data API response"
+    )
     print(f"\n\nWallet API Revision: {wallet_api_data['revision']}\n\n")
     # assert wallet_api_data["revision"] == "20250808"
     assert wallet_api_data["protocol"] == "rest"
@@ -159,19 +157,19 @@ def test_wallet_api(wallet_api_data: Dict[str, Any]):
     assert isinstance(wallet_api_data["parameters"], dict)
 
 
-def test_known_schemas(wallet_api_data: Dict[str, Any]):
-    schemas: Dict[str, Dict[str, Any]] = wallet_api_data.get("schemas", {})
+def test_known_schemas(wallet_api_data: dict[str, Any]):
+    schemas: dict[str, dict[str, Any]] = wallet_api_data.get("schemas", {})
     assert isinstance(schemas, dict)
     assert len(schemas) > 0
 
-    api_schemas: Set[str] = set()
+    api_schemas: set[str] = set()
     for elem in schemas.keys():
         if elem.endswith("Request") or elem.endswith("Response"):
             continue
         api_schemas.add(elem)
 
-    our_schemas: Dict[str, Type] = {}
-    our_known_schemas: Set[str] = set(_MODEL_REGISTRY_BY_NAME.keys())
+    our_schemas: dict[str, type] = {}
+    our_known_schemas: set[str] = set(_MODEL_REGISTRY_BY_NAME.keys())
     for name in our_known_schemas:
         our_schemas[name] = lookup_metadata_by_name(name)["model"]
 
@@ -219,23 +217,23 @@ def test_known_schemas(wallet_api_data: Dict[str, Any]):
         model_schema_names = set(model.model_json_schema().get("properties", {}).keys())
         model_schema = model.model_json_schema().get("properties", {})
 
-        assert (
-            set(api_schema["properties"].keys()) == model_schema_names
-        ), f"Set of properties does not match for: '{name}'"
+        assert set(api_schema["properties"].keys()) == model_schema_names, (
+            f"Set of properties does not match for: '{name}'"
+        )
 
         for prop, prop_schema in api_schema["properties"].items():
             assert prop in model_schema_names
             if "deprecated" in prop_schema:
                 our_prop = model_schema[prop]
-                assert (
-                    our_prop.get("deprecated", False) is True
-                ), f"The property: '{prop}' is deprecated, but not marked as such in our schema."
+                assert our_prop.get("deprecated", False) is True, (
+                    f"The property: '{prop}' is deprecated, but not marked as such in our schema."
+                )
 
 
-def test_methods(wallet_api_data: Dict[str, Any]):
+def test_methods(wallet_api_data: dict[str, Any]):
     resources = wallet_api_data["resources"]
 
-    model_names: Dict[str, str] = {m.lower(): m for m in _MODEL_REGISTRY_BY_NAME.keys()}
+    model_names: dict[str, str] = {m.lower(): m for m in _MODEL_REGISTRY_BY_NAME.keys()}
     print(f"Known Model names: {model_names}")
 
     for resource_name, resource in resources.items():
@@ -245,9 +243,9 @@ def test_methods(wallet_api_data: Dict[str, Any]):
             continue
         assert isinstance(resource, dict)
         assert "methods" in resource
-        assert isinstance(
-            resource["methods"], dict
-        ), "--> does not have a 'methods' key or it is not a dictionary."
+        assert isinstance(resource["methods"], dict), (
+            "--> does not have a 'methods' key or it is not a dictionary."
+        )
 
         if resource_name not in model_names:
             print("--> NO Model with this name is registered.", end="")
@@ -259,7 +257,7 @@ def test_methods(wallet_api_data: Dict[str, Any]):
         print(f"--> check with model: '{model['name']}'", end="")
         assert model["name"].lower() == resource_name
 
-        expected_methods: Set[str] = set()
+        expected_methods: set[str] = set()
         if model["can_read"]:
             expected_methods.add("get")
         if model["can_list"]:

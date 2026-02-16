@@ -1,6 +1,7 @@
 """Integration tests for async API CRUD operations against real Google Wallet API."""
 
 import asyncio
+
 import pytest
 
 text_modules_data = [

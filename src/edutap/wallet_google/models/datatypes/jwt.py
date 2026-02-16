@@ -2,19 +2,17 @@
 Models to be used to assemble the JWT for the save link (add to wallet link).
 """
 
-from ..bases import Model
-from ..passes import generic
-from ..passes import retail
-from ..passes import tickets_and_transit
-from ..passes.bases import Reference
 from datetime import datetime
+
+from ..bases import Model
+from ..passes import generic, retail, tickets_and_transit
+from ..passes.bases import Reference
 
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22
 
 
 class JWTPayload(Model):
-
     eventTicketClasses: (
         list[tickets_and_transit.EventTicketClass | Reference] | None
     ) = None

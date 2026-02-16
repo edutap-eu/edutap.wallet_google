@@ -2,21 +2,20 @@
 This module contains models that are not directly related to passes but to other Google Wallet APIs
 """
 
+from pydantic import AnyHttpUrl, Field
+
 from ..registry import register_model
-from .bases import Model
-from .bases import WithIdModel
+from .bases import Model, WithIdModel
 from .datatypes.general import CallbackOptions
 from .datatypes.message import Message
-from .datatypes.smarttap import IssuerContactInfo
-from .datatypes.smarttap import IssuerToUserInfo
-from .datatypes.smarttap import Permission
-from .datatypes.smarttap import SmartTapMerchantData
+from .datatypes.smarttap import (
+    IssuerContactInfo,
+    IssuerToUserInfo,
+    Permission,
+    SmartTapMerchantData,
+)
 from .deprecated import DeprecatedKindFieldMixin
-from .passes import generic
-from .passes import retail
-from .passes import tickets_and_transit
-from pydantic import AnyHttpUrl
-from pydantic import Field
+from .passes import generic, retail, tickets_and_transit
 
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22

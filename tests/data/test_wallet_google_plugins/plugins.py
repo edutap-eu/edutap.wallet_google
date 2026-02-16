@@ -1,6 +1,6 @@
-from edutap.wallet_google.models.handlers import ImageData
-
 import asyncio
+
+from edutap.wallet_google.models.handlers import ImageData
 
 
 class TestImageProvider:

@@ -4,11 +4,12 @@ Those must not be serialized again, nor repeated in the special models.
 To handle this, we create mixins which can be added to the models which still have the deprecated fields.
 """
 
-from .bases import Model
-from pydantic import AnyUrl
-from pydantic import Field
 from typing import Annotated
+
+from pydantic import AnyUrl, Field
 from typing_extensions import deprecated
+
+from .bases import Model
 
 
 class DeprecatedKindFieldMixin:

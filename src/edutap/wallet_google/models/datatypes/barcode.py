@@ -1,8 +1,6 @@
 from ..bases import Model
 from ..deprecated import DeprecatedKindFieldMixin
-from .enums import BarcodeRenderEncoding
-from .enums import BarcodeType
-from .enums import TotpAlgorithm
+from .enums import BarcodeRenderEncoding, BarcodeType, TotpAlgorithm
 from .localized_string import LocalizedString
 
 # Attribute order as in Google's documentation to make future updates easier!

@@ -1,4 +1,5 @@
 import datetime
+
 import pytest
 
 
@@ -74,10 +75,10 @@ def test_create_claims():
 
 
 def test_api_save_link():
-    from edutap.wallet_google.settings import ROOT_DIR
-
     import base64
     import json
+
+    from edutap.wallet_google.settings import ROOT_DIR
 
     credentials_file = ROOT_DIR / "tests" / "data" / "credentials_fake.json"
     with open(credentials_file) as fd:

@@ -1,8 +1,8 @@
+import pytest
+
 from edutap.wallet_google.models.misc import Issuer
 from edutap.wallet_google.models.passes.bases import ClassModel
 from edutap.wallet_google.utils import validate_data_and_convert_to_json
-
-import pytest
 
 
 def test_api__validate_data_and_convert_to_json__create_mode():

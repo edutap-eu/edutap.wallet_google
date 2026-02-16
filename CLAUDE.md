@@ -19,7 +19,7 @@ Install with uv (preferred):
 - `uv pip install edutap.wallet_google` - Base package with both sync and async APIs (authlib + httpx)
 - `uv pip install edutap.wallet_google[callback]` - Adds FastAPI for callback endpoints
 - `uv pip install edutap.wallet_google[test]` - Adds pytest, respx, and testing tools
-- `uv pip install edutap.wallet_google[typecheck]` - Adds mypy and type stubs
+- `uv pip install edutap.wallet_google[typecheck]` - Adds ty type checker
 - `uv pip install edutap.wallet_google[develop]` - Adds pdbp debugger for development
 
 ## Development Commands
@@ -62,11 +62,9 @@ uvx tox -e format
 uvx tox -e lint
 
 # Individual tools
-uvx pyupgrade --py310-plus src/**/*.py tests/**/*.py
-uvx isort src tests
-uvx black src tests
-uvx flake8 src tests
-uvx mypy src tests
+uvx ruff check src tests
+uvx ruff format src tests
+uvx ty check
 uvx codespell --skip "tests/data/*.json"
 ```
 
@@ -246,11 +244,8 @@ The docs follow the [Diátaxis](https://diataxis.fr/) framework.
 ## Code Quality Tools
 
 Pre-commit hooks enforce:
-- **pyupgrade**: Python 3.10+ syntax modernization
-- **isort**: Import sorting (plone profile)
-- **black**: Code formatting
-- **flake8**: Linting
-- **mypy**: Type checking (with explicit-package-bases)
+- **ruff**: Linting (E, F, W, I, UP rules — replaces pyupgrade, isort, flake8) and code formatting (replaces black)
+- **ty**: Type checking (replaces mypy)
 - **codespell**: Spell checking (ignores test data JSONs)
 - **check-manifest**: Package manifest validation
 - **pyroma**: PyPI metadata quality checks

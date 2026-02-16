@@ -59,9 +59,7 @@ test = [
     "tox",
 ]
 typecheck  = [
-    "mypy",
-    "pytest-stub",
-    "types-cryptography",
+    "ty",
 ]
 develop = [
     "pdbp>=1.7.1", # the maintained successor to pdbpp
@@ -99,25 +97,33 @@ explicit-only = [
     "integration",
 ]
 
-[tool.mypy]
-mypy_path = "./src:./tests"
-explicit_package_bases = true
+[tool.ruff]
+target-version = "py310"
+src = ["src", "tests"]
 
-[[tool.mypy.overrides]]
-module = [
-    "cryptography.*",
-    "authlib.*",
-    "respx.*",
-]
-ignore_missing_imports = true
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E501"]
 
-[tool.isort]
-profile = "plone"
-src_paths = ["src", "tests"]
+[tool.ruff.lint.isort]
+known-first-party = ["edutap"]
+force-sort-within-sections = true
+from-first = true
 
-[tool.black]
-target-version = ["py310"]
-include = "src tests"
+[tool.ty.src]
+exclude = ["worktrees/"]
+
+[tool.ty.environment]
+python-version = "3.10"
+extra-paths = ["src", "tests"]
+
+[tool.ty.rules]
+unresolved-import = "warn"
+# the following rules are stricter than mypy; downgrade to warnings for now
+unresolved-attribute = "warn"
+invalid-argument-type = "warn"
+unknown-argument = "warn"
+not-iterable = "warn"
 
 [tool.codespell]
 ignore-words-list = "discreet,"
@@ -126,7 +132,6 @@ ignore-words-list = "discreet,"
 ignore = [
     ".editorconfig",
     ".pre-commit-config.yaml",
-    ".flake8",
     "worktrees/**",
     "src/edutap/wallet_google/_version.py",
 ]
@@ -155,9 +160,8 @@ description = "automatically reformats code"
 skip_install = true
 deps = ["pre-commit"]
 commands = [
-    ["pre-commit", "run", "-a", "pyupgrade"],
-    ["pre-commit", "run", "-a", "isort"],
-    ["pre-commit", "run", "-a", "black"],
+    ["pre-commit", "run", "-a", "ruff"],
+    ["pre-commit", "run", "-a", "ruff-format"],
 ]
 
 [tool.tox.env.lint]

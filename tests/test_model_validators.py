@@ -2,19 +2,19 @@ import pytest
 
 
 def test_reference_validator_missing():
-    from edutap.wallet_google.models.passes.bases import Reference
-
     import pydantic
+
+    from edutap.wallet_google.models.passes.bases import Reference
 
     with pytest.raises(pydantic.ValidationError):
         Reference(id="1234")
 
 
 def test_reference_validator_both():
+    import pydantic
+
     from edutap.wallet_google.models.passes.bases import Reference
     from edutap.wallet_google.models.passes.generic import GenericObject
-
-    import pydantic
 
     with pytest.raises(pydantic.ValidationError):
         Reference(id="1234", model_name="GenericObject", model_type=GenericObject)
@@ -31,10 +31,10 @@ def test_loyality_LoyaltyPointsBalance_validator_OK():
 
 
 def test_loyality_LoyaltyPointsBalance_validator_failures():
+    import pydantic
+
     from edutap.wallet_google.models.datatypes.loyalty import LoyaltyPointsBalance
     from edutap.wallet_google.models.datatypes.money import Money
-
-    import pydantic
 
     # at least one
     with pytest.raises(pydantic.ValidationError):
@@ -98,11 +98,11 @@ def test_transit_object_concession_category_ok():
 
 def test_transit_object_concession_category_fails():
     """Test that setting both concessionCategory and customConcessionCategory raises error."""
+    import pydantic
+
     from edutap.wallet_google.models.datatypes.enums import ConcessionCategory
     from edutap.wallet_google.models.datatypes.general import LocalizedString
     from edutap.wallet_google.models.passes.tickets_and_transit import TransitObject
-
-    import pydantic
 
     # Both concessionCategory (non-default) and customConcessionCategory set
     with pytest.raises(pydantic.ValidationError):
@@ -147,10 +147,10 @@ def test_transit_object_ticket_leg_ok():
 
 def test_transit_object_ticket_leg_fails():
     """Test that setting both ticketLeg and ticketLegs raises error."""
+    import pydantic
+
     from edutap.wallet_google.models.datatypes.transit import TicketLeg
     from edutap.wallet_google.models.passes.tickets_and_transit import TransitObject
-
-    import pydantic
 
     # Both ticketLeg and ticketLegs set
     with pytest.raises(pydantic.ValidationError):

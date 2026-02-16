@@ -3,11 +3,12 @@
 These tests verify the signature validation functions (async only).
 """
 
-from edutap.wallet_google.models.handlers import CallbackData
-from freezegun import freeze_time
-
 import json
+
+from freezegun import freeze_time
 import pytest
+
+from edutap.wallet_google.models.handlers import CallbackData
 
 callback_data_for_test_failure = {
     "signature": "foo",
@@ -174,12 +175,12 @@ async def test_message_expiration_expiry_check_ignored(mock_settings):
 @pytest.mark.asyncio
 async def test_cache_expiration_refresh(mock_settings):
     """Test that cache is refreshed when it expires (async)."""
-    from edutap.wallet_google.handlers.validate import google_root_signing_public_keys
+    import time
+
     from edutap.wallet_google.handlers.validate import (
         GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE,
+        google_root_signing_public_keys,
     )
-
-    import time
 
     # Clear cache
     GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.clear()

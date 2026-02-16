@@ -1,11 +1,10 @@
+from typing import Protocol, runtime_checkable
+
 from .models.handlers import ImageData
-from typing import Protocol
-from typing import runtime_checkable
 
 
 @runtime_checkable
 class ImageProvider(Protocol):
-
     async def image_by_id(self, image_id: str) -> ImageData:
         """
         :param image_id: Unique image identifier as string.
@@ -17,7 +16,6 @@ class ImageProvider(Protocol):
 
 @runtime_checkable
 class CallbackHandler(Protocol):
-
     async def handle(
         self,
         class_id: str,

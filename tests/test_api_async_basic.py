@@ -16,8 +16,7 @@ async def test_new_is_sync():
 @pytest.mark.asyncio
 async def test_imports_work():
     """Test that async API functions exist in the api module."""
-    from edutap.wallet_google import api
-    from edutap.wallet_google import clientpool
+    from edutap.wallet_google import api, clientpool
 
     # Verify sync functions exist
     assert hasattr(api, "create")

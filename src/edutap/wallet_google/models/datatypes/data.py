@@ -1,10 +1,11 @@
-from ..bases import Model
-from .general import Image
-from .general import Uri
-from .localized_string import LocalizedString
-from pydantic import Field
 from typing import Annotated
+
+from pydantic import Field
 from typing_extensions import deprecated
+
+from ..bases import Model
+from .general import Image, Uri
+from .localized_string import LocalizedString
 
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22

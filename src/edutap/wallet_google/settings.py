@@ -1,11 +1,9 @@
+import json
 from pathlib import Path
-from pydantic import AnyHttpUrl
-from pydantic import Field
-from pydantic_settings import BaseSettings
-from pydantic_settings import SettingsConfigDict
 from typing import Literal
 
-import json
+from pydantic import AnyHttpUrl, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ENV_PREFIX = "EDUTAP_WALLET_GOOGLE_"
 ROOT_DIR = Path(__file__).parent.parent.parent.parent.resolve()
@@ -40,9 +38,7 @@ class Settings(BaseSettings):
     handler_callback_verify_signature: str = (
         "1"  # "1" enables, "0" disables signature verification
     )
-    handler_callback_verify_expiry: str = (
-        "1"  # "1" enables, "0" disables expiration checks (useful for testing with expired data)
-    )
+    handler_callback_verify_expiry: str = "1"  # "1" enables, "0" disables expiration checks (useful for testing with expired data)
     handler_image_cache_control: str = (
         "no-cache"  # "no-cache", "public, immutable, max-age={max_age}", etc.
     )

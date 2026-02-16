@@ -1,10 +1,10 @@
-from ..bases import Model
-from .enums import DateFormat
-from .enums import PredefinedItem
-from .enums import TransitOption
-from pydantic import Field
 from typing import Annotated
+
+from pydantic import Field
 from typing_extensions import deprecated
+
+from ..bases import Model
+from .enums import DateFormat, PredefinedItem, TransitOption
 
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22

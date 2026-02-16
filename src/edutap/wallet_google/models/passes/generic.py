@@ -3,10 +3,7 @@ from ..datatypes.enums import GenericType
 from ..datatypes.general import GroupingInfo
 from ..datatypes.localized_string import LocalizedString
 from ..datatypes.notification import Notifications
-from .bases import ClassModel
-from .bases import CommonLogosMixin
-from .bases import ObjectModel
-from .bases import StyleableMixin
+from .bases import ClassModel, CommonLogosMixin, ObjectModel, StyleableMixin
 
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22

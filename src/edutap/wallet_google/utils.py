@@ -1,10 +1,11 @@
-from .clientpool import client_pool
-from .models.bases import Model
-from cryptography.fernet import Fernet
-
 import logging
 import re
 import typing
+
+from cryptography.fernet import Fernet
+
+from .clientpool import client_pool
+from .models.bases import Model
 
 logger = logging.getLogger(__name__)
 
@@ -126,9 +127,11 @@ def handle_response_errors(
     :raises ObjectAlreadyExistsException: When resource already exists (409)
     :raises WalletException:        For other errors
     """
-    from .exceptions import ObjectAlreadyExistsException
-    from .exceptions import QuotaExceededException
-    from .exceptions import WalletException
+    from .exceptions import (
+        ObjectAlreadyExistsException,
+        QuotaExceededException,
+        WalletException,
+    )
 
     if response.status_code == 200:
         return

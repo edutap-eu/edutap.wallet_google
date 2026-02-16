@@ -1,27 +1,32 @@
+from pydantic import Field, model_validator
+
 from ...registry import register_model
 from ..bases import WithIdModel
-from ..datatypes.barcode import Barcode
-from ..datatypes.barcode import RotatingBarcode
+from ..datatypes.barcode import Barcode, RotatingBarcode
 from ..datatypes.class_template_info import ClassTemplateInfo
-from ..datatypes.data import AppLinkData
-from ..datatypes.data import ImageModuleData
-from ..datatypes.data import LinksModuleData
-from ..datatypes.data import TextModuleData
+from ..datatypes.data import (
+    AppLinkData,
+    ImageModuleData,
+    LinksModuleData,
+    TextModuleData,
+)
 from ..datatypes.datetime import TimeInterval
-from ..datatypes.enums import MultipleDevicesAndHoldersAllowedStatus
-from ..datatypes.enums import State
-from ..datatypes.enums import ViewUnlockRequirement
-from ..datatypes.general import CallbackOptions
-from ..datatypes.general import GroupingInfo
-from ..datatypes.general import Image
-from ..datatypes.general import PassConstraints
-from ..datatypes.general import SaveRestrictions
-from ..datatypes.general import SecurityAnimation
+from ..datatypes.enums import (
+    MultipleDevicesAndHoldersAllowedStatus,
+    State,
+    ViewUnlockRequirement,
+)
+from ..datatypes.general import (
+    CallbackOptions,
+    GroupingInfo,
+    Image,
+    PassConstraints,
+    SaveRestrictions,
+    SecurityAnimation,
+)
 from ..datatypes.location import MerchantLocation
 from ..datatypes.message import Message
 from ..datatypes.moduledata import ValueAddedModuleData
-from pydantic import Field
-from pydantic import model_validator
 
 
 @register_model(
