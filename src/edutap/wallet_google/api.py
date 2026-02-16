@@ -489,7 +489,7 @@ def read(
     :QuotaExceededException: When the quota was exceeded.
     :raises LookupError:     When the resource was not found (404).
     :raises WalletException  When the response status code is not 200 or 404.
-    :return:                 The created model based on the data, or a dict with the partial requested response data returned by the Restful API.
+    :return:                 The retrieved model based on the data, or a dict with the partial requested response data returned by the Restful API.
     """
     (model,) = _prepare_read(name, resource_id)
     url = client_pool.url(name, f"/{resource_id}")
@@ -526,7 +526,7 @@ def update(
     :raises QuotaExceededException: When the quota was exceeded
     :raises LookupError:            When the resource was not found (404)
     :raises WalletException:        When the response status code is not 200 or 404
-    :return:                        The created model based on the data, or a dict with the partial requested response data returned by the Restful API.
+    :return:                        The updated model based on the data, or a dict with the partial requested response data returned by the Restful API.
     """
     name, resource_id, verified_json, model = _prepare_update(data)
     params: dict[str, str] | None = None
@@ -738,7 +738,7 @@ async def aread(
     :QuotaExceededException: When the quota was exceeded.
     :raises LookupError:     When the resource was not found (404).
     :raises WalletException  When the response status code is not 200 or 404.
-    :return:                 The created model based on the data, or a dict with the partial requested response data returned by the Restful API.
+    :return:                 The retrieved model based on the data, or a dict with the partial requested response data returned by the Restful API.
     """
     (model,) = _prepare_read(name, resource_id)
     url = client_pool.url(name, f"/{resource_id}")
@@ -775,7 +775,7 @@ async def aupdate(
     :raises QuotaExceededException: When the quota was exceeded
     :raises LookupError:            When the resource was not found (404)
     :raises WalletException:        When the response status code is not 200 or 404
-    :return:                        The created model based on the data, or a dict with the partial requested response data returned by the Restful API.
+    :return:                        The updated model based on the data, or a dict with the partial requested response data returned by the Restful API.
     """
     name, resource_id, verified_json, model = _prepare_update(data)
     params: dict[str, str] | None = None
