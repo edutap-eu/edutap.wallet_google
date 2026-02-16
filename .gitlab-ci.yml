@@ -21,7 +21,7 @@ unittest:
   image:
     name: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
   script:
-    - uvx --with tox-uv tox -e test
+    - uvx --with tox-uv tox -e py$PYTHON_VERSION
   parallel:
     matrix:
       - PYTHON_VERSION: ["3.10", "3.11", "3.12", "3.13"]
