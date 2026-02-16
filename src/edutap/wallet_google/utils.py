@@ -91,14 +91,14 @@ def validate_data_and_convert_to_json(
     return (identifier, verified_json)
 
 
-def validate_partial_request_fields(
+def validate_partial_response_fields(
     fields: list[str],
     name: str,
 ) -> bool:
     """Validate that all fields in the list are valid field names for the given model.
 
     :param fields:     List of field names to validate.
-    :param model:      Pydantic model class to validate against.
+    :param name:       Registered name of the Pydantic model class to validate against.
     :raises ValueError: If any field is not a valid field name for the model.
     """
     if fields:

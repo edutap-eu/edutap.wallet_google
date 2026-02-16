@@ -49,7 +49,7 @@ from .utils import handle_response_errors
 from .utils import parse_response_json
 from .utils import validate_data
 from .utils import validate_data_and_convert_to_json
-from .utils import validate_partial_request_fields
+from .utils import validate_partial_response_fields
 from authlib.jose import jwt
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
@@ -415,7 +415,7 @@ def create(
     params: dict[str, str] | None = None
 
     if fields:
-        if validate_partial_request_fields(fields, name):
+        if validate_partial_response_fields(fields, name):
             params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
@@ -457,7 +457,7 @@ def read(
 
     # Add fields parameter for partial responses
     if fields:
-        if validate_partial_request_fields(fields, name):
+        if validate_partial_response_fields(fields, name):
             params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
@@ -495,7 +495,7 @@ def update(
 
     # Add fields parameter for partial responses
     if fields:
-        if validate_partial_request_fields(fields, name):
+        if validate_partial_response_fields(fields, name):
             params = {"fields": ",".join(fields)}
 
     session = client_pool.client(credentials=credentials)
@@ -546,7 +546,7 @@ def message(
 
     # Add fields parameter for partial responses
     if fields:
-        if validate_partial_request_fields(fields, name):
+        if validate_partial_response_fields(fields, name):
             params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
@@ -612,7 +612,7 @@ def listing(
 
     # Add fields parameter for partial responses
     if fields:
-        if validate_partial_request_fields(fields, name):
+        if validate_partial_response_fields(fields, name):
             params["fields"] = ",".join(fields)
 
     url = client_pool.url(name)
@@ -689,7 +689,7 @@ async def acreate(
 
     # Add fields parameter for partial responses
     if fields:
-        if validate_partial_request_fields(fields, name):
+        if validate_partial_response_fields(fields, name):
             params = {"fields": ",".join(fields)}
 
     client = client_pool.async_client(credentials=credentials)
@@ -731,7 +731,7 @@ async def aread(
 
     # Add fields parameter for partial responses
     if fields:
-        if validate_partial_request_fields(fields, name):
+        if validate_partial_response_fields(fields, name):
             params = {"fields": ",".join(fields)}
 
     client = client_pool.async_client(credentials=credentials)
@@ -769,7 +769,7 @@ async def aupdate(
 
     # Add fields parameter for partial responses
     if fields:
-        if validate_partial_request_fields(fields, name):
+        if validate_partial_response_fields(fields, name):
             params = {"fields": ",".join(fields)}
 
     session = client_pool.async_client(credentials=credentials)
@@ -820,7 +820,7 @@ async def amessage(
 
     # Add fields parameter for partial responses
     if fields:
-        if validate_partial_request_fields(fields, name):
+        if validate_partial_response_fields(fields, name):
             params = {"fields": ",".join(fields)}
 
     client = client_pool.async_client(credentials=credentials)
@@ -888,7 +888,7 @@ async def alisting(
 
     # Add fields parameter for partial responses
     if fields:
-        if validate_partial_request_fields(fields, name):
+        if validate_partial_response_fields(fields, name):
             params["fields"] = ",".join(fields)
 
     url = client_pool.url(name)
