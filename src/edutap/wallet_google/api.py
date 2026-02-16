@@ -50,6 +50,7 @@ from .utils import handle_response_errors
 from .utils import parse_response_json
 from .utils import validate_data
 from .utils import validate_data_and_convert_to_json
+from .utils import validate_partial_request_fields
 from authlib.jose import jwt
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
@@ -413,8 +414,10 @@ def create(
     name, verified_json, model, headers = _prepare_create(data)
     url = client_pool.url(name)
     params: dict[str, str] | None = None
+
     if fields:
-        params = {"fields": ",".join(fields)}
+        if validate_partial_request_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
     response = client.post(
@@ -452,25 +455,11 @@ def read(
     (model,) = _prepare_read(name, resource_id)
     url = client_pool.url(name, f"/{resource_id}")
     params: dict[str, str] | None = None
+
+    # Add fields parameter for partial responses
     if fields:
-        # Accept fields that are prefixed with 'resource.' by stripping the
-        # prefix for validation but keeping the original field names when
-        # building the HTTP params (Google supports nested selectors like
-        # 'resource.id').
-        valid, non_valid_fields = validate_fields_for_name(name, fields)
-        if not valid:
-            # try stripping 'resource.' prefix where present and validate again
-            stripped = [
-                f.split(".", 1)[1] if f.startswith("resource.") else f for f in fields
-            ]
-            valid_stripped, non_valid_stripped = validate_fields_for_name(
-                name, stripped
-            )
-            if not valid_stripped:
-                raise ValueError(
-                    f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
-                )
-        params = {"fields": ",".join(fields)}
+        if validate_partial_request_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
     response = client.get(url=url, params=params)
@@ -504,25 +493,11 @@ def update(
     """
     name, resource_id, verified_json, model = _prepare_update(data)
     params: dict[str, str] | None = None
+
+    # Add fields parameter for partial responses
     if fields:
-        # Accept fields that are prefixed with 'resource.' by stripping the
-        # prefix for validation but keeping the original field names when
-        # building the HTTP params (Google supports nested selectors like
-        # 'resource.id').
-        valid, non_valid_fields = validate_fields_for_name(name, fields)
-        if not valid:
-            # try stripping 'resource.' prefix where present and validate again
-            stripped = [
-                f.split(".", 1)[1] if f.startswith("resource.") else f for f in fields
-            ]
-            valid_stripped, non_valid_stripped = validate_fields_for_name(
-                name, stripped
-            )
-            if not valid_stripped:
-                raise ValueError(
-                    f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
-                )
-        params = {"fields": ",".join(fields)}
+        if validate_partial_request_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     session = client_pool.client(credentials=credentials)
     if partial:
@@ -569,24 +544,11 @@ def message(
     model, verified_json = _prepare_message(name, message)
     url = client_pool.url(name, f"/{resource_id}/addMessage")
     params: dict[str, str] | None = None
+
+    # Add fields parameter for partial responses
     if fields:
-        # Accept fields that are prefixed with 'resource.' by stripping the
-        # prefix for validation but keeping the original field names when
-        # building the HTTP params (Google supports nested selectors like
-        # 'resource.id').
-        valid, non_valid_fields = validate_fields_for_name(name, fields)
-        if not valid:
-            stripped = [
-                f.split(".", 1)[1] if f.startswith("resource.") else f for f in fields
-            ]
-            valid_stripped, non_valid_stripped = validate_fields_for_name(
-                name, stripped
-            )
-            if not valid_stripped:
-                raise ValueError(
-                    f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
-                )
-        params = {"fields": ",".join(fields)}
+        if validate_partial_request_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
     response = client.post(url=url, data=verified_json.encode("utf-8"), params=params)
@@ -651,12 +613,8 @@ def listing(
 
     # Add fields parameter for partial responses
     if fields:
-        valid, non_valid_fields = validate_fields_for_name(name, fields)
-        if not valid:
-            raise ValueError(
-                f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
-            )
-        params["fields"] = ",".join(fields)
+        if validate_partial_request_fields(fields, name):
+            params["fields"] = ",".join(fields)
 
     url = client_pool.url(name)
 
@@ -729,8 +687,11 @@ async def acreate(
     name, verified_json, model, headers = _prepare_create(data)
     url = client_pool.url(name)
     params: dict[str, str] | None = None
+
+    # Add fields parameter for partial responses
     if fields:
-        params = {"fields": ",".join(fields)}
+        if validate_partial_request_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     client = client_pool.async_client(credentials=credentials)
     response = await client.post(
@@ -768,13 +729,11 @@ async def aread(
     (model,) = _prepare_read(name, resource_id)
     url = client_pool.url(name, f"/{resource_id}")
     params: dict[str, str] | None = None
+
+    # Add fields parameter for partial responses
     if fields:
-        valid, non_valid_fields = validate_fields_for_name(name, fields)
-        if not valid:
-            raise ValueError(
-                f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
-            )
-        params = {"fields": ",".join(fields)}
+        if validate_partial_request_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     client = client_pool.async_client(credentials=credentials)
     response = await client.get(url=url, params=params)
@@ -808,13 +767,11 @@ async def aupdate(
     """
     name, resource_id, verified_json, model = _prepare_update(data)
     params: dict[str, str] | None = None
+
+    # Add fields parameter for partial responses
     if fields:
-        valid, non_valid_fields = validate_fields_for_name(name, fields)
-        if not valid:
-            raise ValueError(
-                f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
-            )
-        params = {"fields": ",".join(fields)}
+        if validate_partial_request_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     session = client_pool.async_client(credentials=credentials)
     if partial:
@@ -861,13 +818,11 @@ async def amessage(
     model, verified_json = _prepare_message(name, message)
     url = client_pool.url(name, f"/{resource_id}/addMessage")
     params: dict[str, str] | None = None
+
+    # Add fields parameter for partial responses
     if fields:
-        valid, non_valid_fields = validate_fields_for_name(name, fields)
-        if not valid:
-            raise ValueError(
-                f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
-            )
-        params = {"fields": ",".join(fields)}
+        if validate_partial_request_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     client = client_pool.async_client(credentials=credentials)
     response = await client.post(
@@ -934,12 +889,8 @@ async def alisting(
 
     # Add fields parameter for partial responses
     if fields:
-        valid, non_valid_fields = validate_fields_for_name(name, fields)
-        if not valid:
-            raise ValueError(
-                f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
-            )
-        params["fields"] = ",".join(fields)
+        if validate_partial_request_fields(fields, name):
+            params["fields"] = ",".join(fields)
 
     url = client_pool.url(name)
 
