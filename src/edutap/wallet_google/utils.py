@@ -120,19 +120,17 @@ def validate_partial_response_fields(
         # prefix for validation but keeping the original field names when
         # building the HTTP params (Google supports nested selectors like
         # 'resource.id').
-        valid, non_valid_fields = validate_fields_for_name(name, fields)
-        if not valid:
-            stripped = [
-                f.split(".", 1)[1] if f.startswith("resource.") else f for f in fields
-            ]
-            valid_stripped, non_valid_stripped = validate_fields_for_name(
-                name, stripped
-            )
-            if not valid_stripped:
-                raise ValueError(
-                    f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
-                )
-                return False
+        stripped = [
+            f.split(".", 1)[1] if f.startswith("resource.") else f for f in fields
+        ]
+        valid_stripped, non_valid_stripped = validate_fields_for_name(
+            name, stripped
+        )
+        if not valid_stripped:
+            # raise ValueError(
+            #     f"The following fields are not valid for model {name}: {', '.join(non_valid_stripped)}"
+            # )
+            return False
         return True
     return False
 
