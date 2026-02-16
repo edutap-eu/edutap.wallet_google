@@ -183,7 +183,6 @@ def validate_fields_for_name(name: str, fields: list[str]) -> tuple[bool, list[s
             non_valid_fields.append(field)
 
     if non_valid_fields:
-        # raise ValueError(f"Fields {non_valid_fields} not valid for '{name}'")
         logger.debug(f"Fields {', '.join(non_valid_fields)} not valid for '{name}'")
         return (False, non_valid_fields)
     return (True, [])

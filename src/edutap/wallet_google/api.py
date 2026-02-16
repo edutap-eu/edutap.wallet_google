@@ -258,11 +258,8 @@ def _validate_partial_response_fields(
         stripped = [
             f.split(".", 1)[1] if f.startswith("resource.") else f for f in fields
         ]
-        valid_stripped, non_valid_stripped = validate_fields_for_name(name, stripped)
+        valid_stripped, _ = validate_fields_for_name(name, stripped)
         if not valid_stripped:
-            # raise ValueError(
-            #     f"The following fields are not valid for model {name}: {', '.join(non_valid_stripped)}"
-            # )
             return False
         return True
     return False
