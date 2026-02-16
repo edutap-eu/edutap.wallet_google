@@ -5,7 +5,6 @@ from .enums import BarcodeType
 from .enums import TotpAlgorithm
 from .localized_string import LocalizedString
 
-
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22
 

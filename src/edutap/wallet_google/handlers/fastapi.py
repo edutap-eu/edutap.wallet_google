@@ -13,7 +13,6 @@ from fastapi.responses import JSONResponse
 
 import asyncio
 
-
 # define routers for all use cases: callback, images, and the combined router (at bottom of file)
 router_callback = APIRouter(
     prefix=client_pool.settings.handler_prefix_callback,

@@ -7,7 +7,6 @@ from typing import Literal
 
 import json
 
-
 ENV_PREFIX = "EDUTAP_WALLET_GOOGLE_"
 ROOT_DIR = Path(__file__).parent.parent.parent.parent.resolve()
 API_URL = "https://walletobjects.googleapis.com/walletobjects/v1"

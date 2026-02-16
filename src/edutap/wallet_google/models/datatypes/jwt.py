@@ -9,7 +9,6 @@ from ..passes import tickets_and_transit
 from ..passes.bases import Reference
 from datetime import datetime
 
-
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22
 
