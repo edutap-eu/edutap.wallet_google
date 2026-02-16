@@ -3,7 +3,6 @@ from edutap.wallet_google.models.datatypes import enums
 import pytest
 import respx
 
-
 testdata = [
     (
         "Create",

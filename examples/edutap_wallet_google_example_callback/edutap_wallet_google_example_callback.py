@@ -5,7 +5,6 @@ from fastapi.logger import logger
 import os
 import pathlib
 
-
 app = FastAPI()
 app.include_router(router_callback)
 

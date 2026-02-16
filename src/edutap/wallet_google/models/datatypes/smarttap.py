@@ -5,7 +5,6 @@ from pydantic import AnyHttpUrl
 from pydantic import EmailStr
 from pydantic import Field
 
-
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22
 

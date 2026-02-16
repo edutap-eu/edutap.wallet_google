@@ -7,7 +7,6 @@ import logging
 import re
 import typing
 
-
 logger = logging.getLogger(__name__)
 
 

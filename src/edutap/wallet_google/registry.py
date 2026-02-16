@@ -1,4 +1,4 @@
-#from .models.bases import Model
+# from .models.bases import Model
 from pydantic import BaseModel
 from typing import TypedDict
 
@@ -7,15 +7,11 @@ import importlib
 import inspect
 import logging
 
-
 logger = logging.getLogger(__name__)
 
-
-class Model(BaseModel):
-    """
-    Abstract Base Model for all Google Wallet Models.
-    Defined here to avoid circular imports between the models and the registry.
-    """
+# Alias Model to BaseModel so that issubclass(..., Model) checks operate on the
+# actual Pydantic base class, avoiding a separate, incompatible model hierarchy.
+Model = BaseModel
 
 
 class RegistryMetadataDict(TypedDict, total=False):

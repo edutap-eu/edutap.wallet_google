@@ -4,7 +4,6 @@ from importlib.metadata import entry_points
 
 import typing
 
-
 _POSSIBLE_PLUGINS = {
     "ImageProvider": ImageProvider,
     "CallbackHandler": CallbackHandler,
