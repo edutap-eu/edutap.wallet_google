@@ -1,9 +1,8 @@
-from typing import TYPE_CHECKING, TypedDict
-
 import functools
 import importlib
 import inspect
 import logging
+from typing import TYPE_CHECKING, TypedDict
 
 logger = logging.getLogger(__name__)
 

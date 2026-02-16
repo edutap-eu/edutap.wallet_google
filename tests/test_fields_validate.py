@@ -1,7 +1,6 @@
-from edutap.wallet_google.registry import _get_fields_for_name
-from edutap.wallet_google.registry import validate_fields_for_name
-
 import pytest
+
+from edutap.wallet_google.registry import _get_fields_for_name, validate_fields_for_name
 
 
 @pytest.mark.parametrize(
