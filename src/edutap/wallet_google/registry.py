@@ -282,7 +282,6 @@ def _get_fields_for_name(name: str) -> list[str]:
     return _get_fields_for_model(model)
 
 
-# @functools.cache
 def _get_fields_from_definition(name, definition: dict) -> list[str]:
     """Returns the list of valid fields for the given schema object."""
     fields: set[str] = set()
