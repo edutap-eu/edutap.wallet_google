@@ -264,9 +264,7 @@ def _get_fields_for_(name, definition: dict) -> list[str]:
         fields.add(name)
     if definition.get("deprecated") is True:
         pass
-    elif definition.get("type") in ("string", "boolean"):
-        fields.add(name)
-    elif definition.get("type") == "array":
+    elif definition.get("type") in ("string", "boolean", "array") or definition.get("type") is None:
         fields.add(name)
     elif definition.get("$ref") is not None:
         ref = definition["$ref"].replace("#/$defs/", "")
@@ -296,9 +294,4 @@ def _get_fields_for_(name, definition: dict) -> list[str]:
                     f"Unhandled anyOf type: {any_of.get('type')} --> definition: {any_of}"
                 )
                 fields.add(name)
-    elif definition.get("$ref") is not None:
-        # nested object, we can add the field name, but not its sub-fields
-        fields.add(name)
-    elif definition.get("type") is None:
-        fields.add(name)
     return list(fields)
