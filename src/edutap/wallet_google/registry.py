@@ -319,8 +319,10 @@ def _get_fields_for_(name, definition: dict) -> list[str]:
                     fields.add(f"{name}/{sub_field}")
 
             else:
-                print(
-                    f"Unhandled anyOf type: {any_of.get('type')} --> definition: {any_of}"
+                logger.warning(
+                    "Unhandled anyOf type: %s --> definition: %s",
+                    any_of.get("type"),
+                    any_of,
                 )
                 fields.add(name)
     return list(fields)
