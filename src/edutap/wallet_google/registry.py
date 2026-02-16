@@ -243,13 +243,11 @@ def _get_fields_for_model(model: "type[Model]") -> list[str]:
     from .models.bases import Model
 
     fields: set[str] = set()
-    # print(f"Getting fields for model: {model}")
     if model is Model:
         return []
     schema = model.model_json_schema(by_alias=True)
     if schema is not None:
         properties = schema.get("properties", {})
-        # breakpoint()
         for name, definition in properties.items():
             sub_fields = _get_fields_for_(name, definition)
             fields.update(sub_fields)

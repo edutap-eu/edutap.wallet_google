@@ -14,9 +14,6 @@ from edutap.wallet_google.registry import _get_fields_for_name, validate_fields_
 )
 def test_get_fields_for_model(name):
     fields = _get_fields_for_name(name)
-    print("\n".join(fields))
-    # breakpoint()
-
     assert "id" in fields
     assert "classId" in fields
 
