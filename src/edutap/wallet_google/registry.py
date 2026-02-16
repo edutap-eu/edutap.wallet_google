@@ -1,4 +1,10 @@
+import functools
+import importlib
+import inspect
+import logging
 from typing import TYPE_CHECKING, TypedDict
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .models.bases import Model
@@ -136,3 +142,186 @@ def raise_when_operation_not_allowed(name: str, operation: str) -> None:
     """
     if not _MODEL_REGISTRY_BY_NAME[name][f"can_{operation}"]:  # type: ignore
         raise ValueError(f"Operation '{operation}' not allowed for '{name}'")
+
+
+def validate_fields_for_name(name: str, fields: list[str]) -> tuple[bool, list[str]]:
+    """Verify that the given fields are valid for the given registered name.
+
+    Returns:
+        A tuple ``(is_valid, invalid_fields)`` where:
+
+        * ``is_valid`` is ``True`` if all fields are valid for the model registered
+          under ``name``, otherwise ``False``.
+        * ``invalid_fields`` is a list of the fields that are not valid. When
+          ``is_valid`` is ``True``, this list is empty.
+
+    This function logs a debug message when invalid fields are found and does not
+    raise an exception.
+    """
+    non_valid_fields = []
+
+    model = lookup_model_by_name(name)
+    model_fields = _get_fields_for_model(model)
+    for field in fields:
+        if field == "*":
+            continue
+        elif "/" in field:
+            if "*" in field:
+                first_part = field.split("*")[0][:-1]
+
+                if first_part not in model_fields:
+                    non_valid_fields.append(field)
+                    continue
+            elif field not in model_fields:
+                non_valid_fields.append(field)
+        elif "(" in field and ")" in field:
+            first_part = field.split("(")[0]
+            if first_part[:-1] not in model_fields:
+                non_valid_fields.append(field)
+                continue
+        elif field not in model.model_fields:
+            non_valid_fields.append(field)
+
+    if non_valid_fields:
+        logger.debug(f"Fields {', '.join(non_valid_fields)} not valid for '{name}'")
+        return (False, non_valid_fields)
+    return (True, [])
+
+
+@functools.cache
+def _find_models() -> dict[str, "type[Model]"]:
+    """Find all Model subclasses from datatypes and deprecated modules.
+
+    :return: Mapping of class name to Model subclass.
+    :rtype: dict[str, type[Model]]
+    """
+    from .models.bases import Model
+
+    models: dict[str, type[Model]] = {}
+    pkg = importlib.import_module("edutap.wallet_google")
+    datatypes_module = pkg.models.datatypes
+    deprecated_module = pkg.models.deprecated
+
+    def _collect_classes(mod):
+        for cls_name, cls in inspect.getmembers(mod, inspect.isclass):
+            if issubclass(cls, Model) and cls is not Model:
+                models[cls_name] = cls
+
+    # deprecated models
+    for cls_name, cls in inspect.getmembers(deprecated_module, inspect.isclass):
+        if (
+            cls.__module__.startswith("edutap.wallet_google.models.deprecated")
+            and issubclass(cls, Model)
+            and cls is not Model
+        ):
+            models[cls_name] = cls
+
+    # datatypes/*
+    for name, module in inspect.getmembers(datatypes_module, inspect.ismodule):
+        if module.__name__.startswith("edutap.wallet_google.models.datatypes"):
+            _collect_classes(module)
+
+    return models
+
+
+@functools.cache
+def _find_enums() -> list[str]:
+    """
+    Returns a list of all enum class names.
+    """
+    pkg = importlib.import_module("edutap.wallet_google")
+    enums_module = pkg.models.datatypes.enums
+    enums: list[str] = []
+    for enum_name, enum in inspect.getmembers(enums_module, inspect.isclass):
+        enums.append(enum_name)
+    return enums
+
+
+@functools.cache
+def _get_fields_for_model(model: "type[Model]") -> list[str]:
+    """Returns the list of valid fields for the given registered name."""
+    from .models.bases import Model
+
+    fields: set[str] = set()
+    if model is Model:
+        return []
+    schema = model.model_json_schema(by_alias=True)
+    if schema is not None:
+        properties = schema.get("properties", {})
+        for name, definition in properties.items():
+            sub_fields = _get_fields_from_definition(name, definition)
+            fields.update(sub_fields)
+    return list(fields)
+
+
+@functools.cache
+def _get_fields_for_name(name: str) -> list[str]:
+    """Returns the list of valid fields for the given registered name."""
+    from .models.bases import Model
+
+    if "__" in name:
+        name = name.split("__")[-1]
+    model: type[Model] | None = None
+    if name in _MODEL_REGISTRY_BY_NAME:
+        model = lookup_model_by_name(name)
+    if model is None:
+        models: dict[str, type[Model]] = _find_models()
+        if len(models) == 0:
+            raise ValueError("No models found")
+        elif len(models) == 1:
+            model = list(models.values())[0]
+        else:
+            for model_name, model_cls in models.items():
+                if model_name.lower() == name.lower():
+                    model = model_cls
+                    break
+    if model is None:
+        if name in _find_enums():
+            return [name]
+        raise ValueError(f"Model '{name}' not found")
+    return _get_fields_for_model(model)
+
+
+def _get_fields_from_definition(name, definition: dict) -> list[str]:
+    """Returns the list of valid fields for the given schema object."""
+    fields: set[str] = set()
+    if definition in ("string", "boolean"):
+        fields.add(name)
+    if definition.get("deprecated") is True:
+        pass
+    elif (
+        definition.get("type") in ("string", "boolean", "array")
+        or definition.get("type") is None
+    ):
+        fields.add(name)
+    elif definition.get("$ref") is not None:
+        ref = definition["$ref"].replace("#/$defs/", "")
+        fields.add(name)
+        sub_fields = _get_fields_for_name(ref)
+        for sub_field in sub_fields:
+            fields.add(f"{name}/{sub_field}")
+    elif definition.get("anyOf") is not None:
+        for any_of in definition["anyOf"]:
+            if any_of.get("type") == "null":
+                fields.add(name)
+            elif any_of.get("type") == "array":
+                sub_fields = _get_fields_from_definition(name, any_of["items"])
+                for sub_field in sub_fields:
+                    fields.add(f"{name}/{sub_field}")
+            elif any_of.get("type") in ("string", "boolean"):
+                fields.add(name)
+            elif any_of.get("$ref") is not None:
+                ref = any_of["$ref"].replace("#/$defs/", "")
+                fields.add(name)
+                sub_fields = _get_fields_for_name(ref)
+                for sub_field in sub_fields:
+                    fields.add(f"{name}/{sub_field}")
+
+            else:
+                logger.warning(
+                    "Unhandled anyOf type: %s --> definition: %s",
+                    any_of.get("type"),
+                    any_of,
+                )
+                fields.add(name)
+    return list(fields)

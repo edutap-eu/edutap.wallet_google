@@ -1,7 +1,8 @@
 from enum import Enum
+import functools
 import typing
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, create_model
 
 
 class Model(BaseModel):
@@ -24,6 +25,26 @@ class WithIdModel(Model):
     """
 
     id: str
+
+
+@functools.cache
+def make_partial_model(model: type[Model]) -> type[Model]:
+    """Create a model variant where all required fields become Optional with None default.
+
+    The result is a subclass of the original model, so isinstance() checks
+    against the original type still pass. Cached per model class.
+    """
+    field_overrides = {}
+    for name, field_info in model.model_fields.items():
+        if field_info.is_required() and field_info.annotation is not None:
+            field_overrides[name] = (field_info.annotation | None, None)
+    if not field_overrides:
+        return model
+    return create_model(
+        f"Partial{model.__name__}",
+        __base__=model,
+        **field_overrides,
+    )
 
 
 def _snake_to_camel(snake_str: str) -> str:
