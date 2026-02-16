@@ -465,7 +465,7 @@ def create(
     )
 
     handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
-    if fields:
+    if params is not None:
         # Return the partial response as dict when fields were requested
         return json.loads(response.content)
     return parse_response_json(response, model)
@@ -501,7 +501,7 @@ def read(
     response = client.get(url=url, params=params)
 
     handle_response_errors(response, "read", name, resource_id)
-    if fields:
+    if params is not None:
         # Return the partial response as dict when fields were requested
         return json.loads(response.content)
     return parse_response_json(response, model)
@@ -578,7 +578,7 @@ def message(
 
     handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
-    if fields:
+    if params is not None:
         # Return the partial response as dict when fields were requested
         return json.loads(response.content)["resource"]
     return model.model_validate(json.loads(response.content)["resource"])
@@ -645,7 +645,7 @@ def listing(
         pagiganted_response = PaginatedResponse.model_validate_json(response.content)
         pagination: Pagination | None = pagiganted_response.pagination
 
-        if fields:
+        if "fields" in params:
             # Return the partial response as dict when fields were requested
             resources = pagiganted_response.resources
             yield from resources
@@ -705,7 +705,7 @@ async def acreate(
     )
 
     handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
-    if fields:
+    if params is not None:
         # Return the partial response as dict when fields were requested
         return json.loads(response.content)
     return parse_response_json(response, model)
@@ -741,7 +741,7 @@ async def aread(
     response = await client.get(url=url, params=params)
 
     handle_response_errors(response, "read", name, resource_id)
-    if fields:
+    if params is not None:
         # Return the partial response as dict when fields were requested
         return json.loads(response.content)
     return parse_response_json(response, model)
@@ -829,7 +829,7 @@ async def amessage(
 
     handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
-    if fields:
+    if params is not None:
         # Return the partial response as dict when fields were requested
         return json.loads(response.content)["resource"]
     return model.model_validate(json.loads(response.content)["resource"])
@@ -896,7 +896,7 @@ async def alisting(
         pagiganted_response = PaginatedResponse.model_validate_json(response.content)
         pagination: Pagination | None = pagiganted_response.pagination
 
-        if fields:
+        if "fields" in params:
             # Return the partial response as dict when fields were requested
             resources = pagiganted_response.resources
             for resource in resources:
