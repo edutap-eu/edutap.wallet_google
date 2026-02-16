@@ -40,7 +40,7 @@ from authlib.jose import jwt
 from .clientpool import client_pool
 from .credentials import credentials_manager
 from .models.bases import Model
-from .models.datatypes.general import PaginatedResponse
+from .models.datatypes.general import PaginatedResponse, Pagination
 from .models.datatypes.jwt import JWTClaims, JWTPayload
 from .models.datatypes.message import Message
 from .models.misc import AddMessageRequest
@@ -375,17 +375,6 @@ def _prepare_listing(
     return model, params, is_pageable, resource_identifier
 
 
-def _process_pagination_info(response: bytes) -> PaginatedResponse | None:
-    """Process pagination info from a listing response.
-
-    Returns: PaginatedResponse instance or None if pagination info is not present.
-    """
-    data = json.loads(response.content)
-    if "pagination" in data:
-        return PaginatedResponse.model_validate(data["pagination"])
-    return None
-
-
 def _process_listing_page(
     response_content: bytes,
     model: type[Model],
@@ -394,9 +383,9 @@ def _process_listing_page(
 
     Returns: list of validated models
     """
-    data = json.loads(response_content)
-    resources = data.get("resources", [])
-    pagination = _process_pagination_info(response_content)
+    paginated_response = PaginatedResponse.model_validate_json(response_content)
+    pagination = paginated_response.pagination
+    resources = paginated_response.resources
 
     validated_models = []
     if not resources:
@@ -591,8 +580,8 @@ def message(
     logger.debug(f"RAW-Response: {response.content!r}")
     if fields:
         # Return the partial response as dict when fields were requested
-        return json.loads(response.content)
-    return parse_response_json(response, model)
+        return json.loads(response.content)["resource"]
+    return model.model_validate(json.loads(response.content)["resource"])
 
 
 def listing(
@@ -653,12 +642,12 @@ def listing(
     while True:
         response = client.get(url=url, params=params)
         handle_response_errors(response, "list", name, resource_identifier)
-        pagination = _process_pagination_info(response)
+        pagiganted_response = PaginatedResponse.model_validate_json(response.content)
+        pagination: Pagination | None = pagiganted_response.pagination
 
         if fields:
             # Return the partial response as dict when fields were requested
-            data = json.loads(response.content)
-            resources = data.get("resources", [])
+            resources = pagiganted_response.resources
             yield from resources
         else:
             # Return the full response as model instances when fields were not requested
@@ -834,14 +823,16 @@ async def amessage(
             params = {"fields": ",".join(fields)}
 
     client = client_pool.async_client(credentials=credentials)
-    response = await client.post(url=url, data=verified_json.encode("utf-8"), params=params)
+    response = await client.post(
+        url=url, data=verified_json.encode("utf-8"), params=params
+    )
 
     handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
     if fields:
         # Return the partial response as dict when fields were requested
-        return json.loads(response.content)
-    return parse_response_json(response, model)
+        return json.loads(response.content)["resource"]
+    return model.model_validate(json.loads(response.content)["resource"])
 
 
 async def alisting(
@@ -902,18 +893,19 @@ async def alisting(
     while True:
         response = await client.get(url=url, params=params)
         handle_response_errors(response, "list", name, resource_identifier)
-        pagination = _process_pagination_info(response)
+        pagiganted_response = PaginatedResponse.model_validate_json(response.content)
+        pagination: Pagination | None = pagiganted_response.pagination
 
         if fields:
             # Return the partial response as dict when fields were requested
-            data = json.loads(response.content)
-            resources = data.get("resources", [])
+            resources = pagiganted_response.resources
             for resource in resources:
-                 yield resource
+                yield resource
         else:
+            # Return the full response as model instances when fields were not requested
             validated_models = _process_listing_page(response.content, model)
-            for validated_model in validated_models:
-                yield validated_model
+            for resource in validated_models:
+                yield resource
 
         if not is_pageable or not pagination:
             break
