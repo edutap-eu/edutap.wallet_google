@@ -98,5 +98,19 @@ def mock_settings():
 
 
 @pytest.fixture
+def mock_async_session(monkeypatch):
+    """Fixture to provide a mock async session that doesn't require real credentials."""
+    import httpx
+
+    from edutap.wallet_google.clientpool import ClientPoolManager
+
+    def mock_async_session(self, credentials=None):
+        return httpx.AsyncClient()
+
+    monkeypatch.setattr(ClientPoolManager, "async_client", mock_async_session)
+    yield
+
+
+@pytest.fixture
 def mock_fernet_encryption_key(mock_settings):
     mock_settings.fernet_encryption_key = "TDTPJVv24gha-jRX0apPgPpMDN2wX1kVSNNZdWXcz8E="
