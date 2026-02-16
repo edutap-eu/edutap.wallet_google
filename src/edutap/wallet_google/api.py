@@ -417,7 +417,9 @@ def create(
     :raises QuotaExceededException:       When the quota was exceeded.
     :raises ObjectAlreadyExistsException: When the id to be created already exists at Google.
     :raises WalletException:              When the response status code is not 200.
-    :return:                              The created model based on the data returned by the Restful API.
+    :return:                              The created model based on the data,
+                                          or a dict with the partial requested response data
+                                          returned by the Restful API.
     """
     name, verified_json, model, headers = _prepare_create(data)
     url = client_pool.url(name)
@@ -459,7 +461,9 @@ def read(
     :QuotaExceededException: When the quota was exceeded.
     :raises LookupError:     When the resource was not found (404).
     :raises WalletException  When the response status code is not 200 or 404.
-    :return:                 The created model based on the data returned by the Restful API
+    :return:                 The created model based on the data,
+                             or a dict with the partial requested response data
+                             returned by the Restful API.
     """
     (model,) = _prepare_read(name, resource_id)
     url = client_pool.url(name, f"/{resource_id}")
@@ -498,7 +502,9 @@ def update(
     :raises QuotaExceededException: When the quota was exceeded
     :raises LookupError:            When the resource was not found (404)
     :raises WalletException:        When the response status code is not 200 or 404
-    :return:                        The created model based on the data returned by the Restful API
+    :return:                        The created model based on the data,
+                                    or a dict with the partial requested response data
+                                    returned by the Restful API.
     """
     name, resource_id, verified_json, model = _prepare_update(data)
     params: dict[str, str] | None = None
@@ -548,7 +554,9 @@ def message(
     :raises QuotaExceededException:   When the quota was exceeded
     :raises LookupError:              When the resource was not found (404)
     :raises WalletException:          When the response status code is not 200 or 404
-    :return:                          The created Model object as returned by the Restful API
+    :return:                          The created model based on the data,
+                                      or a dict with the partial requested response data
+                                      returned by the Restful API.
     """
     model, verified_json = _prepare_message(name, message)
     url = client_pool.url(name, f"/{resource_id}/addMessage")
@@ -691,7 +699,9 @@ async def acreate(
     :raises QuotaExceededException:       When the quota was exceeded.
     :raises ObjectAlreadyExistsException: When the id to be created already exists at Google.
     :raises WalletException:              When the response status code is not 200.
-    :return:                              The created model based on the data returned by the Restful API.
+    :return:                              The created model based on the data,
+                                          or a dict with the partial requested response data
+                                          returned by the Restful API.
     """
     name, verified_json, model, headers = _prepare_create(data)
     url = client_pool.url(name)
@@ -734,7 +744,9 @@ async def aread(
     :QuotaExceededException: When the quota was exceeded.
     :raises LookupError:     When the resource was not found (404).
     :raises WalletException  When the response status code is not 200 or 404.
-    :return:                 The created model based on the data returned by the Restful API
+    :return:                 The created model based on the data,
+                             or a dict with the partial requested response data
+                             returned by the Restful API.
     """
     (model,) = _prepare_read(name, resource_id)
     url = client_pool.url(name, f"/{resource_id}")
@@ -773,7 +785,9 @@ async def aupdate(
     :raises QuotaExceededException: When the quota was exceeded
     :raises LookupError:            When the resource was not found (404)
     :raises WalletException:        When the response status code is not 200 or 404
-    :return:                        The created model based on the data returned by the Restful API
+    :return:                        The created model based on the data,
+                                    or a dict with the partial requested response data
+                                    returned by the Restful API.
     """
     name, resource_id, verified_json, model = _prepare_update(data)
     params: dict[str, str] | None = None
@@ -823,7 +837,9 @@ async def amessage(
     :raises QuotaExceededException:   When the quota was exceeded
     :raises LookupError:              When the resource was not found (404)
     :raises WalletException:          When the response status code is not 200 or 404
-    :return:                          The created Model object as returned by the Restful API
+    :return:                          The created model based on the data,
+                                      or a dict with the partial requested response data
+                                      returned by the Restful API.
     """
     model, verified_json = _prepare_message(name, message)
     url = client_pool.url(name, f"/{resource_id}/addMessage")
