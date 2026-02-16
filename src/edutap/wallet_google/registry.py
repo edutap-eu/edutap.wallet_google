@@ -1,6 +1,5 @@
-from .models.bases import Model
+#from .models.bases import Model
 from pydantic import BaseModel
-from pydantic._internal._model_construction import ModelMetaclass
 from typing import TypedDict
 
 import functools
@@ -12,10 +11,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class Model(BaseModel):
+    """
+    Abstract Base Model for all Google Wallet Models.
+    Defined here to avoid circular imports between the models and the registry.
+    """
+
+
 class RegistryMetadataDict(TypedDict, total=False):
     """TypedDict for the metadata of a registered model."""
 
-    model: "type[Model]"
+    model: type[Model]
     name: str
     url_part: str
     plural: str
@@ -28,7 +34,7 @@ class RegistryMetadataDict(TypedDict, total=False):
 
 
 _MODEL_REGISTRY_BY_NAME: dict[str, RegistryMetadataDict] = {}
-_MODEL_REGISTRY_BY_MODEL: "dict[type[Model], RegistryMetadataDict]" = {}
+_MODEL_REGISTRY_BY_MODEL: dict[type[Model], RegistryMetadataDict] = {}
 
 
 class register_model:
@@ -82,8 +88,8 @@ class register_model:
 
     def __call__(
         self,
-        cls: "type[Model]",
-    ) -> "type[Model]":
+        cls: type[Model],
+    ) -> type[Model]:
         """
         Registers the given class in the registry.
         """
@@ -96,14 +102,14 @@ class register_model:
         return cls
 
 
-def lookup_model_by_name(name: str) -> "type[Model]":
+def lookup_model_by_name(name: str) -> type[Model]:
     """
     Returns the model with the given name.
     """
     return _MODEL_REGISTRY_BY_NAME[name]["model"]
 
 
-def lookup_model_by_plural_name(plural_name: str) -> "type[Model]":
+def lookup_model_by_plural_name(plural_name: str) -> type[Model]:
     """
     Returns the model with the given plural name.
     """
@@ -120,14 +126,14 @@ def lookup_metadata_by_name(name: str) -> RegistryMetadataDict:
     return _MODEL_REGISTRY_BY_NAME[name]
 
 
-def lookup_metadata_by_model_instance(model: "Model") -> RegistryMetadataDict:
+def lookup_metadata_by_model_instance(model: Model) -> RegistryMetadataDict:
     """
     Returns the registry metadata by a given instance of a model
     """
     return _MODEL_REGISTRY_BY_MODEL[type(model)]
 
 
-def lookup_metadata_by_model_type(model_type: "type[Model]") -> RegistryMetadataDict:
+def lookup_metadata_by_model_type(model_type: type[Model]) -> RegistryMetadataDict:
     """
     Returns the registry metadata by a given model type
     """
@@ -144,23 +150,23 @@ def raise_when_operation_not_allowed(name: str, operation: str) -> None:
 
 
 @functools.cache
-def _find_models() -> dict[str, ModelMetaclass]:
-    models: dict[str, ModelMetaclass] = {}
+def _find_models() -> dict[str, type[Model]]:
+    models: dict[str, type[Model]] = {}
     pkg = importlib.import_module("edutap.wallet_google")
     datatypes_module = pkg.models.datatypes
     deprecated_module = pkg.models.deprecated
 
     def _collect_classes(mod):
         for cls_name, cls in inspect.getmembers(mod, inspect.isclass):
-            if issubclass(cls, BaseModel) and cls is not BaseModel:
+            if issubclass(cls, Model) and cls is not Model:
                 models[cls_name] = cls
 
     # deprecated models
     for cls_name, cls in inspect.getmembers(deprecated_module, inspect.isclass):
         if (
             cls.__module__.startswith("edutap.wallet_google.models.deprecated")
-            and issubclass(cls, BaseModel)
-            and cls is not BaseModel
+            and issubclass(cls, Model)
+            and cls is not Model
         ):
             models[cls_name] = cls
 
@@ -222,11 +228,11 @@ def validate_fields_for_name(name: str, fields: list[str]) -> tuple[bool, list[s
 
 
 @functools.cache
-def _get_fields_for_model(model: Model) -> list[str]:
+def _get_fields_for_model(model: type[Model]) -> list[str]:
     """Returns the list of valid fields for the given registered name."""
     fields: set[str] = set()
     # print(f"Getting fields for model: {model}")
-    if model is BaseModel:
+    if model is Model:
         return []
     schema = model.model_json_schema(by_alias=True)
     if schema is not None:
@@ -243,12 +249,20 @@ def _get_fields_for_name(name: str) -> list[str]:
     """Returns the list of valid fields for the given registered name."""
     if "__" in name:
         name = name.split("__")[-1]
-    model: ModelMetaclass | None = None
+    model: type[Model] | None = None
     if name in _MODEL_REGISTRY_BY_NAME:
         model = lookup_model_by_name(name)
     if model is None:
-        models: dict[str, ModelMetaclass] = _find_models()
-        model = models.get(name)
+        models: dict[str, type[Model]] = _find_models()
+        if len(models) == 0:
+            raise ValueError("No models found")
+        elif len(models) == 1:
+            model = list(models.values())[0]
+        else:
+            for model_name, model_cls in models.items():
+                if model_name.lower() == name.lower():
+                    model = model_cls
+                    break
     if model is None:
         if name in _find_enums():
             return [name]
