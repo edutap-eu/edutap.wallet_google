@@ -159,14 +159,27 @@ def handle_response_errors(
     raise WalletException(f"Error: {response.status_code} - {response.text}")
 
 
-def parse_response_json(response, model: type[Model]) -> Model:
+def parse_response_json(
+    response, model: type[Model], *, partial: bool = False
+) -> Model:
     """Parse response JSON and return validated model instance.
+
+    When *partial* is ``True``, a dynamic subclass is used where all required
+    fields become ``Optional`` so that partial API responses (when the
+    ``fields`` parameter is used) can be validated without raising for missing
+    required fields.
 
     :param response: HTTP response object
     :param model:    Pydantic model class to validate against
+    :param partial:  If True, relax required fields for partial responses
     :return:         Validated model instance
     """
     from pydantic import ValidationError
+
+    if partial:
+        from .models.bases import make_partial_model
+
+        model = make_partial_model(model)
 
     logger.debug(f"RAW-Response: {response.content!r}")
     try:
