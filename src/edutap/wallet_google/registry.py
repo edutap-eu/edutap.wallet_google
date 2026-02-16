@@ -190,10 +190,9 @@ def validate_fields_for_name(name: str, fields: list[str]) -> tuple[bool, list[s
 
 @functools.cache
 def _find_models() -> dict[str, "type[Model]"]:
-    """
-    Docstring für _find_models
+    """Find all Model subclasses from datatypes and deprecated modules.
 
-    :return: Beschreibung
+    :return: Mapping of class name to Model subclass.
     :rtype: dict[str, type[Model]]
     """
     from .models.bases import Model
