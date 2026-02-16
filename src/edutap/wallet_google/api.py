@@ -398,7 +398,7 @@ def create(
     *,
     fields: list[str] | None = None,
     credentials: dict | None = None,
-) -> Model:
+) -> Model | dict[str, typing.Any]:
     """
     Creates a Google Wallet items. `C` in CRUD.
 

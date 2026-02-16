@@ -118,7 +118,7 @@ def validate_partial_request_fields(
                 raise ValueError(
                     f"The following fields are not valid for model {name}: {', '.join(non_valid_fields)}"
                 )
-            return False
+                return False
         return True
     return False
 
