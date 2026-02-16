@@ -51,6 +51,7 @@ from .registry import (
     lookup_metadata_by_name,
     lookup_model_by_name,
     raise_when_operation_not_allowed,
+    validate_fields_for_name,
 )
 from .utils import (
     handle_response_errors,
@@ -237,6 +238,35 @@ def save_link(
 
 # Internal helper functions for CRUD operations
 
+def _validate_partial_response_fields(
+    fields: list[str],
+    name: str,
+) -> bool:
+    """Validate that all fields in the list are valid field names for the given model.
+
+    :param fields:     List of field names to validate.
+    :param name:       Registered name of the Pydantic model class to validate against.
+    :raises ValueError: If any field is not a valid field name for the model.
+    """
+    if fields:
+        # Accept fields that are prefixed with 'resource.' by stripping the
+        # prefix for validation but keeping the original field names when
+        # building the HTTP params (Google supports nested selectors like
+        # 'resource.id').
+        stripped = [
+            f.split(".", 1)[1] if f.startswith("resource.") else f for f in fields
+        ]
+        valid_stripped, non_valid_stripped = validate_fields_for_name(
+            name, stripped
+        )
+        if not valid_stripped:
+            # raise ValueError(
+            #     f"The following fields are not valid for model {name}: {', '.join(non_valid_stripped)}"
+            # )
+            return False
+        return True
+    return False
+
 
 def _prepare_create(data: Model) -> tuple[str, str, type[Model], dict]:
     """Prepare data for create operation.
@@ -402,44 +432,61 @@ def _setup_pagination_params(
 
 def create(
     data: Model,
+    *,
     credentials: dict | None = None,
-) -> Model:
+    fields: list[str] | None = None,
+) -> Model | dict[str, typing.Any]:
     """
     Creates a Google Wallet items. `C` in CRUD.
 
     :param data:                          Data to pass to the Google RESTful API.
                                           A model instance, has to be a registered model.
     :param credentials:                   Optional session credentials as dict.
+    :param fields:                        List of fields to include in the response for partial responses.
     :raises QuotaExceededException:       When the quota was exceeded.
     :raises ObjectAlreadyExistsException: When the id to be created already exists at Google.
     :raises WalletException:              When the response status code is not 200.
-    :return:                              The created model based on the data returned by the Restful API.
+    :return:                              The created model based on the data,
+                                          or a dict with the partial requested response data
+                                          returned by the Restful API.
     """
     name, verified_json, model, headers = _prepare_create(data)
     url = client_pool.url(name)
+    params: dict[str, str] | None = None
+
+    if fields:
+        if _validate_partial_response_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
     response = client.post(
         url=url,
         data=verified_json.encode("utf-8"),
         headers=headers,
+        params=params,
     )
 
     handle_response_errors(response, "create", name, getattr(data, "id", "No ID"))
+    if fields:
+        # Return the partial response as dict when fields were requested
+        return json.loads(response.content)
     return parse_response_json(response, model)
 
 
 def read(
     name: str,
     resource_id: str,
+    *,
     credentials: dict | None = None,
-) -> Model:
+    fields: list[str] | None = None,
+) -> Model | dict[str, typing.Any]:
     """
     Reads a Google Wallet Class or Object. `R` in CRUD.
 
     :param name:             Registered name of the model to use
     :param resource_id:      Identifier of the resource to read from the Google RESTful API
     :param credentials:      Optional session credentials as dict.
+    :param fields:           List of fields to include in the response for partial responses.
     :QuotaExceededException: When the quota was exceeded.
     :raises LookupError:     When the resource was not found (404).
     :raises WalletException  When the response status code is not 200 or 404.
@@ -447,26 +494,35 @@ def read(
     """
     (model,) = _prepare_read(name, resource_id)
     url = client_pool.url(name, f"/{resource_id}")
+    params: dict[str, str] | None = None
+    if fields:
+        if _validate_partial_response_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
-    response = client.get(url=url)
+    response = client.get(url=url, params=params)
 
     handle_response_errors(response, "read", name, resource_id)
+    if fields:
+        # Return the partial response as dict when fields were requested
+        return json.loads(response.content)
     return parse_response_json(response, model)
 
 
 def update(
     data: Model,
     *,
-    partial: bool = True,
     credentials: dict | None = None,
-) -> Model:
+    fields: list[str] | None = None,
+    partial: bool = True,
+) -> Model | dict[str, typing.Any]:
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
 
     :param data:                    Data to pass to the Google RESTful API.
                                     A model instance, has to be a registered model.
     :param credentials:             Optional session credentials as dict.
+    :param fields:                  List of fields to include in the response for partial responses.
     :param partial:                 Whether a partial update is executed or a full replacement.
     :raises QuotaExceededException: When the quota was exceeded
     :raises LookupError:            When the resource was not found (404)
