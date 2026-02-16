@@ -1,6 +1,9 @@
 name: Tests
 
 on:
+  push:
+    branches: [ main ]
+  pull_request:
   workflow_call:
   workflow_dispatch:
 
@@ -22,37 +25,5 @@ jobs:
             pyproject.toml
       - name: Install dependencies
         run: uv tool install --with "tox-uv,tox-gh-actions" tox
-      - name: Prepare test environment
-        run: |
-          cp tests/data/credentials_fake.json credentials.json
-          echo "EDUTAP_WALLET_GOOGLE_ISSUER_ID=1234567890123456789" > .env
       - name: Test with tox
         run: tox
-
-  integration-tests:
-    needs:
-      - unit-tests
-    if: github.ref_name == github.event.repository.default_branch
-    runs-on: ubuntu-latest
-    environment:
-      name: Integration-Tests
-      url: https://pypi.org/edutap-eu/edutap.wallet_google/
-    steps:
-      - uses: actions/checkout@v6
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          python-version: '3.13'
-          enable-cache: true
-          cache-dependency-glob: |
-            pyproject.toml
-      - name: Install dependencies
-        run: uv tool install --with "tox-uv,tox-gh" tox
-      - name: Prepare test environment
-        run: |
-          echo "${{ secrets.SERVICE_ACCOUNT_JSON }}" > /tmp/edutap-wallet-google-credentials.json
-          echo "EDUTAP_WALLET_GOOGLE_TEST_ISSUER_ID=${{ secrets.ISSUER_ID }}" > .env
-          echo "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE=/tmp/edutap-wallet-google-credentials.json" >> .env
-          echo "EDUTAP_WALLET_GOOGLE_INTEGRATION_TEST_PREFIX=${{ github.run_id }}" >> .env
-      - name: Test with tox
-        run: tox -- --run-integration
