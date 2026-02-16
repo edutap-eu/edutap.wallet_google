@@ -5,6 +5,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          python-version: '3.13'
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+      - name: Install dependencies
+        run: uv tool install --with "tox-uv,tox-gh" tox
+      - name: Lint with tox
+        run: tox -e lint
+
   unit-tests:
     runs-on: ubuntu-latest
     strategy:
