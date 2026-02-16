@@ -195,9 +195,18 @@ def _find_enums() -> list[str]:
 
 
 def validate_fields_for_name(name: str, fields: list[str]) -> tuple[bool, list[str]]:
-    """Verifies that the given fields are valid for the given registered name.
+    """Verify that the given fields are valid for the given registered name.
 
-    :raises: ValueError when any of the fields is not valid.
+    Returns:
+        A tuple ``(is_valid, invalid_fields)`` where:
+
+        * ``is_valid`` is ``True`` if all fields are valid for the model registered
+          under ``name``, otherwise ``False``.
+        * ``invalid_fields`` is a list of the fields that are not valid. When
+          ``is_valid`` is ``True``, this list is empty.
+
+    This function logs a debug message when invalid fields are found and does not
+    raise an exception.
     """
     non_valid_fields = []
 
