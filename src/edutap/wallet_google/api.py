@@ -404,6 +404,7 @@ def create(
 
     :param data:                          Data to pass to the Google RESTful API.
                                           A model instance, has to be a registered model.
+    :param fields:                        List of fields to include in the response for partial responses.
     :param credentials:                   Optional session credentials as dict.
     :raises QuotaExceededException:       When the quota was exceeded.
     :raises ObjectAlreadyExistsException: When the id to be created already exists at Google.
@@ -445,6 +446,7 @@ def read(
 
     :param name:             Registered name of the model to use
     :param resource_id:      Identifier of the resource to read from the Google RESTful API
+    :param fields:           List of fields to include in the response for partial responses.
     :param credentials:      Optional session credentials as dict.
     :QuotaExceededException: When the quota was exceeded.
     :raises LookupError:     When the resource was not found (404).
@@ -719,6 +721,7 @@ async def aread(
 
     :param name:             Registered name of the model to use
     :param resource_id:      Identifier of the resource to read from the Google RESTful API
+    :param fields:           List of fields to include in the response for partial responses.
     :param credentials:      Optional session credentials as dict.
     :QuotaExceededException: When the quota was exceeded.
     :raises LookupError:     When the resource was not found (404).
