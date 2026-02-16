@@ -528,21 +528,30 @@ def update(
     :return:                        The created model based on the data, or a dict with the partial requested response data returned by the Restful API.
     """
     name, resource_id, verified_json, model = _prepare_update(data)
+    params: dict[str, str] | None = None
+    if fields:
+        if _validate_partial_response_fields(fields, name):
+            params = {"fields": ",".join(fields)}
 
     session = client_pool.client(credentials=credentials)
     if partial:
         response = session.patch(
             url=client_pool.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
+            params=params,
         )
     else:
         response = session.put(
             url=client_pool.url(name, f"/{resource_id}"),
             data=verified_json.encode("utf-8"),
+            params=params,
         )
 
     logger.debug(verified_json.encode("utf-8"))
     handle_response_errors(response, "update", name, resource_id)
+    if params is not None:
+        # Return the partial response as dict when fields were requested
+        return json.loads(response.content)
     return parse_response_json(response, model)
 
 
@@ -789,7 +798,7 @@ async def aupdate(
 
     logger.debug(verified_json.encode("utf-8"))
     handle_response_errors(response, "update", name, resource_id)
-    if fields:
+    if params is not None:
         # Return the partial response as dict when fields were requested
         return json.loads(response.content)
     return parse_response_json(response, model)
