@@ -1,9 +1,6 @@
 name: Tests
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
   workflow_call:
   workflow_dispatch:
 
@@ -14,9 +11,9 @@ jobs:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
           python-version: ${{ matrix.python-version }}
@@ -24,13 +21,14 @@ jobs:
           cache-dependency-glob: |
             pyproject.toml
       - name: Install dependencies
-        run: uv tool install --with "tox-uv,tox-gh-actions" tox
+        run: uv tool install --with "tox-uv,tox-gh" tox
       - name: Prepare test environment
         run: |
           cp tests/data/credentials_fake.json credentials.json
           echo "EDUTAP_WALLET_GOOGLE_ISSUER_ID=1234567890123456789" > .env
       - name: Test with tox
         run: tox
+
   integration-tests:
     needs:
       - unit-tests
@@ -40,32 +38,21 @@ jobs:
       name: Integration-Tests
       url: https://pypi.org/edutap-eu/edutap.wallet_google/
     steps:
-      - uses: actions/checkout@v5
-      # - name: Check for changed models or API
-      #   id: changed-models-or-api
-      #   uses: tj-actions/changed-files@v45
-      #   with:
-      #     files: |
-      #       src/edutap/wallet_google/models/**
-      #       src/edutap/wallet_google/api.py
+      - uses: actions/checkout@v6
       - name: Install the latest version of uv
-        if: steps.changed-models-or-api.outputs.any_changed == 'true'
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.13'
           enable-cache: true
           cache-dependency-glob: |
             pyproject.toml
       - name: Install dependencies
-        if: steps.changed-models-or-api.outputs.any_changed == 'true'
-        run: uv tool install --with "tox-uv,tox-gh-actions" tox
+        run: uv tool install --with "tox-uv,tox-gh" tox
       - name: Prepare test environment
-        if: steps.changed-models-or-api.outputs.any_changed == 'true'
         run: |
           echo "${{ secrets.SERVICE_ACCOUNT_JSON }}" > /tmp/edutap-wallet-google-credentials.json
           echo "EDUTAP_WALLET_GOOGLE_TEST_ISSUER_ID=${{ secrets.ISSUER_ID }}" > .env
           echo "EDUTAP_WALLET_GOOGLE_CREDENTIALS_FILE=/tmp/edutap-wallet-google-credentials.json" >> .env
           echo "EDUTAP_WALLET_GOOGLE_INTEGRATION_TEST_PREFIX=${{ github.run_id }}" >> .env
       - name: Test with tox
-        if: steps.changed-models-or-api.outputs.any_changed == 'true'
         run: tox -- --run-integration

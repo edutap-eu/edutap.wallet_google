@@ -10,10 +10,14 @@
           - published
       workflow_dispatch:
 
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: true
 
     jobs:
       tests:
         uses: "./.github/workflows/tests.yaml"
+        secrets: inherit
 
       # Always build & lint package.
       build-package:
@@ -26,7 +30,7 @@
           id-token: write
 
         steps:
-          - uses: actions/checkout@v5
+          - uses: actions/checkout@v6
             with:
               fetch-depth: 0
               persist-credentials: false
@@ -48,7 +52,7 @@
 
         steps:
           - name: Download packages built by build-and-inspect-python-package
-            uses: actions/download-artifact@v5
+            uses: actions/download-artifact@v7
             with:
               name: Packages
               path: dist
@@ -71,7 +75,7 @@
 
         steps:
           - name: Download packages built by build-and-inspect-python-package
-            uses: actions/download-artifact@v5
+            uses: actions/download-artifact@v7
             with:
               name: Packages
               path: dist

@@ -45,6 +45,7 @@ class SmartTap(DeprecatedKindFieldMixin, WithIdModel):
     "Issuer",
     url_part="issuer",
     resource_id="issuerId",
+    pass_resource_id_on_create=False,
     can_message=False,
 )
 class Issuer(Model):
@@ -52,7 +53,7 @@ class Issuer(Model):
     see: https://developers.google.com/wallet/generic/rest/v1/issuer
     """
 
-    issuerId: str
+    issuerId: str | None = None
     name: str
     contactInfo: IssuerContactInfo | None = None
     homepageUrl: AnyHttpUrl | None = None
@@ -64,6 +65,7 @@ class Issuer(Model):
     "Permissions",
     url_part="permissions",
     resource_id="issuerId",
+    can_create=False,
     can_list=False,
     can_message=False,
 )

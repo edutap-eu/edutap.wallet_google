@@ -71,15 +71,20 @@ def validate_data_and_convert_to_json(
     *,
     existing: bool = False,
     resource_id_key: str = "id",
-) -> tuple[str, str]:
+    skip_resource_id: bool = False,
+) -> tuple[str | None, str]:
     """Takes a model and data, validates it and convert to a json string.
 
-    :param model:      Pydantic model class to use for validation.
-    :param data:       Data to pass to the Google RESTful API.
-                       Either a simple python data structure using built-ins,
-                       or a Pydantic model instance.
-    :param existing:   If True, the data is expected to be an existing object (i.e. on update).
-    :return:           Tuple of resource-id and JSON string.
+    :param model:           Pydantic model class to use for validation.
+    :param data:            Data to pass to the Google RESTful API.
+                            Either a simple python data structure using built-ins,
+                            or a Pydantic model instance.
+    :param existing:        If True, the data is expected to be an existing object (i.e. on update).
+    :param resource_id_key: Key name to fetch resource_id from.
+    :param skip_resource_id: If True, skip fetching identifier and return None.
+                             Also validates that the resource_id field is not set.
+    :return:                Tuple of resource-id (or None if skipped) and JSON string.
+    :raises ValueError:     If skip_resource_id=True but resource_id field is set.
     """
     verified_data = validate_data(model, data)
     verified_json = verified_data.model_dump_json(
@@ -87,7 +92,17 @@ def validate_data_and_convert_to_json(
         exclude_unset=True,  # exclude unset values - this are values not set explicitly by the code
         by_alias=True,
     )
-    identifier = getattr(verified_data, resource_id_key)
+    if skip_resource_id:
+        # Validate that resource_id is NOT set when it should be skipped
+        resource_id_value = getattr(verified_data, resource_id_key, None)
+        if resource_id_value is not None:
+            raise ValueError(
+                f"Resource ID field '{resource_id_key}' must not be set "
+                f"for this model (pass_resource_id_on_create=False)"
+            )
+        identifier = None
+    else:
+        identifier = getattr(verified_data, resource_id_key)
     return (identifier, verified_json)
 
 

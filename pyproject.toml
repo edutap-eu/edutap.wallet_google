@@ -1,6 +1,6 @@
 [project]
 name = "edutap.wallet-google"
-version = "3.0.0b1"
+dynamic = ["version"]
 description = "Library for Google Wallet Communication"
 keywords = ["wallet", "google", "api", "pass", 'fastapi', 'digital identity']
 readme = "README.md"
@@ -72,8 +72,15 @@ develop = [
 generate-fernet-key = "edutap.wallet_google.utils:generate_fernet_key"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+raw-options = { local_scheme = "no-local-version" }
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/edutap/wallet_google/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/edutap"]
@@ -119,6 +126,42 @@ ignore-words-list = "discreet,"
 ignore = [
     ".editorconfig",
     ".pre-commit-config.yaml",
-    "tox.ini",
     ".flake8",
+    "worktrees/**",
+    "src/edutap/wallet_google/_version.py",
 ]
+
+[tool.tox]
+min_version = "4.4.0"
+env_list = ["py310", "py311", "py312", "py313", "py314", "lint"]
+
+[tool.tox.gh.python]
+"3.10" = ["py310"]
+"3.11" = ["py311"]
+"3.12" = ["py312"]
+"3.13" = ["py313"]
+"3.14" = ["py314"]
+
+[tool.tox.env_run_base]
+description = "run tests"
+use_develop = true
+skip_install = false
+deps = ["-e tests/data/test_wallet_google_plugins"]
+commands = [["pytest", { replace = "posargs", extend = true }]]
+extras = ["test", "develop"]
+
+[tool.tox.env.format]
+description = "automatically reformats code"
+skip_install = true
+deps = ["pre-commit"]
+commands = [
+    ["pre-commit", "run", "-a", "pyupgrade"],
+    ["pre-commit", "run", "-a", "isort"],
+    ["pre-commit", "run", "-a", "black"],
+]
+
+[tool.tox.env.lint]
+description = "run linters that will help improve the code style"
+skip_install = true
+deps = ["pre-commit"]
+commands = [["pre-commit", "run", "-a"]]

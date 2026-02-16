@@ -248,7 +248,14 @@ def _prepare_create(data: Model) -> tuple[str, str, type[Model], dict]:
     name = model_metadata["name"]
     raise_when_operation_not_allowed(name, "create")
     model = model_metadata["model"]
-    _, verified_json = validate_data_and_convert_to_json(model, data)
+
+    # Check if resource_id should be skipped (not passed on create)
+    skip_resource_id = not model_metadata.get("pass_resource_id_on_create", True)
+    resource_id_key = model_metadata.get("resource_id", "id")
+
+    _, verified_json = validate_data_and_convert_to_json(
+        model, data, skip_resource_id=skip_resource_id, resource_id_key=resource_id_key
+    )
     headers = {"Content-Type": "application/json"}
     return name, verified_json, model, headers
 
@@ -277,6 +284,7 @@ def _prepare_update(
     resource_id, verified_json = validate_data_and_convert_to_json(
         model, data, existing=True, resource_id_key=model_metadata["resource_id"]
     )
+    assert resource_id is not None, "resource_id is required for update"
     return name, resource_id, verified_json, model
 
 
