@@ -247,7 +247,8 @@ def _validate_partial_response_fields(
 
     :param fields:     List of field names to validate.
     :param name:       Registered name of the Pydantic model class to validate against.
-    :raises ValueError: If any field is not a valid field name for the model.
+    :return:           True if all provided fields are valid for the model;
+                       False if any field is invalid or if no fields are provided.
     """
     if fields:
         # Accept fields that are prefixed with 'resource.' by stripping the
