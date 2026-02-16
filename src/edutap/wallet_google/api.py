@@ -45,7 +45,6 @@ from .registry import lookup_metadata_by_model_type
 from .registry import lookup_metadata_by_name
 from .registry import lookup_model_by_name
 from .registry import raise_when_operation_not_allowed
-from .registry import validate_fields_for_name
 from .utils import handle_response_errors
 from .utils import parse_response_json
 from .utils import validate_data
