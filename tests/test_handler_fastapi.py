@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from freezegun import freeze_time
 
-
 # this callback data can be verified given the credentials.json from demo.edutap.eu is provided.
 real_callback_data = {
     "signature": "MEYCIQCyuBQo/Dao7yUBDUWK12ATFBDkUfJUnropjOaPbPiKEwIhAKXNiVrbNmydpEVIxXRz5z36f8HV2Meq/Td6tqt2+DYO",

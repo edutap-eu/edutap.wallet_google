@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 from typing import TypedDict
 
-
 if TYPE_CHECKING:
     from .models.bases import Model
 

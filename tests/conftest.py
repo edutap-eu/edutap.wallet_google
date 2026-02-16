@@ -8,7 +8,6 @@ import pytest
 import socket
 import typing
 
-
 DATA_PATH = Path(__file__).parent / "data"
 
 

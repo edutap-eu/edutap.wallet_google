@@ -6,7 +6,6 @@ from .general import LocalizedString
 from pydantic import AnyHttpUrl
 from pydantic import model_validator
 
-
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22
 

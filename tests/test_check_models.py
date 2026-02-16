@@ -14,7 +14,6 @@ import json
 import pathlib
 import pytest
 
-
 MODEL_ALIAS_DICT = {
     "AppLinkInfo": "AppLinkDataAppLinkInfo",
     "AppTarget": "AppLinkDataAppLinkInfoAppTarget",
@@ -142,7 +141,9 @@ def test_wallet_api(wallet_api_data: Dict[str, Any]):
     assert wallet_api_data["discoveryVersion"] == "v1"
     assert wallet_api_data["version"] == "v1"
     # this is subject to change over time
-    assert "revision" in wallet_api_data, "Expected 'revision' field in wallet_api_data API response"
+    assert (
+        "revision" in wallet_api_data
+    ), "Expected 'revision' field in wallet_api_data API response"
     print(f"\n\nWallet API Revision: {wallet_api_data['revision']}\n\n")
     # assert wallet_api_data["revision"] == "20250808"
     assert wallet_api_data["protocol"] == "rest"

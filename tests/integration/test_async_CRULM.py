@@ -3,7 +3,6 @@
 import asyncio
 import pytest
 
-
 text_modules_data = [
     {
         "id": "test_without_localization",

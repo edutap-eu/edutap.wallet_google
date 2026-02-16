@@ -12,7 +12,6 @@ import httpx
 import pytest
 import respx
 
-
 # this tests relates to reproduce issue https://github.com/edutap-eu/edutap.wallet_google/issues/36
 
 

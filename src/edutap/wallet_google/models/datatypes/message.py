@@ -4,7 +4,6 @@ from .datetime import TimeInterval
 from .enums import MessageType
 from .localized_string import LocalizedString
 
-
 # Attribute order as in Google's documentation to make future updates easier!
 # last check: 2025-01-22
 

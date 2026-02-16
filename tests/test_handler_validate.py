@@ -9,7 +9,6 @@ from freezegun import freeze_time
 import json
 import pytest
 
-
 callback_data_for_test_failure = {
     "signature": "foo",
     "intermediateSigningKey": {

@@ -5,7 +5,6 @@ see https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-sav
 from .datatypes.enums import CamelCaseAliasEnum
 from pydantic import BaseModel
 
-
 # image fetching from data provider
 
 
