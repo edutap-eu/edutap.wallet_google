@@ -10,8 +10,13 @@
           - published
       workflow_dispatch:
 
+    # Without ``github.event_name`` in the group, the ``push`` event fired
+    # by tagging a release and the ``release`` event fired by publishing
+    # it land in the same group. ``cancel-in-progress: true`` then kills
+    # whichever arrived second — typically the ``release`` run that
+    # uploads to pypi.org, leaving the tag unpublished.
     concurrency:
-      group: release-${{ github.ref }}
+      group: release-${{ github.ref }}-${{ github.event_name }}
       cancel-in-progress: true
 
     jobs:
