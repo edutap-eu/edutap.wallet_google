@@ -52,7 +52,8 @@ from .utils import handle_response_errors
 from .utils import parse_response_json
 from .utils import validate_data
 from .utils import validate_data_and_convert_to_json
-from authlib.jose import jwt
+from joserfc import jwt
+from joserfc.jwk import RSAKey
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
 
@@ -226,9 +227,9 @@ def save_link(
         exclude_none=True,
     )
 
-    # authlib's jwt.encode returns bytes
-    jwt_bytes = jwt.encode(header, payload, credentials["private_key"])
-    jwt_string = jwt_bytes.decode("utf-8")
+    # joserfc.jwt.encode requires a typed Key and returns a str
+    private_key = RSAKey.import_key(credentials["private_key"])
+    jwt_string = jwt.encode(header, payload, private_key)
 
     logger.debug(jwt_string)
     if (jwt_len := len(jwt_string)) >= 1800:
