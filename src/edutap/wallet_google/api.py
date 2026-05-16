@@ -52,10 +52,10 @@ from .utils import handle_response_errors
 from .utils import parse_response_json
 from .utils import validate_data
 from .utils import validate_data_and_convert_to_json
-from joserfc import jwt
-from joserfc.jwk import RSAKey
 from collections.abc import AsyncGenerator
 from collections.abc import Generator
+from joserfc import jwt
+from joserfc.jwk import RSAKey
 
 import datetime
 import json
