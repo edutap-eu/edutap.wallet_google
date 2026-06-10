@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     api_url: AnyHttpUrl = AnyHttpUrl(API_URL)
     save_url: AnyHttpUrl = AnyHttpUrl(SAVE_URL)
 
+    api_request_timeout: float = 30.0  # lib default was 5, we may want to lower here
+
     handler_prefix: str = "/wallet/google"
     handler_prefix_callback: str = ""
     handler_prefix_images: str = ""

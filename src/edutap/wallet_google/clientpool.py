@@ -68,6 +68,8 @@ class ClientPoolManager:
             "key": credentials["private_key"],
             "key_id": credentials["private_key_id"],
             "header": {"alg": "RS256", "typ": "JWT"},
+
+            "timeout": self.settings.api_request_timeout,
         }
 
     def client(self, credentials: dict | None = None) -> AssertionClient:
