@@ -309,6 +309,148 @@ while True:
 
 **Note:** Without `result_per_page`, the generator automatically fetches all pages.
 
+## Upload a private image
+
+Google Wallet can serve an image without ever exposing a public URL for it:
+you upload the image bytes once, get back an opaque `privateImageId`, and
+reference that id from `Image.privateImageId` on a pass **object** (private
+images cannot be used on classes). The upload is one-way and non-reversible —
+before using this in production, read
+[Private image or ImageProvider?](explanation.md) and
+[Lifecycle and the obligation to persist the id](explanation.md) in the
+Explanations section. In short: the id is returned exactly once, there is no
+delete operation, and one image serves exactly one object — your application,
+not this library, is responsible for persisting the mapping.
+
+The example below is the European Student Card as issued by LMU, which
+carries two person-specific images per pass: a portrait and a QR code.
+`store` stands in for whatever persistence your application uses, for
+example a database table keyed by `(object_id, module_id)`.
+
+Before, both personal images were served from a public CDN:
+
+```python
+# before: both personal images served from a public CDN
+image_data = [
+    ImageModuleData(
+        id="photo",
+        mainImage=Image(sourceUri=ImageUri(uri=f"{CDN}/lmu-ausweise/{name}_box@3x.png")),
+    ),
+    ImageModuleData(
+        id="qr_code",
+        mainImage=Image(sourceUri=ImageUri(uri=f"{CDN}/card-{card_uuid}.png")),
+    ),
+    ImageModuleData(
+        id="esc",
+        mainImage=Image(sourceUri=ImageUri(uri=f"{CDN}/esc.png")),
+    ),
+]
+```
+
+After, the portrait and the QR code are uploaded as private images instead.
+Persist each id **immediately after its upload**, not after both uploads have
+succeeded: if the second upload fails, the first id must still be
+recoverable, otherwise that image is orphaned at Google forever.
+
+```python
+from edutap.wallet_google import api
+from edutap.wallet_google.models.datatypes.data import ImageModuleData
+from edutap.wallet_google.models.datatypes.general import Image, ImageUri
+
+# after: persist each id immediately after its upload, then create the object
+photo_id = api.upload_private_image(portrait_bytes, "image/png")
+store.put(object_id, "photo", photo_id)
+
+qr_id = api.upload_private_image(qr_code_bytes, "image/png")
+store.put(object_id, "qr_code", qr_id)
+
+image_data = [
+    ImageModuleData(id="photo", mainImage=Image(privateImageId=photo_id)),
+    ImageModuleData(id="qr_code", mainImage=Image(privateImageId=qr_id)),
+    # unchanged: shared, non-personal, one image would serve one object only
+    ImageModuleData(
+        id="esc",
+        mainImage=Image(sourceUri=ImageUri(uri=f"{CDN}/esc.png")),
+    ),
+]
+```
+
+Finally, place the assembled `imageModulesData` on the object and create it:
+
+```python
+student_pass = api.new(
+    "GenericObject",
+    {
+        "id": object_id,
+        "classId": class_id,
+        "state": "ACTIVE",
+        "imageModulesData": image_data,
+    },
+)
+api.create(student_pass)
+```
+
+**Never retry an upload as part of a `create()` retry loop.** Upload once,
+then retry only `create()`. A naive retry loop around both leaks one image
+per attempt, because there is no way to delete the orphaned upload
+afterwards.
+
+## Show a private image on the front of the card
+
+`imageModulesData` by default renders in the pass's **details view** only.
+To show an image — private or public — on the **front** of the card, the
+class needs a `classTemplateInfo.cardTemplateOverride` that references the
+module by its id. This applies to private images exactly as it does to
+regular ones; it is not a special case of the upload feature, just a
+documentation gap the upload feature makes visible.
+
+The `cardTemplateOverride` lives on the **class**, not on the object, and
+only ever refers to module ids — never to image bytes or a `privateImageId`
+directly. A single shared class template therefore stays valid for every
+holder; only the object side (`textModulesData`, `imageModulesData`) changes
+between passes.
+
+```python
+generic_class = api.new(
+    "GenericClass",
+    {
+        "id": f"{issuer_id}.student-id",
+        "classTemplateInfo": {
+            "cardTemplateOverride": {
+                "cardRowTemplateInfos": [
+                    {
+                        "twoItems": {
+                            # these ids must match the object's
+                            # textModulesData[].id and imageModulesData[].id
+                            "startItem": {
+                                "firstValue": {
+                                    "fields": [
+                                        {"fieldPath": "object.textModulesData['name']"},
+                                    ],
+                                },
+                            },
+                            "endItem": {
+                                "firstValue": {
+                                    "fields": [
+                                        {"fieldPath": "object.imageModulesData['photo']"},
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                ],
+            },
+        },
+    },
+)
+api.create(generic_class)
+```
+
+The `imageModulesData['photo']` selector matches the `id="photo"` entry
+created in *Upload a private image* above — the module id on the object and
+the `fieldPath` on the class template must agree, or the field stays empty
+on the rendered card.
+
 ## Using the Async API
 
 All the examples above can be used with the async API by using the `a`-prefixed functions (`acreate`, `aread`, `aupdate`, etc.) with `async`/`await`:

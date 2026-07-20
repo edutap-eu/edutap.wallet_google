@@ -74,6 +74,85 @@ These settings enable testing with expired test data without regenerating signat
 
 **Important:** Never disable signature verification in production environments.
 
+## Private image or ImageProvider?
+
+The library already offers a way to serve images that are not on a public
+CDN: an `ImageProvider` plugin plus the FastAPI `/images/{encrypted_image_id}`
+route (see [Reference](reference.md)). That endpoint is reachable by anyone
+who has the URL — the id is encrypted, not authenticated. A private image,
+uploaded via `api.upload_private_image()`, is never publicly reachable at
+all. The trade-offs:
+
+| | `ImageProvider` + public route | private image |
+| --- | --- | --- |
+| reachable without the pass | yes, if the URL leaks | no |
+| usable on classes | yes | no |
+| usable for logo / hero image | yes | no |
+| reusable across passes | yes | no, one image per object |
+| changeable after issuing | yes, same URL new bytes | no, requires re-upload and patch |
+| requires a reachable service | yes | no |
+| caller must persist anything | no | yes, see below |
+
+### The synchronous bridge to ImageProvider
+
+`upload_private_image_by_id()`, the synchronous variant, obtains the image
+from the registered `ImageProvider` plugin by creating and tearing down a
+fresh event loop on every call, because `ImageProvider.image_by_id()` is
+async by protocol.
+
+This has a consequence for how an `ImageProvider` implementation may hold
+onto async resources. An implementation that caches an async resource across
+calls — a module-level `httpx.AsyncClient`, for instance — binds that
+resource to the event loop that was running when it was created. On the
+second call, `upload_private_image_by_id()` runs a *new* loop; the loop the
+cached client is bound to is already closed, and the client fails.
+
+Implementations meant to be used with the synchronous bridge must therefore
+create their async resources fresh inside every `image_by_id()` call. An
+implementation that needs to cache resources across calls should instead be
+used through `aupload_private_image_by_id()`, which runs inside the caller's
+own event loop and never creates one of its own.
+
+## Lifecycle and the obligation to persist the id
+
+This section carries the warning, because getting it wrong is silent and
+unrecoverable:
+
+- The id is returned exactly once. Google offers no endpoint to list an
+  issuer's private images.
+- There is no delete operation.
+- An id may be referenced by one object only; a second object needs a fresh
+  upload.
+
+Consequences the caller must act on:
+
+1. **Persist the id together with the object it belongs to, before creating
+   the object.** If the process dies between upload and `create()`, the id
+   is lost and the image is orphaned at Google forever.
+2. **Never retry an upload as part of a `create()` retry.** Upload once, then
+   retry only the `create()`. A naive retry loop around both leaks one image
+   per attempt.
+3. **Re-issuing a pass means re-uploading the image.**
+
+The library deliberately stores nothing. Where the mapping lives — a
+relational table, a compacted Kafka topic, anything else — is an application
+decision. A minimal relational shape for orientation:
+
+```sql
+CREATE TABLE private_image (
+    object_id        text        NOT NULL,
+    module_id        text        NOT NULL,
+    source_ref       text        NOT NULL,  -- how the app identifies the source image
+    private_image_id text        NOT NULL,
+    uploaded_at      timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (object_id, module_id)
+);
+```
+
+A note on event streams: an "image uploaded" event is useful for auditing,
+but an event log is not a lookup store. The source of truth for "which id
+belongs to this pass" must be queryable by object id.
+
 ## Contributing
 
 The sources are in a Git version control system with its main branches at [GitHub](https://github.com/edutap-eu/edutap.wallet_google).

@@ -62,6 +62,14 @@ link = api.save_link([my_pass])
 - **Signature verification** - Cryptographic validation of Google's callbacks
 - **Modern Python** - Built with httpx, Pydantic v2, and Python 3.10+
 
+Private images are also supported: upload image bytes once and reference the
+returned id from a pass object instead of a public URL. The feature may need
+to be enabled for your issuer by Google support, and since Google offers no
+way to list or delete a private image afterwards, your application must
+persist the returned id itself — see
+[Private image or ImageProvider?](https://docs.edutap.eu/packages/edutap_wallet_google/explanation.html)
+for the full trade-offs.
+
 ## Requirements
 
 - Python 3.10 or later (3.13 recommended)

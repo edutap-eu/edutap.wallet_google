@@ -41,11 +41,15 @@ All functions use persistent, pooled HTTP clients managed by the `ClientPoolMana
    update
    message
    listing
+   upload_private_image
+   upload_private_image_by_id
    acreate
    aread
    aupdate
    amessage
    alisting
+   aupload_private_image
+   aupload_private_image_by_id
 ```
 
 **Usage Notes:**
@@ -53,6 +57,112 @@ All functions use persistent, pooled HTTP clients managed by the `ClientPoolMana
 - Async functions use `async`/`await`: `result = await api.acreate(data)`
 - `new()` is synchronous for both - it just creates model instances
 - `save_link()` is synchronous for both - it uses synchronous JWT signing and should not be awaited
+
+### Private image upload
+
+Four functions upload image bytes to Google and return an opaque
+`privateImageId`, for use in `Image.privateImageId` on pass **objects**
+(never on classes). The upload is one-way: Google offers no endpoint to list
+or delete a private image afterwards, so the caller is solely responsible
+for persisting the returned id. See
+[Private image or ImageProvider?](explanation.md) and
+[Lifecycle and the obligation to persist the id](explanation.md) in the
+Explanations section before using this in an application.
+
+```python
+def upload_private_image(
+    data: bytes | ImageData,
+    mime_type: str | None = None,
+    *,
+    issuer_id: str | None = None,
+    credentials: dict | None = None,
+) -> str: ...
+
+
+async def aupload_private_image(
+    data: bytes | ImageData,
+    mime_type: str | None = None,
+    *,
+    issuer_id: str | None = None,
+    credentials: dict | None = None,
+) -> str: ...
+
+
+def upload_private_image_by_id(
+    image_id: str,
+    *,
+    issuer_id: str | None = None,
+    credentials: dict | None = None,
+) -> str: ...
+
+
+async def aupload_private_image_by_id(
+    image_id: str,
+    *,
+    issuer_id: str | None = None,
+    credentials: dict | None = None,
+) -> str: ...
+```
+
+All four return the bare `privateImageId` string — exactly the value that
+belongs into `Image.privateImageId`.
+
+`upload_private_image()` / `aupload_private_image()` accept `data` in two
+forms:
+
+- `bytes` — `mime_type` is then required; passing `None` raises `ValueError`.
+- `ImageData` (`edutap.wallet_google.models.handlers.ImageData`, the type
+  returned by an `ImageProvider` plugin's `image_by_id()`) — `mime_type` must
+  be `None`, otherwise `ValueError`. The mime type is taken from
+  `ImageData.mimetype`.
+
+Paths and file-like objects are deliberately not accepted; callers read the
+bytes themselves.
+
+`upload_private_image_by_id()` / `aupload_private_image_by_id()` fetch the
+image from the single registered `ImageProvider` plugin by `image_id`, then
+upload it — more than one registered provider, or none, is an error. The
+synchronous `upload_private_image_by_id()` bridges to the provider's async
+`image_by_id()` by running a fresh event loop per call; called from within an
+already running event loop it raises `RuntimeError` pointing at
+`aupload_private_image_by_id()` instead of deadlocking. See
+[Private image or ImageProvider?](explanation.md) for what this means for an
+`ImageProvider` implementation that caches async resources.
+
+`issuer_id` falls back to `Settings.issuer_id`
+(`EDUTAP_WALLET_GOOGLE_ISSUER_ID`); when neither is given, a `ValueError` is
+raised. `credentials` is passed to the client pool exactly like in every
+other API function.
+
+**Settings:**
+
+| Setting | Environment variable | Default | Description |
+| --- | --- | --- | --- |
+| `upload_api_url` | `EDUTAP_WALLET_GOOGLE_UPLOAD_API_URL` | `https://walletobjects.googleapis.com/upload/walletobjects/v1` | Base URL below which the private image upload endpoint is built. |
+| `issuer_id` | `EDUTAP_WALLET_GOOGLE_ISSUER_ID` | `""` (empty) | Default issuer id, used when a call does not receive one explicitly — private image uploads and `listing()` / `alisting()` of classes. |
+| `private_image_max_bytes` | `EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_MAX_BYTES` | `5242880` (5 MiB) | Maximum accepted size of a private image upload in bytes. `0` disables the check. |
+| `private_image_allowed_mime_types` | `EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_ALLOWED_MIME_TYPES` | `["image/jpeg", "image/png", "image/webp", "image/gif"]` | Mime types accepted for private image uploads. |
+
+Violations of either setting raise `ValueError` before any HTTP request is
+made.
+
+**Model validation:** `Image` accepts `sourceUri` or `privateImageId`, never
+both — Google rejects an `Image` that sets both fields with a server-side
+error. A Pydantic model validator on `Image` now catches that case
+client-side and raises `ValueError` before any request is made. Leaving both
+fields unset stays permitted: `Image()` is used as an empty placeholder in
+existing code, and every field on `Image` is optional.
+
+**Server-side error messages:** the following three messages are documented
+by Google for this feature. Only the first can occur during the upload
+itself; the other two are raised when the id is used on an object, that is
+during `create()` or `update()`, and surface as `WalletException`.
+
+| Message | Raised when | Remedy |
+| --- | --- | --- |
+| `Image cannot have both source_uri and private_image_id` | An `Image` sets both fields, on object insert/patch. | Prevented client-side by the `Image` validator above; if it is seen anyway, remove one of the two fields. |
+| `Couldn't find private image with id %s for issuer %s` | A non-existent id is set on an object. | Re-upload the image and use the fresh id. |
+| `Couldn't add private image with id %s for issuer %s to object %s because it is already used with object %s. A private image can only be used with one object.` | The same id is used on a second object — Google enforces one image per object. | Re-upload the image to obtain a fresh id for the new object. This is a re-upload, not a retry: retrying with the same id fails again. |
 
 ## Models
 
