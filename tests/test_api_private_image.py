@@ -412,3 +412,110 @@ async def test_aupload_private_image_sends_raw_body(mock_async_session, mock_set
     request = respx.calls.last.request
     assert request.content == b"raw-bytes"
     assert request.headers["Content-Type"] == "image/jpeg"
+
+
+# --- ImageProvider bridge ------------------------------------------------
+
+
+@pytest.fixture
+def single_image_provider():
+    """Isolate these tests from the process-wide plugin registry.
+
+    `plugins.add_plugin()` appends to a module-level list that nothing ever
+    cleans up, so an earlier test file can leave a second ImageProvider
+    registered and make these tests fail with "Multiple ImageProvider
+    plugins registered". Clearing the runtime registry leaves exactly the one
+    provider registered through entry points.
+    """
+    from edutap.wallet_google.plugins import _PLUGIN_REGISTRY
+
+    saved = _PLUGIN_REGISTRY["ImageProvider"]
+    _PLUGIN_REGISTRY["ImageProvider"] = []
+    yield
+    _PLUGIN_REGISTRY["ImageProvider"] = saved
+
+
+@respx.mock
+def test_upload_private_image_by_id(mock_session, mock_settings, single_image_provider):
+    from edutap.wallet_google import api
+
+    respx.post(_upload_url()).mock(
+        return_value=httpx.Response(200, json={"privateImageId": "abc123"})
+    )
+
+    result = api.upload_private_image_by_id("OK", issuer_id=ISSUER_ID)
+
+    assert result == "abc123"
+    request = respx.calls.last.request
+    assert request.content == b"mock-a-jepg"
+    assert request.headers["Content-Type"] == "image/jpeg"
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_aupload_private_image_by_id(
+    mock_async_session, mock_settings, single_image_provider
+):
+    from edutap.wallet_google import api
+
+    respx.post(_upload_url()).mock(
+        return_value=httpx.Response(200, json={"privateImageId": "abc123"})
+    )
+
+    result = await api.aupload_private_image_by_id("OK", issuer_id=ISSUER_ID)
+
+    assert result == "abc123"
+    assert respx.calls.last.request.content == b"mock-a-jepg"
+
+
+@pytest.mark.asyncio
+async def test_aupload_private_image_by_id_propagates_lookup_error(
+    mock_async_session, mock_settings, single_image_provider
+):
+    from edutap.wallet_google import api
+
+    with pytest.raises(LookupError):
+        await api.aupload_private_image_by_id("ERROR", issuer_id=ISSUER_ID)
+
+
+@pytest.mark.asyncio
+async def test_sync_by_id_inside_running_loop_raises(mock_settings):
+    """The sync bridge cannot start a loop inside one, so it must say so.
+
+    No provider fixture needed: the guard fires before any plugin lookup.
+    """
+    from edutap.wallet_google import api
+
+    with pytest.raises(RuntimeError, match="aupload_private_image_by_id"):
+        api.upload_private_image_by_id("OK", issuer_id=ISSUER_ID)
+
+
+@pytest.mark.asyncio
+async def test_image_data_by_id_rejects_multiple_providers(monkeypatch):
+    from edutap.wallet_google import _private_content
+    from edutap.wallet_google.models.handlers import ImageData
+
+    class OtherProvider:
+        async def image_by_id(self, image_id: str) -> ImageData:
+            return ImageData(mimetype="image/png", data=b"other")
+
+    monkeypatch.setattr(
+        "edutap.wallet_google._private_content.get_image_providers",
+        lambda: [OtherProvider(), OtherProvider()],
+    )
+
+    with pytest.raises(ValueError, match="Multiple"):
+        await _private_content.image_data_by_id("OK")
+
+
+@pytest.mark.asyncio
+async def test_image_data_by_id_without_any_provider(monkeypatch):
+    from edutap.wallet_google import _private_content
+
+    monkeypatch.setattr(
+        "edutap.wallet_google.plugins.entry_points",
+        lambda *args, **kwargs: [],
+    )
+
+    with pytest.raises(NotImplementedError):
+        await _private_content.image_data_by_id("OK")

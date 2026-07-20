@@ -12,6 +12,7 @@ so the request is assembled by hand here.
 
 from .clientpool import client_pool
 from .models.handlers import ImageData
+from .plugins import get_image_providers
 
 import logging
 
@@ -120,3 +121,23 @@ def prepare_private_image_upload(
         "Uploading %d bytes of %s to %s", len(payload), resolved_mime_type, url
     )
     return url, payload, headers
+
+
+async def image_data_by_id(image_id: str) -> ImageData:
+    """Fetch an image from the registered ImageProvider plugin.
+
+    :param image_id:              Identifier the ImageProvider understands.
+    :raises NotImplementedError:  When no ImageProvider plugin is registered.
+    :raises ValueError:           When more than one ImageProvider is
+                                  registered, since there is no way to decide
+                                  which one to ask.
+    :raises LookupError:          When the provider does not know the id.
+    :return:                      The image data.
+    """
+    providers = get_image_providers()
+    if len(providers) > 1:
+        raise ValueError(
+            "Multiple ImageProvider plugins registered, cannot decide which "
+            "one to ask for the image."
+        )
+    return await providers[0].image_by_id(image_id)
