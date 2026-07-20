@@ -10,10 +10,10 @@ https://developers.google.com/wallet/generic/use-cases/secure-private-images
 so the request is assembled by hand here.
 """
 
-import logging
-
 from .clientpool import client_pool
 from .models.handlers import ImageData
+
+import logging
 
 
 logger = logging.getLogger(__name__)
@@ -116,5 +116,7 @@ def prepare_private_image_upload(
         f"/privateContent/{resolved_issuer_id}/uploadPrivateImage"
     )
     headers = {"Content-Type": resolved_mime_type}
-    logger.debug("Uploading %d bytes of %s to %s", len(payload), resolved_mime_type, url)
+    logger.debug(
+        "Uploading %d bytes of %s to %s", len(payload), resolved_mime_type, url
+    )
     return url, payload, headers
