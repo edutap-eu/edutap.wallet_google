@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.12+, Pydantic v2, pydantic-settings, httpx + authlib (`AssertionClient` / `AsyncAssertionClient`), pytest + pytest-asyncio + respx, ruff, ty.
 
-**Spec:** `docs/superpowers/specs/2026-07-20-private-image-upload-design.md` — read it before starting. It explains *why* each decision was made; this plan only says *what* to type.
+**Spec:** `superpowers/specs/2026-07-20-private-image-upload-design.md` — read it before starting. It explains *why* each decision was made; this plan only says *what* to type.
 
 ## Global Constraints
 
@@ -1632,7 +1632,7 @@ issuer by Google support, and because neither uploaded images nor created
 objects can be deleted — every run leaves permanent artefacts behind.
 
 Open questions these tests are meant to answer, see
-docs/superpowers/specs/2026-07-20-private-image-upload-design.md:
+superpowers/specs/2026-07-20-private-image-upload-design.md:
 
 1. Does a non-enabled issuer get a 403, a 404, or something else?
 2. May one object carry more than one private image?
@@ -1789,7 +1789,7 @@ for the issuer and whether one object may carry two private images."
 - [ ] **Step 6: Record the findings**
 
 If you can run these against a real issuer, write the results into
-`docs/superpowers/specs/2026-07-20-private-image-upload-design.md`, replacing
+`superpowers/specs/2026-07-20-private-image-upload-design.md`, replacing
 the "unverified" markers in *Endpoint contract* and in *Open questions this
 example raises*. If you cannot, leave them and say so in the handover.
 

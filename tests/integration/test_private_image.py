@@ -10,7 +10,7 @@ issuer by Google support, and because neither uploaded images nor created
 objects can be deleted — every run leaves permanent artefacts behind.
 
 Open questions these tests are meant to answer, see
-docs/superpowers/specs/2026-07-20-private-image-upload-design.md:
+superpowers/specs/2026-07-20-private-image-upload-design.md:
 
 1. Does a non-enabled issuer get a 403, a 404, or something else?
 2. May one object carry more than one private image?
@@ -80,7 +80,7 @@ def test_two_private_images_on_one_object(issuer_id, integration_test_id):
 
     - If returned_ids contains only one ID: Google rejected the second private
       image and the ESC use case does not work as designed. Record this in
-      docs/superpowers/specs/2026-07-20-private-image-upload-design.md.
+      superpowers/specs/2026-07-20-private-image-upload-design.md.
     - If returned_ids is empty or contains None values: Google does not echo
       privateImageId back in the create response. The check must be redone by
       calling api.read("GenericObject", object_id) on the created object.
