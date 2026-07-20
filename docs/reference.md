@@ -145,9 +145,12 @@ Violations raise `ValueError` before any HTTP request is made.
 **Model validation:** `Image` accepts `sourceUri` or `privateImageId`, never
 both — Google rejects an `Image` that sets both fields with a server-side
 error. A Pydantic model validator on `Image` now catches that case
-client-side and raises `ValueError` before any request is made. Leaving both
-fields unset stays permitted: `Image()` is used as an empty placeholder in
-existing code, and every field on `Image` is optional.
+client-side and raises `ValueError` before any request is made. Google also
+rejects an `Image` with neither field set; this library deliberately does
+not enforce that client-side, since `Image()` is used as an empty
+placeholder in existing code and every field on `Image` is optional. An
+`Image` with neither field set will therefore still be rejected by Google
+if it actually reaches a request.
 
 **Server-side error messages:** the following three messages are documented
 by Google for this feature. Only the first can occur during the upload

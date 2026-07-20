@@ -70,8 +70,12 @@ class Image(DeprecatedKindFieldMixin, Model):
     def _exactly_one_image_source(self) -> "Image":
         """Google rejects an Image carrying both a URI and a private image id.
 
-        Setting neither stays permitted: an empty Image is used as a
-        placeholder in existing code, and every field here is optional.
+        Google's discovery document also rejects the case where neither is
+        set ("Requests setting both or neither will be rejected."). This
+        validator deliberately does not enforce that: `Image()` with neither
+        field set is used as an empty placeholder in existing code, and every
+        field here is optional. An `Image` with neither field set will still
+        be rejected by Google if it actually reaches a request.
         """
         if self.sourceUri is not None and self.privateImageId is not None:
             raise ValueError(
