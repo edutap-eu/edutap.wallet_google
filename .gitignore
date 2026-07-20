@@ -47,3 +47,6 @@ credential_file.json
 
 # IDE
 .idea
+
+# superpowers session scratch (task briefs, reports, review diffs)
+.superpowers/
