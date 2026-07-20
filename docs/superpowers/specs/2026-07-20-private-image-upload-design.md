@@ -21,11 +21,27 @@ library. It is documented only through a Java code sample on the
 *secure private images* use-case pages. Implementing it means writing the HTTP
 call by hand.
 
-Reference documentation:
+### Source documentation and its state
+
+The use-case page is the only narrative documentation. It exists as three
+content-identical copies, one per vertical (verified 2026-07-20, page last
+updated 2026-07-16):
 
 - <https://developers.google.com/wallet/generic/use-cases/secure-private-images>
 - <https://developers.google.com/wallet/retail/loyalty-cards/use-cases/secure-private-images>
 - <https://developers.google.com/wallet/tickets/boarding-passes/use-cases/secure-private-images>
+
+The REST reference is not a usable source here — it is incomplete:
+
+| Source | `privateImageId` | `uploadPrivateImage` method |
+| --- | --- | --- |
+| use-case page | described, with the endpoint URL and a Java sample | yes |
+| discovery document, rev. 20260717 | present in the `Image` schema, plus `UploadPrivateImageRequest` and `UploadPrivateImageResponse` | absent |
+| `reference/rest/v1/Image` | **missing entirely** | page returns 404 |
+
+So the use-case page is authoritative for behaviour, the discovery document is
+authoritative for the payload schemas, and no formal documentation of the
+method signature exists anywhere.
 
 ## Endpoint contract
 
@@ -60,9 +76,32 @@ Constraints imposed by Google on the resulting id:
 - Each uploaded image may be referenced by exactly **one** object. There is no
   reuse across passes, and no delete operation.
 - Not combinable with Generic Private Passes.
-- Gated: the `Image.privateImageId` field documentation states
-  "Please contact support to use private images." Issuers that are not on the
-  allowlist will be rejected by the server.
+- Possibly gated. The discovery document's description of
+  `Image.privateImageId` ends with "Please contact support to use private
+  images." The use-case page does not mention any allowlist or onboarding step.
+  Whether a non-onboarded issuer is rejected, and with which status code, is
+  therefore **unverified** — it has to be established during the integration
+  test against a real issuer.
+
+### Server-side error messages
+
+The use-case page documents three concrete error messages. Note that only the
+first can occur during the upload itself; the other two are raised when the id
+is used on an object, that is during `create()` or `update()`:
+
+| Message | Raised when |
+| --- | --- |
+| `Image cannot have both source_uri and private_image_id` | an `Image` sets both fields — on object insert/patch |
+| `Couldn't find private image with id %s for issuer %s` | a non-existent id is set on an object |
+| `Couldn't add private image with id %s for issuer %s to object %s because it is already used with object %s. A private image can only be used with one object.` | the same id is used on a second object; the image must be re-uploaded to obtain a fresh id |
+
+The third message is the server-side enforcement of the one-image-per-object
+rule, and it confirms that a hypothetical `upload + patch` convenience helper
+would fail *after* the upload had already succeeded — leaving an orphaned,
+undeletable image behind. This is the decisive argument against such a helper.
+
+The first message can be prevented client-side: `Image` sets exactly one of
+`sourceUri` and `privateImageId`. See *Model validation* below.
 
 ## Scope
 
@@ -178,6 +217,7 @@ undeletable image behind when the patch fails.
 | File | Change |
 | --- | --- |
 | `models/datatypes/private_content.py` (new) | `UploadPrivateImageResponse` |
+| `models/datatypes/general.py` | `Image`: validator rejecting `sourceUri` and `privateImageId` together |
 | `_private_content.py` (new, internal) | validation, URL building, response parsing |
 | `clientpool.py` | `upload_url()` |
 | `settings.py` | four new settings fields |
@@ -252,6 +292,23 @@ configurable rather than guessed and hard-coded:
 Violations raise `ValueError` before any HTTP request is made, so no request is
 burned against the 20 requests/second rate limit.
 
+### Model validation
+
+`Image` currently allows `sourceUri` and `privateImageId` to be set together or
+both left unset. Google rejects both cases
+("Either this or private_image_id should be set. Requests setting both or
+neither will be rejected."), so the failure only surfaces as a server error on
+object insert.
+
+`Image` gains a Pydantic model validator enforcing exactly one of the two.
+`Image()` with neither field set is currently used in tests and possibly by
+consumers as an empty placeholder — the validator therefore rejects only the
+"both set" case as an error and leaves "neither set" permitted, matching the
+existing lenient `None` defaults throughout the models. This is a deliberate
+narrowing: it catches the mistake that is genuinely easy to make (copying a
+model and adding `privateImageId` without removing `sourceUri`) without
+breaking existing construction patterns.
+
 ### Data flow
 
 ```
@@ -298,11 +355,17 @@ taxonomy intact:
 message. It is extended to accept a plain operation context so the private
 image call can produce a readable message without inventing a fake model name.
 
-Because the feature is allowlist-gated, a non-allowlisted issuer is a
-*likely* failure mode, not an exotic one. The error message for 403 and 404 on
-this endpoint must state explicitly that private images require Google support
-to enable them for the issuer. Without that hint the failure is very hard to
-diagnose.
+On 403 and 404 from the upload endpoint the message points at the possible
+onboarding requirement ("Please contact support to use private images", per the
+discovery document) as one candidate cause. Since the gating is unverified, the
+wording must stay a hint rather than a diagnosis — but without any hint at all
+the failure is very hard to place.
+
+The three server-side messages from the *Server-side error messages* table
+above arrive as `WalletException` from `create()`/`update()`, not from the
+upload. They need no special handling in code; they belong in the
+documentation, so that a reader who hits
+`... already used with object %s` knows the fix is a re-upload, not a retry.
 
 ## Testing
 
@@ -331,6 +394,8 @@ Mocked with `respx`, following the pattern of `test_api_sync.py` and
   `tests/data/test_wallet_google_plugins/`, sync and async
 - `_by_id` with zero or multiple registered providers -> error
 - sync `_by_id` called from inside a running event loop -> `RuntimeError`
+- `Image(sourceUri=..., privateImageId=...)` -> `ValidationError`
+- `Image(privateImageId=...)` and `Image(sourceUri=...)` both validate
 
 ### Integration test — `tests/integration/test_private_image.py`
 
@@ -344,19 +409,197 @@ state. It is therefore additionally gated behind
 
 ## Documentation
 
-Following the Diátaxis structure already used in `docs/`:
+Documentation is not an afterthought here. The upload is a one-way,
+non-reversible operation whose result the caller is solely responsible for
+keeping — a reader who only sees the function signature will get it wrong.
+The documentation work is therefore part of the definition of done, following
+the Diátaxis structure already used in `docs/`.
 
-- `docs/tutorials.md` — how-to: upload an image, place the id in
-  `imageModulesData`, create the object.
-- `docs/reference.md` — the four function signatures, the new settings fields
-  and their defaults.
-- `docs/explanation.md` — when to use a private image versus the existing
-  `ImageProvider` plugin serving images over a public URL, plus the Google-side
-  constraints (objects only, `imageModulesData` only, one image per object,
-  no delete, allowlist required).
+### `docs/tutorials.md` — how-to
 
-The allowlist requirement is also mentioned in `README.md`, because a user
-hitting a 403 will look there first.
+Upload an image, place the id in `imageModulesData`, create the object. Uses
+the student ID card scenario, because it is the real motivating case (see
+*Worked example* below).
+
+Second, shorter section: getting the image onto the **front** of the card via
+`classTemplateInfo.cardTemplateOverride`. Private images live in
+`imageModulesData`, which by default renders in the details view only. The
+use-case page shows the Java equivalent; the library already has all the
+required models (`ClassTemplateInfo`, `CardTemplateOverride`,
+`CardRowTemplateInfo`, `CardRowTwoItems`, `TemplateItem`, `FieldSelector`,
+`FieldReference` in `models/datatypes/class_template_info.py`), so this is
+purely a documentation gap:
+
+```python
+generic_class = api.new(
+    "GenericClass",
+    {
+        "id": f"{issuer_id}.student-id",
+        "classTemplateInfo": {
+            "cardTemplateOverride": {
+                "cardRowTemplateInfos": [
+                    {
+                        "twoItems": {
+                            # these ids must match the object's
+                            # textModulesData[].id and imageModulesData[].id
+                            "startItem": {
+                                "firstValue": {
+                                    "fields": [
+                                        {"fieldPath": "object.textModulesData['name']"},
+                                    ],
+                                },
+                            },
+                            "endItem": {
+                                "firstValue": {
+                                    "fields": [
+                                        {"fieldPath": "object.imageModulesData['photo']"},
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                ],
+            },
+        },
+    },
+)
+api.create(generic_class)
+```
+
+### `docs/reference.md`
+
+The four function signatures, the new settings fields and their defaults, the
+`Image` validator, and the table of server-side error messages with the
+required remedy for each.
+
+### `docs/explanation.md`
+
+Two sections.
+
+**Private image or `ImageProvider`?** The library already offers a way to serve
+images that are not on a CDN: an `ImageProvider` plugin plus the FastAPI
+`/images/{encrypted_image_id}` route. That endpoint is reachable by anyone who
+has the URL — the id is encrypted, not authenticated. A private image is never
+publicly reachable at all. The trade-offs:
+
+| | `ImageProvider` + public route | private image |
+| --- | --- | --- |
+| reachable without the pass | yes, if the URL leaks | no |
+| usable on classes | yes | no |
+| usable for logo / hero image | yes | no |
+| reusable across passes | yes | no, one image per object |
+| changeable after issuing | yes, same URL new bytes | no, requires re-upload and patch |
+| requires a reachable service | yes | no |
+| caller must persist anything | no | yes, see below |
+
+**Lifecycle and the obligation to persist the id.** This section carries the
+warning, because getting it wrong is silent and unrecoverable:
+
+- The id is returned exactly once. Google offers no endpoint to list an
+  issuer's private images.
+- There is no delete operation.
+- An id may be referenced by one object only; a second object needs a fresh
+  upload.
+
+Consequences the reader must act on:
+
+1. **Persist the id together with the object it belongs to, before creating the
+   object.** If the process dies between upload and `create()`, the id is lost
+   and the image is orphaned at Google forever.
+2. **Never retry an upload as part of a `create()` retry.** Upload once, then
+   retry only the `create()`. A naive retry loop around both leaks one image
+   per attempt.
+3. **Re-issuing a pass means re-uploading the image.**
+
+The library deliberately stores nothing. Where the mapping lives — a relational
+table, a compacted Kafka topic, anything else — is an application decision.
+A minimal relational shape for orientation:
+
+```sql
+CREATE TABLE private_image (
+    object_id        text        NOT NULL,
+    module_id        text        NOT NULL,
+    source_ref       text        NOT NULL,  -- how the app identifies the source image
+    private_image_id text        NOT NULL,
+    uploaded_at      timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (object_id, module_id)
+);
+```
+
+A note on event streams: an "image uploaded" event is useful for auditing, but
+an event log is not a lookup store. The source of truth for
+"which id belongs to this pass" must be queryable by object id.
+
+### `README.md`
+
+One short paragraph: the feature exists, it may require onboarding with Google
+support, and it obliges the caller to persist the returned id. Someone hitting
+a 403 looks there first.
+
+## Worked example: student ID card (EUGLOH / demo service)
+
+This is the case that motivates the feature, and the tutorial is written
+against it.
+
+`edutap.eugloh_samples` currently attaches student portraits to passes as
+public CDN URLs, for example in
+`src/edutap/eugloh_samples/data/id_data/simon_lund.py`:
+
+```python
+image_data = [
+    ImageModuleData(
+        id="photo",
+        mainImage=Image(
+            sourceUri=ImageUri(
+                uri="https://cms-cdn.lmu.de/wallet-assets/lmu-ausweise/"
+                    "simon_lund_studierendenausweis.png",
+            ),
+        ),
+    ),
+    ImageModuleData(
+        id="esc",
+        mainImage=Image(
+            sourceUri=ImageUri(uri="https://cms-cdn.lmu.de/wallet-assets/esc.png"),
+        ),
+    ),
+]
+```
+
+The portrait is a personal photograph served from a publicly reachable URL.
+With private images it becomes:
+
+```python
+photo_id = api.upload_private_image(portrait_bytes, "image/png")
+
+image_data = [
+    ImageModuleData(
+        id="photo",
+        mainImage=Image(privateImageId=photo_id),
+    ),
+    # The ESC logo stays a public URL: it is not personal data, it is
+    # identical on every pass, and private images cannot be shared
+    # between objects.
+    ImageModuleData(
+        id="esc",
+        mainImage=Image(
+            sourceUri=ImageUri(uri="https://cms-cdn.lmu.de/wallet-assets/esc.png"),
+        ),
+    ),
+]
+```
+
+Two things the example must teach explicitly:
+
+- Only the **personal** image moves to a private image. A shared logo must not,
+  because one upload serves exactly one object — a logo on 10 000 passes would
+  mean 10 000 uploads.
+- `photo_id` has to be written to the application's store keyed by the object
+  id before `api.create()` runs.
+
+In `edutap.demo_service`, where passes are generated per request in
+`src/edutap/demo_service/demos/`, the same rule applies: the upload belongs
+into the pass-creation path together with a write to the application's
+persistence, not into the module-level sample data.
 
 ## Explicitly not included
 
@@ -364,6 +607,13 @@ hitting a 403 will look there first.
   from more than one object.
 - Deleting an uploaded image — no such endpoint exists.
 - An `attach`/`set` helper that mutates or patches a pass model.
+- Any persistence of the `privateImageId` — no database schema, no event
+  publishing, no plugin protocol for a store. The library stays a pure API
+  client, consistent with how it handles callbacks (a protocol the application
+  implements) rather than owning state. A `PrivateImageStore` protocol seam
+  offering `lookup()`/`store()` for retry idempotency was considered and
+  deferred: it should be decided once the demo service has issued real private
+  image passes and we know whether the idempotency is needed in practice.
 - Private images on hero images or on the web — announced by Google as
   "in development", not available yet.
 
