@@ -29,6 +29,8 @@ link = api.save_link([my_pass])  # save_link is sync, not awaited
 ```
 """
 
+from ._private_content import prepare_private_image_upload
+from ._private_content import PRIVATE_IMAGE_HINT
 from .clientpool import client_pool
 from .credentials import credentials_manager
 from .models.bases import make_partial_model
@@ -38,6 +40,8 @@ from .models.datatypes.general import Pagination
 from .models.datatypes.jwt import JWTClaims
 from .models.datatypes.jwt import JWTPayload
 from .models.datatypes.message import Message
+from .models.datatypes.private_content import UploadPrivateImageResponse
+from .models.handlers import ImageData
 from .models.misc import AddMessageRequest
 from .models.passes.bases import ClassModel
 from .models.passes.bases import ObjectModel
@@ -73,11 +77,13 @@ __all__ = [
     "update",
     "message",
     "listing",
+    "upload_private_image",
     "acreate",
     "aread",
     "aupdate",
     "amessage",
     "alisting",
+    "aupload_private_image",
 ]
 
 
@@ -673,6 +679,56 @@ def listing(
     return
 
 
+def upload_private_image(
+    data: bytes | ImageData,
+    mime_type: str | None = None,
+    *,
+    issuer_id: str | None = None,
+    credentials: dict | None = None,
+) -> str:
+    """Uploads a private image and returns its identifier.
+
+    A private image is not served from a publicly reachable URL. The returned
+    identifier belongs into `Image.privateImageId`, which may be used on pass
+    **objects** only, inside `imageModulesData`, and only for a single object.
+
+    The identifier is returned exactly once. Google offers no way to list or
+    delete private images, so the caller must persist it together with the
+    object it belongs to. See the documentation for the full lifecycle.
+
+    see: https://developers.google.com/wallet/generic/use-cases/secure-private-images
+
+    :param data:                    Raw image bytes, or an ImageData instance
+                                    as returned by an ImageProvider plugin.
+    :param mime_type:               Mime type of the image. Required when
+                                    passing bytes, and forbidden when passing
+                                    an ImageData instance.
+    :param issuer_id:               Issuer id to upload for. Defaults to the
+                                    configured EDUTAP_WALLET_GOOGLE_ISSUER_ID.
+    :param credentials:             Optional session credentials as dict.
+    :raises ValueError:             When the input, the mime type, the size or
+                                    the issuer id is invalid.
+    :raises QuotaExceededException: When the quota was exceeded.
+    :raises LookupError:            When the endpoint answered 404.
+    :raises WalletException:        When the response status code is not 200.
+    :return:                        The privateImageId of the uploaded image.
+    """
+    url, payload, headers = prepare_private_image_upload(data, mime_type, issuer_id)
+
+    client = client_pool.client(credentials=credentials)
+    response = client.post(url=url, content=payload, headers=headers)
+
+    handle_response_errors(
+        response,
+        "upload private image for",
+        "PrivateImage",
+        hint=PRIVATE_IMAGE_HINT,
+    )
+    return UploadPrivateImageResponse.model_validate_json(
+        response.content
+    ).privateImageId
+
+
 # Asynchronous API
 
 
@@ -922,3 +978,47 @@ async def alisting(
                 continue
         break
     return
+
+
+async def aupload_private_image(
+    data: bytes | ImageData,
+    mime_type: str | None = None,
+    *,
+    issuer_id: str | None = None,
+    credentials: dict | None = None,
+) -> str:
+    """Uploads a private image asynchronously and returns its identifier.
+
+    See `upload_private_image` for the full description, the constraints
+    Google places on private images, and the obligation to persist the
+    returned identifier.
+
+    :param data:                    Raw image bytes, or an ImageData instance
+                                    as returned by an ImageProvider plugin.
+    :param mime_type:               Mime type of the image. Required when
+                                    passing bytes, and forbidden when passing
+                                    an ImageData instance.
+    :param issuer_id:               Issuer id to upload for. Defaults to the
+                                    configured EDUTAP_WALLET_GOOGLE_ISSUER_ID.
+    :param credentials:             Optional session credentials as dict.
+    :raises ValueError:             When the input, the mime type, the size or
+                                    the issuer id is invalid.
+    :raises QuotaExceededException: When the quota was exceeded.
+    :raises LookupError:            When the endpoint answered 404.
+    :raises WalletException:        When the response status code is not 200.
+    :return:                        The privateImageId of the uploaded image.
+    """
+    url, payload, headers = prepare_private_image_upload(data, mime_type, issuer_id)
+
+    client = client_pool.async_client(credentials=credentials)
+    response = await client.post(url=url, content=payload, headers=headers)
+
+    handle_response_errors(
+        response,
+        "upload private image for",
+        "PrivateImage",
+        hint=PRIVATE_IMAGE_HINT,
+    )
+    return UploadPrivateImageResponse.model_validate_json(
+        response.content
+    ).privateImageId

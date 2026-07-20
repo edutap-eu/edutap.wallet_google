@@ -2,7 +2,9 @@
 
 from edutap.wallet_google.clientpool import client_pool
 
+import httpx
 import pytest
+import respx
 
 
 def test_settings_defaults(mock_settings):
@@ -259,3 +261,154 @@ def test_handle_response_errors_without_hint_is_unchanged():
         handle_response_errors(response, "read", "GenericObject")
 
     assert str(excinfo.value) == "GenericObject not found: not found"
+
+
+# --- upload, sync and async ----------------------------------------------
+
+
+ISSUER_ID = "3388000000012345"
+
+
+def _upload_url() -> str:
+    return client_pool.upload_url(f"/privateContent/{ISSUER_ID}/uploadPrivateImage")
+
+
+@respx.mock
+def test_upload_private_image_returns_id(mock_session, mock_settings):
+    from edutap.wallet_google import api
+
+    respx.post(_upload_url()).mock(
+        return_value=httpx.Response(200, json={"privateImageId": "abc123"})
+    )
+
+    result = api.upload_private_image(b"raw", "image/png", issuer_id=ISSUER_ID)
+
+    assert result == "abc123"
+
+
+@respx.mock
+def test_upload_private_image_sends_raw_body_and_content_type(
+    mock_session, mock_settings
+):
+    from edutap.wallet_google import api
+
+    respx.post(_upload_url()).mock(
+        return_value=httpx.Response(200, json={"privateImageId": "abc123"})
+    )
+
+    api.upload_private_image(b"raw-bytes", "image/jpeg", issuer_id=ISSUER_ID)
+
+    request = respx.calls.last.request
+    assert request.content == b"raw-bytes"
+    assert request.headers["Content-Type"] == "image/jpeg"
+
+
+@respx.mock
+def test_upload_private_image_accepts_image_data(mock_session, mock_settings):
+    from edutap.wallet_google import api
+    from edutap.wallet_google.models.handlers import ImageData
+
+    respx.post(_upload_url()).mock(
+        return_value=httpx.Response(200, json={"privateImageId": "abc123"})
+    )
+
+    result = api.upload_private_image(
+        ImageData(mimetype="image/jpeg", data=b"raw"), issuer_id=ISSUER_ID
+    )
+
+    assert result == "abc123"
+    assert respx.calls.last.request.headers["Content-Type"] == "image/jpeg"
+
+
+@respx.mock
+def test_upload_private_image_uses_settings_issuer_id(mock_session, mock_settings):
+    from edutap.wallet_google import api
+
+    mock_settings.issuer_id = ISSUER_ID
+    respx.post(_upload_url()).mock(
+        return_value=httpx.Response(200, json={"privateImageId": "abc123"})
+    )
+
+    assert api.upload_private_image(b"raw", "image/png") == "abc123"
+
+
+@respx.mock
+def test_upload_private_image_403_mentions_the_hint(mock_session, mock_settings):
+    from edutap.wallet_google import api
+    from edutap.wallet_google.exceptions import WalletException
+
+    respx.post(_upload_url()).mock(return_value=httpx.Response(403, text="denied"))
+
+    with pytest.raises(WalletException, match="Google support"):
+        api.upload_private_image(b"raw", "image/png", issuer_id=ISSUER_ID)
+
+
+@respx.mock
+def test_upload_private_image_403_quota(mock_session, mock_settings):
+    from edutap.wallet_google import api
+    from edutap.wallet_google.exceptions import QuotaExceededException
+
+    respx.post(_upload_url()).mock(
+        return_value=httpx.Response(403, text="quota exceeded")
+    )
+
+    with pytest.raises(QuotaExceededException):
+        api.upload_private_image(b"raw", "image/png", issuer_id=ISSUER_ID)
+
+
+@respx.mock
+def test_upload_private_image_404(mock_session, mock_settings):
+    from edutap.wallet_google import api
+
+    respx.post(_upload_url()).mock(return_value=httpx.Response(404, text="nope"))
+
+    with pytest.raises(LookupError):
+        api.upload_private_image(b"raw", "image/png", issuer_id=ISSUER_ID)
+
+
+@respx.mock
+def test_upload_private_image_500(mock_session, mock_settings):
+    from edutap.wallet_google import api
+    from edutap.wallet_google.exceptions import WalletException
+
+    respx.post(_upload_url()).mock(return_value=httpx.Response(500, text="boom"))
+
+    with pytest.raises(WalletException):
+        api.upload_private_image(b"raw", "image/png", issuer_id=ISSUER_ID)
+
+
+def test_upload_private_image_rejects_bytes_without_mime_type(mock_settings):
+    from edutap.wallet_google import api
+
+    with pytest.raises(ValueError, match="mime_type is required"):
+        api.upload_private_image(b"raw", None, issuer_id=ISSUER_ID)
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_aupload_private_image_returns_id(mock_async_session, mock_settings):
+    from edutap.wallet_google import api
+
+    respx.post(_upload_url()).mock(
+        return_value=httpx.Response(200, json={"privateImageId": "abc123"})
+    )
+
+    result = await api.aupload_private_image(b"raw", "image/png", issuer_id=ISSUER_ID)
+
+    assert result == "abc123"
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_aupload_private_image_sends_raw_body(mock_async_session, mock_settings):
+    from edutap.wallet_google import api
+
+    respx.post(_upload_url()).mock(
+        return_value=httpx.Response(200, json={"privateImageId": "abc123"})
+    )
+
+    await api.aupload_private_image(b"raw-bytes", "image/jpeg", issuer_id=ISSUER_ID)
+
+    request = respx.calls.last.request
+    assert request.content == b"raw-bytes"
+    assert request.headers["Content-Type"] == "image/jpeg"
