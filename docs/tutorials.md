@@ -327,6 +327,15 @@ carries two person-specific images per pass: a portrait and a QR code.
 `store` stands in for whatever persistence your application uses, for
 example a database table keyed by `(object_id, module_id)`.
 
+**Note:** This example uploads *two* private images to the same object.
+Google documents that a private image can be used with a single object, but
+not how many private images an object may carry — two-per-object is
+plausible, not confirmed. Verify it against your own issuer with
+`tests/integration/test_private_image.py` before relying on it. If Google
+rejects the second image, the first upload is not recoverable: a private
+image can be neither listed nor deleted, so it stays orphaned at Google
+permanently.
+
 Before, both personal images were served from a public CDN:
 
 ```python

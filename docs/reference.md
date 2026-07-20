@@ -136,8 +136,8 @@ other API function.
 
 **Configuration:**
 
-Private image upload settings are configured via environment variables — see the
-[Configuration options](installation.md#configuration-options) section of the installation guide
+Private image upload settings are configured via environment variables — see
+the configuration options section of the [installation guide](installation.md)
 for `EDUTAP_WALLET_GOOGLE_UPLOAD_API_URL`, `EDUTAP_WALLET_GOOGLE_ISSUER_ID`,
 `EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_MAX_BYTES`, and `EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_ALLOWED_MIME_TYPES`.
 Violations raise `ValueError` before any HTTP request is made.
