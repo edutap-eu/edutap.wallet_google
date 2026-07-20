@@ -123,32 +123,51 @@ def prepare_private_image_upload(
     return url, payload, headers
 
 
-def log_raw_upload_response(response) -> None:
-    """Log the raw body of a private image upload response before parsing it.
+def parse_private_image_response(response) -> str:
+    """Parse a private image upload response and return the privateImageId.
 
     Every other response in this library passes through
     `utils.parse_response_json`, which logs the raw body at `logger.debug`
     right before validating it. `upload_private_image` and
-    `aupload_private_image` parse `UploadPrivateImageResponse` directly
+    `aupload_private_image` validate `UploadPrivateImageResponse` directly
     instead, since that response model needs none of the partial-model
-    handling `parse_response_json` provides, so without this call their raw
-    body would never be logged at all.
+    handling `parse_response_json` provides, so this helper mirrors the same
+    debug-log-then-validate shape for them.
 
-    That matters more here than anywhere else in the library: uploading a
-    private image is the one operation that cannot be undone or retried for
-    free. Google offers no way to list or delete a private image, so if
-    `Model`'s `extra="forbid"` rejects an otherwise-200 body (an added
-    field, an empty body, a proxy's HTML interstitial) and the id is lost,
-    that image is orphaned at Google permanently, with no other way to
-    recover the id. `logger.debug` is easy to leave disabled in a
-    production deployment, so this logs at `logger.warning` instead, on the
-    principle that a slightly noisier log beats an unrecoverable, silently
-    lost id.
+    That mirroring stops at the error path. Uploading a private image is the
+    one operation in this library that cannot be undone or retried for free:
+    Google offers no way to list or delete a private image, so if `Model`'s
+    `extra="forbid"` rejects an otherwise-200 body (an added field, an empty
+    body, a proxy's HTML interstitial), the id is gone from everywhere except
+    this log line, and the image is orphaned at Google permanently. That
+    warrants `logger.error` with an explicit explanation of the stakes,
+    where `parse_response_json` only logs the validation errors.
 
-    :param response: HTTP response object (from httpx), already checked by
-                     `handle_response_errors`.
+    :param response:            HTTP response object (from httpx), already
+                                checked by `handle_response_errors`.
+    :raises pydantic.ValidationError: When the response body does not
+                                validate as `UploadPrivateImageResponse`. The
+                                raw body has already been logged at
+                                `logger.error` by the time this propagates.
+    :return:                    The privateImageId of the uploaded image.
     """
-    logger.warning(f"RAW-Response (private image upload): {response.content!r}")
+    from .models.datatypes.private_content import UploadPrivateImageResponse
+    from pydantic import ValidationError
+
+    logger.debug(f"RAW-Response (private image upload): {response.content!r}")
+    try:
+        return UploadPrivateImageResponse.model_validate_json(
+            response.content
+        ).privateImageId
+    except ValidationError:
+        logger.error(
+            "A private image was uploaded but its id could not be parsed "
+            "out of the response. Private images can be neither listed nor "
+            "deleted, so this raw body is the only remaining record of the "
+            "id: %r",
+            response.content,
+        )
+        raise
 
 
 async def image_data_by_id(image_id: str) -> ImageData:

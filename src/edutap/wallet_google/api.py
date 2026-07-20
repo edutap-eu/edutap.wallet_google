@@ -30,7 +30,7 @@ link = api.save_link([my_pass])  # save_link is sync, not awaited
 """
 
 from ._private_content import image_data_by_id
-from ._private_content import log_raw_upload_response
+from ._private_content import parse_private_image_response
 from ._private_content import prepare_private_image_upload
 from ._private_content import PRIVATE_IMAGE_HINT
 from .clientpool import client_pool
@@ -42,7 +42,6 @@ from .models.datatypes.general import Pagination
 from .models.datatypes.jwt import JWTClaims
 from .models.datatypes.jwt import JWTPayload
 from .models.datatypes.message import Message
-from .models.datatypes.private_content import UploadPrivateImageResponse
 from .models.handlers import ImageData
 from .models.misc import AddMessageRequest
 from .models.passes.bases import ClassModel
@@ -734,10 +733,7 @@ def upload_private_image(
         "PrivateImage",
         hint=PRIVATE_IMAGE_HINT,
     )
-    log_raw_upload_response(response)
-    return UploadPrivateImageResponse.model_validate_json(
-        response.content
-    ).privateImageId
+    return parse_private_image_response(response)
 
 
 def upload_private_image_by_id(
@@ -1072,10 +1068,7 @@ async def aupload_private_image(
         "PrivateImage",
         hint=PRIVATE_IMAGE_HINT,
     )
-    log_raw_upload_response(response)
-    return UploadPrivateImageResponse.model_validate_json(
-        response.content
-    ).privateImageId
+    return parse_private_image_response(response)
 
 
 async def aupload_private_image_by_id(

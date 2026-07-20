@@ -221,32 +221,57 @@ def test_validate_private_image_size_check_disabled_by_zero(mock_settings):
     assert validate_private_image(b"more than four bytes", "image/png") is None
 
 
-# --- raw response logging -------------------------------------------------
+# --- raw response parsing ------------------------------------------------
 
 
-def test_log_raw_upload_response_logs_the_content(caplog):
-    """The raw body is logged before it is parsed, at a level that survives.
+def test_parse_private_image_response_returns_the_id_and_logs_at_debug(caplog):
+    """The happy path returns the id and logs the raw body at DEBUG.
 
-    Losing this id is unrecoverable, so it is logged at WARNING instead of
-    the DEBUG level `utils.parse_response_json` uses for every other
-    response, on the assumption that a production deployment is more
-    likely to have WARNING visible than DEBUG.
+    This matches what `utils.parse_response_json` does for every other
+    response in the library: routine, successful uploads must not produce
+    WARNING or ERROR noise, only the same DEBUG trail every other endpoint
+    gets.
     """
-    from edutap.wallet_google._private_content import log_raw_upload_response
+    from edutap.wallet_google._private_content import parse_private_image_response
 
     import logging
 
     response = httpx.Response(200, json={"privateImageId": "abc123"})
 
-    with caplog.at_level(
-        logging.WARNING, logger="edutap.wallet_google._private_content"
-    ):
-        log_raw_upload_response(response)
+    with caplog.at_level(logging.DEBUG, logger="edutap.wallet_google._private_content"):
+        result = parse_private_image_response(response)
 
+    assert result == "abc123"
     assert len(caplog.records) == 1
     record = caplog.records[0]
-    assert record.levelno == logging.WARNING
+    assert record.levelno == logging.DEBUG
     assert repr(response.content) in caplog.text
+
+
+def test_parse_private_image_response_logs_raw_body_at_error_and_reraises(caplog):
+    """An unparseable body is the id's only remaining record, so it must
+    survive at ERROR, not the DEBUG level the happy path uses.
+
+    Uploading a private image cannot be undone or retried for free: Google
+    offers no way to list or delete a private image. If the 200 response
+    fails validation, the id existed only in that body. This asserts the
+    raw content actually reaches the log record at ERROR, not merely that
+    the exception propagates.
+    """
+    from edutap.wallet_google._private_content import parse_private_image_response
+    from pydantic import ValidationError
+
+    import logging
+
+    response = httpx.Response(200, json={"unexpectedField": "surprise"})
+
+    with caplog.at_level(logging.ERROR, logger="edutap.wallet_google._private_content"):
+        with pytest.raises(ValidationError):
+            parse_private_image_response(response)
+
+    error_records = [r for r in caplog.records if r.levelno == logging.ERROR]
+    assert len(error_records) == 1
+    assert repr(response.content) in error_records[0].getMessage()
 
 
 # --- request preparation -------------------------------------------------
