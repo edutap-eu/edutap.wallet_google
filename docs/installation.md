@@ -88,6 +88,13 @@ Credentials
 
   Default: empty string
 
+- `EDUTAP_WALLET_GOOGLE_ISSUER_ID`
+
+  Default issuer ID, used when an API call does not receive one explicitly.
+  Relevant for `api.listing()` on classes and for private image uploads.
+
+  Default: empty string
+
 
 FastAPI handler specific settings.
 There are two routers available for callback and images, plus one combined providing both at once:
@@ -175,6 +182,21 @@ There are two routers available for callback and images, plus one combined provi
 
   Default: `5.0`
 
+Private image upload guardrails. These are client-side checks; Google documents no corresponding server-side restrictions.
+
+- `EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_MAX_BYTES`
+
+  Maximum accepted size of a private image upload in bytes.
+  Set to `0` to disable the check.
+
+  Default: `5242880` (5 MB)
+
+- `EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_ALLOWED_MIME_TYPES`
+
+  MIME types accepted for private image uploads, as a JSON list.
+
+  Default: `["image/jpeg", "image/png", "image/webp", "image/gif"]`
+
 - `EDUTAP_WALLET_GOOGLE_FERNET_ENCRYPTION_KEY`
 
   Image Identifiers in the images handler are encrypted symmetrically.
@@ -189,6 +211,12 @@ Google API URLs, normally not subject of change:
 - `EDUTAP_WALLET_GOOGLE_API_URL`
 
   Defaults to `https://walletobjects.googleapis.com/walletobjects/v1`.
+
+- `EDUTAP_WALLET_GOOGLE_UPLOAD_API_URL`
+
+  Base URL for media upload endpoints.
+
+  Defaults to `https://walletobjects.googleapis.com/upload/walletobjects/v1`.
 
 - `EDUTAP_WALLET_GOOGLE_SAVE_URL`
 

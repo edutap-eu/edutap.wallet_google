@@ -134,17 +134,13 @@ already running event loop it raises `RuntimeError` pointing at
 raised. `credentials` is passed to the client pool exactly like in every
 other API function.
 
-**Settings:**
+**Configuration:**
 
-| Setting | Environment variable | Default | Description |
-| --- | --- | --- | --- |
-| `upload_api_url` | `EDUTAP_WALLET_GOOGLE_UPLOAD_API_URL` | `https://walletobjects.googleapis.com/upload/walletobjects/v1` | Base URL below which the private image upload endpoint is built. |
-| `issuer_id` | `EDUTAP_WALLET_GOOGLE_ISSUER_ID` | `""` (empty) | Default issuer id, used when a call does not receive one explicitly — private image uploads and `listing()` / `alisting()` of classes. |
-| `private_image_max_bytes` | `EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_MAX_BYTES` | `5242880` (5 MiB) | Maximum accepted size of a private image upload in bytes. `0` disables the check. |
-| `private_image_allowed_mime_types` | `EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_ALLOWED_MIME_TYPES` | `["image/jpeg", "image/png", "image/webp", "image/gif"]` | Mime types accepted for private image uploads. |
-
-Violations of either setting raise `ValueError` before any HTTP request is
-made.
+Private image upload settings are configured via environment variables — see the
+[Configuration options](installation.md#configuration-options) section of the installation guide
+for `EDUTAP_WALLET_GOOGLE_UPLOAD_API_URL`, `EDUTAP_WALLET_GOOGLE_ISSUER_ID`,
+`EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_MAX_BYTES`, and `EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_ALLOWED_MIME_TYPES`.
+Violations raise `ValueError` before any HTTP request is made.
 
 **Model validation:** `Image` accepts `sourceUri` or `privateImageId`, never
 both — Google rejects an `Image` that sets both fields with a server-side
