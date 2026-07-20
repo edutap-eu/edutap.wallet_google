@@ -278,6 +278,24 @@ def test_handle_response_errors_appends_hint_on_404():
         handle_response_errors(response, "upload", "PrivateImage", hint="ask support")
 
 
+def test_handle_response_errors_appends_hint_on_generic_error():
+    """The generic branch (any status other than 403/404/409) gets the hint too.
+
+    Whether a non-enabled issuer is rejected with 403, 404 or 400 is still
+    unverified against a real issuer; if it turns out to be 400, this is the
+    only branch that would ever show the hint.
+    """
+    from edutap.wallet_google.exceptions import WalletException
+    from edutap.wallet_google.utils import handle_response_errors
+
+    import httpx
+
+    response = httpx.Response(400, text="bad request")
+
+    with pytest.raises(WalletException, match="ask support"):
+        handle_response_errors(response, "upload", "PrivateImage", hint="ask support")
+
+
 def test_handle_response_errors_without_hint_is_unchanged():
     from edutap.wallet_google.utils import handle_response_errors
 

@@ -161,7 +161,9 @@ def handle_response_errors(
         raise ObjectAlreadyExistsException(
             f"{name} {resource_id} already exists\n{response.text}"
         )
-    raise WalletException(f"Error: {response.status_code} - {response.text}")
+    raise WalletException(
+        f"Error: {response.status_code} - {response.text}{hint_suffix}"
+    )
 
 
 def parse_response_json(
