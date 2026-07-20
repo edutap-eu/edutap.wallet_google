@@ -373,7 +373,12 @@ def _prepare_listing(
     elif name.endswith("Class"):
         is_pageable = True
         if not issuer_id:
-            raise ValueError("issuer_id must be given to list classes")
+            issuer_id = client_pool.settings.issuer_id
+        if not issuer_id:
+            raise ValueError(
+                "issuer_id must be given to list classes, either as an "
+                "argument or via EDUTAP_WALLET_GOOGLE_ISSUER_ID"
+            )
         params["issuerId"] = issuer_id
         resource_identifier = issuer_id if issuer_id else ""
     elif name == "Issuer":

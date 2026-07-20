@@ -519,3 +519,31 @@ async def test_image_data_by_id_without_any_provider(monkeypatch):
 
     with pytest.raises(NotImplementedError):
         await _private_content.image_data_by_id("OK")
+
+
+# --- issuer id fallback in listing ---------------------------------------
+
+
+@respx.mock
+def test_listing_classes_falls_back_to_configured_issuer_id(
+    mock_session, mock_settings
+):
+    from edutap.wallet_google import api
+
+    mock_settings.issuer_id = ISSUER_ID
+    respx.get(client_pool.url("GenericClass")).mock(
+        return_value=httpx.Response(200, json={"resources": [], "pagination": None})
+    )
+
+    list(api.listing("GenericClass"))
+
+    assert respx.calls.last.request.url.params["issuerId"] == ISSUER_ID
+
+
+def test_listing_classes_without_any_issuer_id_raises(mock_session, mock_settings):
+    from edutap.wallet_google import api
+
+    mock_settings.issuer_id = ""
+
+    with pytest.raises(ValueError, match="issuer_id"):
+        list(api.listing("GenericClass"))
