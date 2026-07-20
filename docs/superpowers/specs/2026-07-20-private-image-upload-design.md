@@ -338,6 +338,16 @@ Before doing so it calls `asyncio.get_running_loop()`. If a loop is already
 running — the FastAPI case — it raises `RuntimeError` pointing at
 `aupload_private_image_by_id`, instead of deadlocking silently.
 
+**Added after implementation review:** this bridge creates and tears down a
+fresh event loop on *every* call. An `ImageProvider` implementation that caches
+an async resource across calls — a module-level `httpx.AsyncClient`, for
+instance — binds that resource to the first loop, which is already closed by
+the second call. Such an implementation fails on its second use. Providers
+meant for the synchronous bridge must create their async resources per call;
+otherwise the caller should use `aupload_private_image_by_id`. This constraint
+is documented in `docs/explanation.md`; it was not part of the original design
+and surfaced during the code review of the bridge.
+
 ## Error handling
 
 `handle_response_errors()` from `utils.py` is reused, keeping the existing
