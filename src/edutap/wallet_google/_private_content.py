@@ -123,6 +123,34 @@ def prepare_private_image_upload(
     return url, payload, headers
 
 
+def log_raw_upload_response(response) -> None:
+    """Log the raw body of a private image upload response before parsing it.
+
+    Every other response in this library passes through
+    `utils.parse_response_json`, which logs the raw body at `logger.debug`
+    right before validating it. `upload_private_image` and
+    `aupload_private_image` parse `UploadPrivateImageResponse` directly
+    instead, since that response model needs none of the partial-model
+    handling `parse_response_json` provides, so without this call their raw
+    body would never be logged at all.
+
+    That matters more here than anywhere else in the library: uploading a
+    private image is the one operation that cannot be undone or retried for
+    free. Google offers no way to list or delete a private image, so if
+    `Model`'s `extra="forbid"` rejects an otherwise-200 body (an added
+    field, an empty body, a proxy's HTML interstitial) and the id is lost,
+    that image is orphaned at Google permanently, with no other way to
+    recover the id. `logger.debug` is easy to leave disabled in a
+    production deployment, so this logs at `logger.warning` instead, on the
+    principle that a slightly noisier log beats an unrecoverable, silently
+    lost id.
+
+    :param response: HTTP response object (from httpx), already checked by
+                     `handle_response_errors`.
+    """
+    logger.warning(f"RAW-Response (private image upload): {response.content!r}")
+
+
 async def image_data_by_id(image_id: str) -> ImageData:
     """Fetch an image from the registered ImageProvider plugin.
 

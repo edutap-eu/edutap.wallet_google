@@ -206,6 +206,34 @@ def test_validate_private_image_size_check_disabled_by_zero(mock_settings):
     assert validate_private_image(b"more than four bytes", "image/png") is None
 
 
+# --- raw response logging -------------------------------------------------
+
+
+def test_log_raw_upload_response_logs_the_content(caplog):
+    """The raw body is logged before it is parsed, at a level that survives.
+
+    Losing this id is unrecoverable, so it is logged at WARNING instead of
+    the DEBUG level `utils.parse_response_json` uses for every other
+    response, on the assumption that a production deployment is more
+    likely to have WARNING visible than DEBUG.
+    """
+    from edutap.wallet_google._private_content import log_raw_upload_response
+
+    import logging
+
+    response = httpx.Response(200, json={"privateImageId": "abc123"})
+
+    with caplog.at_level(
+        logging.WARNING, logger="edutap.wallet_google._private_content"
+    ):
+        log_raw_upload_response(response)
+
+    assert len(caplog.records) == 1
+    record = caplog.records[0]
+    assert record.levelno == logging.WARNING
+    assert repr(response.content) in caplog.text
+
+
 # --- request preparation -------------------------------------------------
 
 

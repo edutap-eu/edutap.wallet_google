@@ -30,6 +30,7 @@ link = api.save_link([my_pass])  # save_link is sync, not awaited
 """
 
 from ._private_content import image_data_by_id
+from ._private_content import log_raw_upload_response
 from ._private_content import prepare_private_image_upload
 from ._private_content import PRIVATE_IMAGE_HINT
 from .clientpool import client_pool
@@ -733,6 +734,7 @@ def upload_private_image(
         "PrivateImage",
         hint=PRIVATE_IMAGE_HINT,
     )
+    log_raw_upload_response(response)
     return UploadPrivateImageResponse.model_validate_json(
         response.content
     ).privateImageId
@@ -1070,6 +1072,7 @@ async def aupload_private_image(
         "PrivateImage",
         hint=PRIVATE_IMAGE_HINT,
     )
+    log_raw_upload_response(response)
     return UploadPrivateImageResponse.model_validate_json(
         response.content
     ).privateImageId
