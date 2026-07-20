@@ -39,6 +39,7 @@ c. A fully green run does NOT answer question 3. `tests/data/private_image_test.
 """
 
 from edutap.wallet_google import api
+from edutap.wallet_google.models.passes import GenericObject
 from edutap.wallet_google.settings import Settings
 from pathlib import Path
 
@@ -141,6 +142,10 @@ def test_two_private_images_on_one_object(issuer_id, integration_test_id):
     )
 
     created = api.create(generic_object)
+
+    # api.create() is annotated to return the Model base class, so narrow it
+    # before reaching for pass-specific fields.
+    assert isinstance(created, GenericObject)
 
     returned_ids = {
         module.mainImage.privateImageId

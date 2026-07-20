@@ -249,7 +249,7 @@ def test_parse_private_image_response_returns_the_id_and_logs_at_debug(caplog):
 
 
 def test_parse_private_image_response_logs_raw_body_at_error_and_reraises(caplog):
-    """An unparseable body is the id's only remaining record, so it must
+    """An unparsable body is the id's only remaining record, so it must
     survive at ERROR, not the DEBUG level the happy path uses.
 
     Uploading a private image cannot be undone or retried for free: Google
