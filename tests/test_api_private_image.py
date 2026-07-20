@@ -106,3 +106,117 @@ def test_image_rejects_both_source_uri_and_private_image_id():
             sourceUri=ImageUri(uri="https://example.org/photo.png"),
             privateImageId="abc123",
         )
+
+
+# --- input normalisation -------------------------------------------------
+
+
+def test_normalize_bytes_with_mime_type():
+    from edutap.wallet_google._private_content import normalize_image_input
+
+    assert normalize_image_input(b"raw", "image/png") == (b"raw", "image/png")
+
+
+def test_normalize_image_data_takes_mime_type_from_model():
+    from edutap.wallet_google._private_content import normalize_image_input
+    from edutap.wallet_google.models.handlers import ImageData
+
+    image_data = ImageData(mimetype="image/jpeg", data=b"raw")
+
+    assert normalize_image_input(image_data, None) == (b"raw", "image/jpeg")
+
+
+def test_normalize_bytes_without_mime_type_raises():
+    from edutap.wallet_google._private_content import normalize_image_input
+
+    with pytest.raises(ValueError, match="mime_type is required"):
+        normalize_image_input(b"raw", None)
+
+
+def test_normalize_image_data_with_mime_type_raises():
+    from edutap.wallet_google._private_content import normalize_image_input
+    from edutap.wallet_google.models.handlers import ImageData
+
+    image_data = ImageData(mimetype="image/jpeg", data=b"raw")
+
+    with pytest.raises(ValueError, match="must not be given"):
+        normalize_image_input(image_data, "image/png")
+
+
+# --- issuer id -----------------------------------------------------------
+
+
+def test_resolve_issuer_id_prefers_the_argument(mock_settings):
+    from edutap.wallet_google._private_content import resolve_issuer_id
+
+    mock_settings.issuer_id = "from-settings"
+
+    assert resolve_issuer_id("explicit") == "explicit"
+
+
+def test_resolve_issuer_id_falls_back_to_settings(mock_settings):
+    from edutap.wallet_google._private_content import resolve_issuer_id
+
+    mock_settings.issuer_id = "from-settings"
+
+    assert resolve_issuer_id(None) == "from-settings"
+
+
+def test_resolve_issuer_id_without_any_source_raises(mock_settings):
+    from edutap.wallet_google._private_content import resolve_issuer_id
+
+    mock_settings.issuer_id = ""
+
+    with pytest.raises(ValueError, match="EDUTAP_WALLET_GOOGLE_ISSUER_ID"):
+        resolve_issuer_id(None)
+
+
+# --- guardrails ----------------------------------------------------------
+
+
+def test_validate_private_image_accepts_allowed_type(mock_settings):
+    from edutap.wallet_google._private_content import validate_private_image
+
+    assert validate_private_image(b"raw", "image/png") is None
+
+
+def test_validate_private_image_rejects_disallowed_type(mock_settings):
+    from edutap.wallet_google._private_content import validate_private_image
+
+    with pytest.raises(ValueError, match="image/tiff"):
+        validate_private_image(b"raw", "image/tiff")
+
+
+def test_validate_private_image_rejects_oversized_payload(mock_settings):
+    from edutap.wallet_google._private_content import validate_private_image
+
+    mock_settings.private_image_max_bytes = 4
+
+    with pytest.raises(ValueError, match="exceeds"):
+        validate_private_image(b"more than four bytes", "image/png")
+
+
+def test_validate_private_image_size_check_disabled_by_zero(mock_settings):
+    from edutap.wallet_google._private_content import validate_private_image
+
+    mock_settings.private_image_max_bytes = 0
+
+    assert validate_private_image(b"more than four bytes", "image/png") is None
+
+
+# --- request preparation -------------------------------------------------
+
+
+def test_prepare_private_image_upload(mock_settings):
+    from edutap.wallet_google._private_content import prepare_private_image_upload
+
+    url, payload, headers = prepare_private_image_upload(
+        b"raw", "image/png", "3388000000012345"
+    )
+
+    assert url == (
+        "https://walletobjects.googleapis.com/upload/walletobjects/v1"
+        "/privateContent/3388000000012345/uploadPrivateImage"
+    )
+    assert payload == b"raw"
+    assert headers == {"Content-Type": "image/png"}
