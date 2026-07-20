@@ -75,6 +75,17 @@ def test_two_private_images_on_one_object(issuer_id, integration_test_id):
     If Google rejects the second reference, the ESC use case does not work
     and the spec must be corrected.
 
+    This test verifies that both private image IDs are actually attached to
+    the returned object. If the assertion fails:
+
+    - If returned_ids contains only one ID: Google rejected the second private
+      image and the ESC use case does not work as designed. Record this in
+      docs/superpowers/specs/2026-07-20-private-image-upload-design.md.
+    - If returned_ids is empty or contains None values: Google does not echo
+      privateImageId back in the create response. The check must be redone by
+      calling api.read("GenericObject", object_id) on the created object.
+    - Either outcome is a real finding to be recorded, not a test to loosen.
+
     Question 3 is manual: render the created object on a device and confirm
     that a real scanner still reads a QR code uploaded this way. Replace the
     test PNG with an actual QR code to do so.
@@ -106,7 +117,12 @@ def test_two_private_images_on_one_object(issuer_id, integration_test_id):
 
     created = api.create(generic_object)
 
-    assert len(created.imageModulesData) == 2
+    returned_ids = {
+        module.mainImage.privateImageId
+        for module in created.imageModulesData or []
+        if module.mainImage is not None
+    }
+    assert returned_ids == {photo_id, qr_id}
 
 
 def test_a_private_image_cannot_be_reused(issuer_id, integration_test_id):
