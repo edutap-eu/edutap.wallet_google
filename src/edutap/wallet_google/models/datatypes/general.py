@@ -7,6 +7,7 @@ from .localized_string import LocalizedString
 from pydantic import AnyHttpUrl
 from pydantic import AnyUrl
 from pydantic import Field
+from pydantic import model_validator
 from typing import Annotated
 from typing_extensions import deprecated
 
@@ -64,6 +65,21 @@ class Image(DeprecatedKindFieldMixin, Model):
     sourceUri: ImageUri | None = None
     privateImageId: str | None = None
     contentDescription: LocalizedString | None = None
+
+    @model_validator(mode="after")
+    def _exactly_one_image_source(self) -> "Image":
+        """Google rejects an Image carrying both a URI and a private image id.
+
+        Setting neither stays permitted: an empty Image is used as a
+        placeholder in existing code, and every field here is optional.
+        """
+        if self.sourceUri is not None and self.privateImageId is not None:
+            raise ValueError(
+                "Image cannot have both sourceUri and privateImageId set. "
+                "Use sourceUri for publicly reachable images and "
+                "privateImageId for an uploaded private image."
+            )
+        return self
 
 
 class PassConstraints(Model):

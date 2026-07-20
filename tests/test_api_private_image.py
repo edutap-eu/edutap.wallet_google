@@ -53,3 +53,56 @@ def test_upload_url_tolerates_trailing_slash_in_setting(mock_settings):
         "https://example.org/upload/walletobjects/v1"
         "/privateContent/123/uploadPrivateImage"
     )
+
+
+def test_upload_private_image_response_parses():
+    """The response model reads the privateImageId out of the JSON body."""
+    from edutap.wallet_google.models.datatypes.private_content import (
+        UploadPrivateImageResponse,
+    )
+
+    response = UploadPrivateImageResponse.model_validate_json(
+        '{"privateImageId": "abc123"}'
+    )
+
+    assert response.privateImageId == "abc123"
+
+
+def test_image_accepts_private_image_id_alone():
+    """An Image referencing an uploaded private image is valid."""
+    from edutap.wallet_google.models.datatypes.general import Image
+
+    image = Image(privateImageId="abc123")
+
+    assert image.privateImageId == "abc123"
+    assert image.sourceUri is None
+
+
+def test_image_accepts_source_uri_alone():
+    """The classic public URL form stays valid."""
+    from edutap.wallet_google.models.datatypes.general import Image
+    from edutap.wallet_google.models.datatypes.general import ImageUri
+
+    image = Image(sourceUri=ImageUri(uri="https://example.org/photo.png"))
+
+    assert image.privateImageId is None
+
+
+def test_image_accepts_neither():
+    """An empty Image stays constructible, it is used as a placeholder."""
+    from edutap.wallet_google.models.datatypes.general import Image
+
+    assert Image().sourceUri is None
+
+
+def test_image_rejects_both_source_uri_and_private_image_id():
+    """Google rejects this server side; catch it while building the model."""
+    from edutap.wallet_google.models.datatypes.general import Image
+    from edutap.wallet_google.models.datatypes.general import ImageUri
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError, match="privateImageId"):
+        Image(
+            sourceUri=ImageUri(uri="https://example.org/photo.png"),
+            privateImageId="abc123",
+        )
