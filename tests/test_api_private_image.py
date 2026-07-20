@@ -7,22 +7,37 @@ import pytest
 import respx
 
 
-def test_settings_defaults(mock_settings):
+def test_settings_defaults(monkeypatch):
     """The new private image settings have usable defaults.
 
-    `issuer_id` is deliberately not asserted here: `Settings()` reads the
-    environment, and a developer with EDUTAP_WALLET_GOOGLE_ISSUER_ID set
-    would see a false failure. Its behaviour is covered by the
-    resolve_issuer_id tests, which set the value explicitly.
+    `Settings()` reads the environment, so every variable this test asserts
+    a default for is cleared first. The previous version of this test only
+    did that reasoning for `issuer_id` (left unasserted, covered instead by
+    the resolve_issuer_id tests below) but then went on to assert
+    `private_image_max_bytes` and the mime type list, which are read from
+    the environment exactly the same way and would have given a developer
+    with e.g. EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_MAX_BYTES set the exact
+    false failure the original docstring warned about.
     """
-    assert str(mock_settings.upload_api_url) == (
+    from edutap.wallet_google.settings import Settings
+
+    for var in (
+        "EDUTAP_WALLET_GOOGLE_UPLOAD_API_URL",
+        "EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_MAX_BYTES",
+        "EDUTAP_WALLET_GOOGLE_PRIVATE_IMAGE_ALLOWED_MIME_TYPES",
+    ):
+        monkeypatch.delenv(var, raising=False)
+
+    settings = Settings()
+
+    assert str(settings.upload_api_url) == (
         "https://walletobjects.googleapis.com/upload/walletobjects/v1"
     )
-    assert mock_settings.private_image_max_bytes == 5 * 1024 * 1024
-    assert "image/jpeg" in mock_settings.private_image_allowed_mime_types
-    assert "image/png" in mock_settings.private_image_allowed_mime_types
-    assert "image/webp" in mock_settings.private_image_allowed_mime_types
-    assert "image/gif" in mock_settings.private_image_allowed_mime_types
+    assert settings.private_image_max_bytes == 5 * 1024 * 1024
+    assert "image/jpeg" in settings.private_image_allowed_mime_types
+    assert "image/png" in settings.private_image_allowed_mime_types
+    assert "image/webp" in settings.private_image_allowed_mime_types
+    assert "image/gif" in settings.private_image_allowed_mime_types
 
 
 def test_upload_url_builds_path(mock_settings):
