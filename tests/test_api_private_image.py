@@ -220,3 +220,42 @@ def test_prepare_private_image_upload(mock_settings):
     )
     assert payload == b"raw"
     assert headers == {"Content-Type": "image/png"}
+
+
+# --- error hint ----------------------------------------------------------
+
+
+def test_handle_response_errors_appends_hint_on_403():
+    from edutap.wallet_google.exceptions import WalletException
+    from edutap.wallet_google.utils import handle_response_errors
+
+    import httpx
+
+    response = httpx.Response(403, text="forbidden")
+
+    with pytest.raises(WalletException, match="ask support"):
+        handle_response_errors(response, "upload", "PrivateImage", hint="ask support")
+
+
+def test_handle_response_errors_appends_hint_on_404():
+    from edutap.wallet_google.utils import handle_response_errors
+
+    import httpx
+
+    response = httpx.Response(404, text="not found")
+
+    with pytest.raises(LookupError, match="ask support"):
+        handle_response_errors(response, "upload", "PrivateImage", hint="ask support")
+
+
+def test_handle_response_errors_without_hint_is_unchanged():
+    from edutap.wallet_google.utils import handle_response_errors
+
+    import httpx
+
+    response = httpx.Response(404, text="not found")
+
+    with pytest.raises(LookupError) as excinfo:
+        handle_response_errors(response, "read", "GenericObject")
+
+    assert str(excinfo.value) == "GenericObject not found: not found"

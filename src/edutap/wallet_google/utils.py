@@ -114,6 +114,7 @@ def handle_response_errors(
     name: str,
     resource_id: str = "",
     allow_409: bool = False,
+    hint: str = "",
 ) -> None:
     """Handle HTTP response errors and raise appropriate exceptions.
 
@@ -122,6 +123,9 @@ def handle_response_errors(
     :param name:         Resource name for error messages
     :param resource_id:  Resource ID for error messages
     :param allow_409:    If True, don't raise exception on 409 (for create operations)
+    :param hint:         Optional extra note appended to access denied and not
+                         found messages, for endpoints whose failure mode is
+                         hard to diagnose from the status code alone.
     :raises QuotaExceededException: When API quota exceeded
     :raises LookupError:            When resource not found (404)
     :raises ObjectAlreadyExistsException: When resource already exists (409)
@@ -134,6 +138,8 @@ def handle_response_errors(
     if response.status_code == 200:
         return
 
+    hint_suffix = f" ({hint})" if hint else ""
+
     if response.status_code == 403:
         response_lower = response.text.lower()
         # Use word boundaries to avoid false positives like "accurate", "separate"
@@ -142,11 +148,12 @@ def handle_response_errors(
                 f"Quota exceeded while trying to {operation} {name} {resource_id}"
             )
         raise WalletException(
-            f"Access denied while trying to {operation} {name} {resource_id}: {response.text}"
+            f"Access denied while trying to {operation} {name} {resource_id}: "
+            f"{response.text}{hint_suffix}"
         )
 
     elif response.status_code == 404:
-        raise LookupError(f"{name} not found: {response.text}")
+        raise LookupError(f"{name} not found: {response.text}{hint_suffix}")
 
     elif response.status_code == 409:
         if allow_409:
