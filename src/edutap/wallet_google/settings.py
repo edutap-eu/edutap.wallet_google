@@ -11,6 +11,7 @@ import json
 ENV_PREFIX = "EDUTAP_WALLET_GOOGLE_"
 ROOT_DIR = Path(__file__).parent.parent.parent.parent.resolve()
 API_URL = "https://walletobjects.googleapis.com/walletobjects/v1"
+UPLOAD_API_URL = "https://walletobjects.googleapis.com/upload/walletobjects/v1"
 SAVE_URL = "https://pay.google.com/gp/v/save"
 SCOPES = ["https://www.googleapis.com/auth/wallet_object.issuer"]
 
@@ -33,6 +34,7 @@ class Settings(BaseSettings):
     )
 
     api_url: AnyHttpUrl = AnyHttpUrl(API_URL)
+    upload_api_url: AnyHttpUrl = AnyHttpUrl(UPLOAD_API_URL)
     save_url: AnyHttpUrl = AnyHttpUrl(SAVE_URL)
 
     handler_prefix: str = "/wallet/google"
@@ -51,6 +53,23 @@ class Settings(BaseSettings):
     credentials_file: Path = ROOT_DIR / "tests" / "data" / "credentials_fake.json"
     credentials_scopes: list[str] = SCOPES
     test_issuer_id: str = Field(default="")
+    issuer_id: str = Field(
+        default="",
+        description="Default issuer id, used when an API call does not receive one explicitly.",
+    )
+    private_image_max_bytes: int = Field(
+        default=5 * 1024 * 1024,
+        description="Maximum accepted size of a private image upload in bytes. 0 disables the check.",
+    )
+    private_image_allowed_mime_types: list[str] = Field(
+        default=[
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif",
+        ],
+        description="Mime types accepted for private image uploads.",
+    )
     sender_id: str = "GooglePayPasses"
 
     fernet_encryption_key: str = ""
