@@ -123,8 +123,8 @@ def handle_response_errors(
     :param name:         Resource name for error messages
     :param resource_id:  Resource ID for error messages
     :param allow_409:    If True, don't raise exception on 409 (for create operations)
-    :param hint:         Optional extra note appended to access denied and not
-                         found messages, for endpoints whose failure mode is
+    :param hint:         Optional extra note appended to error messages (403/404 and
+                         the generic non-2xx branch), for endpoints whose failure mode is
                          hard to diagnose from the status code alone.
     :raises QuotaExceededException: When API quota exceeded
     :raises LookupError:            When resource not found (404)
