@@ -372,8 +372,10 @@ def test_listing_validation_error_missing_resource_id():
 
 
 @respx.mock
-def test_listing_validation_error_missing_issuer_id():
+def test_listing_validation_error_missing_issuer_id(mock_settings):
     """Test that listing raises ValueError when issuer_id is missing for classes."""
+    mock_settings.issuer_id = ""
+
     with pytest.raises(ValueError) as exc_info:
         list(listing("GenericClass"))
 
