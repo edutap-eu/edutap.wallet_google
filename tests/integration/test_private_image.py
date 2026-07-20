@@ -16,6 +16,26 @@ superpowers/specs/2026-07-20-private-image-upload-design.md:
 2. May one object carry more than one private image?
 3. Does a private image render faithfully enough for a QR code to stay
    machine-readable? Manual, see `test_two_private_images_on_one_object`.
+
+Before running these, note:
+
+a. Expect the first test to fail, and treat that as the answer. The
+   discovery document's description of `Image.privateImageId` ends with
+   "Please contact support to use private images." — stronger evidence than
+   this file's cautious "possibly gated" framing. A rejection on the very
+   first upload is the likely outcome and a finding to record, not a bug to
+   chase.
+b. Every run of `test_two_private_images_on_one_object` costs two permanent
+   artefacts: it uploads both images *before* attempting the create, so if
+   Google rejects the second reference, two undeletable images are already
+   orphaned — and re-running to confirm that costs two more.
+c. A fully green run does NOT answer question 3. `tests/data/private_image_test.png`
+   is a 70-byte placeholder. The docstrings below tell the runner to
+   substitute a real QR code, but nothing fails, warns or skips if they
+   don't, so all three tests can pass while question 3 remains exactly as
+   open as before. If a QR code does not survive Google's re-encoding, the
+   student ID card use case is dead regardless of how questions 1 and 2
+   resolve.
 """
 
 from edutap.wallet_google import api
@@ -85,6 +105,11 @@ def test_two_private_images_on_one_object(issuer_id, integration_test_id):
       privateImageId back in the create response. The check must be redone by
       calling api.read("GenericObject", object_id) on the created object.
     - Either outcome is a real finding to be recorded, not a test to loosen.
+    - If a read or create fails with a Pydantic `ValidationError` naming
+      "Image cannot have both sourceUri and privateImageId set": Google
+      echoed both fields back on a response, the library's validator rejects
+      it, and the object has become unreadable through this library. That is
+      a finding to record, not a test to loosen either.
 
     Question 3 is manual: render the created object on a device and confirm
     that a real scanner still reads a QR code uploaded this way. Replace the
