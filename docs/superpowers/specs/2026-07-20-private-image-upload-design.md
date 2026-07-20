@@ -402,10 +402,30 @@ Mocked with `respx`, following the pattern of `test_api_sync.py` and
 Marked `@pytest.mark.integration`. Uploads a small real PNG and uses the
 returned id in a `GenericObject`.
 
-This test will fail for issuers that are not allowlisted, which is the normal
-state. It is therefore additionally gated behind
+Beyond the happy path it has to answer the questions the documentation leaves
+open. These are verification goals, not assertions that can be written blind:
+
+1. **Does an issuer need onboarding?** Establish what a non-onboarded issuer
+   receives, and with which status code, so the error message added in
+   *Error handling* can be worded from evidence rather than from the discovery
+   document's hint.
+2. **May one object carry more than one private image?** Upload two images and
+   reference both from separate `imageModulesData` entries on the same object.
+   The ESC use case depends on this; see the worked example.
+3. **How is a private image rendered compared to a `sourceUri` image?** Upload
+   a QR code and confirm it is still machine-readable on a device. This step is
+   manual — a scanner is required — and is documented as such rather than
+   automated.
+
+Gating: the test is additionally hidden behind
 `EDUTAP_WALLET_GOOGLE_TEST_PRIVATE_IMAGES=1` and skipped otherwise, so that
-`--run-integration` stays green for everyone else.
+`--run-integration` stays green for everyone else. Two reasons: the feature may
+require onboarding, and every run leaves permanently undeletable images and
+objects behind at Google.
+
+The findings from goals 1 to 3 are written back into this spec and into
+`docs/explanation.md` once known. Until then the corresponding statements in
+this document are explicitly marked unverified.
 
 ## Documentation
 
@@ -418,8 +438,9 @@ the Diátaxis structure already used in `docs/`.
 ### `docs/tutorials.md` — how-to
 
 Upload an image, place the id in `imageModulesData`, create the object. Uses
-the student ID card scenario, because it is the real motivating case (see
-*Worked example* below).
+the European Student Card scenario, because it is the real motivating case
+(see *Worked example* below) and because its two private images per pass make
+the persistence obligation concrete rather than theoretical.
 
 Second, shorter section: getting the image onto the **front** of the card via
 `classTemplateInfo.cardTemplateOverride`. Private images live in
@@ -536,70 +557,142 @@ One short paragraph: the feature exists, it may require onboarding with Google
 support, and it obliges the caller to persist the returned id. Someone hitting
 a 403 looks there first.
 
-## Worked example: student ID card (EUGLOH / demo service)
+## Worked example: European Student Card with two private images
 
-This is the case that motivates the feature, and the tutorial is written
-against it.
+The European Student Card as issued by LMU is the case that motivates the
+feature, and the tutorial is written against it. It is richer than a plain
+portrait, because it carries **two** person-specific images on the front of the
+card.
 
-`edutap.eugloh_samples` currently attaches student portraits to passes as
-public CDN URLs, for example in
-`src/edutap/eugloh_samples/data/id_data/simon_lund.py`:
+A note on the source material: `edutap.eugloh_samples` and
+`edutap.demo_service` are demonstration repositories. They deliberately take
+the shortest path — module-level sample data, images on a public CDN — and are
+not a description of how a production issuer should work. The example below
+describes the production shape; the demo repositories are cited only because
+they show the image layout of a real card.
+
+### The card
+
+Per issued pass, three images appear in `imageModulesData`:
+
+| module id | content | person-specific | rendering |
+| --- | --- | --- | --- |
+| `photo` | portrait | yes | front, via `cardTemplateOverride` |
+| `qr_code` | ESC QR code with the ESC logo, encoding the ESCN | yes | front, own card row |
+| `esc` | ESC programme logo | no, identical on every card | details view |
+
+Several portrait crops (square, round, boxed) may be held internally for
+different use cases, but exactly **one** of them ends up on the pass. Choosing
+the variant happens before the upload; it is not a concern of this library and
+does not multiply the number of uploads.
+
+So: **two uploads per issued pass**, one for the portrait and one for the QR
+code.
+
+### Why it matters
+
+The QR code is the stronger argument, not the portrait. Its URL is an opaque
+UUID, which is obscurity rather than access control, and its payload is the
+ESCN — a persistent personal identifier tied to the holder's institution.
+A production issuer must not serve the portrait and a personal identifier from
+an unauthenticated public origin. Private images remove that origin entirely:
+there is no URL to leak.
+
+The programme logo stays a public URL. It is not personal data, it is identical
+on every card, and since one private image serves exactly one object, moving it
+would mean one upload per issued pass for a constant image.
+
+### The class template needs no change
+
+This is the reassuring part. The `cardTemplateOverride` lives on the **class**
+and refers to module ids only:
 
 ```python
+FieldReference(fieldPath="object.imageModulesData['qr_code']")
+```
+
+The private image lives on the **object**. Classes cannot carry private images
+at all — and they do not need to. A single shared class template stays valid
+for every holder; only the object side changes. That `cardTemplateOverride`
+path is also the only way to get a private image onto the front of the card,
+since `imageModulesData` otherwise renders in the details view only.
+
+### Before and after
+
+```python
+# before: both personal images served from a public CDN
 image_data = [
     ImageModuleData(
         id="photo",
-        mainImage=Image(
-            sourceUri=ImageUri(
-                uri="https://cms-cdn.lmu.de/wallet-assets/lmu-ausweise/"
-                    "simon_lund_studierendenausweis.png",
-            ),
-        ),
+        mainImage=Image(sourceUri=ImageUri(uri=f"{CDN}/lmu-ausweise/{name}_box@3x.png")),
+    ),
+    ImageModuleData(
+        id="qr_code",
+        mainImage=Image(sourceUri=ImageUri(uri=f"{CDN}/card-{card_uuid}.png")),
     ),
     ImageModuleData(
         id="esc",
-        mainImage=Image(
-            sourceUri=ImageUri(uri="https://cms-cdn.lmu.de/wallet-assets/esc.png"),
-        ),
+        mainImage=Image(sourceUri=ImageUri(uri=f"{CDN}/esc.png")),
     ),
 ]
 ```
 
-The portrait is a personal photograph served from a publicly reachable URL.
-With private images it becomes:
-
 ```python
+# after: persist each id immediately after its upload, then create the object
 photo_id = api.upload_private_image(portrait_bytes, "image/png")
+store.put(object_id, "photo", photo_id)
+
+qr_id = api.upload_private_image(qr_code_bytes, "image/png")
+store.put(object_id, "qr_code", qr_id)
 
 image_data = [
-    ImageModuleData(
-        id="photo",
-        mainImage=Image(privateImageId=photo_id),
-    ),
-    # The ESC logo stays a public URL: it is not personal data, it is
-    # identical on every pass, and private images cannot be shared
-    # between objects.
+    ImageModuleData(id="photo", mainImage=Image(privateImageId=photo_id)),
+    ImageModuleData(id="qr_code", mainImage=Image(privateImageId=qr_id)),
+    # unchanged: shared, non-personal, one image would serve one object only
     ImageModuleData(
         id="esc",
-        mainImage=Image(
-            sourceUri=ImageUri(uri="https://cms-cdn.lmu.de/wallet-assets/esc.png"),
-        ),
+        mainImage=Image(sourceUri=ImageUri(uri=f"{CDN}/esc.png")),
     ),
 ]
 ```
 
-Two things the example must teach explicitly:
+Persisting after **each** upload rather than once before `create()` matters
+here: with two uploads the failure surface doubles. If the second upload fails,
+the first id must still be recoverable, otherwise that image is orphaned.
 
-- Only the **personal** image moves to a private image. A shared logo must not,
-  because one upload serves exactly one object — a logo on 10 000 passes would
-  mean 10 000 uploads.
-- `photo_id` has to be written to the application's store keyed by the object
-  id before `api.create()` runs.
+This is also why the store is keyed by `(object_id, module_id)` rather than by
+object alone — with two private images per pass, an object-keyed schema would
+be wrong.
 
-In `edutap.demo_service`, where passes are generated per request in
-`src/edutap/demo_service/demos/`, the same rule applies: the upload belongs
-into the pass-creation path together with a write to the application's
-persistence, not into the module-level sample data.
+### Lifecycle over an academic year
+
+- Changing the validity period is a `patch` on the same object id. The images
+  stay valid and are not re-uploaded.
+- Re-issuing the card produces a new object, which needs two new uploads. The
+  previous images cannot be transferred and cannot be deleted.
+
+### Open questions this example raises
+
+Both must be answered by the integration test before the ESC use case can be
+considered supported. Neither is answered by Google's documentation:
+
+1. **More than one private image per object.** Google states that an image can
+   be used with a single object; nothing states how many private images an
+   object may carry, and `imageModulesData` is a list. The ESC card requires
+   two. Plausible, but unverified — if it does not hold, the use case does not
+   work.
+2. **Rendering fidelity for functional images.** The QR code is scanned, and it
+   carries a logo overlay, which already consumes error-correction headroom.
+   Whether Google re-encodes, recompresses or rescales private images
+   differently from `sourceUri` images is undocumented. For a portrait a
+   quality loss would be cosmetic; here it can break scannability. The test
+   must render the pass on a device and read the code with a real scanner, not
+   merely assert that the upload returned an id.
+
+A third, operational consequence: because objects cannot be deleted and private
+images cannot be deleted either, every integration test run against the real
+API leaves two permanent images behind. This reinforces the decision to gate
+those tests behind their own environment flag.
 
 ## Explicitly not included
 
