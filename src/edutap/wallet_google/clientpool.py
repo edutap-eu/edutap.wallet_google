@@ -161,6 +161,23 @@ class ClientPoolManager:
         model_metadata = lookup_metadata_by_name(name)
         return f"{self.settings.api_url}/{model_metadata['url_part']}{additional_path}"
 
+    def upload_url(self, path: str) -> str:
+        """
+        Create the URL for a media upload endpoint.
+
+        Media uploads do not live below the regular API URL but below a
+        separate `/upload` prefix, so this cannot reuse `url()`.
+
+        :param path:        Path below the API version, must start with a
+                            forward slash.
+        :raises ValueError: When the path does not start with a forward slash.
+        :return:            The url of the Google upload endpoint.
+        """
+        if not path.startswith("/"):
+            raise ValueError("path must start with a forward slash")
+        prefix = str(self.settings.upload_api_url).rstrip("/")
+        return f"{prefix}{path}"
+
 
 # Singleton instance for both sync and async operations
 client_pool = ClientPoolManager()
