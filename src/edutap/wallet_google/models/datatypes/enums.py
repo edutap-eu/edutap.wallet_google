@@ -362,12 +362,33 @@ class State(CamelCaseAliasEnum):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/State
          https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/State
+
+    The official reference page does not spell out the semantic difference
+    between COMPLETED, EXPIRED, and INACTIVE — in the Wallet app they all
+    behave the same way (pass is moved to the "Expired passes" section).
+    The distinction is convention/intent only, inferred from Google's
+    per-vertical "Expired passes" how-to guides, e.g.
+    https://developers.google.com/wallet/generic/use-cases/expired-passes
     """
 
+    # Treated as ACTIVE by the Wallet app when the field is omitted.
     STATE_UNSPECIFIED = "STATE_UNSPECIFIED"
+
+    # Pass is current and shown in the main "Passes" view.
     ACTIVE = "ACTIVE"
+
+    # Pass was used / fulfilled (one-shot artifact: boarding pass after the
+    # flight, ticket after entry, loyalty challenge achieved, gift card
+    # redeemed to zero).
     COMPLETED = "COMPLETED"
+
+    # Pass's time-based validity has ended (coupon date passed, event date
+    # in the past). Pairs conceptually with validTimeInterval.end.
     EXPIRED = "EXPIRED"
+
+    # Administratively disabled by the issuer, but not expired by date and
+    # not completed by use. Right pick for revocations, suspensions, or
+    # "temporarily withdrawn" passes that may be re-activated later.
     INACTIVE = "INACTIVE"
 
 
