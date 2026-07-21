@@ -32,9 +32,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "authlib",
+    "authlib>=1.7.2",
     "cryptography",
     "httpx",
+    "joserfc",
     "pydantic-settings",
     "pydantic[email]>=2.0",
   ]
