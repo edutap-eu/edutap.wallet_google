@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Bring `edutap.wallet_google` up to the project's tooling standard — a `Makefile` as the uniform entry point, PEP 639 and PEP 735 packaging metadata, an `sdist` that stops shipping internal documents, a `ty` pin that can actually be updated, and the full ruff rule selection.
+**Goal:** Bring `edutap.wallet_google` up to the project's tooling standard — a `Makefile` as the uniform entry point, PEP 639 and PEP 735 packaging metadata with version constraints Renovate can act on, an `sdist` that stops shipping internal documents, a `ty` pin that can actually be updated, and the full ruff rule selection.
 
-**Architecture:** Five independent changes on one branch, in an order that matters: the packaging metadata defines the `dev` dependency group that the `Makefile` then installs, and the linter rules go last so their large diffs do not sit underneath everything else during review.
+**Architecture:** Five independent changes on one branch, in an order that matters: the packaging metadata (Task 1) defines the `dev` dependency group — and gives every entry in it, in `[build-system.requires]`, and in the `callback` extra a real version constraint, which is what makes any of them visible to Renovate at all — that the `Makefile` (Task 2) then installs and depends on finding `ruff` and `ty` in. The linter rules go last so their large diffs do not sit underneath everything else during review. The six runtime dependencies in `[project.dependencies]` are out of scope for every task: their open floors stay open, by design — see the spec's Part 5.
 
 **Tech Stack:** hatchling, uv, prek, ruff, ty, tox, pytest.
 
@@ -16,6 +16,7 @@
 - Conventional Commits. Commit messages, code, comments and identifiers in English.
 - **Do not drop Python 3.10 support in this branch.** Its end of life is 2026-10-31, which has not happened. Narrowing `requires-python` in a published library is a breaking change and belongs in its own release.
 - **Do not write the 144 missing docstrings.** The `D1xx` rules stay in `ignore`; see Task 5.
+- **Do not add upper bounds to the six runtime dependencies in `[project.dependencies]`.** Their open floors are deliberate — see the spec's Part 5 — even though Task 1 adds ceilings to `ruff` and `ty` in the dev tooling. Those are not the same kind of dependency and not the same decision.
 - `tests/` stays in the sdist. A distribution packager wants to run the suite.
 - After Task 1 the install command everywhere is `uv pip install -U -e ".[callback]" --group dev`. `[test]`, `[typecheck]` and `[develop]` no longer exist as extras.
 - Each task ends with a green `pytest` before its commit. The suite is fast; run it.
@@ -34,7 +35,7 @@ uv pip install -e ".[test,develop]"   # the *old* extras; Task 1 replaces them
 
 | File | Responsibility | Task |
 | --- | --- | --- |
-| `pyproject.toml` | license expression, dependency groups, sdist contents, ruff rules, dated 3.10 marker | 1, 3, 4, 5 |
+| `pyproject.toml` | license expression, dependency groups and their version constraints, `build-system.requires` floors, sdist contents, ruff rules, dated 3.10 marker | 1, 3, 4, 5 |
 | `MANIFEST.in` | deleted — hatchling never read it | 1 |
 | `Makefile` | uniform entry point to the common workflows (create) | 2 |
 | `.pre-commit-config.yaml` | `ty` moves to the official hook repository | 3 |
@@ -46,15 +47,24 @@ uv pip install -e ".[test,develop]"   # the *old* extras; Task 1 replaces them
 
 ---
 
-### Task 1: Packaging metadata
+### Task 1: Packaging metadata and dependency version constraints
+
+This task also carries the spec's Part 5: giving every entry in `[dependency-groups]`, the
+`callback` extra, and `[build-system.requires]` a real version constraint. It belongs here
+rather than in a new Task 7 because Step 4 below is the only place `[dependency-groups]` is
+written — adding the constraints later would mean re-editing the exact TOML block this task
+just wrote, for no benefit. Nothing about the constraints depends on Tasks 2-5, but Task 2
+runs the other way: `make lint` (Task 2, Step 1) calls `$(PYTHON) -m ruff check`, and `ruff`
+was never a project dependency before this task added it to the new `lint` group — without
+Step 4 below, Task 2's `Makefile` would have nothing installed to find.
 
 **Files:**
-- Modify: `pyproject.toml:13-33` (license, classifiers), `:51-71` (extras → groups), `[tool.tox.env_run_base]`
+- Modify: `pyproject.toml:13-33` (license, classifiers), `[build-system.requires]`, `:51-71` (extras → groups, with version constraints), `[tool.tox.env_run_base]`
 - Delete: `MANIFEST.in`
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: the extra `callback` and the dependency groups `test`, `typecheck`, `dev`. Every later task and the `Makefile` install with `-e ".[callback]" --group dev`.
+- Produces: the extra `callback` and the dependency groups `test`, `lint`, `typecheck`, `dev`, every entry version-constrained, plus a floored `[build-system.requires]`. Every later task and the `Makefile` install with `-e ".[callback]" --group dev`; Task 2's `make lint` additionally depends on `ruff` and `ty` resolving out of this group.
 
 - [ ] **Step 1: Record what the sdist contains today**
 
@@ -88,7 +98,39 @@ and delete this line from `classifiers`:
 
 PEP 639 forbids carrying both a license expression and a license classifier; leaving the classifier in makes the build fail rather than warn.
 
-- [ ] **Step 3: Move the development extras to dependency groups**
+- [ ] **Step 3: Floor `[build-system.requires]`**
+
+In `pyproject.toml`, replace:
+
+```toml
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+```
+
+with:
+
+```toml
+[build-system]
+requires = [
+    # 1.27.0 is the first hatchling release that builds a PEP 639 license
+    # expression as Metadata-Version 2.4 with License-Expression/License-File
+    # fields (Step 2 above). 1.26.x accepts the license-files array syntax
+    # without erroring but silently builds Metadata-Version 2.3 with no
+    # license fields at all; 1.24.0 and 1.25.0 reject the syntax outright.
+    # Verified by building a throwaway package against all four.
+    "hatchling>=1.27.0",
+    "hatch-vcs>=0.5.0",  # the version currently resolving; no feature drives this floor
+]
+build-backend = "hatchling.build"
+```
+
+Both were bare names before this, so Renovate skipped them outright
+(`skipReason: "unspecified-version"`); see the spec's Part 5 for the mechanism. Step 9
+below re-verifies the `Metadata-Version: 2.4` output, which doubles as confirmation that
+1.27.0 is actually sufficient.
+
+- [ ] **Step 4: Move the development extras to dependency groups, with version constraints**
 
 Replace the whole `[project.optional-dependencies]` block (lines 51-71) with:
 
@@ -96,35 +138,58 @@ Replace the whole `[project.optional-dependencies]` block (lines 51-71) with:
 [project.optional-dependencies]
 # The only extra a consumer of this library installs. Everything else that used
 # to live here is a dependency group below: groups are not published in the
-# wheel metadata, which is the right place for tooling nobody downstream needs.
+# wheel metadata, which is the right place for tooling nobody downstream needs
+# — and, per the spec's Part 5, the right place to give Renovate a version
+# constraint to act on, which none of these had before.
 callback = [
-    "fastapi",
+    "fastapi>=0.141.1",
 ]
 
 [dependency-groups]
 test = [
-    "freezegun",
-    "pytest-asyncio",
-    "pytest-cov",
-    "pytest-explicit",
-    "pytest",
-    "respx",
-    "tox",
+    "freezegun>=1.5.5",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "pytest-explicit>=1.0.1",
+    "pytest>=9.1.1",
+    "respx>=0.23.1",
+    "tox>=4.58.0",
+]
+lint = [
+    # Ceiling as well as floor: a ruff minor release changes what it reports
+    # and reformats files that were correct under the previous one — matches
+    # edutap.data_provider's own ruff>=0.16,<0.17, and matches the version
+    # already pinned in .pre-commit-config.yaml (v0.16.1) so the hook and
+    # this group cannot silently disagree. ruff was never a project
+    # dependency before this; it only ran inside pre-commit/prek's own
+    # isolated environment.
+    "ruff>=0.16.1,<0.17",
 ]
 typecheck = [
-    "ty",
+    # Ceiling as well as floor, for the same reason as ruff: ty is pre-1.0
+    # and moves fast enough that Task 3 jumps it 49 releases in one commit.
+    # Its releases are all 0.0.x, so there is no separate minor line to float
+    # within — the ceiling pins the current release exactly and asks for a
+    # deliberate bump, and a look at what changed, every single time.
+    "ty>=0.0.66,<0.0.67",
 ]
 dev = [
     {include-group = "test"},
+    {include-group = "lint"},
     {include-group = "typecheck"},
-    "pdbp>=1.7.1", # the maintained successor to pdbpp
+    "pdbp>=1.7.1", # the maintained successor to pdbpp; already floored, unchanged
     # "ipython",  not recommended with pdpb, better use ipdb then
 ]
 ```
 
 Note what is **not** there: the old `test` extra began with `"edutap.wallet-google[callback]"`. Inside an extra that is a recursive self-reference; inside a dependency group it is an ordinary requirement and would be resolved against PyPI, pulling the published package over the local checkout. `callback` therefore moves to the install command instead.
 
-- [ ] **Step 4: Point tox at the group**
+Every floor above is the version that resolved in a fresh `uv venv` + `uv pip install -e
+".[callback,test,typecheck]"` on 2026-08-05, cross-checked against PyPI's current release
+the same day — not a guess. `pdbp` already had a floor for an unrelated reason and stays
+unchanged.
+
+- [ ] **Step 5: Point tox at the group**
 
 In `[tool.tox.env_run_base]`, replace:
 
@@ -139,19 +204,20 @@ extras = ["callback"]
 dependency_groups = ["dev"]
 ```
 
-tox 4.58 supports both keys together. `dev` pulls `test` and `typecheck` in through `include-group`.
+tox 4.58 supports both keys together. `dev` pulls `test`, `lint` and `typecheck` in through `include-group`.
 
-- [ ] **Step 5: Verify the install resolves**
+- [ ] **Step 6: Verify the install resolves**
 
 ```bash
 uv pip install -e ".[callback]" --group dev
+uv pip list | grep -E "^(fastapi|ruff|ty|pdbp) "
 ```
 
-Expected: resolves and installs, including `fastapi`, `pytest`, `ty` and `pdbp`.
+Expected: resolves and installs, including `fastapi`, `pytest`, `ruff`, `ty` and `pdbp` — the second command's versions must be at or above the floors just written in Step 4.
 
-Read the output rather than only the exit code. `edutap-wallet-google` must appear as the local editable path, not as a *downloaded* package — if it is downloaded, a self-reference survived Step 3 and the checkout is being shadowed by the published release.
+Read the output rather than only the exit code. `edutap-wallet-google` must appear as the local editable path, not as a *downloaded* package — if it is downloaded, a self-reference survived Step 4 and the checkout is being shadowed by the published release.
 
-- [ ] **Step 6: Constrain the sdist and delete `MANIFEST.in`**
+- [ ] **Step 7: Constrain the sdist and delete `MANIFEST.in`**
 
 Add to `pyproject.toml`, next to the existing `[tool.hatch.build.targets.wheel]`:
 
@@ -179,7 +245,7 @@ Then:
 git rm MANIFEST.in
 ```
 
-- [ ] **Step 7: Diff the sdist against the baseline**
+- [ ] **Step 8: Diff the sdist against the baseline**
 
 ```bash
 uvx --from build pyproject-build --sdist --outdir dist-after .
@@ -197,7 +263,7 @@ Expected in the diff, as removals only: `.claude/*`, `.dockerignore`, `.editorco
 
 **Every `src/` and `tests/` path must be unchanged.** A removal under either is a mistake in the `include` list, not an improvement.
 
-- [ ] **Step 8: Confirm the license metadata in the built artefact**
+- [ ] **Step 9: Confirm the license metadata in the built artefact**
 
 ```bash
 python3 -c "
@@ -208,9 +274,9 @@ print(t.extractfile(name).read().decode()[:600])
 "
 ```
 
-Expected: `Metadata-Version: 2.4`, `License-Expression: EUPL-1.2`, `License-File: LICENSE`, and **no** `Classifier: License :: OSI Approved …`.
+Expected: `Metadata-Version: 2.4`, `License-Expression: EUPL-1.2`, `License-File: LICENSE`, and **no** `Classifier: License :: OSI Approved …`. This also confirms Step 3's `hatchling>=1.27.0` floor is sufficient — it is the same output that floor was derived from.
 
-- [ ] **Step 9: Clean up and run the suite**
+- [ ] **Step 10: Clean up and run the suite**
 
 ```bash
 rm -rf dist-before dist-after sdist-before.txt sdist-after.txt
@@ -219,23 +285,36 @@ pytest
 
 Expected: PASS.
 
-- [ ] **Step 10: Commit**
+- [ ] **Step 11: Commit**
 
-`MANIFEST.in` was already staged for deletion by the `git rm` in Step 6.
+`MANIFEST.in` was already staged for deletion by the `git rm` in Step 7.
 
 ```bash
 git add pyproject.toml
-git commit -m "build: adopt PEP 639 and PEP 735, and stop shipping internal docs
+git commit -m "build: adopt PEP 639 and PEP 735, and give Renovate real dependency versions
 
 The PEP 639 TODO in pyproject.toml is redeemable: hatchling emits
 Metadata-Version 2.4 with License-Expression, so the license text field and
-the license classifier both go.
+the license classifier both go. hatchling>=1.27.0 is now an explicit floor,
+since it is the first release that actually does this; 1.26.x accepts the
+syntax but silently drops the license fields.
 
 test, typecheck and develop were extras, which published them in the wheel
-metadata although no consumer installs them; they become dependency groups,
-with develop renamed dev. The self-reference to [callback] cannot come along —
-in a group it would resolve against PyPI rather than the checkout — so it
-moves to the install command.
+metadata although no consumer installs them; they become dependency groups
+(test, lint, typecheck, dev), with develop renamed dev and lint newly split
+out for ruff. The self-reference to [callback] cannot come along — in a
+group it would resolve against PyPI rather than the checkout — so it moves
+to the install command.
+
+Every entry in the new groups, in the callback extra, and in
+build-system.requires was previously a bare name or, in pdbp's case, already
+floored — Renovate's pep621 manager skips bare names outright
+(skipReason: unspecified-version) and leaves floors it already satisfies
+untouched. None of them are published in the wheel, so a real constraint
+costs a consumer nothing. ruff and ty additionally get a ceiling, because a
+minor release of either changes behaviour rather than only fixing it. The
+six runtime dependencies in [project.dependencies] are untouched: their open
+floors are deliberate, and the reasoning is in the spec's Part 5.
 
 MANIFEST.in never did anything: hatchling does not read it, and the sdist it
 claimed to trim still contained docs/ and .claude/. An explicit sdist target
@@ -719,7 +798,13 @@ Run: `grep -rn "MANIFEST" --exclude-dir=.git --exclude-dir=.venv .`
 
 Expected: no hits. In particular `[tool.check-manifest]` may still list entries that only made sense with it; leave the section, it is check-manifest's own configuration.
 
-- [ ] **Step 4: Review the whole diff by area**
+- [ ] **Step 4: Confirm no bare-name dependency survived in the touched blocks**
+
+Run: `grep -nE '^\s*"[a-zA-Z][a-zA-Z0-9._-]*",?\s*(#.*)?$' pyproject.toml`
+
+This also matches bare strings that are not dependencies at all — `testpaths`, `explicit-only` and similar list entries — ignore those; read the surrounding block for each hit. Expected: no hits inside `[project.optional-dependencies]`, `[dependency-groups]` or `[build-system.requires]` — every entry there now carries at least a floor (Task 1). `[project.dependencies]` is expected to still show bare entries for `httpx` and `joserfc`; those are two of the six runtime dependencies with no version constraint by design, per the spec's Part 5, and this task does not touch them.
+
+- [ ] **Step 5: Review the whole diff by area**
 
 ```bash
 git diff main...HEAD -- pyproject.toml Makefile .pre-commit-config.yaml
@@ -728,16 +813,17 @@ git diff main...HEAD --stat -- src tests
 
 The first is the substance and should be read line by line. The second is mostly docstring churn from Task 5 and is reviewed by its own commits.
 
-- [ ] **Step 5: Write the pull request description**
+- [ ] **Step 6: Write the pull request description**
 
-Structure it by the five commits' subjects, and state:
+Structure it by the commits' subjects, and state:
 
 1. `[test]`, `[typecheck]` and `[develop]` no longer exist — the install command is now `uv pip install -e ".[callback]" --group dev`. Anyone with a sibling checkout referencing the old extras has to change it.
 2. The sdist lost about 40 files of CI configuration and internal notes; `src/` and `tests/` are unchanged, verified by a file-list diff.
 3. Python 3.10 support is deliberately **not** dropped, and why.
 4. The `D1xx` docstring rules are deliberately ignored, with the count (144) and where the comment explaining it lives.
 5. The ty jump from 0.0.17 to 0.0.66 and anything it made necessary in `[tool.ty.rules]`.
+6. Every `[dependency-groups]`, `callback` and `[build-system.requires]` entry now carries a version constraint Renovate can act on — the sibling `chore/renovate` PR (#95) found none of them actionable before this. The six runtime dependencies in `[project.dependencies]` deliberately keep their open floors; see the spec's Part 5.
 
-- [ ] **Step 6: Stop**
+- [ ] **Step 7: Stop**
 
 Do not push. The user pushes and opens the pull request.

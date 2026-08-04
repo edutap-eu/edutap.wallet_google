@@ -14,10 +14,13 @@ are four gaps, each verified rather than assumed:
 3. Two packaging standards the project can now adopt — one of which its own `pyproject.toml`
    already carries a TODO for — plus an `sdist` that ships internal working documents.
 4. The ruff rule selection is narrower than the project standard.
+5. None of the repository's Python dependencies are actionable by Renovate — not because
+   Renovate is misconfigured, but because of how they are declared here, verified from
+   Renovate's source during a sibling branch's review.
 
-These are grouped into four parts below. They land on one branch,
+These are grouped into five parts below. They land on one branch,
 `chore/package-modernisation`, because they overlap heavily in `pyproject.toml` and
-splitting them would mean four branches rebasing over each other for the same file.
+splitting them would mean five branches rebasing over each other for the same file.
 
 ## Part 1: Makefile and prek
 
@@ -238,6 +241,127 @@ Only 2 of the fixes are *safe*; the other 305 need `--unsafe-fixes`, which rewri
 docstring text rather than only layout. That pass is therefore reviewed rather than
 trusted — but it is not worth splitting off a safe-only commit containing two lines.
 
+## Part 5: Dependency version constraints, so Renovate has something to act on
+
+A sibling branch, `chore/renovate` (PR #95), added a Renovate configuration to this
+repository. Its review turned up something the Renovate configuration itself cannot fix:
+measured against `pyproject.toml` on `main`, Renovate can act on none of the Python
+dependencies.
+
+| Block | Entries | Actionable | Why not |
+| --- | --- | --- | --- |
+| `[project.dependencies]` | 6 | 0 | `httpx`, `joserfc` are bare names; `authlib>=1.7.2`, `cryptography>=48.0.1`, `pydantic-settings>=2.14.2`, `pydantic[email]>=2.0` are open floors |
+| `[project.optional-dependencies]` | 11 | 0 | ten bare names (`fastapi`, `freezegun`, `pytest`, `pytest-asyncio`, `pytest-cov`, `pytest-explicit`, `respx`, `tox`, `ty`, and the `edutap.wallet-google[callback]` self-reference); one open floor, `pdbp>=1.7.1` |
+| `[build-system.requires]` | 2 | 0 | `hatchling`, `hatch-vcs`, both bare |
+
+### The mechanism
+
+Established from Renovate's source, not just from its observed behaviour on this one repo.
+Two separate reasons produce the same zero:
+
+A dependency with no version operator at all — `httpx`, `joserfc`, and the ten bare names
+above — gets `skipReason: "unspecified-version"` in Renovate's pep621 manager and is
+skipped before any update logic runs.
+
+A dependency with an open `>=` floor and no ceiling *is* processed, but the pep621
+manager's default `rangeStrategy` is `replace`, and `replace` only rewrites a range when
+the candidate version does not already satisfy it. An open floor is satisfied by every
+future release by construction, so `replace` returns the range unchanged forever. This is
+not specific to runtime dependencies — it is exactly why `pdbp>=1.7.1` is equally inert
+today.
+
+The one thing that does move an open floor is a security advisory: Renovate's
+`vulnerabilityAlerts` preset defaults `rangeStrategy` to `bump` with no lockfile involved,
+`prCreation` to `"immediate"`, and `schedule` to empty — none of the usual scheduling or
+range-preservation rules apply to a vulnerability fix. That is not hypothetical: it is how
+`authlib>=1.7.2`, `cryptography>=48.0.1` and `pydantic-settings>=2.14.2` reached their
+current floors, in PR #93 ("chore: stop tracking uv.lock and raise runtime dependency
+floors").
+
+So Renovate's effective coverage of this repository, as configured on `chore/renovate`, is
+GitHub Actions and nothing in `pyproject.toml`.
+
+### Runtime dependencies keep their open floors
+
+This is deliberate, not an oversight left for later. An upper bound on a *library's*
+runtime dependency creates an unsolvable resolution conflict for every consumer who needs
+a newer release of that dependency for a reason of their own — this package does not get
+to decide that for them. The floors themselves are security floors: the comment already
+sitting above `[project.dependencies]` says "Keep them as floors, not equalities," and that
+comment is untouched by this plan.
+
+`rangeStrategy: "bump"` project-wide is rejected for the identical reason a ceiling is: it
+would ratchet every runtime floor to the newest release on every publication of `authlib`,
+`cryptography`, and the rest, forcing every downstream consumer onto that floor in
+lockstep with a package they may not otherwise need to touch.
+
+The one path that legitimately moves a runtime floor is exactly the one already in use — a
+`vulnerabilityAlerts`-triggered PR, as in PR #93. Nothing in this part changes that path or
+touches the six entries in `[project.dependencies]`. This is written down here so it
+survives contact with someone who, on seeing the Renovate coverage table above,
+"helpfully" adds ceilings to fix it.
+
+### The non-published dependencies get real version constraints
+
+After this plan's Task 1, everything except `callback` lives in `[dependency-groups]`, and
+a dependency group is never written into the wheel or sdist metadata — nothing that
+installs this package as a dependency ever resolves it. Constraining these costs a
+consumer of the library nothing, and it is the difference between "skipped" and
+"actionable" for Renovate.
+
+Every entry gets at least a floor, and the floor is the version measured resolving in a
+fresh install on 2026-08-05 — `uv venv` followed by `uv pip install -e
+".[callback,test,typecheck]"` in a clean checkout, cross-checked against the version PyPI
+reports as current the same day — not a guess:
+
+| Dependency | Floor | Source |
+| --- | --- | --- |
+| `fastapi` | `>=0.141.1` | fresh install |
+| `freezegun` | `>=1.5.5` | fresh install |
+| `pytest` | `>=9.1.1` | fresh install |
+| `pytest-asyncio` | `>=1.4.0` | fresh install |
+| `pytest-cov` | `>=7.1.0` | fresh install |
+| `pytest-explicit` | `>=1.0.1` | fresh install |
+| `respx` | `>=0.23.1` | fresh install |
+| `tox` | `>=4.58.0` | fresh install |
+| `pdbp` | `>=1.7.1` (unchanged) | already floored, for an unrelated reason — see its own comment |
+
+Two tools get a ceiling as well as a floor, because a minor release changes what they
+*report*, not only what they fix:
+
+- **`ruff`** — a minor release changes what the linter flags and reformats files that were
+  correct under the previous minor. This is exactly `edutap.data_provider`'s own
+  `ruff>=0.16,<0.17`, and the floor here — `>=0.16.1,<0.17` — is the version currently
+  pinned in `.pre-commit-config.yaml` (`v0.16.1`) and confirmed as PyPI's latest release on
+  2026-08-05, so the pre-commit hook and the dependency-group entry cannot silently
+  disagree. `ruff` was not previously a project dependency at all — it only ever ran inside
+  `pre-commit`/`prek`'s own isolated environment — so this also closes a latent gap: without
+  it, `make lint`'s `$(PYTHON) -m ruff …` (Task 2) would have nothing installed to find.
+- **`ty`** — pre-1.0 and moving fast enough that this plan's Task 3 jumps it 49 releases in
+  one commit. `ty`'s releases are all `0.0.x`; there is no separate minor line to float
+  within, so the ceiling — `>=0.0.66,<0.0.67` — pins the exact current release and requires
+  a deliberate bump, and a look at the diagnostics it adds (per Task 3), for every single
+  release that follows. That is the right amount of friction for a tool this early in its
+  life.
+
+`[build-system.requires]` gets floors too:
+
+- **`hatchling`** needs one anyway, for a reason independent of Renovate: this plan's Task 1
+  adopts PEP 639, and `license = "EUPL-1.2"` with `license-files = ["LICENSE"]` only
+  produces a `Metadata-Version: 2.4` build with `License-Expression`/`License-File` fields
+  from a hatchling that understands the array-of-strings form of `license-files`. Verified
+  by building a throwaway package against four hatchling releases: 1.24.0 and 1.25.0 reject
+  the syntax outright (`TypeError: Field 'project.license-files' must be a table` — the
+  pre-PEP-639 table-of-globs form); 1.26.0 through 1.26.3 accept it without error but
+  silently build `Metadata-Version: 2.3` with no license fields at all; 1.27.0 is the first
+  release that emits `Metadata-Version: 2.4`, `License-Expression: EUPL-1.2`,
+  `License-File: LICENSE`. The floor is `hatchling>=1.27.0` — the minimum that makes Task
+  1's own change work, not merely the version that happens to be installed today (1.31.0).
+  This makes Task 1's implicit requirement explicit instead of leaving it to be discovered
+  as an opaque, silent metadata downgrade.
+- **`hatch-vcs`** has no such constraint driving it; its floor, `>=0.5.0`, is simply the
+  version PyPI reports as current on 2026-08-05.
+
 ## Non-goals
 
 Writing the 144 missing docstrings. Dropping Python 3.10. Replacing tox, hatchling or
@@ -245,7 +369,9 @@ pytest. Adding a local `docs/conf.py` — the documentation is built centrally f
 docs.edutap.eu, and giving this repository a second, divergent Sphinx configuration would
 create a build that agrees with nothing. It is a real gap, noted here so it is not
 rediscovered, and it needs a decision at the level of the whole eduTAP documentation
-tree rather than in this package.
+tree rather than in this package. **Adding upper bounds to the six runtime dependencies in
+`[project.dependencies]`** — Part 5 explains why that is a deliberate non-goal, not
+something left for later: it would break dependency resolution for consumers.
 
 ## Risks
 
@@ -259,10 +385,17 @@ tree rather than in this package.
   `edutap.wallet-google[develop]`.** That is a development-only extra of a library, so the
   blast radius is this repository and any sibling checkout that names it. `grep` for it
   before merging.
+- **The `ruff` and `ty` ceilings mean every one of their releases needs a manual (or
+  Renovate-proposed) bump, not just the ones that matter.** That is the intended trade-off
+  for two tools whose minor releases change behaviour — see Part 5 — but it means more
+  version-bump PRs to review than the other dependency-group entries generate.
 
 ## Verification
 
 `make lint`, `make test-local` and `make test-matrix` all green. An sdist built before and
 after, with the two file lists diffed explicitly. `uv pip install -e ".[callback]" --group
 dev` resolving in a clean environment. A wheel's `METADATA` showing
-`License-Expression: EUPL-1.2`.
+`License-Expression: EUPL-1.2`. Every entry in `[dependency-groups]`, the `callback`
+extra, and `[build-system.requires]` carrying a version constraint — `grep` confirms no
+bare names remain — with `ruff`'s floor matching what `.pre-commit-config.yaml` pins, so
+`make lint` and the pre-commit hook cannot silently run different versions.
