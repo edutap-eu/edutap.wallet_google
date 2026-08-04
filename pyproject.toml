@@ -32,11 +32,14 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    # Lower bounds pin out known security vulnerabilities in these runtime
+    # dependencies. Keep them as floors, not equalities: consumers still
+    # resolve the actual version against their own environment.
     "authlib>=1.7.2",
-    "cryptography",
+    "cryptography>=48.0.1",  # <48.0.1: vulnerable OpenSSL bundled in wheels (high)
     "httpx",
     "joserfc",
-    "pydantic-settings",
+    "pydantic-settings>=2.14.2",  # 2.12.0..2.14.1: symlink escape in secrets source
     "pydantic[email]>=2.0",
   ]
 

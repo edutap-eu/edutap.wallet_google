@@ -47,3 +47,7 @@ credential_file.json
 
 # IDE
 .idea
+
+# uv lockfile — this is a library, consumers resolve their own versions from
+# the ranges in pyproject.toml; a committed lock only adds Dependabot noise.
+uv.lock
