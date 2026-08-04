@@ -13,6 +13,11 @@
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
 
   extends: [
+    // Also brings in `:ignoreModulesAndTests`, whose ignorePaths cover
+    // `**/examples/**` and `**/tests/**` — so
+    // `examples/edutap_wallet_google_example_callback/pyproject.toml` and
+    // `tests/data/test_wallet_google_plugins/pyproject.toml` are not watched.
+    // Desirable here, but it's a preset decision, not one made in this file.
     "config:recommended",
     // Once a week, before 4 AM. Dependency updates are not news; a Monday morning
     // batch is read, a stream through the week is dismissed.
@@ -37,6 +42,13 @@
 
   // No automerge anywhere. Green CI proves the suite still passes, not that the
   // update is one we want.
+  //
+  // The two rules below cover project.dependencies and
+  // project.optional-dependencies, not the whole pep621 surface: build-system.requires
+  // (hatchling, hatch-vcs) and requires-python are also extracted by the pep621
+  // manager and match neither rule, so an update to either would arrive ungrouped
+  // under config:recommended's defaults. Nobody pins either today, so this is
+  // acknowledged rather than given a third rule.
   packageRules: [
     {
       matchManagers: ["github-actions"],
@@ -54,9 +66,26 @@
       // The runtime dependencies, which every consumer of this library resolves
       // against. Each one on its own, so the pull request is about that library.
       //
-      // These carry lower bounds rather than bare names since PR #93, and several
-      // of those bounds exist to pin out a specific advisory — read the comment
-      // beside the dependency in pyproject.toml before lowering one.
+      // Most of these carry lower bounds (`>=`) rather than bare names since PR #93;
+      // httpx and joserfc are still bare names for now. Several of the bounds exist
+      // to pin out a specific advisory — read the comment beside the dependency in
+      // pyproject.toml before lowering one.
+      //
+      // In practice this rule rarely fires. The pep621 manager exports no
+      // getRangeStrategy, so rangeStrategy: "auto" resolves to "replace"; for pep440,
+      // "replace" leaves an open `>=` floor unchanged whenever the newer version
+      // already satisfies it — which every floor above does, by construction. httpx
+      // and joserfc, being bare names, are skipped outright
+      // (skipReason: "unspecified-version"). This is intended, not an oversight: the
+      // floors are deliberate advisory pins, not something we want Renovate ratcheting
+      // upward on every release.
+      //
+      // The mitigating case is security advisories, which bypass all of the above.
+      // vulnerabilityAlerts defaults to rangeStrategy: "update-lockfile", which with no
+      // lockfile here becomes "bump", plus prCreation: "immediate" and schedule: [] —
+      // so a vulnerability alert does raise a floor, immediately, ignoring the Monday
+      // schedule. That is how the floors from PR #93 came about in the first place,
+      // and it's the real synergy with keeping Dependabot security alerts on.
       matchManagers: ["pep621"],
       matchDepTypes: ["project.dependencies"],
       groupName: null,
