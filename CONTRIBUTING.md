@@ -52,8 +52,14 @@ Dependency updates arrive as pull requests from two bots, neither of which
 merges anything on its own:
 
 - **Renovate** (hosted Mend app, configured in `renovate.json5`) watches the
-  dependencies in `pyproject.toml` and the actions in `.github/workflows/`.
-  It opens pull requests once a week, on Monday morning.
+  actions in `.github/workflows/` and reliably opens pull requests for those.
+  For the dependencies in `pyproject.toml` it currently opens pull requests
+  mostly for the `[project.optional-dependencies]` extras: the runtime
+  dependencies use open `>=` floors, and Renovate's default range strategy
+  leaves those unchanged whenever a newer release still satisfies them, so
+  routine updates rarely produce a pull request. A *security* advisory is the
+  exception — those raise a floor immediately, any day of the week, not just
+  the Monday batch. Renovate checks in before 4am every Monday regardless.
 - **pre-commit.ci** watches the hook revisions in `.pre-commit-config.yaml`
   and opens a pull request monthly.
 
