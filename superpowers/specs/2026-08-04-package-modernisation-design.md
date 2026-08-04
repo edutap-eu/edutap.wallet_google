@@ -1,0 +1,268 @@
+# Package modernisation: Makefile, packaging metadata, tool pins, linter rules
+
+Status: designed, ready to implement.
+
+## Why
+
+The package is already on the current toolchain in the ways that matter most — uv drives
+CI and tox, ruff is the only linter and formatter, ty is the type checker, the tox matrix
+lives in `[tool.tox]` as native TOML, and the version comes from `hatch-vcs`. What is left
+are four gaps, each verified rather than assumed:
+
+1. There is no `Makefile`, so there is no uniform entry point to the common workflows.
+2. Two things carry a silent expiry date: the `ty` pin and Python 3.10 support.
+3. Two packaging standards the project can now adopt — one of which its own `pyproject.toml`
+   already carries a TODO for — plus an `sdist` that ships internal working documents.
+4. The ruff rule selection is narrower than the project standard.
+
+These are grouped into four parts below. They land on one branch,
+`chore/package-modernisation`, because they overlap heavily in `pyproject.toml` and
+splitting them would mean four branches rebasing over each other for the same file.
+
+## Part 1: Makefile and prek
+
+### Makefile
+
+`edutap.data_provider` already has one, and it is the template: a `PYTHON := .venv/bin/python`
+variable, a self-documenting `help` default goal, and `venv` as a prerequisite of every
+other target so no one runs `make lint` against a missing environment.
+
+The targets, matching the project standard:
+
+| Target | Does |
+| --- | --- |
+| `help` | lists the targets (default goal) |
+| `venv` | `uv venv` plus `uv pip install -U -e ".[callback]" --group dev` |
+| `lint` | `ruff check`, `ruff format --check`, `ty check` |
+| `reformat` | `ruff format`, `ruff check --fix` |
+| `test-local` | `pytest` — the unit suite |
+| `test-integration` | `pytest --run-integration` — needs Google credentials |
+| `test-matrix` | `uvx --with "tox-uv,tox-gh" tox` — every supported Python |
+
+`test-matrix` is this package's third suite, in the slot the standard leaves open for
+"further, more expensive suites". It is separate from `test-local` because it builds five
+interpreters' worth of environments.
+
+Tools are called through `$(PYTHON) -m …` rather than `uv run`, for data_provider's
+recorded reason: this package declares an entry point group, and a bare `uv run` resolves
+it against the whole environment.
+
+### prek
+
+`prek` replaces `pre-commit` as the local hook runner. It reads the same
+`.pre-commit-config.yaml`, so nothing about the hooks changes — only the two tox
+environments `format` and `lint`, whose `deps` and `commands` name `pre-commit` today.
+
+pre-commit.ci keeps running server-side on the real `pre-commit`; the two coexist by
+design, and the `ci:` block in `.pre-commit-config.yaml` is untouched.
+
+## Part 2: Packaging metadata
+
+### PEP 639 — the TODO in `pyproject.toml` is now redeemable
+
+`pyproject.toml` carries an eight-line comment asking for the SPDX license expression
+"when implemented in PyPI, twine, pyroma, etc." It is implemented. Verified by building a
+throwaway package with hatchling 1.31:
+
+```
+Metadata-Version: 2.4
+License-Expression: EUPL-1.2
+License-File: LICENSE
+```
+
+So `license = { text = "EUPL 1.2" }` becomes `license = "EUPL-1.2"`, `license-files =
+["LICENSE"]` is added, the `License :: OSI Approved :: …` classifier goes (PEP 639 forbids
+carrying both), and the TODO block is deleted.
+
+### PEP 735 — dev dependencies are not extras
+
+`test`, `typecheck` and `develop` are declared as extras today, which publishes them in the
+wheel metadata even though no consumer of the library would ever install
+`edutap.wallet-google[test]`. They become `[dependency-groups]`, which is the standard for
+exactly this, and `develop` is renamed `dev` in the move — free, because dependency groups
+are not published metadata.
+
+`callback` stays a real extra. It is the one a consumer genuinely installs.
+
+**The self-reference has to go.** The `test` extra currently begins with
+`"edutap.wallet-google[callback]"`. Inside `[project.optional-dependencies]` that is a
+well-defined recursive self-reference; inside a dependency group it is not special-cased at
+all and would be resolved against an index, i.e. it would pull the *published* package from
+PyPI over the local checkout. So `callback` comes off the group and onto the install
+command, and `dev` pulls the other groups in through `include-group`:
+
+```toml
+[project.optional-dependencies]
+callback = ["fastapi"]
+
+[dependency-groups]
+test = ["freezegun", "pytest", "pytest-asyncio", "pytest-cov", "pytest-explicit", "respx", "tox"]
+typecheck = ["ty"]
+dev = [
+    {include-group = "test"},
+    {include-group = "typecheck"},
+    "pdbp>=1.7.1",
+]
+```
+
+Verified in a throwaway project: `uv pip install -e ".[callback]" --group dev` resolves the
+local editable package, the extra and all three groups transitively. tox 4.58 ships native
+`dependency_groups` support (`tox/tox_env/python/dependency_groups.py`, registered as a
+config key in `tox_env/python/runner.py`) and accepts it alongside `extras`, so the tox
+environments change from `extras = ["test", "develop"]` to `extras = ["callback"]` plus
+`dependency_groups = ["dev"]`.
+
+### The sdist ships internal working documents
+
+`MANIFEST.in` is dead. It is a setuptools file, hatchling does not read it, and the sdist
+proves it: `MANIFEST.in` says `recursive-exclude docs *` and `recursive-exclude .claude *`,
+yet an sdist built from `main` contains both. The full top level of the current sdist:
+
+```
+.claude  .dockerignore  .editorconfig  .github  .gitignore  .pre-commit-config.yaml
+CLAUDE.md  CONTRIBUTING.md  LICENSE  MANIFEST.in  PKG-INFO  README.md  RELEASING.md
+docs  examples  pyproject.toml  src  superpowers  tests
+```
+
+108 files, including `superpowers/` (internal specs and plans), `CLAUDE.md`, `.claude/` and
+the CI configuration. None of that belongs in a distribution on PyPI.
+
+The fix is an explicit `[tool.hatch.build.targets.sdist]` section. `tests/` **stays** — a
+consumer packaging this for a distribution wants to run the suite — and so do `README.md`,
+`LICENSE`, `CONTRIBUTING.md` and `pyproject.toml`. Everything else at the top level goes,
+and `MANIFEST.in` is deleted with it.
+
+`check-manifest` stays as a hook. Its job — noticing that a file tracked in git is missing
+from the sdist — is still worth doing, and it is the thing that will complain if the new
+`sdist` section is too aggressive.
+
+## Part 3: The two things with an expiry date
+
+### The `ty` pin cannot be updated by anything
+
+`.pre-commit-config.yaml` runs ty as a `local` hook: `entry: uvx ty@0.0.17 check`. That pin
+is at 0.0.17; ty is at 0.0.66. Nothing will ever move it — pre-commit's `autoupdate` only
+rewrites the `rev:` of remote repositories, and no Renovate manager reads a version out of
+an `entry` string. It has been stuck for 49 releases and would stay stuck.
+
+`astral-sh/ty-pre-commit` exists and is the official hook repository. Switching to it puts
+the version in a `rev:` where pre-commit.ci's monthly autoupdate can reach it:
+
+```yaml
+-   repo: https://github.com/astral-sh/ty-pre-commit
+    rev: v0.0.66
+    hooks:
+    -   id: ty
+```
+
+The hook is `pass_filenames: false` and `always_run: true`, matching the current local
+hook's behaviour. `ty` must come out of the `skip:` list in the `ci:` block once it is a
+remote hook that pre-commit.ci can actually run — unless it turns out to be too slow there,
+in which case it stays skipped and the point still stands, because the *revision* is now
+maintained either way.
+
+Given ty is pre-1.0 and moves fast, expect the jump from 0.0.17 to 0.0.66 to surface new
+diagnostics. `[tool.ty.rules]` already downgrades four rules to warnings; anything new gets
+the same treatment or a fix, and the jump is its own commit so the noise is reviewable.
+
+### Python 3.10 reaches end of life on 2026-10-31
+
+That is under three months away. The package declares `requires-python = ">=3.10"` and
+tests py310 through py314.
+
+**Support is not dropped in this branch.** 3.10 is still supported today, and narrowing
+`requires-python` in a published library is a breaking change for consumers — it belongs in
+its own release with its own note, not smuggled into a modernisation branch.
+
+What this branch does is make sure it is not forgotten: a dated comment beside
+`requires-python` naming the date and listing every place that changes with it
+(`requires-python`, `classifiers`, `[tool.ruff] target-version`, `[tool.ty.environment]
+python-version`, `[tool.tox] env_list`, `[tool.tox.gh.python]`, the CI matrix in
+`tests.yaml`), plus a line in `RELEASING.md`.
+
+## Part 4: ruff rule groups
+
+Current selection is `["E", "F", "W", "I", "UP"]`. The project standard also names `B`
+(bugbear), `S` (bandit/security) and `D` (pydocstyle). Measured against the code on `main`
+with ruff 0.16.1:
+
+### B — 15 findings, all worth fixing
+
+```
+8  B904  raise-without-from-inside-except
+3  B007  unused-loop-control-variable
+2  B018  useless-expression
+1  B017  assert-raises-exception
+1  B019  cached-instance-method
+```
+
+`B904` is the substantive one: eight `raise` statements inside `except` blocks that lose
+the original traceback. `B019` (`cached-instance-method`) is a genuine memory-leak class of
+bug and needs looking at rather than silencing.
+
+### S — 408 findings, of which 4 are in `src` and 3 of those are false positives
+
+```
+src:    3 S105 hardcoded-password-string, 1 S101 assert
+tests:  404 S101 assert
+```
+
+`S101` in tests is what pytest is: `per-file-ignores` for `tests/**`. The three `S105` are
+a `token_endpoint` URL constant, an enum member named `GENERIC_SEASON_PASS`, and one
+further match — each gets a `# noqa: S105` with the reason, not a blanket ignore, so a real
+hardcoded secret would still be caught.
+
+### D — 508 findings, 201 after autofix, 57 after excluding the undocumented rules
+
+`D` is enabled together with `[tool.ruff.lint.pydocstyle] convention = "pep257"`. The
+convention is not cosmetic: without it there are 864 findings rather than 508, because
+`D212`, `D213`, `D415` and `D404` are all active, and those belong to conventions this
+project does not follow. It also settles the `D203`/`D211` and `D212`/`D213`
+incompatibilities that ruff otherwise warns about on every run, so no explicit `ignore`
+entry is needed for them — verified, the warnings disappear.
+
+Measured on a scratch copy with the convention set: `ruff check --select D --fix
+--unsafe-fixes` takes 508 down to 201. What is left splits cleanly:
+
+| | Count | Nature |
+| --- | --- | --- |
+| `D100`/`D101`/`D102`/`D103`/`D104`/`D107` | 144 | missing docstrings — writing prose |
+| `D401`, `D205`, `D400` | 57 | wording and layout of docstrings that exist |
+
+So `D` is enabled with the `D1xx` "undocumented" rules ignored, the 57 remaining fixed by
+hand, and writing the 144 missing docstrings left as separate future work. Enabling `D1xx`
+now would mean either 144 hastily-written docstrings or a permanent blanket ignore, and
+both are worse than an honest, narrow exclusion.
+
+Only 2 of the fixes are *safe*; the other 305 need `--unsafe-fixes`, which rewrites
+docstring text rather than only layout. That pass is therefore reviewed rather than
+trusted — but it is not worth splitting off a safe-only commit containing two lines.
+
+## Non-goals
+
+Writing the 144 missing docstrings. Dropping Python 3.10. Replacing tox, hatchling or
+pytest. Adding a local `docs/conf.py` — the documentation is built centrally for
+docs.edutap.eu, and giving this repository a second, divergent Sphinx configuration would
+create a build that agrees with nothing. It is a real gap, noted here so it is not
+rediscovered, and it needs a decision at the level of the whole eduTAP documentation
+tree rather than in this package.
+
+## Risks
+
+- **The ty jump from 0.0.17 to 0.0.66 will surface diagnostics.** Expected, its own commit.
+- **The `--unsafe-fixes` docstring pass touches a lot of files.** Its whole value is the
+  reviewable diff; anyone merging without reading it gets what they deserve.
+- **The new `[tool.hatch.build.targets.sdist]` could exclude something needed.** The check
+  is a file-list comparison of the sdist before and after, not a guess. `check-manifest`
+  stays as the second net.
+- **Renaming the `develop` extra to a `dev` group breaks anyone installing
+  `edutap.wallet-google[develop]`.** That is a development-only extra of a library, so the
+  blast radius is this repository and any sibling checkout that names it. `grep` for it
+  before merging.
+
+## Verification
+
+`make lint`, `make test-local` and `make test-matrix` all green. An sdist built before and
+after, with the two file lists diffed explicitly. `uv pip install -e ".[callback]" --group
+dev` resolving in a clean environment. A wheel's `METADATA` showing
+`License-Expression: EUPL-1.2`.
