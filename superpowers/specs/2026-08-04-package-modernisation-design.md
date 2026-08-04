@@ -256,30 +256,38 @@ dependencies.
 
 ### The mechanism
 
-Established from Renovate's source, not just from its observed behaviour on this one repo.
-Two separate reasons produce the same zero:
+Confirmed by running Renovate itself against the repository (`--dry-run=full`, v44.11.6),
+not only by reasoning from its source. An earlier version of this section relied on the
+source-code mechanism alone and got the next section's conclusion wrong — see "Floors are
+necessary but not sufficient" below for what the dry run corrected.
+
+Two separate reasons produce the same zero in the table above:
 
 A dependency with no version operator at all — `httpx`, `joserfc`, and the ten bare names
 above — gets `skipReason: "unspecified-version"` in Renovate's pep621 manager and is
-skipped before any update logic runs.
+skipped before any update logic runs. The dry run reports exactly 15 of these.
 
 A dependency with an open `>=` floor and no ceiling *is* processed, but the pep621
 manager's default `rangeStrategy` is `replace`, and `replace` only rewrites a range when
 the candidate version does not already satisfy it. An open floor is satisfied by every
 future release by construction, so `replace` returns the range unchanged forever. This is
 not specific to runtime dependencies — it is exactly why `pdbp>=1.7.1` is equally inert
-today.
+today, and the dry run confirms it: `authlib`, `cryptography`, `pydantic-settings`,
+`pydantic` and `pdbp` are all extracted with no `skipReason`, and not one of them produces
+an update.
 
-The one thing that does move an open floor is a security advisory: Renovate's
-`vulnerabilityAlerts` preset defaults `rangeStrategy` to `bump` with no lockfile involved,
-`prCreation` to `"immediate"`, and `schedule` to empty — none of the usual scheduling or
-range-preservation rules apply to a vulnerability fix. That is not hypothetical: it is how
-`authlib>=1.7.2`, `cryptography>=48.0.1` and `pydantic-settings>=2.14.2` reached their
-current floors, in PR #93 ("chore: stop tracking uv.lock and raise runtime dependency
-floors").
+The one thing that does move an open floor without a config change is a security advisory:
+Renovate's `vulnerabilityAlerts` preset defaults `rangeStrategy` to `bump` with no lockfile
+involved, `prCreation` to `"immediate"`, and `schedule` to empty — none of the usual
+scheduling or range-preservation rules apply to a vulnerability fix. That is not
+hypothetical: it is how `authlib>=1.7.2`, `cryptography>=48.0.1` and
+`pydantic-settings>=2.14.2` reached their current floors, in PR #93 ("chore: stop tracking
+uv.lock and raise runtime dependency floors").
 
-So Renovate's effective coverage of this repository, as configured on `chore/renovate`, is
-GitHub Actions and nothing in `pyproject.toml`.
+So Renovate's effective coverage of this repository, as configured on `chore/renovate`
+before this part, is GitHub Actions and nothing in `pyproject.toml`: the dry run's only two
+proposed branches, repository-wide, are `renovate/astral-sh-setup-uv-9.x` and
+`renovate/hynek-build-and-inspect-python-package-3.x`.
 
 ### Runtime dependencies keep their open floors
 
@@ -290,10 +298,13 @@ to decide that for them. The floors themselves are security floors: the comment 
 sitting above `[project.dependencies]` says "Keep them as floors, not equalities," and that
 comment is untouched by this plan.
 
-`rangeStrategy: "bump"` project-wide is rejected for the identical reason a ceiling is: it
-would ratchet every runtime floor to the newest release on every publication of `authlib`,
-`cryptography`, and the rest, forcing every downstream consumer onto that floor in
-lockstep with a package they may not otherwise need to touch.
+`rangeStrategy: "bump"` — the fix this part applies elsewhere, see below — is rejected here
+project-wide for the identical reason a ceiling is: it would ratchet every runtime floor to
+the newest release on every publication of `authlib`, `cryptography`, and the rest, forcing
+every downstream consumer onto that floor in lockstep with a package they may not otherwise
+need to touch. That contrast is exactly why `bump` is safe for the dependency groups below
+and rejected here: nothing downstream resolves a dependency group, but every consumer of
+this library resolves `[project.dependencies]`.
 
 The one path that legitimately moves a runtime floor is exactly the one already in use — a
 `vulnerabilityAlerts`-triggered PR, as in PR #93. Nothing in this part changes that path or
@@ -301,13 +312,41 @@ touches the six entries in `[project.dependencies]`. This is written down here s
 survives contact with someone who, on seeing the Renovate coverage table above,
 "helpfully" adds ceilings to fix it.
 
+### Floors are necessary but not sufficient
+
+The first version of this part said "every entry gets at least a floor" and treated that as
+the fix. It is necessary — an unfloored entry is skipped outright — but the dry run showed
+it is not sufficient: `pdbp>=1.7.1` is the control case. It was already a floored,
+already-a-dependency-group-shaped entry before any of this part's other changes, and
+Renovate's dry run still produced nothing for it, for the mechanism reason above —
+`replace` leaves a satisfied floor untouched. Giving every other entry in
+`[dependency-groups]` the same kind of open floor would have reproduced exactly the same
+nothing. Two branches, both GitHub Actions, is what the whole repository's Renovate
+configuration currently proposes; zero of them touch a Python dependency.
+
+The fix is pairing the floor with `rangeStrategy: "bump"` on the packageRule that matches
+these entries in `renovate.json5` — not on the manager or the repository as a whole, only
+on the rule that already groups them as "development dependencies." `bump` raises the floor
+itself to each new release, rather than leaving a satisfied floor alone. That is exactly the
+mechanism the `vulnerabilityAlerts` preset already uses for a security advisory (previous
+section); this part turns it on permanently, but only for the entries where doing so is
+free — nothing downstream resolves a dependency group, an optional extra nobody but this
+repository's own tooling installs, or `[build-system.requires]`, so ratcheting all three
+forward on every release costs no consumer anything. `[project.dependencies]` gets none of
+this, for the reason in the previous section.
+
+`renovate.json5` is not in this checkout. It lives on `chore/renovate` (PR #95), still
+open. This branch can state the rule change here and write it into the implementation plan,
+but cannot make the edit until #95 merges to `main` and `chore/package-modernisation` is
+rebased onto the result — see Global Constraints in the plan, and Task 1's final steps.
+
 ### The non-published dependencies get real version constraints
 
 After this plan's Task 1, everything except `callback` lives in `[dependency-groups]`, and
 a dependency group is never written into the wheel or sdist metadata — nothing that
 installs this package as a dependency ever resolves it. Constraining these costs a
-consumer of the library nothing, and it is the difference between "skipped" and
-"actionable" for Renovate.
+consumer of the library nothing, which is what makes `bump` safe for them; the constraint
+itself is what stops Renovate skipping them outright.
 
 Every entry gets at least a floor, and the floor is the version measured resolving in a
 fresh install on 2026-08-05 — `uv venv` followed by `uv pip install -e
@@ -324,10 +363,12 @@ reports as current the same day — not a guess:
 | `pytest-explicit` | `>=1.0.1` | fresh install |
 | `respx` | `>=0.23.1` | fresh install |
 | `tox` | `>=4.58.0` | fresh install |
-| `pdbp` | `>=1.7.1` (unchanged) | already floored, for an unrelated reason — see its own comment |
+| `pdbp` | `>=1.7.1` (unchanged) | already floored, for an unrelated reason — see its own comment; the entry `bump` is defined against |
 
-Two tools get a ceiling as well as a floor, because a minor release changes what they
-*report*, not only what they fix:
+Two tools get a ceiling as well as a floor. With `bump` in place this is no longer what
+makes them visible to Renovate — every entry in the group gets that from `bump` regardless
+of a ceiling — so the ceilings are kept on their own merits, not as part of the
+actionability mechanism:
 
 - **`ruff`** — a minor release changes what the linter flags and reformats files that were
   correct under the previous minor. This is exactly `edutap.data_provider`'s own
@@ -336,15 +377,23 @@ Two tools get a ceiling as well as a floor, because a minor release changes what
   2026-08-05, so the pre-commit hook and the dependency-group entry cannot silently
   disagree. `ruff` was not previously a project dependency at all — it only ever ran inside
   `pre-commit`/`prek`'s own isolated environment — so this also closes a latent gap: without
-  it, `make lint`'s `$(PYTHON) -m ruff …` (Task 2) would have nothing installed to find.
+  it, `make lint`'s `$(PYTHON) -m ruff …` (Task 2) would have nothing installed to find. The
+  ceiling means `bump` can keep advancing the floor silently through patch releases inside
+  `0.16.x`, which ruff's own release policy keeps behaviour-stable, while a release that
+  crosses into `0.17` still needs a deliberate ceiling change — whether `bump` actually
+  respects an upper bound that way, rather than proposing to jump straight past it, is
+  unverified and worth checking the first time Task 1's Step 13 dry run sees a `0.17`
+  release available.
 - **`ty`** — pre-1.0 and moving fast enough that this plan's Task 3 jumps it 49 releases in
   one commit. `ty`'s releases are all `0.0.x`; there is no separate minor line to float
-  within, so the ceiling — `>=0.0.66,<0.0.67` — pins the exact current release and requires
-  a deliberate bump, and a look at the diagnostics it adds (per Task 3), for every single
-  release that follows. That is the right amount of friction for a tool this early in its
-  life.
+  within, so the ceiling — `>=0.0.66,<0.0.67` — pins the exact current release, meaning
+  every single subsequent release needs a deliberate ceiling change and a look at the
+  diagnostics it adds (per Task 3), `bump` or not. That is the right amount of friction for
+  a tool this early in its life.
 
-`[build-system.requires]` gets floors too:
+`[build-system.requires]` gets floors too, and — since it is exactly as unpublished as a
+dependency group — the same `bump` rangeStrategy, via the same `renovate.json5` rule
+extended to match it:
 
 - **`hatchling`** needs one anyway, for a reason independent of Renovate: this plan's Task 1
   adopts PEP 639, and `license = "EUPL-1.2"` with `license-files = ["LICENSE"]` only
@@ -361,6 +410,25 @@ Two tools get a ceiling as well as a floor, because a minor release changes what
   as an opaque, silent metadata downgrade.
 - **`hatch-vcs`** has no such constraint driving it; its floor, `>=0.5.0`, is simply the
   version PyPI reports as current on 2026-08-05.
+
+### The `renovate.json5` change this depends on
+
+The floors above are this branch's job and land in Task 1 regardless. The pairing with
+`rangeStrategy: "bump"` is a `renovate.json5` edit, and that file does not exist on
+`chore/package-modernisation` — it is being added by the sibling `chore/renovate` branch
+(PR #95), still open at the time of writing. Concretely, the "development dependencies"
+packageRule there currently reads `matchDepTypes: ["project.optional-dependencies"]`; after
+Task 1 moves most of what it matches into `[dependency-groups]`, that needs to become
+`matchDepTypes: ["project.optional-dependencies", "dependency-groups",
+"build-system.requires"]` with `rangeStrategy: "bump"` added — folding
+`build-system.requires` into the same rule closes a gap `chore/renovate`'s own comment
+already flags ("build-system.requires … match neither rule … acknowledged rather than given
+a third rule"), rather than leaving it to become a second, near-identical rule.
+
+This branch can write that change down — Task 1's Steps 12-13 do — but cannot commit it
+until #95 merges to `main` and `chore/package-modernisation` is rebased onto the result.
+Until then, this part's floors are real and the `bump` pairing is designed but not yet
+applied.
 
 ## Non-goals
 
@@ -389,6 +457,14 @@ something left for later: it would break dependency resolution for consumers.
   Renovate-proposed) bump, not just the ones that matter.** That is the intended trade-off
   for two tools whose minor releases change behaviour — see Part 5 — but it means more
   version-bump PRs to review than the other dependency-group entries generate.
+- **The `renovate.json5` half of Part 5 cannot land with this branch.** It depends on PR
+  #95 merging first; until then the floors this branch adds are real but inert in exactly
+  the way `pdbp>=1.7.1` already is. Task 1's Steps 12-13 exist to make sure that edit does
+  not get forgotten once #95 merges — the floors alone are easy to mistake for "done."
+- **Whether Renovate's `bump` strategy respects an explicit ceiling, rather than proposing
+  to jump straight past it, is asserted here but not yet verified against this repository.**
+  The first dry run that sees a release cross one of the `ruff`/`ty` ceilings (Task 1, Step
+  13) is the actual test.
 
 ## Verification
 
@@ -398,4 +474,8 @@ dev` resolving in a clean environment. A wheel's `METADATA` showing
 `License-Expression: EUPL-1.2`. Every entry in `[dependency-groups]`, the `callback`
 extra, and `[build-system.requires]` carrying a version constraint — `grep` confirms no
 bare names remain — with `ruff`'s floor matching what `.pre-commit-config.yaml` pins, so
-`make lint` and the pre-commit hook cannot silently run different versions.
+`make lint` and the pre-commit hook cannot silently run different versions. Once #95 has
+merged and this branch is rebased: a Renovate dry run (`--dry-run=full`) showing the
+`development dependencies` rule's entries extracted with `rangeStrategy: "bump"` and no
+`skipReason` — the same dry run that, before the `renovate.json5` change, produced only
+two branches repository-wide and none for a Python dependency.

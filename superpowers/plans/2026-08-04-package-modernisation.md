@@ -4,7 +4,7 @@
 
 **Goal:** Bring `edutap.wallet_google` up to the project's tooling standard — a `Makefile` as the uniform entry point, PEP 639 and PEP 735 packaging metadata with version constraints Renovate can act on, an `sdist` that stops shipping internal documents, a `ty` pin that can actually be updated, and the full ruff rule selection.
 
-**Architecture:** Five independent changes on one branch, in an order that matters: the packaging metadata (Task 1) defines the `dev` dependency group — and gives every entry in it, in `[build-system.requires]`, and in the `callback` extra a real version constraint, which is what makes any of them visible to Renovate at all — that the `Makefile` (Task 2) then installs and depends on finding `ruff` and `ty` in. The linter rules go last so their large diffs do not sit underneath everything else during review. The six runtime dependencies in `[project.dependencies]` are out of scope for every task: their open floors stay open, by design — see the spec's Part 5.
+**Architecture:** Five independent changes on one branch, in an order that matters: the packaging metadata (Task 1) defines the `dev` dependency group — and gives every entry in it, in `[build-system.requires]`, and in the `callback` extra a real version constraint. A floor alone only stops Renovate from skipping an entry outright; making it actually actionable needs `rangeStrategy: "bump"` on the matching `renovate.json5` rule too — Task 1's final steps carry that, gated on the sibling `chore/renovate` PR (#95) merging first. The `Makefile` (Task 2) then installs from the same group and depends on finding `ruff` and `ty` in it. The linter rules go last so their large diffs do not sit underneath everything else during review. The six runtime dependencies in `[project.dependencies]` are out of scope for every task: their open floors stay open, by design — see the spec's Part 5.
 
 **Tech Stack:** hatchling, uv, prek, ruff, ty, tox, pytest.
 
@@ -17,6 +17,7 @@
 - **Do not drop Python 3.10 support in this branch.** Its end of life is 2026-10-31, which has not happened. Narrowing `requires-python` in a published library is a breaking change and belongs in its own release.
 - **Do not write the 144 missing docstrings.** The `D1xx` rules stay in `ignore`; see Task 5.
 - **Do not add upper bounds to the six runtime dependencies in `[project.dependencies]`.** Their open floors are deliberate — see the spec's Part 5 — even though Task 1 adds ceilings to `ruff` and `ty` in the dev tooling. Those are not the same kind of dependency and not the same decision.
+- **`renovate.json5` does not exist on this branch.** It lives on `chore/renovate` (PR #95), still open. Task 1's Steps 12-13 — pairing the new floors with `rangeStrategy: "bump"` — cannot run until #95 merges to `main` and `chore/package-modernisation` is rebased onto the result. Do not attempt them before then, and do not let that dependency block the rest of Task 1 or the branch: Steps 1-11 do not touch `renovate.json5` and have no reason to wait.
 - `tests/` stays in the sdist. A distribution packager wants to run the suite.
 - After Task 1 the install command everywhere is `uv pip install -U -e ".[callback]" --group dev`. `[test]`, `[typecheck]` and `[develop]` no longer exist as extras.
 - Each task ends with a green `pytest` before its commit. The suite is fast; run it.
@@ -37,6 +38,7 @@ uv pip install -e ".[test,develop]"   # the *old* extras; Task 1 replaces them
 | --- | --- | --- |
 | `pyproject.toml` | license expression, dependency groups and their version constraints, `build-system.requires` floors, sdist contents, ruff rules, dated 3.10 marker | 1, 3, 4, 5 |
 | `MANIFEST.in` | deleted — hatchling never read it | 1 |
+| `renovate.json5` (not on this branch yet — arrives with #95) | pair the new floors with `rangeStrategy: "bump"` so they are actionable, not just present | 1 (Steps 12-13, blocked on #95) |
 | `Makefile` | uniform entry point to the common workflows (create) | 2 |
 | `.pre-commit-config.yaml` | `ty` moves to the official hook repository | 3 |
 | `RELEASING.md` | the Python 3.10 removal checklist | 3 |
@@ -58,13 +60,30 @@ runs the other way: `make lint` (Task 2, Step 1) calls `$(PYTHON) -m ruff check`
 was never a project dependency before this task added it to the new `lint` group — without
 Step 4 below, Task 2's `Makefile` would have nothing installed to find.
 
+A floor alone is not the whole fix, and Steps 1-11 below only do half of it. Renovate was
+run against the repository directly (`--dry-run=full`, v44.11.6) rather than reasoned about
+from source, and `pdbp>=1.7.1` — already floored, already dependency-group-shaped, before
+any of Steps 1-11 run — is the proof: Renovate extracted it with no `skipReason` and still
+proposed nothing for it, because the pep621 manager's default `rangeStrategy` is `replace`,
+which leaves a satisfied floor untouched forever. The whole repository's dry run produced
+exactly two branches, both GitHub Actions, none for a Python dependency. Steps 12-13 are
+the other half: pairing every floor Step 4 writes with `rangeStrategy: "bump"` on the
+matching `renovate.json5` rule — but that file lives on the sibling `chore/renovate` branch
+(PR #95), still open, so those two steps are written down now and executed once #95 merges
+and this branch rebases, not before. See the spec's Part 5 for the full mechanism and the
+`ruff`/`ty` ceiling reasoning, which changes once `bump` is in the picture: a ceiling no
+longer makes an entry visible to Renovate (`bump` does that for the whole group regardless),
+so the ceilings on those two are kept for their own merits — a ruff minor release changes
+what it reports, `ty` is pre-1.0 and moving fast — not as part of the actionability fix.
+
 **Files:**
 - Modify: `pyproject.toml:13-33` (license, classifiers), `[build-system.requires]`, `:51-71` (extras → groups, with version constraints), `[tool.tox.env_run_base]`
 - Delete: `MANIFEST.in`
+- Modify (Steps 12-13 only, after PR #95 merges and this branch rebases): `renovate.json5`
 
 **Interfaces:**
-- Consumes: nothing.
-- Produces: the extra `callback` and the dependency groups `test`, `lint`, `typecheck`, `dev`, every entry version-constrained, plus a floored `[build-system.requires]`. Every later task and the `Makefile` install with `-e ".[callback]" --group dev`; Task 2's `make lint` additionally depends on `ruff` and `ty` resolving out of this group.
+- Consumes: nothing for Steps 1-11. Steps 12-13 consume `renovate.json5` from `chore/renovate` (PR #95), merged into `main` and rebased into this branch.
+- Produces: the extra `callback` and the dependency groups `test`, `lint`, `typecheck`, `dev`, every entry version-constrained, plus a floored `[build-system.requires]`. Every later task and the `Makefile` install with `-e ".[callback]" --group dev`; Task 2's `make lint` additionally depends on `ruff` and `ty` resolving out of this group. Steps 12-13 additionally produce a `renovate.json5` "development dependencies" rule with `rangeStrategy: "bump"`, which is what makes the floors above actionable rather than merely present.
 
 - [ ] **Step 1: Record what the sdist contains today**
 
@@ -319,6 +338,102 @@ floors are deliberate, and the reasoning is in the spec's Part 5.
 MANIFEST.in never did anything: hatchling does not read it, and the sdist it
 claimed to trim still contained docs/ and .claude/. An explicit sdist target
 replaces it and drops 40 files of CI configuration and internal notes."
+```
+
+- [ ] **Step 12: Pair the new floors with `rangeStrategy: "bump"` in `renovate.json5`**
+
+**Blocked until PR #95 (`chore/renovate`) merges to `main` and this branch is rebased onto
+the result.** `renovate.json5` does not exist in this checkout before that. Check first:
+
+```bash
+git fetch origin
+git log origin/main -- renovate.json5
+```
+
+If that shows nothing, stop — #95 has not merged yet, and this step is not doable. Once it
+has and this branch is rebased, `renovate.json5` will exist and carry a `packageRules` entry
+that currently reads (on `chore/renovate`, before this step):
+
+```json5
+{
+  // Everything under [project.optional-dependencies] — the callback, test,
+  // typecheck and develop extras. None of it is installed by a consumer of the
+  // library, so one pull request for the batch would be proportionate — if this
+  // rule ever matched anything. It currently does not: all eleven entries
+  // (...) are bare names with skipReason: "unspecified-version", except
+  // `pdbp>=1.7.1`, whose open floor `rangeStrategy: "replace"` leaves unchanged.
+  // Same mechanism, same nil result, as the runtime-dependency rule below — see
+  // there for the detail.
+  matchManagers: ["pep621"],
+  matchDepTypes: ["project.optional-dependencies"],
+  groupName: "development dependencies",
+},
+```
+
+Replace it with:
+
+```json5
+{
+  // The callback extra plus everything now in [dependency-groups] (test, lint,
+  // typecheck, dev) and in build-system.requires (hatchling, hatch-vcs): none of
+  // it is installed by a consumer of the library, and none of it is published in
+  // the wheel or sdist metadata a consumer resolves. Every entry here carries a
+  // version constraint as of chore/package-modernisation (Task 1) — but a floor
+  // alone is not sufficient. pdbp>=1.7.1 was already floored before that work,
+  // and a dry run against this repository (--dry-run=full, v44.11.6) still
+  // produced nothing for it: the default rangeStrategy for pep621 is "replace",
+  // which leaves an open floor unchanged whenever the newest release already
+  // satisfies it — which it always does. rangeStrategy: "bump" instead raises
+  // the floor itself to each new release. That is safe here specifically
+  // because nothing downstream resolves these ranges — unlike the
+  // runtime-dependency rule below, where the same setting would force every
+  // consumer to upgrade in lockstep.
+  matchManagers: ["pep621"],
+  matchDepTypes: [
+    "project.optional-dependencies",
+    "dependency-groups",
+    "build-system.requires",
+  ],
+  groupName: "development dependencies",
+  rangeStrategy: "bump",
+},
+```
+
+`build-system.requires` was previously unmatched by any rule — `chore/renovate`'s own
+comment on the runtime-dependency rule already flagged this as "acknowledged rather than
+given a third rule." Folding it into this rule rather than adding a fourth closes that gap
+at the same time, since it is exactly as unpublished as a dependency group.
+
+- [ ] **Step 13: Verify with a dry run, and commit**
+
+```bash
+npx --yes renovate --platform=local --dry-run=full .
+```
+
+(Or however this repository's Renovate access is configured to run locally — check
+`chore/renovate`'s own `CONTRIBUTING.md` notes on running it, added by that branch.)
+
+Expected: every entry that Step 4 floored is extracted with `rangeStrategy: "bump"` and no
+`skipReason`. If a newer release exists for any of them on the day this runs, that entry
+now produces an update — the concrete difference from the `pdbp` control case. If `ruff` or
+`ty` has a release available past its ceiling, read what Renovate proposes for it
+specifically: this is the first real test of whether `bump` respects an upper bound rather
+than jumping past it, flagged as unverified in the spec's Part 5.
+
+```bash
+git add renovate.json5
+git commit -m "build: pair dependency-group floors with rangeStrategy bump
+
+A floor alone does not make an entry actionable: pdbp>=1.7.1 was already
+floored and a dry run against this repository still proposed nothing for
+it, because pep621's default rangeStrategy (replace) leaves a satisfied
+floor unchanged. bump raises the floor itself on each release instead.
+
+Safe here because nothing downstream resolves a dependency group, the
+callback extra, or build-system.requires — unlike project.dependencies,
+where the same setting would force every consumer of this library to
+upgrade in lockstep. build-system.requires also moves into this rule,
+closing a gap the rule's own comment already flagged."
 ```
 
 ---
@@ -822,7 +937,7 @@ Structure it by the commits' subjects, and state:
 3. Python 3.10 support is deliberately **not** dropped, and why.
 4. The `D1xx` docstring rules are deliberately ignored, with the count (144) and where the comment explaining it lives.
 5. The ty jump from 0.0.17 to 0.0.66 and anything it made necessary in `[tool.ty.rules]`.
-6. Every `[dependency-groups]`, `callback` and `[build-system.requires]` entry now carries a version constraint Renovate can act on — the sibling `chore/renovate` PR (#95) found none of them actionable before this. The six runtime dependencies in `[project.dependencies]` deliberately keep their open floors; see the spec's Part 5.
+6. Every `[dependency-groups]`, `callback` and `[build-system.requires]` entry now carries a version constraint — necessary, per a `chore/renovate` (PR #95) dry run that found none of them actionable before this, but not sufficient on its own: `pdbp>=1.7.1` was already floored and still produced nothing. Actionability needs `rangeStrategy: "bump"` on the matching `renovate.json5` rule too (Task 1, Steps 12-13), which is blocked on #95 merging and may still be pending when this PR is opened — say so explicitly if it is. The six runtime dependencies in `[project.dependencies]` deliberately keep their open floors; see the spec's Part 5.
 
 - [ ] **Step 7: Stop**
 
