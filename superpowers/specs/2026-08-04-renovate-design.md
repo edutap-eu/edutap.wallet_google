@@ -3,6 +3,10 @@
 Status: designed, ready to implement. Branched from `main` after PR #93
 (`chore/drop-uv-lock`) landed.
 
+**This goes to `main` first**, ahead of the `chore/httpx2-migration` branch. It helps
+regardless of what else is in flight, and it is independent of the httpx2 work, which is
+deliberately parked until authlib publishes its httpx2 release.
+
 ## Why
 
 Today the only automation watching dependencies here is `.github/dependabot.yml`, and it
