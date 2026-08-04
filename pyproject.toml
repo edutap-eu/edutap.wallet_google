@@ -140,6 +140,10 @@ ignore = [
     ".editorconfig",
     ".pre-commit-config.yaml",
     "worktrees/**",
+    # Agent-session scratch files for the superpowers SDD workflow: gitignored,
+    # but hatchling's default sdist target has no include/exclude rules to keep
+    # them out of the built sdist, so check-manifest sees them as unexpected.
+    ".superpowers/**",
     "src/edutap/wallet_google/_version.py",
 ]
 
