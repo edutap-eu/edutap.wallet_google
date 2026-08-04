@@ -13,11 +13,25 @@ Today the only automation watching dependencies here is `.github/dependabot.yml`
 watches exactly one ecosystem: GitHub Actions, weekly. The Python dependencies in
 `pyproject.toml` are watched by nothing for routine updates — only Dependabot's
 repository-level *security alerts* fire against them, and those bypass `dependabot.yml`
-entirely. This branch fixes the routine-update gap for GitHub Actions and for the
-`[project.optional-dependencies]` extras. It does **not** fix it for the runtime
-dependencies: their open `>=` floors mean Renovate's default range strategy leaves them
-unchanged whenever a newer release already satisfies the floor, so those still rely on
-the security-alert path — see "Configuration" below.
+entirely. This branch adds Renovate as a second pair of eyes on GitHub Actions and
+brings config-as-code for the Python side, but **it does not close the routine-update gap
+for `pyproject.toml`** — not even for the `[project.optional-dependencies]` extras.
+Measured against this branch's `pyproject.toml`: every one of the six
+`[project.dependencies]` entries and all eleven `[project.optional-dependencies]` entries
+is either a bare name (`skipReason: "unspecified-version"`, skipped outright) or an open
+`>=` floor, which Renovate's default range strategy leaves unchanged whenever a newer
+release already satisfies it — which an open floor always does. Zero of seventeen entries
+are actionable by Renovate today. Only Dependabot's security-alert path still reaches
+them, exactly as before this branch — see "Configuration" below. Closing this gap needs
+version ranges on the bare names and tighter floors, which is `chore/package-modernisation`'s
+job, not this one's.
+
+What this branch does add for GitHub Actions is a *second* bot watching the same
+ecosystem `dependabot.yml` already covers, not a replacement for it. Both stay configured
+for a transition period, deliberately: duplicate pull requests for the same action bump
+are the visible, harmless proof that Renovate is actually working here. Once it has
+demonstrably opened pull requests and its Dependency Dashboard issue exists, one of the
+two gets switched off — see "Dependabot" below.
 
 `edutap.data_provider` already runs Renovate, and its
 [`renovate.json5`](https://github.com/edutap-collective/edutap.data_provider/blob/main/renovate.json5)
@@ -69,9 +83,11 @@ Deliberately **not** carried over:
 - **`:enablePreCommit`.** data_provider enables it because its pre-commit revisions are
   otherwise unwatched. This repository's `.pre-commit-config.yaml` has a `ci:` block with
   `autoupdate_schedule: monthly`, so pre-commit.ci already opens those pull requests — PR
-  #94 was one. Enabling Renovate's pre-commit manager here would duplicate them, the same
-  trap as running Dependabot and Renovate on GitHub Actions at once. The JSON5 comment
-  records this, so a later reader does not mistake the omission for an oversight.
+  #94 was one. Enabling Renovate's pre-commit manager here would duplicate them for no
+  reason — unlike keeping Dependabot on GitHub Actions (see "Dependabot" below),
+  pre-commit.ci is already proven, so there is nothing to demonstrate by doubling up. The
+  JSON5 comment records this, so a later reader does not mistake the omission for an
+  oversight.
 - **`lockFileMaintenance` on `uv.lock`.** Renovate's `pep621` manager supports uv
   lockfiles, but PR #93 stopped tracking `uv.lock` on the grounds that a library's
   consumers never read it. There is no lockfile left to maintain.
@@ -85,14 +101,27 @@ Renovate rule of its own. data_provider gives `ruff` a dedicated rule because it
 
 ## Dependabot
 
-`.github/dependabot.yml` is deleted. It covers only GitHub Actions, which Renovate now
-covers, and leaving both configured produces two pull requests for every action bump — it
-is demonstrably active, PR #91 bumped `actions/checkout` from 6 to 7. data_provider has no
-`dependabot.yml`.
+`.github/dependabot.yml` stays, running alongside Renovate, on purpose, for a transition
+period. It covers only GitHub Actions — demonstrably active, PR #91 bumped
+`actions/checkout` from 6 to 7 — which is also the *only* ecosystem Renovate can
+currently act on here (see "Why" above: the `pep621` manager finds zero actionable
+entries in `pyproject.toml` today). Deleting `dependabot.yml` on the strength of "Renovate
+covers the same ground" was tried in an earlier version of this branch and was wrong: it
+was not "Renovate additionally covers X", it was swapping a working tool for an unproven
+one in the same ecosystem, while the new tool's documented main failure mode is silence
+(see "Risks" below). data_provider has no `dependabot.yml`, but data_provider's
+`pyproject.toml` gives Renovate version ranges to act on; this repository's does not, yet.
+
+Both bots stay configured until Renovate has demonstrably opened pull requests here and
+its Dependency Dashboard issue exists — proof it actually runs, not just that it is
+installed. Duplicate GitHub Actions pull requests during that period are accepted,
+deliberately: they are visible and harmless, and they are the proof. Once that proof
+exists, switching one of the two off is a later decision, not this one.
 
 This does **not** turn off Dependabot **security alerts** — those are a repository setting,
-not something `dependabot.yml` controls, and they stay on. The nineteen open alerts were
-addressed by PR #93 removing the lockfile they all originated from, not by this branch.
+not something `dependabot.yml` controls, and they stay on regardless. The nineteen open
+alerts were addressed by PR #93 removing the lockfile they all originated from, not by
+this branch.
 
 ## Risks
 
@@ -102,9 +131,13 @@ addressed by PR #93 removing the lockfile they all originated from, not by this 
   Dependency Dashboard issue appears afterwards.
 - **First run is expected to be quiet, not noisy.** Checked by hand: all GitHub Actions
   references in this repository are already current, `pypa/gh-action-pypi-publish@release/v1`
-  is a branch ref that Renovate skips, and the runtime-dependency rule's open `>=` floors
-  mean the pep621 manager yields essentially nothing either — see "Configuration" above.
-  Realistically zero to one pull request on the first Monday, not one per dependency.
+  is a branch ref that Renovate skips, and both `pep621` rules — runtime dependencies and
+  the optional-dependency extras alike — yield nothing today: every entry in
+  `pyproject.toml` is either a bare name Renovate skips outright or an open `>=` floor its
+  default range strategy leaves unchanged, see "Configuration" above. Realistically zero
+  pull requests on the first Monday, not one per dependency. That stays true until
+  `chore/package-modernisation` gives the bare names ranges; it is not a bug in this
+  branch's config.
 
 ## Environment note
 

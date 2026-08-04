@@ -31,10 +31,11 @@
   // `:enablePreCommit` — .pre-commit-config.yaml carries a `ci:` block with
   // `autoupdate_schedule: monthly`, so pre-commit.ci already opens the pull requests
   // that bump those revisions. Enabling Renovate's pre-commit manager as well would
-  // produce two pull requests per hook, the same trap as running Dependabot and
-  // Renovate on GitHub Actions at once. This is also why `ruff` needs no rule of its
-  // own here, unlike in edutap.data_provider: it is pinned by revision in
-  // .pre-commit-config.yaml, not as a version range in pyproject.toml.
+  // produce two pull requests per hook — unlike the GitHub Actions overlap with
+  // Dependabot below, this duplication buys nothing (pre-commit.ci is already proven,
+  // there is nothing to demonstrate), so it stays off. This is also why `ruff` needs
+  // no rule of its own here, unlike in edutap.data_provider: it is pinned by revision
+  // in .pre-commit-config.yaml, not as a version range in pyproject.toml.
   //
   // `lockFileMaintenance` — there is no lockfile. uv.lock stopped being tracked in
   // PR #93, on the grounds that a library's consumers resolve the ranges in
@@ -51,13 +52,26 @@
   // acknowledged rather than given a third rule.
   packageRules: [
     {
+      // `.github/dependabot.yml` watches this same ecosystem, on purpose, for a
+      // transition period: duplicate pull requests for the same action bump are
+      // the visible, harmless cost of proving Renovate actually opens pull
+      // requests here. Once Renovate has demonstrably done that and its
+      // Dependency Dashboard issue exists, one of the two gets switched off —
+      // that is a later decision, not this one.
       matchManagers: ["github-actions"],
       groupName: "GitHub Actions",
     },
     {
       // Everything under [project.optional-dependencies] — the callback, test,
       // typecheck and develop extras. None of it is installed by a consumer of the
-      // library, so one pull request for the batch is proportionate.
+      // library, so one pull request for the batch would be proportionate — if this
+      // rule ever matched anything. It currently does not: all eleven entries
+      // (`fastapi`, `freezegun`, `pytest`, `pytest-asyncio`, `pytest-cov`,
+      // `pytest-explicit`, `respx`, `tox`, `ty`, and the `edutap.wallet-google[callback]`
+      // self-reference) are bare names with skipReason: "unspecified-version", except
+      // `pdbp>=1.7.1`, whose open floor `rangeStrategy: "replace"` leaves unchanged.
+      // Same mechanism, same nil result, as the runtime-dependency rule below — see
+      // there for the detail.
       matchManagers: ["pep621"],
       matchDepTypes: ["project.optional-dependencies"],
       groupName: "development dependencies",
@@ -66,26 +80,30 @@
       // The runtime dependencies, which every consumer of this library resolves
       // against. Each one on its own, so the pull request is about that library.
       //
-      // Most of these carry lower bounds (`>=`) rather than bare names since PR #93;
-      // httpx and joserfc are still bare names for now. Several of the bounds exist
-      // to pin out a specific advisory — read the comment beside the dependency in
-      // pyproject.toml before lowering one.
+      // Four of the six carry lower bounds (`>=`) rather than bare names: `authlib`,
+      // `cryptography`, `pydantic-settings` and `pydantic` do; `httpx` and `joserfc`
+      // don't. Several of the bounds exist to pin out a specific advisory — read the
+      // comment beside the dependency in pyproject.toml before lowering one.
       //
-      // In practice this rule rarely fires. The pep621 manager exports no
+      // Right now this rule matches none of the six. The pep621 manager exports no
       // getRangeStrategy, so rangeStrategy: "auto" resolves to "replace"; for pep440,
       // "replace" leaves an open `>=` floor unchanged whenever the newer version
       // already satisfies it — which every floor above does, by construction. httpx
       // and joserfc, being bare names, are skipped outright
       // (skipReason: "unspecified-version"). This is intended, not an oversight: the
       // floors are deliberate advisory pins, not something we want Renovate ratcheting
-      // upward on every release.
+      // upward on every release. Giving the bare names actual ranges, which would make
+      // them visible to Renovate at all, is `chore/package-modernisation`'s job, not
+      // this branch's.
       //
-      // The mitigating case is security advisories, which bypass all of the above.
-      // vulnerabilityAlerts defaults to rangeStrategy: "update-lockfile", which with no
-      // lockfile here becomes "bump", plus prCreation: "immediate" and schedule: [] —
-      // so a vulnerability alert does raise a floor, immediately, ignoring the Monday
-      // schedule. That is how the floors from PR #93 came about in the first place,
-      // and it's the real synergy with keeping Dependabot security alerts on.
+      // Until that lands, the only thing that reaches a Python dependency here is a
+      // security advisory, which bypasses all of the above. vulnerabilityAlerts
+      // defaults to rangeStrategy: "update-lockfile", which with no lockfile here
+      // becomes "bump", plus prCreation: "immediate" and schedule: [] — so an
+      // advisory does raise a floor, immediately, ignoring the Monday schedule. That
+      // is how the floors from PR #93 came about in the first place, and it's the
+      // real synergy with keeping Dependabot's security alerts on, independent of its
+      // GitHub Actions coverage above.
       matchManagers: ["pep621"],
       matchDepTypes: ["project.dependencies"],
       groupName: null,
