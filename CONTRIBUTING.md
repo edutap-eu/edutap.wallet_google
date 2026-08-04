@@ -46,6 +46,20 @@ If work is ready, remove the draft status from the PR to signalize readiness for
 
 On of the core contributors will review, comment and - if all is fine - merge it.
 
+## Dependency updates
+
+Dependency updates arrive as pull requests from two bots, neither of which
+merges anything on its own:
+
+- **Renovate** (hosted Mend app, configured in `renovate.json5`) watches the
+  dependencies in `pyproject.toml` and the actions in `.github/workflows/`.
+  It opens pull requests once a week, on Monday morning.
+- **pre-commit.ci** watches the hook revisions in `.pre-commit-config.yaml`
+  and opens a pull request monthly.
+
+Renovate also maintains a "Dependency Dashboard" issue listing everything it
+is holding back. If Renovate appears to have stopped, check that issue first.
+
 ## Documentation
 
 We love improvements to the documentation.
