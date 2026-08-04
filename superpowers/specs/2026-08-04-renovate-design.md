@@ -11,7 +11,13 @@ deliberately parked until authlib publishes its httpx2 release.
 
 Today the only automation watching dependencies here is `.github/dependabot.yml`, and it
 watches exactly one ecosystem: GitHub Actions, weekly. The Python dependencies in
-`pyproject.toml` are watched by nothing.
+`pyproject.toml` are watched by nothing for routine updates — only Dependabot's
+repository-level *security alerts* fire against them, and those bypass `dependabot.yml`
+entirely. This branch fixes the routine-update gap for GitHub Actions and for the
+`[project.optional-dependencies]` extras. It does **not** fix it for the runtime
+dependencies: their open `>=` floors mean Renovate's default range strategy leaves them
+unchanged whenever a newer release already satisfies the floor, so those still rely on
+the security-alert path — see "Configuration" below.
 
 `edutap.data_provider` already runs Renovate, and its
 [`renovate.json5`](https://github.com/edutap-collective/edutap.data_provider/blob/main/renovate.json5)
@@ -32,9 +38,13 @@ installed on the organisation *plus* a workflow file and two repository secrets,
 hosted app needs the install and nothing else. Same prerequisite, less machinery, and
 consistent with data_provider.
 
-**This requires a manual step that cannot be done from this branch:** installing the Mend
-Renovate app on the `edutap-eu` organisation, or at minimum granting it this repository.
-Until that happens the config file sits inert. The pull request description must say so.
+**The Mend Renovate app is already installed on the `edutap-eu` organisation**,
+organisation-wide (`repository_selection: "all"`), confirmed via
+`gh api orgs/edutap-eu/installations`. There is no install-or-grant step left to do. What
+is still open is confirming this repository is actually onboarded on the Mend side once
+this branch merges: there is no Dependency Dashboard issue here yet, which is expected
+before the config file exists on `main`, but is the thing to check for afterwards. The
+pull request description should say that, not describe an app install as a blocker.
 
 ## Configuration
 
@@ -86,7 +96,19 @@ addressed by PR #93 removing the lockfile they all originated from, not by this 
 
 ## Risks
 
-- **Nothing happens until the app is installed.** The failure mode is silence, not an
-  error. Whoever merges this needs to check that the dependency dashboard issue appears.
-- **First run is noisy.** `config:recommended` opens a pull request per outstanding
-  update. Expected once, on the first Monday after installation.
+- **Onboarding could still silently not happen.** The app is installed org-wide, but
+  repository onboarding on the Mend side is a separate step this branch cannot verify.
+  The failure mode is silence, not an error. Whoever merges this needs to check that the
+  Dependency Dashboard issue appears afterwards.
+- **First run is expected to be quiet, not noisy.** Checked by hand: all GitHub Actions
+  references in this repository are already current, `pypa/gh-action-pypi-publish@release/v1`
+  is a branch ref that Renovate skips, and the runtime-dependency rule's open `>=` floors
+  mean the pep621 manager yields essentially nothing either — see "Configuration" above.
+  Realistically zero to one pull request on the first Monday, not one per dependency.
+
+## Environment note
+
+The `renovate-config-validator` command (see the plan) needs Node ≥22. This machine's
+default `node` on `PATH` is v10.24.1, under which the command fails with
+`npx: command not found: renovate` — a message that reads like a missing package rather
+than an unsupported Node version. Switch to a current Node (e.g. `nvm use --lts`) first.
