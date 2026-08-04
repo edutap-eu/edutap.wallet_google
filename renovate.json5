@@ -1,0 +1,65 @@
+// Renovate configuration. JSON5 rather than JSON so the reasoning can live next to
+// the rules — this file decides what arrives unasked in the pull request list, and
+// a rule nobody understands is a rule somebody switches off.
+//
+// Renovate runs as the hosted Mend app, installed on the edutap-eu organisation;
+// there is no workflow of ours that drives it. A self-hosted run authenticating
+// with GITHUB_TOKEN would open pull requests that GitHub refuses to let trigger
+// workflows, so every update would arrive untested. An app token does not have
+// that defect, but it needs a GitHub App installed on the organisation *plus* a
+// workflow file and two repository secrets — the same prerequisite as the hosted
+// app, for more machinery.
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  extends: [
+    "config:recommended",
+    // Once a week, before 4 AM. Dependency updates are not news; a Monday morning
+    // batch is read, a stream through the week is dismissed.
+    "schedule:earlyMondays",
+  ],
+
+  timezone: "Europe/Berlin",
+
+  // Deliberately absent, so a later reader does not mistake either for an oversight:
+  //
+  // `:enablePreCommit` — .pre-commit-config.yaml carries a `ci:` block with
+  // `autoupdate_schedule: monthly`, so pre-commit.ci already opens the pull requests
+  // that bump those revisions. Enabling Renovate's pre-commit manager as well would
+  // produce two pull requests per hook, the same trap as running Dependabot and
+  // Renovate on GitHub Actions at once. This is also why `ruff` needs no rule of its
+  // own here, unlike in edutap.data_provider: it is pinned by revision in
+  // .pre-commit-config.yaml, not as a version range in pyproject.toml.
+  //
+  // `lockFileMaintenance` — there is no lockfile. uv.lock stopped being tracked in
+  // PR #93, on the grounds that a library's consumers resolve the ranges in
+  // pyproject.toml and never read it.
+
+  // No automerge anywhere. Green CI proves the suite still passes, not that the
+  // update is one we want.
+  packageRules: [
+    {
+      matchManagers: ["github-actions"],
+      groupName: "GitHub Actions",
+    },
+    {
+      // Everything under [project.optional-dependencies] — the callback, test,
+      // typecheck and develop extras. None of it is installed by a consumer of the
+      // library, so one pull request for the batch is proportionate.
+      matchManagers: ["pep621"],
+      matchDepTypes: ["project.optional-dependencies"],
+      groupName: "development dependencies",
+    },
+    {
+      // The runtime dependencies, which every consumer of this library resolves
+      // against. Each one on its own, so the pull request is about that library.
+      //
+      // These carry lower bounds rather than bare names since PR #93, and several
+      // of those bounds exist to pin out a specific advisory — read the comment
+      // beside the dependency in pyproject.toml before lowering one.
+      matchManagers: ["pep621"],
+      matchDepTypes: ["project.dependencies"],
+      groupName: null,
+    },
+  ],
+}
