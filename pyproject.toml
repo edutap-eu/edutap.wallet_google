@@ -24,7 +24,7 @@ authors = [
 # it goes stale:
 #   README.md "Built with httpx, Pydantic v2, and Python 3.10+"
 #   README.md "Python 3.10 or later (3.13 recommended)"
-#   docs/installation.md "Python 3.10+, currently up to 3.13 is tested"
+#   docs/installation.md "Python 3.10+, currently up to 3.14 is tested"
 #   Makefile, the test-matrix help text "py310 through py314"
 #   CONTRIBUTING.md, the same sentence as the Makefile
 # The two README lines are the user-facing statement of the supported floor; if
