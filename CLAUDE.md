@@ -51,7 +51,7 @@ pytest -k "not integration" --tb=short  # Skip integration tests
 
 ```bash
 # Run all pre-commit hooks (includes all checks below)
-uvx pre-commit run --all-files
+uvx prek run --all-files
 
 # Format code (tox environment)
 uvx tox -e format
@@ -233,10 +233,10 @@ The docs follow the [Diátaxis](https://diataxis.fr/) framework.
 ## Development Workflow
 
 1. **Local setup**: `uv venv && source .venv/bin/activate && uv pip install -U -e ".[callback]" --group dev` (or `make venv`)
-2. **Install pre-commit**: `uvx pre-commit install` (runs checks on every commit)
+2. **Install prek**: `uvx prek install` (runs checks on every commit)
 3. **Make changes**: Edit code, add tests
 4. **Run tests**: `pytest tests/ -k "not integration"` (fast iteration)
-5. **Run checks**: `uvx pre-commit run --all-files` (before committing)
+5. **Run checks**: `uvx prek run --all-files` (before committing)
 6. **Integration test**: Set environment variables and run `pytest tests/integration/ --run-integration`
 
 ## Code Quality Tools

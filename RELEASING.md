@@ -69,7 +69,7 @@ with environment `release-test-pypi`.
 The `_version.py` file is not generated. Run:
 
 ```bash
-uv sync  # or uv pip install -e .
+uv pip install -e .
 ```
 
 ### Package not uploading
