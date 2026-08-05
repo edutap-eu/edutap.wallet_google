@@ -9,6 +9,7 @@ import importlib
 import inspect
 import json
 import pathlib
+import pkgutil
 import pytest
 
 
@@ -23,11 +24,16 @@ MODEL_ALIAS_DICT = {
 
 def find_models() -> dict[str, type]:
     models: dict[str, type] = {}
-    # Imported by name, not reached for as an attribute of the package: see the
-    # note in edutap.wallet_google.registry._find_models().
+    # Enumerate the submodules from the package path and import each one: see
+    # the note in edutap.wallet_google.registry._find_models(). This test exists
+    # to catch a datatypes model that drifted from Google's schema, so it has to
+    # see modules nothing else imported — that is precisely the case where a
+    # model would go unchecked.
     datatypes_module = importlib.import_module("edutap.wallet_google.models.datatypes")
-    for name, module in inspect.getmembers(datatypes_module, inspect.ismodule):
-        # print(f"Module: 'name', '{module}'")
+    for module_info in pkgutil.iter_modules(datatypes_module.__path__):
+        module = importlib.import_module(
+            f"edutap.wallet_google.models.datatypes.{module_info.name}"
+        )
         for cls_name, cls in inspect.getmembers(module, inspect.isclass):
             if (
                 cls.__module__.startswith("edutap.wallet_google.models.datatypes")

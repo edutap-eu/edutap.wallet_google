@@ -42,13 +42,21 @@ def make_partial_model(model: type[Model]) -> type[Model]:
             field_overrides[name] = (field_info.annotation | None, None)
     if not field_overrides:
         return model
-    # ty 0.0.66 cannot select an overload for a call that passes **kwargs from a
-    # dict: it has no way to prove which keyword-only parameters the unpacking
-    # fills, so every overload of create_model is rejected. Reproducible without
-    # pydantic on any overloaded function with keyword-only parameters, and the
-    # same call against the non-overloaded implementation signature checks
-    # cleanly. Suppressed on this line rather than by downgrading the rule
-    # project-wide, because no-matching-overload does catch real errors.
+    # This call cannot be overload-checked by any conforming type checker, and
+    # that is not going to change. A **kwargs unpacking has statically unknown
+    # keys, so a checker cannot tell whether it supplies create_model's
+    # keyword-only parameters (__base__, __config__, ...) or its arbitrary field
+    # definitions — and therefore cannot pick an overload. Confirmed on a
+    # reduced case with no pydantic involved: ty 0.0.66 and mypy 1.18.2 both
+    # reject the same call against an overloaded signature and both accept it
+    # against a non-overloaded one.
+    #
+    # So do not read this as a bug to re-test on a newer ty. If it ever needs to
+    # go away, the fix is at this call site — building the model without a
+    # dict unpacking — not upstream.
+    #
+    # Suppressed on the line rather than by downgrading no-matching-overload in
+    # [tool.ty.rules], because the rule does catch real errors elsewhere.
     return create_model(  # ty: ignore[no-matching-overload]
         f"Partial{model.__name__}",
         __base__=model,

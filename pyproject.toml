@@ -12,10 +12,23 @@ authors = [
 ]
 # Python 3.10 reaches end of life on 2026-10-31. Dropping it narrows this
 # field, which is a breaking change for consumers, so it gets its own release
-# rather than riding along with something else. Everything that changes with
-# it: requires-python below, the 3.10 classifier, [tool.ruff] target-version,
-# [tool.ty.environment] python-version, [tool.tox] env_list,
-# [tool.tox.gh.python], and the matrix in .github/workflows/tests.yaml.
+# rather than riding along with something else.
+#
+# Everything that changes with it — configuration:
+#   requires-python below, and the 3.10 entry in classifiers
+#   [tool.ruff] target-version
+#   [tool.ty.environment] python-version
+#   [tool.tox] env_list, and [tool.tox.gh.python]
+#   .github/workflows/tests.yaml, the python-version matrix
+# and prose, which is the half that gets forgotten, because nothing fails when
+# it goes stale:
+#   README.md "Built with httpx, Pydantic v2, and Python 3.10+"
+#   README.md "Python 3.10 or later (3.13 recommended)"
+#   docs/installation.md "Python 3.10+, currently up to 3.13 is tested"
+#   Makefile, the test-matrix help text "py310 through py314"
+#   CONTRIBUTING.md, the same sentence as the Makefile
+# The two README lines are the user-facing statement of the supported floor; if
+# only one thing on this list gets updated, make it those.
 requires-python = ">=3.10"
 license = "EUPL-1.2"
 license-files = ["LICENSE"]
@@ -37,7 +50,11 @@ dependencies = [
     # resolve the actual version against their own environment.
     "authlib>=1.7.2",
     "cryptography>=48.0.1",  # <48.0.1: vulnerable OpenSSL bundled in wheels (high)
-    "httpx",
+    # A feature floor, not a security one and not a statement about what is
+    # tested: api.py sends request bodies with `content=`, added in httpx 0.15.0
+    # ("Added Request(content=...) for byte content, instead of overloading
+    # Request(data=...)"). Below that the calls would raise TypeError.
+    "httpx>=0.15",
     "joserfc",
     "pydantic-settings>=2.14.2",  # 2.12.0..2.14.1: symlink escape in secrets source
     "pydantic[email]>=2.0",
@@ -186,6 +203,11 @@ extra-paths = ["src", "tests"]
 error-on-warning = false
 
 [tool.ty.rules]
+# Environment-dependent, and the only rule here that genuinely is: it reports
+# nothing in a checkout that installed the optional `callback` extra, because
+# handlers/fastapi.py imports fastapi unconditionally while fastapi lives in
+# [project.optional-dependencies]. Held at "warn" so a checkout without the
+# extra is not a failing checkout.
 unresolved-import = "warn"
 # The following rules are stricter than mypy. As of ty 0.0.66 they report
 # nothing at all in src/ — every remaining instance is in tests/ — so this is
@@ -206,14 +228,20 @@ unresolved-import = "warn"
 #   feeds hand-written JSON-ish dicts straight into models, so the declared
 #   field types do not match what a `dict[str, str | list[str]]` literal infers.
 #
-# unknown-argument and not-iterable currently report nothing, and unresolved-import
-# only fires where the optional `callback` extra is absent. Left downgraded on
-# purpose: promoting a rule back to error because today's checkout happens to be
-# clean is how a green build turns red on someone else's machine.
+# unknown-argument reports nothing as of this commit, but only because fixing
+#   register_model's annotation cleared all 34 instances at once. Kept at "warn"
+#   rather than promoted on the strength of one clean checkout: it was grouped
+#   with the two above as "stricter than mypy" by whoever wrote this section,
+#   and there are no instances left to judge that call from.
 unresolved-attribute = "warn"
 invalid-argument-type = "warn"
 unknown-argument = "warn"
-not-iterable = "warn"
+# not-iterable is an error, unlike its neighbours above. Its single instance was
+# a test unpacking the result of dict.get() without checking for None, fixed in
+# the same commit as this line. It does not depend on which extras are installed
+# and it does not depend on the api.py `-> Model` annotations, so neither reason
+# for downgrading the others applies to it.
+not-iterable = "error"
 
 [tool.codespell]
 ignore-words-list = "discreet,"

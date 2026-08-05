@@ -6,6 +6,7 @@ import functools
 import importlib
 import inspect
 import logging
+import pkgutil
 
 
 logger = logging.getLogger(__name__)
@@ -212,16 +213,14 @@ def _find_models() -> dict[str, "type[Model]"]:
     from .models.bases import Model
 
     models: dict[str, type[Model]] = {}
-    # Import the two modules by name instead of reaching for them as attributes
-    # of the imported package. `edutap.wallet_google.models.datatypes` is a
-    # namespace package and `.deprecated` is not imported by
-    # `models/__init__.py`; both only happen to be set as attributes because
-    # other modules imported them first. That is a load-order coincidence, and
-    # a coincidence this function's whole result depends on.
-    datatypes_module = importlib.import_module("edutap.wallet_google.models.datatypes")
+    # `models/__init__.py` does not import `.deprecated`; it is only ever set as
+    # an attribute of its parent because `misc.py` and `passes/retail.py` import
+    # from it. Importing it by name here does execute it, so this no longer
+    # depends on who else imported what first.
     deprecated_module = importlib.import_module(
         "edutap.wallet_google.models.deprecated"
     )
+    datatypes = importlib.import_module("edutap.wallet_google.models.datatypes")
 
     def _collect_classes(mod):
         for cls_name, cls in inspect.getmembers(mod, inspect.isclass):
@@ -237,10 +236,20 @@ def _find_models() -> dict[str, "type[Model]"]:
         ):
             models[cls_name] = cls
 
-    # datatypes/*
-    for name, module in inspect.getmembers(datatypes_module, inspect.ismodule):
-        if module.__name__.startswith("edutap.wallet_google.models.datatypes"):
-            _collect_classes(module)
+    # datatypes/* — enumerate the submodules from the package path and import
+    # each one, rather than asking the package object which submodules it has.
+    # `datatypes` is a namespace package: it has no `__init__.py`, so importing
+    # it executes no code and binds no submodule attributes. Anything reading
+    # the attributes therefore sees only the submodules some *other* module
+    # already imported, and a new datatypes module that nothing else imports
+    # would be silently skipped by model discovery. pkgutil.iter_modules reads
+    # the directory, so it sees every submodule whether or not it is loaded.
+    for module_info in pkgutil.iter_modules(datatypes.__path__):
+        _collect_classes(
+            importlib.import_module(
+                f"edutap.wallet_google.models.datatypes.{module_info.name}"
+            )
+        )
 
     return models
 
