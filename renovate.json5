@@ -1,0 +1,121 @@
+// Renovate configuration. JSON5 rather than JSON so the reasoning can live next to
+// the rules — this file decides what arrives unasked in the pull request list, and
+// a rule nobody understands is a rule somebody switches off.
+//
+// Renovate runs as the hosted Mend app, installed on the edutap-eu organisation;
+// there is no workflow of ours that drives it. A self-hosted run authenticating
+// with GITHUB_TOKEN would open pull requests that GitHub refuses to let trigger
+// workflows, so every update would arrive untested. An app token does not have
+// that defect, but it needs a GitHub App installed on the organisation *plus* a
+// workflow file and two repository secrets — the same prerequisite as the hosted
+// app, for more machinery.
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  extends: [
+    // Also brings in `:ignoreModulesAndTests`, whose ignorePaths cover
+    // `**/examples/**` and `**/tests/**` — so
+    // `examples/edutap_wallet_google_example_callback/pyproject.toml` and
+    // `tests/data/test_wallet_google_plugins/pyproject.toml` are not watched.
+    // Desirable here, but it's a preset decision, not one made in this file.
+    "config:recommended",
+    // Once a week, before 4 AM. Dependency updates are not news; a Monday morning
+    // batch is read, a stream through the week is dismissed.
+    "schedule:earlyMondays",
+  ],
+
+  timezone: "Europe/Berlin",
+
+  // Deliberately absent, so a later reader does not mistake either for an oversight:
+  //
+  // `:enablePreCommit` — .pre-commit-config.yaml carries a `ci:` block with
+  // `autoupdate_schedule: monthly`, so pre-commit.ci already opens the pull requests
+  // that bump those revisions. Enabling Renovate's pre-commit manager as well would
+  // produce two pull requests per hook — unlike the GitHub Actions overlap with
+  // Dependabot below, this duplication buys nothing (pre-commit.ci is already proven,
+  // there is nothing to demonstrate), so it stays off. This is also why `ruff` needs
+  // no rule of its own here, unlike in edutap.data_provider: it is pinned by revision
+  // in .pre-commit-config.yaml, not as a version range in pyproject.toml.
+  //
+  // `lockFileMaintenance` — there is no lockfile. uv.lock stopped being tracked in
+  // PR #93, on the grounds that a library's consumers resolve the ranges in
+  // pyproject.toml and never read it.
+
+  // No automerge anywhere. Green CI proves the suite still passes, not that the
+  // update is one we want.
+  //
+  // The two rules below cover project.dependencies and
+  // project.optional-dependencies, not the whole pep621 surface: build-system.requires
+  // (hatchling, hatch-vcs) and requires-python are also extracted by the pep621
+  // manager and match neither rule, so an update to either would arrive ungrouped
+  // under config:recommended's defaults. Nobody pins either today, so this is
+  // acknowledged rather than given a third rule.
+  packageRules: [
+    {
+      // `.github/dependabot.yml` watches this same ecosystem, on purpose, for a
+      // transition period: duplicate pull requests for the same action bump are
+      // the visible, harmless cost of proving Renovate actually opens pull
+      // requests here. Once Renovate has demonstrably done that and its
+      // Dependency Dashboard issue exists, one of the two gets switched off —
+      // that is a later decision, not this one.
+      matchManagers: ["github-actions"],
+      groupName: "GitHub Actions",
+    },
+    {
+      // Everything under [project.optional-dependencies] — the callback, test,
+      // typecheck and develop extras. None of it is installed by a consumer of the
+      // library, so one pull request for the batch would be proportionate — if this
+      // rule ever matched anything. It currently does not: all eleven entries
+      // (`fastapi`, `freezegun`, `pytest`, `pytest-asyncio`, `pytest-cov`,
+      // `pytest-explicit`, `respx`, `tox`, `ty`, and the `edutap.wallet-google[callback]`
+      // self-reference) are bare names with skipReason: "unspecified-version", except
+      // `pdbp>=1.7.1`, whose open floor `rangeStrategy: "replace"` leaves unchanged.
+      // Same mechanism, same nil result, as the runtime-dependency rule below — see
+      // there for the detail.
+      matchManagers: ["pep621"],
+      matchDepTypes: ["project.optional-dependencies"],
+      groupName: "development dependencies",
+    },
+    {
+      // The runtime dependencies, which every consumer of this library resolves
+      // against. Each one on its own, so the pull request is about that library.
+      //
+      // Four of the six carry lower bounds (`>=`) rather than bare names: `authlib`,
+      // `cryptography`, `pydantic-settings` and `pydantic` do; `httpx` and `joserfc`
+      // don't. Several of the bounds exist to pin out a specific advisory — read the
+      // comment beside the dependency in pyproject.toml before lowering one.
+      //
+      // Right now this rule matches none of the six. The pep621 manager exports no
+      // getRangeStrategy, so rangeStrategy: "auto" resolves to "replace"; for pep440,
+      // "replace" leaves an open `>=` floor unchanged whenever the newer version
+      // already satisfies it — which every floor above does, by construction. httpx
+      // and joserfc, being bare names, are skipped outright
+      // (skipReason: "unspecified-version"). This is intended, not an oversight: the
+      // floors are deliberate advisory pins, not something we want Renovate ratcheting
+      // upward on every release. Giving the bare names actual ranges, which would make
+      // them visible to Renovate at all, is `chore/package-modernisation`'s job, not
+      // this branch's.
+      //
+      // Until that lands, the only thing that reaches a Python dependency here is a
+      // security advisory, which bypasses all of the above. vulnerabilityAlerts
+      // defaults to rangeStrategy: "update-lockfile", which with no lockfile here
+      // becomes "bump", plus prCreation: "immediate" and schedule: [] — so an
+      // advisory does raise a floor, immediately, ignoring the Monday schedule. That
+      // is how the floors from PR #93 came about in the first place, and it's the
+      // real synergy with keeping Dependabot's security alerts on, independent of its
+      // GitHub Actions coverage above.
+      //
+      // Two things not to get wrong about that, both raised reviewing this file:
+      // vulnerabilityAlerts needs no preset to switch on — the gate reads
+      // `if (vulnerabilityAlerts.enabled === false)`, so it runs unless something
+      // disables it, and adding `:enableVulnerabilityAlerts` would only restate the
+      // default. And the "update-lockfile becomes bump" step above is conditional on
+      // there being no lockfile: track uv.lock again and advisories go back to editing
+      // the lockfile instead of raising the floors here, which removes the only
+      // mechanism this paragraph describes.
+      matchManagers: ["pep621"],
+      matchDepTypes: ["project.dependencies"],
+      groupName: null,
+    },
+  ],
+}

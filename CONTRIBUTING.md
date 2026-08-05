@@ -46,6 +46,43 @@ If work is ready, remove the draft status from the PR to signalize readiness for
 
 On of the core contributors will review, comment and - if all is fine - merge it.
 
+## Dependency updates
+
+Dependency updates arrive as pull requests from up to three bots, none of
+which merges anything on its own:
+
+- **Renovate** (hosted Mend app, configured in `renovate.json5`) watches the
+  actions in `.github/workflows/` and the dependencies in `pyproject.toml`.
+  It checks in before 4 AM every Monday, except for security advisories,
+  which bypass the schedule and arrive immediately.
+- **Dependabot** (`.github/dependabot.yml`) also watches
+  `.github/workflows/`, in parallel with Renovate, on purpose, for a
+  transition period: seeing two pull requests for the same action bump is
+  the visible, harmless proof that Renovate is actually working here. Once
+  Renovate has demonstrably opened pull requests and its "Dependency
+  Dashboard" issue exists, one of the two gets switched off — that has not
+  happened yet.
+- **pre-commit.ci** watches the hook revisions in `.pre-commit-config.yaml`
+  and opens a pull request monthly.
+
+**Renovate currently opens no pull requests for `pyproject.toml`.** Every
+entry in `[project.dependencies]` and `[project.optional-dependencies]` is
+either a bare name with no version specifier (Renovate skips those outright:
+`skipReason: "unspecified-version"`) or an open `>=` floor, which Renovate's
+default range strategy leaves unchanged whenever the currently released
+version already satisfies it — which an open floor always does. Do not
+expect a Python dependency pull request from a routine Monday run. Adding
+proper version ranges so Renovate can act on them is being addressed
+separately, on `chore/package-modernisation`. Until that lands, the one
+exception is a published *security advisory*: that bypasses the range logic
+above and raises a floor immediately, any day of the week — see
+`renovate.json5` for the mechanism, and keep Dependabot's security alerts
+(a repository setting, independent of `dependabot.yml`) switched on, since
+that is what feeds Renovate's advisory data too.
+
+Renovate also maintains a "Dependency Dashboard" issue listing everything it
+is holding back. If Renovate appears to have stopped, check that issue first.
+
 ## Documentation
 
 We love improvements to the documentation.
