@@ -278,7 +278,7 @@ print(len(names), 'files')
 diff sdist-before.txt sdist-after.txt
 ```
 
-Expected in the diff, as removals only: `.claude/*`, `.dockerignore`, `.editorconfig`, `.github/*`, `.gitignore`, `.pre-commit-config.yaml`, `CLAUDE.md`, `MANIFEST.in`, `RELEASING.md`, `docs/*`, `examples/*`, `superpowers/*`. `PKG-INFO` stays (hatchling generates it).
+Expected in the diff, as removals only: `.claude/*`, `.dockerignore`, `.editorconfig`, `.github/*`, `.pre-commit-config.yaml`, `CLAUDE.md`, `MANIFEST.in`, `RELEASING.md`, `docs/*`, `examples/*`, `superpowers/*`. `PKG-INFO` stays (hatchling generates it); `.gitignore` also stays — hatchling force-includes it in every sdist regardless of `include`.
 
 **Every `src/` and `tests/` path must be unchanged.** A removal under either is a mistake in the `include` list, not an improvement.
 
