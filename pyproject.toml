@@ -162,7 +162,8 @@ packages = ["src/edutap"]
 #     packager who already has a populated environment can read it and run
 #     that command directly instead of guessing.
 #   superpowers/, .claude/, CLAUDE.md are internal working documents.
-#   .github/, docs/ and examples/ are not needed to build or test the package.
+#   .github/, docs/, examples/ and renovate.json5 are not needed to build or
+#     test the package.
 include = [
     "/src",
     "/tests",
@@ -305,6 +306,9 @@ ignore = [
     "docs/**",
     "examples/**",
     "superpowers/**",
+    # CI/tooling configuration, same category as .github/: not needed to
+    # build or test the package.
+    "renovate.json5",
 ]
 
 [tool.tox]
