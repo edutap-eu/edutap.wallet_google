@@ -48,6 +48,9 @@ credential_file.json
 # IDE
 .idea
 
+# superpowers session scratch (task briefs, reports, review diffs)
+.superpowers/
+
 # uv lockfile — this is a library, consumers resolve their own versions from
 # the ranges in pyproject.toml; a committed lock only adds Dependabot noise.
 uv.lock
