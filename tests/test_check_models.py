@@ -85,7 +85,7 @@ def discovery_api_data(module_tmp_path):
 
 @pytest.fixture(scope="module")
 def wallet_api_data(module_tmp_path):
-    """Loads the Google Wallet API data from the local file."""
+    """Load the Google Wallet API data from the local file."""
     filename = module_tmp_path / "wallet_api_data.json"
     if not filename.exists():
         request_api_data_write_to_file(

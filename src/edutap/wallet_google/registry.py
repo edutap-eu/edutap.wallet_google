@@ -46,8 +46,8 @@ _MODEL_REGISTRY_BY_MODEL: "dict[type[Model], RegistryMetadataDict]" = {}
 
 
 class register_model:
-    """
-    Registers a Pydantic model based on Model in a registry.
+    """Register a Pydantic model based on Model in a registry.
+
     To be used as a decorator.
     """
 
@@ -66,7 +66,7 @@ class register_model:
         can_message: bool = True,
     ):
         """
-        Prepares the registration of a Model or its subclasses.
+        Prepare the registration of a Model or its subclasses.
 
         :param name:        Name of the model. Usually the same as the class name.
         :param url_part:    Part of the URL to be used for the RESTful API endpoint.
@@ -100,7 +100,7 @@ class register_model:
         self,
         cls: type[ModelT],
     ) -> type[ModelT]:
-        """Registers the given class in the registry."""
+        """Register the given class in the registry."""
         name = self.metadata["name"]
         if name in _MODEL_REGISTRY_BY_NAME:
             raise ValueError(f"Duplicate registration of '{name}'")
@@ -111,12 +111,12 @@ class register_model:
 
 
 def lookup_model_by_name(name: str) -> "type[Model]":
-    """Returns the model with the given name."""
+    """Return the model with the given name."""
     return _MODEL_REGISTRY_BY_NAME[name]["model"]
 
 
 def lookup_model_by_plural_name(plural_name: str) -> "type[Model]":
-    """Returns the model with the given plural name."""
+    """Return the model with the given plural name."""
     for model in _MODEL_REGISTRY_BY_NAME.values():
         if model["plural"] == plural_name:
             return model["model"]
@@ -124,22 +124,22 @@ def lookup_model_by_plural_name(plural_name: str) -> "type[Model]":
 
 
 def lookup_metadata_by_name(name: str) -> RegistryMetadataDict:
-    """Returns the metadata of the model with the given name."""
+    """Return the metadata of the model with the given name."""
     return _MODEL_REGISTRY_BY_NAME[name]
 
 
 def lookup_metadata_by_model_instance(model: "Model") -> RegistryMetadataDict:
-    """Returns the registry metadata by a given instance of a model."""
+    """Return the registry metadata by a given instance of a model."""
     return _MODEL_REGISTRY_BY_MODEL[type(model)]
 
 
 def lookup_metadata_by_model_type(model_type: "type[Model]") -> RegistryMetadataDict:
-    """Returns the registry metadata by a given model type."""
+    """Return the registry metadata by a given model type."""
     return _MODEL_REGISTRY_BY_MODEL[model_type]
 
 
 def raise_when_operation_not_allowed(name: str, operation: str) -> None:
-    """Verifies that the given operation is allowed for the given registered name.
+    """Verify that the given operation is allowed for the given registered name.
 
     :raises: ValueError when the operation is not allowed.
     """
@@ -244,7 +244,7 @@ def _find_models() -> dict[str, "type[Model]"]:
 
 @functools.cache
 def _find_enums() -> list[str]:
-    """Returns a list of all enum class names."""
+    """Return a list of all enum class names."""
     # Imported by name for the same reason as in _find_models() above.
     enums_module = importlib.import_module(
         "edutap.wallet_google.models.datatypes.enums"
@@ -257,7 +257,7 @@ def _find_enums() -> list[str]:
 
 @functools.cache
 def _get_fields_for_model(model: "type[Model]") -> list[str]:
-    """Returns the list of valid fields for the given registered name."""
+    """Return the list of valid fields for the given model class."""
     from .models.bases import Model
 
     fields: set[str] = set()
@@ -274,7 +274,7 @@ def _get_fields_for_model(model: "type[Model]") -> list[str]:
 
 @functools.cache
 def _get_fields_for_name(name: str) -> list[str]:
-    """Returns the list of valid fields for the given registered name."""
+    """Return the list of valid fields for the given registered name."""
     from .models.bases import Model
 
     if "__" in name:
@@ -301,7 +301,7 @@ def _get_fields_for_name(name: str) -> list[str]:
 
 
 def _get_fields_from_definition(name, definition: dict) -> list[str]:
-    """Returns the list of valid fields for the given schema object."""
+    """Return the list of valid fields for the given schema object."""
     fields: set[str] = set()
     if definition in ("string", "boolean"):
         fields.add(name)

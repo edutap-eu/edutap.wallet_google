@@ -157,10 +157,7 @@ async def test_message_expiration_just_before_expiry(mock_settings):
 @pytest.mark.asyncio
 @freeze_time("2025-10-15 10:01:00")
 async def test_message_expiration_expiry_check_ignored(mock_settings):
-    """
-    Test that the handler_callback_verify_expiry set to 0 disables
-    check for key expiration (needed for testing) (async).
-    """
+    """Test that the handler_callback_verify_expiry set to 0 disables check for key expiration (needed for testing) (async)."""
     from edutap.wallet_google.handlers.validate import verified_signed_message
 
     mock_settings.handler_callback_verify_signature = "1"

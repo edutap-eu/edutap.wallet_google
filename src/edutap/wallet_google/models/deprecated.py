@@ -1,5 +1,6 @@
 """
 Many Google wallet models or datatypes have deprecated attributes.
+
 Those must not be serialized again, nor repeated in the special models.
 To handle this, we create mixins which can be added to the models which still have the deprecated fields.
 """
@@ -12,10 +13,7 @@ from typing_extensions import deprecated
 
 
 class DeprecatedKindFieldMixin:
-    """
-    Mixin to add the deprecated kind field to a model.
-    May be removed in the future.
-    """
+    """Mixin to add the deprecated kind field to a model. May be removed in the future."""
 
     kind: Annotated[
         str,
@@ -30,10 +28,7 @@ class DeprecatedKindFieldMixin:
 
 
 class DeprecatedAllowMultipleUsersPerObjectMixin:
-    """
-    Mixin to add the deprecated allowMultipleUsersPerObject field to a model.
-    May be removed in the future.
-    """
+    """Mixin to add the deprecated allowMultipleUsersPerObject field to a model. May be removed in the future."""
 
     allowMultipleUsersPerObject: Annotated[
         bool,
@@ -48,10 +43,7 @@ class DeprecatedAllowMultipleUsersPerObjectMixin:
 
 
 class DeprecatedVersionFieldMixin:
-    """
-    Mixin to add the deprecated version field to a model.
-    May be removed in the future.
-    """
+    """Mixin to add the deprecated version field to a model. May be removed in the future."""
 
     version: Annotated[
         str | None,
@@ -80,10 +72,7 @@ class LatLongPoint(DeprecatedKindFieldMixin, Model):
 
 
 class DeprecatedLocationsFieldMixin:
-    """
-    Mixin to add the deprecated locations field to a model.
-    May be removed in the future.
-    """
+    """Mixin to add the deprecated locations field to a model. May be removed in the future."""
 
     locations: Annotated[
         list[LatLongPoint] | None,
@@ -175,10 +164,7 @@ class InfoModuleData(Model):
 
 
 class DeprecatedInfoModuleDataFieldMixin:
-    """
-    Mixin to add the deprecated infoModuleData field to a model.
-    May be removed in the future.
-    """
+    """Mixin to add the deprecated infoModuleData field to a model. May be removed in the future."""
 
     infoModuleData: Annotated[
         InfoModuleData | None,
@@ -239,10 +225,7 @@ class Image(DeprecatedKindFieldMixin, Model):
 
 
 class DeprecatedWordMarkFieldMixin:
-    """
-    Mixin to add the deprecated wordMark field to a model.
-    May be removed in the future.
-    """
+    """Mixin to add the deprecated wordMark field to a model. May be removed in the future."""
 
     wordMark: Annotated[
         list[Image] | None,

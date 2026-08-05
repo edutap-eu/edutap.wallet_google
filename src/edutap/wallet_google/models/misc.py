@@ -85,20 +85,13 @@ class AddMessageRequest(Model):
     can_message=False,
 )
 class JwtResource(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/jwt
-         https://developers.google.com/wallet/tickets/events/rest/v1/jwt
-         https://developers.google.com/wallet/generic/web/javascript-button#google-pay-api-for-passes-jwt.
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/jwt, https://developers.google.com/wallet/tickets/events/rest/v1/jwt and https://developers.google.com/wallet/generic/web/javascript-button#google-pay-api-for-passes-jwt."""
 
     jwt: str
 
 
 class Resources(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/jwt/insert#resources
-         https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert#resources.
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/jwt/insert#resources and https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert#resources."""
 
     eventTicketClasses: list[tickets_and_transit.EventTicketClass] | None = None
     eventTicketObjects: list[tickets_and_transit.EventTicketObject] | None = None

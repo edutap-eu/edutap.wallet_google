@@ -70,8 +70,7 @@ def _snake_to_camel(snake_str: str) -> str:
 
 
 class CamelCaseAliasEnum(Enum):
-    """Add an value alias in camelcase to the enum,
-    given the value in snake-case.
+    """Add a value alias in camelcase to the enum, given the value in snake-case.
 
     example: a enum like
 
@@ -102,6 +101,7 @@ class CamelCaseAliasEnum(Enum):
 
     def __eq__(self, other: typing.Any | Enum) -> bool:
         """Allow comparison with the camelcase value.
+
         Take into account that UPPER_CASE and camelCase are equal.
         """
         if not isinstance(other, Enum):

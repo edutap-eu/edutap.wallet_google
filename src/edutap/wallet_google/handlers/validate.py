@@ -1,5 +1,6 @@
 """
-Parts of this module are rewrites and borrows from from https://github.com/yoyowallet/google-pay-token-decryption
+Parts of this module are rewrites and borrows from from https://github.com/yoyowallet/google-pay-token-decryption.
+
 The above packages does not fulfill the needs we have here, but was a great starting point.
 Copyright is by its original authors at Yoyo Wallet <dev@yoyowallet.com>
 This file is under the MIT License, as found here https://github.com/yoyowallet/google-pay-token-decryption/blob/5cd006da9687171c1e35b55507b671c6e4eb513d/pyproject.toml#L8.
@@ -92,10 +93,7 @@ def _calculate_cache_expiration(keys: RootSigningPublicKeys) -> float:
 
 
 def _construct_signed_data(*args: str) -> bytes:
-    """
-    Construct the signed message from the list of its components by concatenating the
-    byte length of each component in 4 bytes little-endian format plus the UTF-8 encoded
-    component.
+    """Construct the signed message from the list of its components by concatenating the byte length of each component in 4 bytes little-endian format plus the UTF-8 encoded component.
 
     See https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#verify-signature
     or  https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#how-to-construct-the-byte-string-for-intermediate-signing-key-signature
@@ -243,9 +241,7 @@ async def google_root_signing_public_keys(
 
 
 async def verified_signed_message(data: CallbackData) -> SignedMessage:
-    """
-    Verifies the signature of the callback data asynchronously.
-    and returns the parsed SignedMessage.
+    """Verify the signature of the callback data and return the parsed SignedMessage, asynchronously.
 
     Async version using httpx.AsyncClient for fetching Google root signing keys.
     """

@@ -299,9 +299,7 @@ class SharedDataType(CamelCaseAliasEnum):
 
 
 class State(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/State
-         https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/State.
+    """see: https://developers.google.com/wallet/generic/rest/v1/State and https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/State.
 
     The official reference page does not spell out the semantic difference
     between COMPLETED, EXPIRED, and INACTIVE — in the Wallet app they all

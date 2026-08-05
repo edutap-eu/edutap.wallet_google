@@ -96,6 +96,7 @@ class Pagination(DeprecatedKindFieldMixin, Model):
 
 class PaginatedResponse(Model):
     """All Class and Object List Responses are paginated.
+
     see: https://developers.google.com/wallet/reference/rest/v1/loyaltyclass/list
          https://developers.google.com/wallet/reference/rest/v1/loyaltyobject/list
          https://developers.google.com/wallet/reference/rest/v1/offerclass/list

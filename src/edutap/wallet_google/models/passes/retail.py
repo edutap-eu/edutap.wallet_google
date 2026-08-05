@@ -204,10 +204,7 @@ class LoyaltyObject(
     DeprecatedInfoModuleDataFieldMixin,
     ObjectModel,
 ):
-    """
-    data-type,
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject.
-    """
+    """data-type, see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject."""
 
     # inherits kind (deprecated)
     classReference: LoyaltyClass | None = None
