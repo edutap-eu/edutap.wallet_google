@@ -53,7 +53,8 @@ which merges anything on its own:
 
 - **Renovate** (hosted Mend app, configured in `renovate.json5`) watches the
   actions in `.github/workflows/` and the dependencies in `pyproject.toml`.
-  It checks in before 4am every Monday.
+  It checks in before 4 AM every Monday, except for security advisories,
+  which bypass the schedule and arrive immediately.
 - **Dependabot** (`.github/dependabot.yml`) also watches
   `.github/workflows/`, in parallel with Renovate, on purpose, for a
   transition period: seeing two pull requests for the same action bump is
