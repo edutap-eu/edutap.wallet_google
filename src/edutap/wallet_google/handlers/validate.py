@@ -1,5 +1,5 @@
 """
-Parts of this module are rewrites and borrows from from https://github.com/yoyowallet/google-pay-token-decryption.
+Parts of this module are rewrites and borrows from https://github.com/yoyowallet/google-pay-token-decryption.
 
 The above packages does not fulfill the needs we have here, but was a great starting point.
 Copyright is by its original authors at Yoyo Wallet <dev@yoyowallet.com>
@@ -93,7 +93,10 @@ def _calculate_cache_expiration(keys: RootSigningPublicKeys) -> float:
 
 
 def _construct_signed_data(*args: str) -> bytes:
-    """Construct the signed message from the list of its components by concatenating the byte length of each component in 4 bytes little-endian format plus the UTF-8 encoded component.
+    """Construct the signed message from its components.
+
+    Concatenates, for each component, its byte length in 4-byte
+    little-endian format followed by the UTF-8 encoded component.
 
     See https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#verify-signature
     or  https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#how-to-construct-the-byte-string-for-intermediate-signing-key-signature
