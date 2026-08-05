@@ -10,6 +10,12 @@ authors = [
     {name = "Jens Klein", email = "jk@kleinundpartner.at"},
     {name = "Robert Niederreiter", email = "office@squarewave.at"},
 ]
+# Python 3.10 reaches end of life on 2026-10-31. Dropping it narrows this
+# field, which is a breaking change for consumers, so it gets its own release
+# rather than riding along with something else. Everything that changes with
+# it: requires-python below, the 3.10 classifier, [tool.ruff] target-version,
+# [tool.ty.environment] python-version, [tool.tox] env_list,
+# [tool.tox.gh.python], and the matrix in .github/workflows/tests.yaml.
 requires-python = ">=3.10"
 license = "EUPL-1.2"
 license-files = ["LICENSE"]
