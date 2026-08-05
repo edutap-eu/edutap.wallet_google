@@ -223,14 +223,14 @@ dependency_groups = ["dev"]
 [tool.tox.env.format]
 description = "automatically reformats code"
 skip_install = true
-deps = ["pre-commit"]
+deps = ["prek"]
 commands = [
-    ["pre-commit", "run", "-a", "ruff"],
-    ["pre-commit", "run", "-a", "ruff-format"],
+    ["prek", "run", "-a", "ruff"],
+    ["prek", "run", "-a", "ruff-format"],
 ]
 
 [tool.tox.env.lint]
 description = "run linters that will help improve the code style"
 skip_install = true
-deps = ["pre-commit"]
-commands = [["pre-commit", "run", "-a"]]
+deps = ["prek"]
+commands = [["prek", "run", "-a"]]
