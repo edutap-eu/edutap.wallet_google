@@ -91,13 +91,15 @@ async def test_handler_validate_ok(mock_settings):
 
 @pytest.mark.asyncio
 async def test_handler_validate_invalid(mock_settings):
-    """Test that invalid signature raises exception (async)."""
+    """Test that an invalid (expired) message raises ValueError."""
     from edutap.wallet_google.handlers.validate import verified_signed_message
 
     mock_settings.handler_callback_verify_signature = "1"
 
+    # expTimeMillis is 0 in the fixture, so this always fails the expiry
+    # check with a ValueError, before signature verification is even reached.
     data = CallbackData.model_validate(callback_data_for_test_failure)
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError, match="Expired message"):
         await verified_signed_message(data)
 
 

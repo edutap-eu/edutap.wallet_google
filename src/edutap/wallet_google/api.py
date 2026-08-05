@@ -313,7 +313,16 @@ def _prepare_update(
     resource_id, verified_json = validate_data_and_convert_to_json(
         model, data, existing=True, resource_id_key=model_metadata["resource_id"]
     )
-    assert resource_id is not None, "resource_id is required for update"
+    if resource_id is None:
+        # A caller can pass a model instance whose resource-id field was never
+        # set; validate_data_and_convert_to_json() then legitimately returns
+        # None (see its `skip_resource_id` branch for the other case that
+        # yields None). That is a caller mistake, not an internal invariant,
+        # so it must survive python -O as a real, actionable error.
+        raise ValueError(
+            f"resource_id (field '{model_metadata['resource_id']}') must be "
+            f"set on the model instance for an update"
+        )
     return name, resource_id, verified_json, model
 
 

@@ -172,9 +172,9 @@ class GenericType(CamelCaseAliasEnum):
     """
 
     GENERIC_TYPE_UNSPECIFIED = "GENERIC_TYPE_UNSPECIFIED"  # Unspecified generic type.
-    GENERIC_SEASON_PASS = "GENERIC_SEASON_PASS"  # Season pass
+    GENERIC_SEASON_PASS = "GENERIC_SEASON_PASS"  # noqa: S105  # an enum member, not a secret  # Season pass
     GENERIC_UTILITY_BILLS = "GENERIC_UTILITY_BILLS"  # Utility bills
-    GENERIC_PARKING_PASS = "GENERIC_PARKING_PASS"  # Parking pass
+    GENERIC_PARKING_PASS = "GENERIC_PARKING_PASS"  # noqa: S105  # an enum member, not a secret  # Parking pass
     GENERIC_VOUCHER = "GENERIC_VOUCHER"  # Voucher
     GENERIC_GYM_MEMBERSHIP = "GENERIC_GYM_MEMBERSHIP"  # Gym membership cards
     GENERIC_LIBRARY_MEMBERSHIP = (

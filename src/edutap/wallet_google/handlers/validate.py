@@ -331,9 +331,15 @@ async def verified_signed_message(data: CallbackData) -> SignedMessage:
         logger.error(
             f"Message signature verification failed: {e.__class__.__name__}: {e}"
         )
+        # This is cryptographic signature verification on an inbound
+        # webhook callback: the class name and message are already logged
+        # above for server-side debugging. Not chaining keeps whatever the
+        # `cryptography` library put into its exception (which is not
+        # documented to avoid leaking key- or padding-related detail) out
+        # of any downstream trace of this security-sensitive failure.
         raise ValueError(
             "Invalid message signature: verification failed with intermediate signing key"
-        )
+        ) from None
 
     logger.info(
         f"Successfully verified callback for {message.classId}/{message.objectId} "

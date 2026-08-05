@@ -35,10 +35,14 @@ async def handle_callback(request: Request, callback_data: CallbackData):
     # get the registered callback handlers
     try:
         handlers = get_callback_handlers()
-    except NotImplementedError:
+    except NotImplementedError as error:
+        # NotImplementedError carries no more than a static "no plug-in
+        # found" message (see plugins.get_plugins()); chaining it keeps the
+        # traceback pointing at the failed entry_points lookup, which helps
+        # diagnosing a deployment/registration problem.
         raise HTTPException(
             status_code=500, detail="No callback handlers were registered."
-        )
+        ) from error
 
     # extract and verify message (given verification is not disabled)
     callback_message = await verified_signed_message(callback_data)
@@ -67,13 +71,13 @@ async def handle_callback(request: Request, callback_data: CallbackData):
                 timeout=client_pool.settings.handlers_callback_timeout,
             )
         )
-    except asyncio.TimeoutError:
+    except asyncio.TimeoutError as error:
         logger.exception(
             f"Timeout after {client_pool.settings.handlers_callback_timeout}s while handling the callbacks.",
         )
         raise HTTPException(
             status_code=500, detail="Error while handling the callbacks (timeout)."
-        )
+        ) from error
     # results is a list of exceptions or None
     if any(results):
         logger.error("Error while handling a callbacks.")
@@ -92,10 +96,13 @@ async def handle_image(request: Request, encrypted_image_id: str):
     # get the registered image providers
     try:
         handlers = get_image_providers()
-    except NotImplementedError:
+    except NotImplementedError as error:
+        # Same reasoning as the callback handler lookup above: the original
+        # carries only a static message and chaining it keeps the traceback
+        # pointing at the failed entry_points lookup.
         raise HTTPException(
             status_code=500, detail="No image providers were registered."
-        )
+        ) from error
     if len(handlers) > 1:
         logger.error("Multiple image providers found, abort.")
         raise HTTPException(
@@ -112,29 +119,41 @@ async def handle_image(request: Request, encrypted_image_id: str):
             handler.image_by_id(image_id),
             timeout=client_pool.settings.handlers_image_timeout,
         )
-    except asyncio.TimeoutError:
+    except asyncio.TimeoutError as error:
         logger.exception(
             f"Timeout after {client_pool.settings.handlers_image_timeout}s while handling the image.",
         )
         raise HTTPException(
             status_code=500, detail="Error while handling the image (timeout)."
-        )
-    except asyncio.CancelledError:
+        ) from error
+    except asyncio.CancelledError as error:
         logger.exception(
             "Cancelled while handling the image.",
         )
         raise HTTPException(
             status_code=500, detail="Error while handling the image (cancel)."
-        )
+        ) from error
     except LookupError:
-        raise HTTPException(status_code=404, detail="Image not found.")
+        # image_by_id() is provided by a pluggable ImageProvider and its
+        # LookupError may embed the lookup key (e.g. a storage path or
+        # object id derived from the decrypted image id) in its message.
+        # That is exactly the kind of detail the caller must not see, and
+        # it is not needed server-side either — nothing here logs it, unlike
+        # the other except-branches, precisely to keep it out of chains that
+        # might get exported to less trusted sinks.
+        raise HTTPException(status_code=404, detail="Image not found.") from None
     except Exception:
         logger.exception(
             "Error while handling a image.",
         )
+        # A catch-all around a third-party ImageProvider plugin: the
+        # original could be anything the plugin author's code raises, with
+        # unknown content. It is already fully captured by logger.exception
+        # above; not chaining it keeps the HTTPException from also carrying
+        # arbitrary plugin-internal details.
         raise HTTPException(
             status_code=500, detail="Error while handling the image (exception)."
-        )
+        ) from None
     cache_control = client_pool.settings.handler_image_cache_control.format(
         max_age=result.max_age
     )

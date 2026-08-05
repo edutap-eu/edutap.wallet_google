@@ -174,8 +174,12 @@ target-version = "py310"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP"]
+select = ["B", "E", "F", "I", "S", "UP", "W"]
 ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# assert *is* the test framework here; S101 in tests is not a finding.
+"tests/**" = ["S101"]
 
 [tool.ruff.lint.isort]
 force-single-line = true

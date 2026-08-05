@@ -264,7 +264,7 @@ def _find_enums() -> list[str]:
         "edutap.wallet_google.models.datatypes.enums"
     )
     enums: list[str] = []
-    for enum_name, enum in inspect.getmembers(enums_module, inspect.isclass):
+    for enum_name, _enum in inspect.getmembers(enums_module, inspect.isclass):
         enums.append(enum_name)
     return enums
 
