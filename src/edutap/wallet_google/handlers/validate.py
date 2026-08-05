@@ -2,7 +2,7 @@
 Parts of this module are rewrites and borrows from from https://github.com/yoyowallet/google-pay-token-decryption
 The above packages does not fulfill the needs we have here, but was a great starting point.
 Copyright is by its original authors at Yoyo Wallet <dev@yoyowallet.com>
-This file is under the MIT License, as found here https://github.com/yoyowallet/google-pay-token-decryption/blob/5cd006da9687171c1e35b55507b671c6e4eb513d/pyproject.toml#L8
+This file is under the MIT License, as found here https://github.com/yoyowallet/google-pay-token-decryption/blob/5cd006da9687171c1e35b55507b671c6e4eb513d/pyproject.toml#L8.
 
 The google-pay-token-decryption uses ECv2 for verification and decryption of payment tokens.
 
@@ -245,7 +245,7 @@ async def google_root_signing_public_keys(
 async def verified_signed_message(data: CallbackData) -> SignedMessage:
     """
     Verifies the signature of the callback data asynchronously.
-    and returns the parsed SignedMessage
+    and returns the parsed SignedMessage.
 
     Async version using httpx.AsyncClient for fetching Google root signing keys.
     """

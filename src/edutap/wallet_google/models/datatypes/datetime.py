@@ -10,17 +10,13 @@ import datetime
 
 
 class DateTime(Model):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/DateTime
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/DateTime."""
 
     date: datetime.datetime
 
 
 class TimeInterval(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/TimeInterval
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/TimeInterval."""
 
     # inherits kind (deprecated)
     start: DateTime | None = None

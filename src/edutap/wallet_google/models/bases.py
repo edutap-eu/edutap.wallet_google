@@ -22,9 +22,7 @@ class Model(BaseModel):
 
 
 class WithIdModel(Model):
-    """
-    Model for Google Wallet models with an identifier.
-    """
+    """Model for Google Wallet models with an identifier."""
 
     id: str
 
@@ -104,7 +102,7 @@ class CamelCaseAliasEnum(Enum):
 
     def __eq__(self, other: typing.Any | Enum) -> bool:
         """Allow comparison with the camelcase value.
-        Take into account that UPPER_CASE and camelCase are equal
+        Take into account that UPPER_CASE and camelCase are equal.
         """
         if not isinstance(other, Enum):
             other = self.__class__(other)

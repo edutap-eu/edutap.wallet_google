@@ -12,26 +12,20 @@ from pydantic import model_validator
 
 
 class ActivationOptions(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitclass#activationoptions
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitclass#activationoptions."""
 
     activationUrl: AnyHttpUrl | None = None
     allowReactivation: bool = False
 
 
 class ActivationStatus(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#activationstatus
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#activationstatus."""
 
     state: ActivationState = ActivationState.UNKNOWN_STATE
 
 
 class TicketRestrictions(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketrestrictions
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketrestrictions."""
 
     routeRestrictions: LocalizedString | None = None
     routeRestrictionsDetails: LocalizedString | None = None
@@ -40,9 +34,7 @@ class TicketRestrictions(Model):
 
 
 class TicketCost(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketcost
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketcost."""
 
     faceValue: Money | None = None
     purchasePrice: Money | None = None
@@ -50,9 +42,7 @@ class TicketCost(Model):
 
 
 class TicketSeat(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketseat
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketseat."""
 
     fareClass: FareClass = FareClass.FARE_CLASS_UNSPECIFIED
     customFareClass: LocalizedString | None = None
@@ -62,9 +52,7 @@ class TicketSeat(Model):
 
 
 class TicketLeg(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketleg
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketleg."""
 
     originStationCode: str | None = None
     originName: LocalizedString | None = None
@@ -99,9 +87,7 @@ class TicketLeg(Model):
 
 
 class PurchaseDetails(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#purchasedetails
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#purchasedetails."""
 
     purchaseReceiptNumber: str | None = None
     purchaseDateTime: str | None = None
@@ -111,8 +97,6 @@ class PurchaseDetails(Model):
 
 
 class DeviceContext(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#devicecontext
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#devicecontext."""
 
     deviceToken: str | None = None

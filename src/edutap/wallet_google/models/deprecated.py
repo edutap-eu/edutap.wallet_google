@@ -67,7 +67,7 @@ class DeprecatedVersionFieldMixin:
 
 class LatLongPoint(DeprecatedKindFieldMixin, Model):
     """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/LatLongPoint
+    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/LatLongPoint.
 
     To avoid circular imports this model is a duplicate of the one in location.py
 
@@ -99,7 +99,7 @@ class DeprecatedLocationsFieldMixin:
 
 class TranslatedString(DeprecatedKindFieldMixin, Model):
     """
-    see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString#translatedstring
+    see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString#translatedstring.
 
     To avoid circular imports this model is a duplicate of the one in location.py
 
@@ -113,7 +113,7 @@ class TranslatedString(DeprecatedKindFieldMixin, Model):
 
 class LocalizedString(DeprecatedKindFieldMixin, Model):
     """
-    see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString
+    see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString.
 
     To avoid circular imports this model is a duplicate of the one in localized_string.py
 
@@ -127,7 +127,7 @@ class LocalizedString(DeprecatedKindFieldMixin, Model):
 
 class LabelValue(Model):
     """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvalue
+    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvalue.
 
     To avoid circular imports this model is a duplicate of the one in data.py
 
@@ -142,7 +142,7 @@ class LabelValue(Model):
 
 class LabelValueRow(Model):
     """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvaluerow
+    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData#labelvaluerow.
 
     To avoid circular imports this model is a duplicate of the one in data.py
 
@@ -154,7 +154,7 @@ class LabelValueRow(Model):
 
 class InfoModuleData(Model):
     """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData
+    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/InfoModuleData.
 
     To avoid circular imports this model is a duplicate of the one in data.py
 
@@ -194,7 +194,7 @@ class DeprecatedInfoModuleDataFieldMixin:
 
 class ImageUri(Model):
     """
-    see: https://developers.google.com/wallet/generic/rest/v1/Image#imageuri
+    see: https://developers.google.com/wallet/generic/rest/v1/Image#imageuri.
 
     To avoid circular imports this model is a duplicate of the one in general.py
 
@@ -226,7 +226,7 @@ class ImageUri(Model):
 
 class Image(DeprecatedKindFieldMixin, Model):
     """
-    see: https://developers.google.com/wallet/generic/rest/v1/Image
+    see: https://developers.google.com/wallet/generic/rest/v1/Image.
 
     To avoid circular imports this model is a duplicate of the one in general.py
 

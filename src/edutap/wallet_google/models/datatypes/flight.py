@@ -13,9 +13,7 @@ from pydantic import Field
 
 
 class BoardingAndSeatingInfo(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightobject#BoardingAndSeatingInfo
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightobject#BoardingAndSeatingInfo."""
 
     # inherits kind (deprecated)
     boardingGroup: str | None = None
@@ -29,9 +27,7 @@ class BoardingAndSeatingInfo(DeprecatedKindFieldMixin, Model):
 
 
 class FrequentFlyerInfo(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightobject#FrequentFlyerInfo
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightobject#FrequentFlyerInfo."""
 
     # inherits kind (deprecated)
     frequentFlyerProgramName: LocalizedString
@@ -39,9 +35,7 @@ class FrequentFlyerInfo(DeprecatedKindFieldMixin, Model):
 
 
 class ReservationInfo(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightobject#ReservationInfo
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightobject#ReservationInfo."""
 
     # inherits kind (deprecated)
     confirmationCode: str | None = None
@@ -50,9 +44,7 @@ class ReservationInfo(DeprecatedKindFieldMixin, Model):
 
 
 class FlightCarrier(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightcarrier
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightcarrier."""
 
     # inherits kind (deprecated)
     carrierIataCode: str | None = Field(
@@ -70,9 +62,7 @@ class FlightCarrier(DeprecatedKindFieldMixin, Model):
 
 
 class FlightHeader(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightheader
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightheader."""
 
     # inherits kind (deprecated)
     carrier: FlightCarrier | None = None
@@ -83,9 +73,7 @@ class FlightHeader(DeprecatedKindFieldMixin, Model):
 
 
 class AirportInfo(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#airportinfo
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightclass#airportinfo."""
 
     # inherits kind (deprecated)
     airportIataCode: str | None = Field(max_length=3, default=None)
@@ -95,9 +83,7 @@ class AirportInfo(DeprecatedKindFieldMixin, Model):
 
 
 class BoardingAndSeatingPolicy(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#boardingandseatingpolicy
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightclass#boardingandseatingpolicy."""
 
     # inherits kind (deprecated)
     boardingPolicy: BoardingPolicy = BoardingPolicy.BOARDING_POLICY_UNSPECIFIED

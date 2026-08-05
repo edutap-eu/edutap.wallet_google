@@ -100,9 +100,7 @@ class register_model:
         self,
         cls: type[ModelT],
     ) -> type[ModelT]:
-        """
-        Registers the given class in the registry.
-        """
+        """Registers the given class in the registry."""
         name = self.metadata["name"]
         if name in _MODEL_REGISTRY_BY_NAME:
             raise ValueError(f"Duplicate registration of '{name}'")
@@ -113,16 +111,12 @@ class register_model:
 
 
 def lookup_model_by_name(name: str) -> "type[Model]":
-    """
-    Returns the model with the given name.
-    """
+    """Returns the model with the given name."""
     return _MODEL_REGISTRY_BY_NAME[name]["model"]
 
 
 def lookup_model_by_plural_name(plural_name: str) -> "type[Model]":
-    """
-    Returns the model with the given plural name.
-    """
+    """Returns the model with the given plural name."""
     for model in _MODEL_REGISTRY_BY_NAME.values():
         if model["plural"] == plural_name:
             return model["model"]
@@ -130,23 +124,17 @@ def lookup_model_by_plural_name(plural_name: str) -> "type[Model]":
 
 
 def lookup_metadata_by_name(name: str) -> RegistryMetadataDict:
-    """
-    Returns the metadata of the model with the given name.
-    """
+    """Returns the metadata of the model with the given name."""
     return _MODEL_REGISTRY_BY_NAME[name]
 
 
 def lookup_metadata_by_model_instance(model: "Model") -> RegistryMetadataDict:
-    """
-    Returns the registry metadata by a given instance of a model
-    """
+    """Returns the registry metadata by a given instance of a model."""
     return _MODEL_REGISTRY_BY_MODEL[type(model)]
 
 
 def lookup_metadata_by_model_type(model_type: "type[Model]") -> RegistryMetadataDict:
-    """
-    Returns the registry metadata by a given model type
-    """
+    """Returns the registry metadata by a given model type."""
     return _MODEL_REGISTRY_BY_MODEL[model_type]
 
 
@@ -256,9 +244,7 @@ def _find_models() -> dict[str, "type[Model]"]:
 
 @functools.cache
 def _find_enums() -> list[str]:
-    """
-    Returns a list of all enum class names.
-    """
+    """Returns a list of all enum class names."""
     # Imported by name for the same reason as in _find_models() above.
     enums_module = importlib.import_module(
         "edutap.wallet_google.models.datatypes.enums"

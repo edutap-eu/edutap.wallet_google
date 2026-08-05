@@ -123,7 +123,7 @@ def _create_payload(models: list[ClassModel | ObjectModel | Reference]) -> JWTPa
 
 
 def _convert_str_or_datetime_to_str(value: str | datetime.datetime) -> str:
-    """convert and check the value to be a valid string for the JWT claim timestamps"""
+    """Convert and check the value to be a valid string for the JWT claim timestamps."""
     if isinstance(value, datetime.datetime):
         return str(int(value.timestamp()))
     if value == "":

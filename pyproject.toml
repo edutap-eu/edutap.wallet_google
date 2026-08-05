@@ -174,12 +174,29 @@ target-version = "py310"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["B", "E", "F", "I", "S", "UP", "W"]
-ignore = ["E501"]
+select = ["B", "D", "E", "F", "I", "S", "UP", "W"]
+ignore = [
+    "E501",
+    # The "undocumented public …" rules. 144 findings, every one of which needs
+    # a docstring written rather than a fix applied. Enabling them now would buy
+    # 144 hasty docstrings or a permanent blanket ignore. Write the docstrings,
+    # then delete these lines — not the other way round.
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D107",
+]
 
 [tool.ruff.lint.per-file-ignores]
 # assert *is* the test framework here; S101 in tests is not a finding.
 "tests/**" = ["S101"]
+
+[tool.ruff.lint.pydocstyle]
+# Also settles the D203/D211 and D212/D213 incompatibilities, which ruff
+# otherwise warns about on every single run.
+convention = "pep257"
 
 [tool.ruff.lint.isort]
 force-single-line = true

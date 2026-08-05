@@ -12,7 +12,7 @@ from pydantic import model_validator
 class LoyaltyPointsBalance(Model):
     """
     data-type,
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPointsBalance
+    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPointsBalance.
     """
 
     string: str | None = None
@@ -37,7 +37,7 @@ class LoyaltyPointsBalance(Model):
 class LoyaltyPoints(Model):
     """
     data-type,
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPoints
+    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject#LoyaltyPoints.
     """
 
     label: str | None = None

@@ -13,7 +13,7 @@ from typing_extensions import deprecated
 
 class TextModuleData(Model):
     """
-    see: https://developers.google.com/wallet/generic/rest/v1/TextModuleData
+    see: https://developers.google.com/wallet/generic/rest/v1/TextModuleData.
 
     Google accepts both header and localizedHeader, body and localizedBody
     but if localizedHeader and localizedBody are present, header and body are ignored and set to None.
@@ -29,35 +29,27 @@ class TextModuleData(Model):
 
 
 class LinksModuleData(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/LinksModuleData
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/LinksModuleData."""
 
     uris: list[Uri] | None = None
 
 
 class ImageModuleData(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/ImageModuleData
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/ImageModuleData."""
 
     mainImage: Image | None = None
     id: str | None = None
 
 
 class AppTarget(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#apptarget
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#apptarget."""
 
     targetUri: Uri | None = None
     packageName: str | None = None
 
 
 class AppLinkInfo(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#applinkinfo
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData#applinkinfo."""
 
     appLogoImage: Annotated[
         Image | None,
@@ -93,9 +85,7 @@ class AppLinkInfo(Model):
 
 
 class AppLinkData(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/AppLinkData."""
 
     androidAppLinkInfo: AppLinkInfo | None = None
     iosAppLinkInfo: Annotated[
