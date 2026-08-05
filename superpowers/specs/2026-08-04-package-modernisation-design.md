@@ -159,10 +159,23 @@ the version in a `rev:` where pre-commit.ci's monthly autoupdate can reach it:
 ```
 
 The hook is `pass_filenames: false` and `always_run: true`, matching the current local
-hook's behaviour. `ty` must come out of the `skip:` list in the `ci:` block once it is a
-remote hook that pre-commit.ci can actually run — unless it turns out to be too slow there,
-in which case it stays skipped and the point still stands, because the *revision* is now
-maintained either way.
+hook's behaviour.
+
+This section originally expected `ty` to come out of the `skip:` list in the `ci:` block
+once it was a remote hook, hedged with "unless it turns out to be too slow there".
+**Measured on PR #96: it stays skipped, and the reason is not slowness.** The hook's entry
+is `uv check --quiet --preview-features=check-command --ty-version=0.0.66`, and `uv check`
+builds the project, which resolves `build-system.requires` against PyPI. pre-commit.ci
+disables network access while hooks run, so the build fails with
+`dns error: Temporary failure in name resolution` before ty type-checks anything. That is
+architectural — no pin, rev bump or timeout setting changes it — and it applies to any
+hook that resolves dependencies at run time, not just this one.
+
+The hedge's conclusion still holds, and is the actual point of the change: the *revision*
+is maintained either way, because `rev:` is what pre-commit.ci's monthly autoupdate
+rewrites, whether or not the hook is in `skip:`. And ty is not left unchecked — the
+GitHub Actions `lint` job runs `tox -e lint`, which runs every hook including ty, with
+network available. Verified passing at v0.0.66 on PR #96.
 
 Given ty is pre-1.0 and moves fast, expect the jump from 0.0.17 to 0.0.66 to surface new
 diagnostics. `[tool.ty.rules]` already downgrades four rules to warnings; anything new gets

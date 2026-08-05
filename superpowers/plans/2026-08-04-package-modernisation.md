@@ -592,15 +592,21 @@ The point is not the version, it is where the version lives. `entry: uvx ty@0.0.
 
 The upstream hook is already `pass_filenames: false` and `always_run: true`, matching the local hook it replaces.
 
-- [ ] **Step 2: Take ty out of the pre-commit.ci skip list**
+- [ ] ~~**Step 2: Take ty out of the pre-commit.ci skip list**~~ — **SUPERSEDED, tested and reverted.**
 
-In the `ci:` block at the top of `.pre-commit-config.yaml`:
+This step said `ty` was skipped because a `local` hook shelling out to `uvx` cannot run in pre-commit.ci's sandbox, and that a remote hook can. **The second half is wrong.** It was tested rather than assumed: the branch was pushed as draft PR #96, and the ty hook was the only failure in the run.
 
-```yaml
-    skip: [check-manifest, pyroma]
+The upstream hook's entry is `uv check --quiet --preview-features=check-command --ty-version=0.0.66`. `uv check` builds the project, which resolves `build-system.requires` against PyPI, and pre-commit.ci disables network while hooks run:
+
+```
+× Failed to build `edutap-wallet-google @ file:///code`
+  ├─▶ Failed to resolve requirements from `build-system.requires`
+  ╰─▶ dns error: Temporary failure in name resolution
 ```
 
-`ty` was skipped because a `local` hook shelling out to `uvx` cannot run in pre-commit.ci's sandbox. A remote hook can.
+So the `ci:` block keeps `skip: [check-manifest, pyroma, ty]`, with that reasoning recorded as a comment in `.pre-commit-config.yaml` itself.
+
+Step 1 is unaffected and remains the point of the task: the version moved out of an `entry:` string that no tool could update — stuck at 0.0.17 for 49 releases — into a `rev:` that pre-commit.ci's monthly autoupdate maintains regardless of `skip:`. ty still runs in the GitHub Actions `lint` job via `tox -e lint` (verified passing at v0.0.66 on PR #96), and locally via `make lint`.
 
 - [ ] **Step 3: Run it and expect new diagnostics**
 

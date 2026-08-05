@@ -2,7 +2,32 @@ exclude: ^worktrees/
 ci:
     autofix_prs: false
     autoupdate_schedule: monthly
-    skip: [check-manifest, pyroma]
+    # ty is skipped here for a measured reason, not out of caution — please do
+    # not quietly drop it from this list.
+    #
+    # The ty-pre-commit hook's entry is
+    #   uv check --quiet --preview-features=check-command --ty-version=0.0.66
+    # and `uv check` builds the project, which resolves `build-system.requires`
+    # against PyPI. pre-commit.ci disables network access while hooks run, so
+    # the build cannot resolve and the hook fails before ty ever type-checks
+    # anything. Observed on PR #96, where it was tested deliberately:
+    #
+    #   × Failed to build `edutap-wallet-google @ file:///code`
+    #     ├─▶ Failed to resolve requirements from `build-system.requires`
+    #     ├─▶ No solution found when resolving: `hatchling>=1.27.0`, `hatch-vcs>=0.5.0`
+    #     ╰─▶ dns error: Temporary failure in name resolution
+    #
+    # Every other hook passed in that run. This is architectural, not a timeout
+    # and not a version problem: no pin or rev bump fixes it, because the runner
+    # has no network by design.
+    #
+    # ty is NOT unchecked as a result. It runs in the GitHub Actions `lint` job
+    # via `tox -e lint` (verified passing at v0.0.66 on PR #96) and locally via
+    # `make lint` and `prek run -a`. Only the pre-commit.ci execution is skipped,
+    # while `rev:` on the hook below stays inside pre-commit.ci's monthly
+    # autoupdate — which is the reason it became a remote hook in the first
+    # place.
+    skip: [check-manifest, pyroma, ty]
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
