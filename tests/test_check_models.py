@@ -23,8 +23,9 @@ MODEL_ALIAS_DICT = {
 
 def find_models() -> dict[str, type]:
     models: dict[str, type] = {}
-    pkg = importlib.import_module("edutap.wallet_google")
-    datatypes_module = pkg.models.datatypes
+    # Imported by name, not reached for as an attribute of the package: see the
+    # note in edutap.wallet_google.registry._find_models().
+    datatypes_module = importlib.import_module("edutap.wallet_google.models.datatypes")
     for name, module in inspect.getmembers(datatypes_module, inspect.ismodule):
         # print(f"Module: 'name', '{module}'")
         for cls_name, cls in inspect.getmembers(module, inspect.isclass):

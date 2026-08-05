@@ -213,6 +213,10 @@ async def test_cache_expiration_refresh(mock_settings):
     cached_after = GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(
         mock_settings.google_environment
     )
+    # dict.get() returns None for a missing key; assert the entry is there so a
+    # cache that was not refilled fails on this line instead of on the unpacking
+    # below with a bare "cannot unpack non-iterable NoneType".
+    assert cached_after is not None
     _, cache_exp_after = cached_after
     assert cache_exp_after > time.time()  # New expiration in future
 

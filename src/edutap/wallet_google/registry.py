@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 from typing import TypedDict
+from typing import TypeVar
 
 import functools
 import importlib
@@ -11,6 +12,16 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .models.bases import Model
+
+
+# The decorated class flows through `register_model.__call__` unchanged at
+# runtime, so the annotation has to carry its concrete type through as well.
+# Annotating the parameter and the return value both as `type[Model]` erased
+# every decorated class down to that base: `EventTicketClass` stopped being a
+# class for a type checker and became a variable holding some `type[Model]`,
+# which then cannot be used in a type expression at all. TypeVar and not PEP
+# 695 syntax because this package still supports Python 3.10.
+ModelT = TypeVar("ModelT", bound="Model")
 
 
 class RegistryMetadataDict(TypedDict, total=False):
@@ -86,8 +97,8 @@ class register_model:
 
     def __call__(
         self,
-        cls: "type[Model]",
-    ) -> "type[Model]":
+        cls: type[ModelT],
+    ) -> type[ModelT]:
         """
         Registers the given class in the registry.
         """
@@ -201,9 +212,16 @@ def _find_models() -> dict[str, "type[Model]"]:
     from .models.bases import Model
 
     models: dict[str, type[Model]] = {}
-    pkg = importlib.import_module("edutap.wallet_google")
-    datatypes_module = pkg.models.datatypes
-    deprecated_module = pkg.models.deprecated
+    # Import the two modules by name instead of reaching for them as attributes
+    # of the imported package. `edutap.wallet_google.models.datatypes` is a
+    # namespace package and `.deprecated` is not imported by
+    # `models/__init__.py`; both only happen to be set as attributes because
+    # other modules imported them first. That is a load-order coincidence, and
+    # a coincidence this function's whole result depends on.
+    datatypes_module = importlib.import_module("edutap.wallet_google.models.datatypes")
+    deprecated_module = importlib.import_module(
+        "edutap.wallet_google.models.deprecated"
+    )
 
     def _collect_classes(mod):
         for cls_name, cls in inspect.getmembers(mod, inspect.isclass):
@@ -232,8 +250,10 @@ def _find_enums() -> list[str]:
     """
     Returns a list of all enum class names.
     """
-    pkg = importlib.import_module("edutap.wallet_google")
-    enums_module = pkg.models.datatypes.enums
+    # Imported by name for the same reason as in _find_models() above.
+    enums_module = importlib.import_module(
+        "edutap.wallet_google.models.datatypes.enums"
+    )
     enums: list[str] = []
     for enum_name, enum in inspect.getmembers(enums_module, inspect.isclass):
         enums.append(enum_name)

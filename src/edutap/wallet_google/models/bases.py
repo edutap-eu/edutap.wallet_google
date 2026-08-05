@@ -42,7 +42,14 @@ def make_partial_model(model: type[Model]) -> type[Model]:
             field_overrides[name] = (field_info.annotation | None, None)
     if not field_overrides:
         return model
-    return create_model(
+    # ty 0.0.66 cannot select an overload for a call that passes **kwargs from a
+    # dict: it has no way to prove which keyword-only parameters the unpacking
+    # fills, so every overload of create_model is rejected. Reproducible without
+    # pydantic on any overloaded function with keyword-only parameters, and the
+    # same call against the non-overloaded implementation signature checks
+    # cleanly. Suppressed on this line rather than by downgrading the rule
+    # project-wide, because no-matching-overload does catch real errors.
+    return create_model(  # ty: ignore[no-matching-overload]
         f"Partial{model.__name__}",
         __base__=model,
         **field_overrides,

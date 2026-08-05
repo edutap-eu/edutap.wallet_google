@@ -20,10 +20,9 @@ lint: venv ## Run ruff checks and the type checker
 	$(PYTHON) -m ruff format --check src tests
 	# Runs the ty pinned in the typecheck dependency group, installed into
 	# .venv by the venv target above — not an unpinned `uvx ty check`, which
-	# would resolve to whatever the latest release happens to be. The local
-	# pre-commit hook currently pins a different, older ty
-	# (.pre-commit-config.yaml: ty@0.0.17); bringing the two into agreement
-	# is Task 3's job, not this target's.
+	# would resolve to whatever the latest release happens to be. Keep the
+	# pin in sync with rev: on the ty hook in .pre-commit-config.yaml, so
+	# this target and CI report the same thing.
 	$(PYTHON) -m ty check
 
 reformat: venv ## Autoformat and autofix

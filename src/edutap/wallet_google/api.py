@@ -458,7 +458,7 @@ def create(
     client = client_pool.client(credentials=credentials)
     response = client.post(
         url=url,
-        data=verified_json.encode("utf-8"),
+        content=verified_json.encode("utf-8"),
         headers=headers,
         params=params,
     )
@@ -534,13 +534,13 @@ def update(
     if partial:
         response = session.patch(
             url=client_pool.url(name, f"/{resource_id}"),
-            data=verified_json.encode("utf-8"),
+            content=verified_json.encode("utf-8"),
             params=params,
         )
     else:
         response = session.put(
             url=client_pool.url(name, f"/{resource_id}"),
-            data=verified_json.encode("utf-8"),
+            content=verified_json.encode("utf-8"),
             params=params,
         )
 
@@ -579,7 +579,9 @@ def message(
             params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
-    response = client.post(url=url, data=verified_json.encode("utf-8"), params=params)
+    response = client.post(
+        url=url, content=verified_json.encode("utf-8"), params=params
+    )
 
     handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
@@ -705,7 +707,7 @@ async def acreate(
     client = client_pool.async_client(credentials=credentials)
     response = await client.post(
         url=url,
-        data=verified_json.encode("utf-8"),
+        content=verified_json.encode("utf-8"),
         headers=headers,
         params=params,
     )
@@ -781,13 +783,13 @@ async def aupdate(
     if partial:
         response = await session.patch(
             url=client_pool.url(name, f"/{resource_id}"),
-            data=verified_json.encode("utf-8"),
+            content=verified_json.encode("utf-8"),
             params=params,
         )
     else:
         response = await session.put(
             url=client_pool.url(name, f"/{resource_id}"),
-            data=verified_json.encode("utf-8"),
+            content=verified_json.encode("utf-8"),
             params=params,
         )
 
@@ -827,7 +829,7 @@ async def amessage(
 
     client = client_pool.async_client(credentials=credentials)
     response = await client.post(
-        url=url, data=verified_json.encode("utf-8"), params=params
+        url=url, content=verified_json.encode("utf-8"), params=params
     )
 
     handle_response_errors(response, "send message to", name, resource_id)

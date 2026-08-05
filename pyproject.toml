@@ -169,9 +169,41 @@ exclude = ["worktrees/"]
 python-version = "3.10"
 extra-paths = ["src", "tests"]
 
+[tool.ty.terminal]
+# ty exits 1 on warning-level diagnostics by default. Every rule set to "warn"
+# below is one this project has deliberately decided not to block on yet, and a
+# non-zero exit for them makes "warn" mean exactly the same thing as "error" —
+# at which point the downgrades say nothing. The diagnostics are still printed;
+# only the exit code changes, and error-level ones still fail. Configured here
+# rather than as a --exit-zero-on-warning flag, so a bare `ty check` in a
+# terminal, `make lint` and the pre-commit hook all behave the same way.
+error-on-warning = false
+
 [tool.ty.rules]
 unresolved-import = "warn"
-# the following rules are stricter than mypy; downgrade to warnings for now
+# The following rules are stricter than mypy. As of ty 0.0.66 they report
+# nothing at all in src/ — every remaining instance is in tests/ — so this is
+# about how much type discipline the test suite is held to, not the library.
+#
+# unresolved-attribute (71x, all in tests/): the CRUD functions in api.py select
+#   the model class from a runtime registry lookup by string name, so they are
+#   annotated `-> Model` and cannot be narrower. Every test that reads a pass
+#   back and touches a concrete field — `read("EventTicketObject", ...).state` —
+#   is therefore an attribute access on the base class. Narrowing this needs a
+#   different public API shape (Literal overloads, or a model-class-first
+#   variant of read()), which is a design change and not a lint fix.
+# invalid-argument-type (31x, all in tests/): two causes, both test-local.
+#   Fixtures such as `@register_model("Foo", ...) class Foo: pass` in
+#   test_clientpool.py register a plain class that is not a Model subclass — the
+#   registry only stores it, so the tests pass, but the annotation is honest
+#   that this is not what the decorator is for. And test_handler_fastapi.py
+#   feeds hand-written JSON-ish dicts straight into models, so the declared
+#   field types do not match what a `dict[str, str | list[str]]` literal infers.
+#
+# unknown-argument and not-iterable currently report nothing, and unresolved-import
+# only fires where the optional `callback` extra is absent. Left downgraded on
+# purpose: promoting a rule back to error because today's checkout happens to be
+# clean is how a green build turns red on someone else's machine.
 unresolved-attribute = "warn"
 invalid-argument-type = "warn"
 unknown-argument = "warn"
