@@ -267,6 +267,17 @@ dependencies.
 | `[project.optional-dependencies]` | 11 | 0 | ten bare names (`fastapi`, `freezegun`, `pytest`, `pytest-asyncio`, `pytest-cov`, `pytest-explicit`, `respx`, `tox`, `ty`, and the `edutap.wallet-google[callback]` self-reference); one open floor, `pdbp>=1.7.1` |
 | `[build-system.requires]` | 2 | 0 | `hatchling`, `hatch-vcs`, both bare |
 
+This table is the baseline this part reasons from: `pyproject.toml` as it stood on `main`
+before this branch. It is no longer the state at the tip of `chore/package-modernisation` —
+this plan's Task 3 (commit `3da2e5a`) gave `httpx` a floor, `httpx>=0.15`, for a reason that
+has nothing to do with Renovate: `api.py` sends request bodies with `content=`, added in
+httpx 0.15.0, and below that version the calls raise `TypeError`. It is a feature floor, the
+same kind the `authlib`/`cryptography`/`pydantic-settings` floors already were, and it
+happens to make `httpx` actionable to Renovate (an open floor with `replace`, same as those
+three — see "The mechanism" below for why that is necessary but not sufficient on its own).
+By the time this branch merges, `joserfc` is the only entry left bare in
+`[project.dependencies]`; the other five, including `httpx`, carry a floor.
+
 ### The mechanism
 
 Confirmed by running Renovate itself against the repository (`--dry-run=full`, v44.11.6),
@@ -320,10 +331,13 @@ and rejected here: nothing downstream resolves a dependency group, but every con
 this library resolves `[project.dependencies]`.
 
 The one path that legitimately moves a runtime floor is exactly the one already in use — a
-`vulnerabilityAlerts`-triggered PR, as in PR #93. Nothing in this part changes that path or
-touches the six entries in `[project.dependencies]`. This is written down here so it
-survives contact with someone who, on seeing the Renovate coverage table above,
-"helpfully" adds ceilings to fix it.
+`vulnerabilityAlerts`-triggered PR, as in PR #93. Nothing in *this part* changes that path or
+proposes touching any of the six entries in `[project.dependencies]` — Part 5 adds no
+ceiling and no `rangeStrategy: "bump"` to any of them. That is a separate claim from whether
+another task on this branch edits one of the six: Task 3 does, giving `httpx` a feature
+floor (see the note under the table above) for a reason internal to `api.py`, not to make it
+Renovate-actionable. This is written down here so it survives contact with someone who, on
+seeing the Renovate coverage table above, "helpfully" adds ceilings to fix it.
 
 ### Floors are necessary but not sufficient
 
@@ -343,10 +357,14 @@ on the rule that already groups them as "development dependencies." `bump` raise
 itself to each new release, rather than leaving a satisfied floor alone. That is exactly the
 mechanism the `vulnerabilityAlerts` preset already uses for a security advisory (previous
 section); this part turns it on permanently, but only for the entries where doing so is
-free — nothing downstream resolves a dependency group, an optional extra nobody but this
-repository's own tooling installs, or `[build-system.requires]`, so ratcheting all three
-forward on every release costs no consumer anything. `[project.dependencies]` gets none of
-this, for the reason in the previous section.
+free — nothing downstream resolves a dependency group or `[build-system.requires]`, so
+ratcheting either forward on every release costs no consumer anything. `[project.dependencies]`
+gets none of this, for the reason in the previous section — and neither does the `callback`
+extra in `[project.optional-dependencies]`, for the identical reason: unlike `test`,
+`typecheck` and the rest of what used to share that table with it, `callback` is published
+and a consumer resolves it, so it follows `[project.dependencies]`'s rule, not this one. See
+"The non-published dependencies get real version constraints" below for where that leaves
+`callback`.
 
 `renovate.json5` is not in this checkout. It lives on `chore/renovate` (PR #95), still
 open. This branch can state the rule change here and write it into the implementation plan,
@@ -361,14 +379,21 @@ installs this package as a dependency ever resolves it. Constraining these costs
 consumer of the library nothing, which is what makes `bump` safe for them; the constraint
 itself is what stops Renovate skipping them outright.
 
-Every entry gets at least a floor, and the floor is the version measured resolving in a
-fresh install on 2026-08-05 — `uv venv` followed by `uv pip install -e
+`callback` is deliberately not in the table below, for the reason given at the end of the
+previous section: it is published, a consumer resolves it, and "the version that happened
+to resolve in a fresh install today" is not a justification this plan accepts for a
+published entry — that is precisely the harm Part 5 rejects for `[project.dependencies]`.
+`fastapi` keeps no floor at all, because nothing in `handlers/fastapi.py` needs one; it
+would get one the same way `httpx>=0.15` in `[project.dependencies]` did, by pointing at an
+actual code requirement, if one ever exists.
+
+Every other entry gets at least a floor, and the floor is the version measured resolving in
+a fresh install on 2026-08-05 — `uv venv` followed by `uv pip install -e
 ".[callback,test,typecheck]"` in a clean checkout, cross-checked against the version PyPI
 reports as current the same day — not a guess:
 
 | Dependency | Floor | Source |
 | --- | --- | --- |
-| `fastapi` | `>=0.141.1` | fresh install |
 | `freezegun` | `>=1.5.5` | fresh install |
 | `pytest` | `>=9.1.1` | fresh install |
 | `pytest-asyncio` | `>=1.4.0` | fresh install |
@@ -431,12 +456,22 @@ The floors above are this branch's job and land in Task 1 regardless. The pairin
 `chore/package-modernisation` — it is being added by the sibling `chore/renovate` branch
 (PR #95), still open at the time of writing. Concretely, the "development dependencies"
 packageRule there currently reads `matchDepTypes: ["project.optional-dependencies"]`; after
-Task 1 moves most of what it matches into `[dependency-groups]`, that needs to become
-`matchDepTypes: ["project.optional-dependencies", "dependency-groups",
-"build-system.requires"]` with `rangeStrategy: "bump"` added — folding
-`build-system.requires` into the same rule closes a gap `chore/renovate`'s own comment
-already flags ("build-system.requires … match neither rule … acknowledged rather than given
-a third rule"), rather than leaving it to become a second, near-identical rule.
+Task 1 moves most of what it matched into `[dependency-groups]`, that needs to become
+`matchDepTypes: ["dependency-groups", "build-system.requires"]` with `rangeStrategy: "bump"`
+added — folding `build-system.requires` into the same rule closes a gap `chore/renovate`'s
+own comment already flags ("build-system.requires … match neither rule … acknowledged rather
+than given a third rule"), rather than leaving it to become a second, near-identical rule.
+
+`project.optional-dependencies` drops out of this rule rather than carrying over into it.
+Earlier drafts of this part kept it in the `matchDepTypes` list, reasoning that `callback` —
+the one entry left there after Task 1 — was as unpublished as everything else being folded
+in. It is not: `callback` is the extra a consumer of this library actually installs (see
+"PEP 735" above), exactly like the six entries in `[project.dependencies]`, and the same
+argument that keeps `bump` off those six applies to it. Task 1 does not give `fastapi` a
+floor at all — `handlers/fastapi.py` only needs symbols present since FastAPI's earliest
+0.x releases — so there is nothing in `[project.optional-dependencies]` for this rule to
+match today regardless. If a real floor is ever added there for an actual code reason, it
+follows `[project.dependencies]`'s rule (open floor, `replace`, no `bump`), not this one.
 
 This branch can write that change down — Task 1's Steps 12-13 do — but cannot commit it
 until #95 merges to `main` and `chore/package-modernisation` is rebased onto the result.

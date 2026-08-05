@@ -4,7 +4,7 @@
 
 **Goal:** Bring `edutap.wallet_google` up to the project's tooling standard — a `Makefile` as the uniform entry point, PEP 639 and PEP 735 packaging metadata with version constraints Renovate can act on, an `sdist` that stops shipping internal documents, a `ty` pin that can actually be updated, and the full ruff rule selection.
 
-**Architecture:** Five independent changes on one branch, in an order that matters: the packaging metadata (Task 1) defines the `dev` dependency group — and gives every entry in it, in `[build-system.requires]`, and in the `callback` extra a real version constraint. A floor alone only stops Renovate from skipping an entry outright; making it actually actionable needs `rangeStrategy: "bump"` on the matching `renovate.json5` rule too — Task 1's final steps carry that, gated on the sibling `chore/renovate` PR (#95) merging first. The `Makefile` (Task 2) then installs from the same group and depends on finding `ruff` and `ty` in it. The linter rules go last so their large diffs do not sit underneath everything else during review. The six runtime dependencies in `[project.dependencies]` are out of scope for every task: their open floors stay open, by design — see the spec's Part 5.
+**Architecture:** Five independent changes on one branch, in an order that matters: the packaging metadata (Task 1) defines the `dev` dependency group and gives every entry in it, and in `[build-system.requires]`, a real version constraint. A floor alone only stops Renovate from skipping an entry outright; making it actually actionable needs `rangeStrategy: "bump"` on the matching `renovate.json5` rule too — Task 1's final steps carry that, gated on the sibling `chore/renovate` PR (#95) merging first. The `callback` extra is published wheel metadata a consumer resolves, so it follows the same rule as `[project.dependencies]` instead: no constraint without a real code reason, and never `bump`. The `Makefile` (Task 2) then installs from the same group and depends on finding `ruff` and `ty` in it. The linter rules go last so their large diffs do not sit underneath everything else during review. The six runtime dependencies in `[project.dependencies]` are out of scope for every task: their open floors stay open, by design — see the spec's Part 5.
 
 **Tech Stack:** hatchling, uv, prek, ruff, ty, tox, pytest.
 
@@ -83,7 +83,7 @@ what it reports, `ty` is pre-1.0 and moving fast — not as part of the actionab
 
 **Interfaces:**
 - Consumes: nothing for Steps 1-11. Steps 12-13 consume `renovate.json5` from `chore/renovate` (PR #95), merged into `main` and rebased into this branch.
-- Produces: the extra `callback` and the dependency groups `test`, `lint`, `typecheck`, `dev`, every entry version-constrained, plus a floored `[build-system.requires]`. Every later task and the `Makefile` install with `-e ".[callback]" --group dev`; Task 2's `make lint` additionally depends on `ruff` and `ty` resolving out of this group. Steps 12-13 additionally produce a `renovate.json5` "development dependencies" rule with `rangeStrategy: "bump"`, which is what makes the floors above actionable rather than merely present.
+- Produces: the extra `callback` (published, unconstrained — no code reason for a floor exists) and the dependency groups `test`, `lint`, `typecheck`, `dev`, every entry version-constrained, plus a floored `[build-system.requires]`. Every later task and the `Makefile` install with `-e ".[callback]" --group dev`; Task 2's `make lint` additionally depends on `ruff` and `ty` resolving out of this group. Steps 12-13 additionally produce a `renovate.json5` "development dependencies" rule matching `dependency-groups` and `build-system.requires` (not `project.optional-dependencies` — see Step 12) with `rangeStrategy: "bump"`, which is what makes the floors above actionable rather than merely present.
 
 - [ ] **Step 1: Record what the sdist contains today**
 
@@ -157,11 +157,15 @@ Replace the whole `[project.optional-dependencies]` block (lines 51-71) with:
 [project.optional-dependencies]
 # The only extra a consumer of this library installs. Everything else that used
 # to live here is a dependency group below: groups are not published in the
-# wheel metadata, which is the right place for tooling nobody downstream needs
-# — and, per the spec's Part 5, the right place to give Renovate a version
-# constraint to act on, which none of these had before.
+# wheel metadata, which is the right place for tooling nobody downstream needs.
+#
+# `callback` does not get the same treatment: it IS published, so it follows
+# the spec's Part 5 rule for [project.dependencies], not the dependency-groups
+# rule — a floor only when a real code requirement backs it, no ceiling, no
+# Renovate `bump`. handlers/fastapi.py needs nothing past FastAPI's earliest
+# 0.x releases, so no floor is added.
 callback = [
-    "fastapi>=0.141.1",
+    "fastapi",
 ]
 
 [dependency-groups]
@@ -203,10 +207,13 @@ dev = [
 
 Note what is **not** there: the old `test` extra began with `"edutap.wallet-google[callback]"`. Inside an extra that is a recursive self-reference; inside a dependency group it is an ordinary requirement and would be resolved against PyPI, pulling the published package over the local checkout. `callback` therefore moves to the install command instead.
 
-Every floor above is the version that resolved in a fresh `uv venv` + `uv pip install -e
-".[callback,test,typecheck]"` on 2026-08-05, cross-checked against PyPI's current release
-the same day — not a guess. `pdbp` already had a floor for an unrelated reason and stays
-unchanged.
+Every floor above except `callback`'s is the version that resolved in a fresh `uv venv` + `uv
+pip install -e ".[callback,test,typecheck]"` on 2026-08-05, cross-checked against PyPI's
+current release the same day — not a guess. `pdbp` already had a floor for an unrelated
+reason and stays unchanged. `callback` deliberately gets no floor at all: it is published
+metadata, so "the version that happened to resolve today" is not a justification this plan
+accepts for it, the same way it would not be accepted for one of the six entries in
+`[project.dependencies]`.
 
 - [ ] **Step 5: Point tox at the group**
 
@@ -374,13 +381,13 @@ Replace it with:
 
 ```json5
 {
-  // The callback extra plus everything now in [dependency-groups] (test, lint,
-  // typecheck, dev) and in build-system.requires (hatchling, hatch-vcs): none of
-  // it is installed by a consumer of the library, and none of it is published in
-  // the wheel or sdist metadata a consumer resolves. Every entry here carries a
-  // version constraint as of chore/package-modernisation (Task 1) — but a floor
-  // alone is not sufficient. pdbp>=1.7.1 was already floored before that work,
-  // and a dry run against this repository (--dry-run=full, v44.11.6) still
+  // Everything now in [dependency-groups] (test, lint, typecheck, dev) and in
+  // build-system.requires (hatchling, hatch-vcs): none of it is installed by
+  // a consumer of the library, and none of it is published in the wheel or
+  // sdist metadata a consumer resolves. Every entry here carries a version
+  // constraint as of chore/package-modernisation (Task 1) — but a floor alone
+  // is not sufficient. pdbp>=1.7.1 was already floored before that work, and
+  // a dry run against this repository (--dry-run=full, v44.11.6) still
   // produced nothing for it: the default rangeStrategy for pep621 is "replace",
   // which leaves an open floor unchanged whenever the newest release already
   // satisfies it — which it always does. rangeStrategy: "bump" instead raises
@@ -388,9 +395,20 @@ Replace it with:
   // because nothing downstream resolves these ranges — unlike the
   // runtime-dependency rule below, where the same setting would force every
   // consumer to upgrade in lockstep.
+  //
+  // project.optional-dependencies is deliberately NOT in matchDepTypes below,
+  // even though it matched the "before" rule above. After Task 1 it holds only
+  // the callback extra, and callback is published wheel metadata that a
+  // consumer of this library actually resolves — unlike everything else this
+  // rule groups. bump would ratchet callback's fastapi floor to each new
+  // FastAPI release and force every application using this extra to upgrade
+  // in lockstep, which is exactly the harm the runtime-dependency rule below
+  // exists to avoid. callback currently carries no floor at all (Task 1 found
+  // no code reason for one), so this rule has nothing to match there today
+  // regardless; if callback ever gets a real floor, it belongs with the
+  // runtime-dependency rule's reasoning, not this one.
   matchManagers: ["pep621"],
   matchDepTypes: [
-    "project.optional-dependencies",
     "dependency-groups",
     "build-system.requires",
   ],
@@ -429,11 +447,16 @@ floored and a dry run against this repository still proposed nothing for
 it, because pep621's default rangeStrategy (replace) leaves a satisfied
 floor unchanged. bump raises the floor itself on each release instead.
 
-Safe here because nothing downstream resolves a dependency group, the
-callback extra, or build-system.requires — unlike project.dependencies,
-where the same setting would force every consumer of this library to
-upgrade in lockstep. build-system.requires also moves into this rule,
-closing a gap the rule's own comment already flagged."
+Safe here because nothing downstream resolves a dependency group or
+build-system.requires — unlike project.dependencies, where the same
+setting would force every consumer of this library to upgrade in
+lockstep. build-system.requires also moves into this rule, closing a gap
+the rule's own comment already flagged.
+
+project.optional-dependencies stays out of this rule on purpose: after
+Task 1 it holds only the published callback extra, which a consumer of
+this library resolves directly, so it follows project.dependencies'
+rule (open floor, no bump) rather than this one."
 ```
 
 ---
@@ -943,7 +966,7 @@ Structure it by the commits' subjects, and state:
 3. Python 3.10 support is deliberately **not** dropped, and why.
 4. The `D1xx` docstring rules are deliberately ignored, with the count (144) and where the comment explaining it lives.
 5. The ty jump from 0.0.17 to 0.0.66 and anything it made necessary in `[tool.ty.rules]`.
-6. Every `[dependency-groups]`, `callback` and `[build-system.requires]` entry now carries a version constraint — necessary, per a `chore/renovate` (PR #95) dry run that found none of them actionable before this, but not sufficient on its own: `pdbp>=1.7.1` was already floored and still produced nothing. Actionability needs `rangeStrategy: "bump"` on the matching `renovate.json5` rule too (Task 1, Steps 12-13), which is blocked on #95 merging and may still be pending when this PR is opened — say so explicitly if it is. The six runtime dependencies in `[project.dependencies]` deliberately keep their open floors; see the spec's Part 5.
+6. Every `[dependency-groups]` and `[build-system.requires]` entry now carries a version constraint — necessary, per a `chore/renovate` (PR #95) dry run that found none of them actionable before this, but not sufficient on its own: `pdbp>=1.7.1` was already floored and still produced nothing. Actionability needs `rangeStrategy: "bump"` on the matching `renovate.json5` rule too (Task 1, Steps 12-13), which is blocked on #95 merging and may still be pending when this PR is opened — say so explicitly if it is. `callback` is deliberately excluded from this: it is published wheel metadata a consumer resolves, so it follows `[project.dependencies]`'s rule instead — no constraint without a real code reason, and never `bump` — and it keeps no floor at all. The six runtime dependencies in `[project.dependencies]` deliberately keep their open floors; see the spec's Part 5.
 
 - [ ] **Step 7: Stop**
 

@@ -68,11 +68,21 @@ Documentation = "https://docs.edutap.eu/packages/edutap_wallet_google/index.html
 [project.optional-dependencies]
 # The only extra a consumer of this library installs. Everything else that used
 # to live here is a dependency group below: groups are not published in the
-# wheel metadata, which is the right place for tooling nobody downstream needs
-# — and, per the spec's Part 5, the right place to give Renovate a version
-# constraint to act on, which none of these had before.
+# wheel metadata, which is the right place for tooling nobody downstream needs.
+#
+# `callback` is different from those groups precisely because it *is*
+# published: every consumer of `edutap.wallet-google[callback]` resolves this
+# entry against their own environment, exactly like the six entries in
+# `[project.dependencies]` (spec's Part 5). It therefore follows that part's
+# rule, not the dependency-groups' rule: a floor only when a real code
+# requirement backs it, no ceiling, and no Renovate `rangeStrategy: "bump"` —
+# bumping this floor on every FastAPI release would force lockstep upgrades on
+# every application that depends on this extra. handlers/fastapi.py imports
+# only APIRouter, Request, Response, HTTPException, JSONResponse and logger,
+# all present since FastAPI's earliest 0.x releases, so no floor is justified
+# here yet. Add one if and when the code actually needs it.
 callback = [
-    "fastapi>=0.141.1",
+    "fastapi",
 ]
 
 [dependency-groups]
@@ -89,10 +99,10 @@ lint = [
     # Ceiling as well as floor: a ruff minor release changes what it reports
     # and reformats files that were correct under the previous one — matches
     # edutap.data_provider's own ruff>=0.16,<0.17, and matches the version
-    # already pinned in .pre-commit-config.yaml (v0.16.1) so the hook and
-    # this group cannot silently disagree. ruff was never a project
-    # dependency before this; it only ran inside pre-commit/prek's own
-    # isolated environment.
+    # already pinned in .pre-commit-config.yaml (v0.16.1) — cross-referenced
+    # there too, and kept honest by tests/test_tool_version_pins.py rather
+    # than by the comment alone. ruff was never a project dependency before
+    # this; it only ran inside pre-commit/prek's own isolated environment.
     "ruff>=0.16.1,<0.17",
 ]
 typecheck = [
@@ -100,7 +110,9 @@ typecheck = [
     # and moves fast enough that Task 3 jumps it 49 releases in one commit.
     # Its releases are all 0.0.x, so there is no separate minor line to float
     # within — the ceiling pins the current release exactly and asks for a
-    # deliberate bump, and a look at what changed, every single time.
+    # deliberate bump, and a look at what changed, every single time. Matches
+    # .pre-commit-config.yaml (v0.0.66), enforced by
+    # tests/test_tool_version_pins.py, not just claimed in this comment.
     "ty>=0.0.66,<0.0.67",
 ]
 dev = [
@@ -118,7 +130,8 @@ generate-fernet-key = "edutap.wallet_google.utils:generate_fernet_key"
 requires = [
     # 1.27.0 is the first hatchling release that builds a PEP 639 license
     # expression as Metadata-Version 2.4 with License-Expression/License-File
-    # fields (Step 2 above). 1.26.x accepts the license-files array syntax
+    # fields, which `license = "EUPL-1.2"` and `license-files` above rely on.
+    # 1.26.x accepts the license-files array syntax
     # without erroring but silently builds Metadata-Version 2.3 with no
     # license fields at all; 1.24.0 and 1.25.0 reject the syntax outright.
     # Verified by building a throwaway package against all four.
@@ -141,8 +154,13 @@ packages = ["src/edutap"]
 # hatchling does not read MANIFEST.in — that is a setuptools file, and an sdist
 # built with it in place still contained docs/ and .claude/, both of which it
 # claimed to exclude. These are the contents on purpose:
-#   tests/ and the Makefile stay, so a distribution packager can run the
-#     suite with `make test-local`.
+#   tests/ and the Makefile stay together: `make test-local` itself needs
+#     network (its `venv` prerequisite runs `uv venv` plus an install), which
+#     a distro packager's sandboxed build usually does not have — but the
+#     Makefile is still the authoritative, minimal reference for which
+#     command runs the suite (`pytest`, see the `test-local` target), so a
+#     packager who already has a populated environment can read it and run
+#     that command directly instead of guessing.
 #   superpowers/, .claude/, CLAUDE.md are internal working documents.
 #   .github/, docs/ and examples/ are not needed to build or test the package.
 include = [
