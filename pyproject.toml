@@ -11,13 +11,8 @@ authors = [
     {name = "Robert Niederreiter", email = "office@squarewave.at"},
 ]
 requires-python = ">=3.10"
-license = { text = "EUPL 1.2" }
-# TODO for PEP 639 https://peps.python.org/pep-0639
-# -> when implemented in PyPI, twine, pyroma, etc.
-# add license-expression = EUPL-1.2
-# add license-file = LICENSE
-# remove license field
-# remove License classifier
+license = "EUPL-1.2"
+license-files = ["LICENSE"]
 
 classifiers = [
     "Programming Language :: Python :: 3.10",
@@ -25,7 +20,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
-    "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries",
@@ -49,24 +43,48 @@ Issues = "https://github.com/edutap-eu/edutap.wallet_google/issues"
 Documentation = "https://docs.edutap.eu/packages/edutap_wallet_google/index.html"
 
 [project.optional-dependencies]
+# The only extra a consumer of this library installs. Everything else that used
+# to live here is a dependency group below: groups are not published in the
+# wheel metadata, which is the right place for tooling nobody downstream needs
+# — and, per the spec's Part 5, the right place to give Renovate a version
+# constraint to act on, which none of these had before.
 callback = [
-    "fastapi",
+    "fastapi>=0.141.1",
 ]
+
+[dependency-groups]
 test = [
-    "edutap.wallet-google[callback]",
-    "freezegun",
-    "pytest-asyncio",
-    "pytest-cov",
-    "pytest-explicit",
-    "pytest",
-    "respx",
-    "tox",
+    "freezegun>=1.5.5",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "pytest-explicit>=1.0.1",
+    "pytest>=9.1.1",
+    "respx>=0.23.1",
+    "tox>=4.58.0",
 ]
-typecheck  = [
-    "ty",
+lint = [
+    # Ceiling as well as floor: a ruff minor release changes what it reports
+    # and reformats files that were correct under the previous one — matches
+    # edutap.data_provider's own ruff>=0.16,<0.17, and matches the version
+    # already pinned in .pre-commit-config.yaml (v0.16.1) so the hook and
+    # this group cannot silently disagree. ruff was never a project
+    # dependency before this; it only ran inside pre-commit/prek's own
+    # isolated environment.
+    "ruff>=0.16.1,<0.17",
 ]
-develop = [
-    "pdbp>=1.7.1", # the maintained successor to pdbpp
+typecheck = [
+    # Ceiling as well as floor, for the same reason as ruff: ty is pre-1.0
+    # and moves fast enough that Task 3 jumps it 49 releases in one commit.
+    # Its releases are all 0.0.x, so there is no separate minor line to float
+    # within — the ceiling pins the current release exactly and asks for a
+    # deliberate bump, and a look at what changed, every single time.
+    "ty>=0.0.66,<0.0.67",
+]
+dev = [
+    {include-group = "test"},
+    {include-group = "lint"},
+    {include-group = "typecheck"},
+    "pdbp>=1.7.1", # the maintained successor to pdbpp; already floored, unchanged
     # "ipython",  not recommended with pdpb, better use ipdb then
 ]
 
@@ -74,7 +92,16 @@ develop = [
 generate-fernet-key = "edutap.wallet_google.utils:generate_fernet_key"
 
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = [
+    # 1.27.0 is the first hatchling release that builds a PEP 639 license
+    # expression as Metadata-Version 2.4 with License-Expression/License-File
+    # fields (Step 2 above). 1.26.x accepts the license-files array syntax
+    # without erroring but silently builds Metadata-Version 2.3 with no
+    # license fields at all; 1.24.0 and 1.25.0 reject the syntax outright.
+    # Verified by building a throwaway package against all four.
+    "hatchling>=1.27.0",
+    "hatch-vcs>=0.5.0",  # the version currently resolving; no feature drives this floor
+]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
@@ -86,6 +113,22 @@ version-file = "src/edutap/wallet_google/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/edutap"]
+
+[tool.hatch.build.targets.sdist]
+# hatchling does not read MANIFEST.in — that is a setuptools file, and an sdist
+# built with it in place still contained docs/ and .claude/, both of which it
+# claimed to exclude. These are the contents on purpose:
+#   tests/ stays, so a distribution packager can run the suite.
+#   superpowers/, .claude/, CLAUDE.md are internal working documents.
+#   .github/, docs/ and examples/ are not needed to build or test the package.
+include = [
+    "/src",
+    "/tests",
+    "/README.md",
+    "/CONTRIBUTING.md",
+    "/LICENSE",
+    "/pyproject.toml",
+]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -160,7 +203,8 @@ use_develop = true
 skip_install = false
 deps = ["-e tests/data/test_wallet_google_plugins"]
 commands = [["pytest", { replace = "posargs", extend = true }]]
-extras = ["test", "develop"]
+extras = ["callback"]
+dependency_groups = ["dev"]
 
 [tool.tox.env.format]
 description = "automatically reformats code"
