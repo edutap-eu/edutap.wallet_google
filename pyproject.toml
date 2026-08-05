@@ -118,12 +118,14 @@ packages = ["src/edutap"]
 # hatchling does not read MANIFEST.in — that is a setuptools file, and an sdist
 # built with it in place still contained docs/ and .claude/, both of which it
 # claimed to exclude. These are the contents on purpose:
-#   tests/ stays, so a distribution packager can run the suite.
+#   tests/ and the Makefile stay, so a distribution packager can run the
+#     suite with `make test-local`.
 #   superpowers/, .claude/, CLAUDE.md are internal working documents.
 #   .github/, docs/ and examples/ are not needed to build or test the package.
 include = [
     "/src",
     "/tests",
+    "/Makefile",
     "/README.md",
     "/CONTRIBUTING.md",
     "/LICENSE",

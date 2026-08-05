@@ -18,7 +18,13 @@ venv: ## Create .venv and install the package with the callback extra and dev gr
 lint: venv ## Run ruff checks and the type checker
 	$(PYTHON) -m ruff check src tests
 	$(PYTHON) -m ruff format --check src tests
-	uvx ty check
+	# Runs the ty pinned in the typecheck dependency group, installed into
+	# .venv by the venv target above — not an unpinned `uvx ty check`, which
+	# would resolve to whatever the latest release happens to be. The local
+	# pre-commit hook currently pins a different, older ty
+	# (.pre-commit-config.yaml: ty@0.0.17); bringing the two into agreement
+	# is Task 3's job, not this target's.
+	$(PYTHON) -m ty check
 
 reformat: venv ## Autoformat and autofix
 	$(PYTHON) -m ruff format src tests
