@@ -104,6 +104,15 @@
       // is how the floors from PR #93 came about in the first place, and it's the
       // real synergy with keeping Dependabot's security alerts on, independent of its
       // GitHub Actions coverage above.
+      //
+      // Two things not to get wrong about that, both raised reviewing this file:
+      // vulnerabilityAlerts needs no preset to switch on — the gate reads
+      // `if (vulnerabilityAlerts.enabled === false)`, so it runs unless something
+      // disables it, and adding `:enableVulnerabilityAlerts` would only restate the
+      // default. And the "update-lockfile becomes bump" step above is conditional on
+      // there being no lockfile: track uv.lock again and advisories go back to editing
+      // the lockfile instead of raising the floors here, which removes the only
+      // mechanism this paragraph describes.
       matchManagers: ["pep621"],
       matchDepTypes: ["project.dependencies"],
       groupName: null,
