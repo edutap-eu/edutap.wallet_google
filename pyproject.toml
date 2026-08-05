@@ -179,11 +179,25 @@ not-iterable = "warn"
 ignore-words-list = "discreet,"
 
 [tool.check-manifest]
+# Mirror image of [tool.hatch.build.targets.sdist].include: everything that
+# section deliberately leaves out of the sdist has to be named here too, or
+# check-manifest reports it as "missing" on every run. Edit the two together.
+# One pattern per excluded top-level area, not per file, so a new file added
+# inside docs/, examples/, superpowers/ or .claude/ does not reopen this —
+# but nothing broader than that: a new top-level file or directory nobody
+# accounted for should still make this hook complain.
 ignore = [
     ".editorconfig",
     ".pre-commit-config.yaml",
     "worktrees/**",
     "src/edutap/wallet_google/_version.py",
+    ".claude/**",
+    ".dockerignore",
+    "CLAUDE.md",
+    "RELEASING.md",
+    "docs/**",
+    "examples/**",
+    "superpowers/**",
 ]
 
 [tool.tox]
