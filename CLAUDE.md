@@ -18,9 +18,7 @@ The package provides:
 Install with uv (preferred):
 - `uv pip install edutap.wallet_google` - Base package with both sync and async APIs (authlib + httpx)
 - `uv pip install edutap.wallet_google[callback]` - Adds FastAPI for callback endpoints
-- `uv pip install edutap.wallet_google[test]` - Adds pytest, respx, and testing tools
-- `uv pip install edutap.wallet_google[typecheck]` - Adds ty type checker
-- `uv pip install edutap.wallet_google[develop]` - Adds pdbp debugger for development
+- For development, use the `dev` dependency group instead of extras: `uv pip install -U -e ".[callback]" --group dev` (or `make venv`) adds pytest, respx, ty and pdbp. The `[test]`, `[typecheck]` and `[develop]` extras no longer exist.
 
 ## Development Commands
 
@@ -43,7 +41,7 @@ uvx tox -e py313 -- --cov=src/edutap/wallet_google --cov-report=term-missing
 uvx tox -e py313 -- tests/integration/ -v --run-integration
 
 # Fast iteration: Run tests directly (no tox overhead)
-# First: uv venv && source .venv/bin/activate && uv pip install -e .[test,develop]
+# First: uv venv && source .venv/bin/activate && uv pip install -U -e ".[callback]" --group dev
 pytest tests/test_api_sync.py -v
 pytest tests/test_api_async.py::test_acreate -v --tb=short
 pytest -k "not integration" --tb=short  # Skip integration tests
@@ -234,7 +232,7 @@ The docs follow the [Diátaxis](https://diataxis.fr/) framework.
 
 ## Development Workflow
 
-1. **Local setup**: `uv venv && source .venv/bin/activate && uv pip install -e .[test,develop,typecheck]`
+1. **Local setup**: `uv venv && source .venv/bin/activate && uv pip install -U -e ".[callback]" --group dev` (or `make venv`)
 2. **Install pre-commit**: `uvx pre-commit install` (runs checks on every commit)
 3. **Make changes**: Edit code, add tests
 4. **Run tests**: `pytest tests/ -k "not integration"` (fast iteration)
