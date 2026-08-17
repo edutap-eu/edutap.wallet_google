@@ -79,3 +79,32 @@ def test_decode_strips_the_response_prefix_from_content_id():
     )
 
     assert [r.content_id for r in responses] == ["item-0", "item-1"]
+
+
+MALFORMED_STATUS_LINE_RESPONSE = (
+    "--rspboundary\r\n"
+    "Content-Type: application/http\r\n"
+    "Content-ID: <response-item-0>\r\n"
+    "\r\n"
+    "not a valid status line\r\n"
+    "Content-Type: application/json\r\n"
+    "\r\n"
+    '{"id": "issuer.one"}\r\n'
+    "\r\n"
+    "--rspboundary--\r\n"
+)
+
+
+def test_decode_returns_status_code_zero_for_malformed_status_line():
+    """A part with a malformed status line must not crash the whole decode.
+
+    One malformed part in a batch of hundreds must degrade to a result,
+    not blow up the entire ``decode_multipart`` call.
+    """
+    responses = decode_multipart(
+        MALFORMED_STATUS_LINE_RESPONSE.encode("utf-8"),
+        "multipart/mixed; boundary=rspboundary",
+    )
+
+    assert len(responses) == 1
+    assert responses[0].status_code == 0

@@ -80,8 +80,15 @@ def _parse_http_payload(payload: str) -> tuple[int, dict | None]:
     """
     head, _, body = payload.partition(f"{_CRLF}{_CRLF}")
     status_line = head.split(_CRLF, 1)[0]
-    # "HTTP/1.1 404 Not Found" -> 404
-    status_code = int(status_line.split(" ")[1])
+    try:
+        # "HTTP/1.1 404 Not Found" -> 404
+        status_code = int(status_line.split(" ")[1])
+    except (IndexError, ValueError):
+        # A single malformed part must not crash the whole batch decode: 0 is
+        # never a real HTTP status, and callers already treat any non-2xx
+        # status as not-ok, so this degrades gracefully into the existing
+        # error path.
+        status_code = 0
     body = body.strip()
     if not body:
         return status_code, None
