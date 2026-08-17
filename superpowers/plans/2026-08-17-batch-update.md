@@ -1152,7 +1152,7 @@ Pass types may be mixed in one batch — each sub-request carries its own path:
 ```python
 batch = api.Batch()
 batch.add_update("LoyaltyObject", {"id": "issuer.member-1", "state": "EXPIRED"})
-batch.add_update("EventTicketObject", {"id": "issuer.ticket-9", "state": "USED"})
+batch.add_update("EventTicketObject", {"id": "issuer.ticket-9", "state": "COMPLETED"})
 ```
 
 For the bulk case, add a whole list at once and use `len(batch)` to decide how much goes
