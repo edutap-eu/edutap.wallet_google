@@ -126,7 +126,7 @@ grows.
 | `tests/test_batch.py` | building and executing a batch, against respx (create) | 2, 4 |
 | `tests/test_batch_async.py` | `aexecute()` against respx (create) | 3 |
 | `docs/tutorials.md`, `docs/reference.md` | document the new API (modify) | 4 |
-| `tests/integration/test_batch.py` | round-trip against the real API (create) | 5 |
+| `tests/integration/test_batch_integration.py` | round-trip against the real API (create); the name may NOT be `test_batch.py` — `tests/` has no `__init__.py` and pytest runs in its default `prepend` import mode, so a second file of that basename collides with `tests/test_batch.py` | 5 |
 
 ---
 
@@ -1206,7 +1206,7 @@ the real endpoint can say which it accepts. This task also produces the two numb
 has: whether a batch counts as one call, and how many sub-requests fit.
 
 **Files:**
-- Create: `tests/integration/test_batch.py`
+- Create: `tests/integration/test_batch_integration.py`
 - Modify: `superpowers/plans/2026-08-17-batch-update.md` (this file, Step 6)
 
 **Interfaces:**
@@ -1220,14 +1220,14 @@ Read `tests/integration/test_CRULM.py`. Follow its credential handling, its
 
 - [ ] **Step 2: Write the round-trip test**
 
-Create `tests/integration/test_batch.py`. It must create two objects, batch-update one
+Create `tests/integration/test_batch_integration.py`. It must create two objects, batch-update one
 attribute on both, assert both results are `ok`, then read them back and assert the
 attribute actually changed. Reading back matters: a 200 in a batch part is not by itself
 proof the write landed.
 
 - [ ] **Step 3: Run it against the real API**
 
-Run: `uvx tox -e py313 -- tests/integration/test_batch.py -v --run-integration`
+Run: `uvx tox -e py313 -- tests/integration/test_batch_integration.py -v --run-integration`
 
 If it fails with a 400 on the format, switch `_PART_CONTENT_TYPE` in `multipart.py` to
 `"application/http"` and — because that content type means each part carries a full HTTP
@@ -1276,7 +1276,7 @@ documented. As of this writing, none of them is documented.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add tests/integration/test_batch.py superpowers/plans/2026-08-17-batch-update.md
+git add tests/integration/test_batch_integration.py superpowers/plans/2026-08-17-batch-update.md
 git commit -m "test(batch): add integration round-trip and record measured limits"
 ```
 
