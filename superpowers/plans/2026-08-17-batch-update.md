@@ -287,9 +287,13 @@ Expected: PASS
 
 - [ ] **Step 5: Write the failing decoder tests**
 
-Append to `tests/test_multipart.py`:
+Append to `tests/test_multipart.py` — but put the new import in the **top-of-file import
+block** beside the existing ones, not here. Ruff's `E402` is active in this project
+(`select = ["E", "F", "W", "I", "UP"]`, only `E501` ignored), so a mid-file import fails
+`tox -e lint`.
 
 ```python
+# this import belongs at the top of the file, with the others
 from edutap.wallet_google.multipart import decode_multipart
 
 
@@ -327,6 +331,9 @@ def test_decode_returns_one_sub_response_per_part():
     assert responses[0].status_code == 200
     assert responses[0].body == {"id": "issuer.one", "state": "EXPIRED"}
     assert responses[1].status_code == 404
+    # `body` is typed `dict | None`; the project's ty hook raises
+    # not-subscriptable without this narrowing.
+    assert responses[1].body is not None
     assert responses[1].body["error"]["code"] == 404
 
 
@@ -358,8 +365,15 @@ def _parse_http_payload(payload: str) -> tuple[int, dict | None]:
     """
     head, _, body = payload.partition(f"{_CRLF}{_CRLF}")
     status_line = head.split(_CRLF, 1)[0]
-    # "HTTP/1.1 404 Not Found" -> 404
-    status_code = int(status_line.split(" ")[1])
+    try:
+        # "HTTP/1.1 404 Not Found" -> 404
+        status_code = int(status_line.split(" ")[1])
+    except (IndexError, ValueError):
+        # A single malformed part must not crash the whole batch decode: 0 is
+        # never a real HTTP status, and callers already treat any non-2xx
+        # status as not-ok, so this degrades gracefully into the existing
+        # error path.
+        status_code = 0
     body = body.strip()
     if not body:
         return status_code, None
@@ -405,7 +419,16 @@ def decode_multipart(content: bytes, content_type: str) -> list[SubResponse]:
 - [ ] **Step 8: Run the whole file**
 
 Run: `uv run pytest tests/test_multipart.py -v`
-Expected: PASS, 3 tests
+Expected: PASS, 4 tests
+
+The fourth is `test_decode_returns_status_code_zero_for_malformed_status_line`, added
+during review: a part whose status line cannot be parsed must come back as a
+`SubResponse` with `status_code=0` rather than raising out of `decode_multipart`. It
+exists because the `try`/`except` above was missing from the first draft of this plan,
+and one malformed part would have destroyed every other result in the same response —
+against this feature's core commitment that partial failures come back as results. Note
+for anyone naming tests here: `codespell` runs in `tox -e lint` and rejects
+"unparseable".
 
 - [ ] **Step 9: Lint and commit**
 
