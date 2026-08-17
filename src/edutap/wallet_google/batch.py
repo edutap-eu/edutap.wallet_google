@@ -170,6 +170,23 @@ class Batch:
             if body is not None and "error" in body:
                 error = BatchError.model_validate(body["error"])
                 body = None
+            elif not (200 <= sub_response.status_code < 300):
+                # Invariant: BatchResult.ok is False implies BatchResult.error is
+                # not None. Google's protocol only guarantees an "error" key in
+                # the body for the errors it recognises; a non-2xx status can
+                # still arrive with no such key (or, per _parse_http_payload, a
+                # status line that could not even be parsed, degraded here to
+                # status_code=0). Without this branch, callers following the
+                # documented `if not result.ok: print(result.error.message)`
+                # pattern would hit AttributeError on error=None.
+                if sub_response.status_code == 0:
+                    message = "Sub-response status line could not be parsed."
+                else:
+                    message = (
+                        f"Sub-response returned status {sub_response.status_code} "
+                        "without an error body."
+                    )
+                error = BatchError(code=sub_response.status_code, message=message)
             results.append(
                 BatchResult(
                     index=index,

@@ -232,3 +232,69 @@ def test_batch_builds_the_right_path_for_every_pass_type(mock_session, name, url
 
     body = route.calls.last.request.content.decode("utf-8")
     assert f"PATCH /walletobjects/v1/{url_part}/issuer.one" in body
+
+
+@respx.mock
+def test_result_has_an_error_when_the_server_returns_non_2xx_without_an_error_body(
+    mock_session,
+):
+    """ok is False must never leave error as None; callers read error.message."""
+    no_error_body = (
+        "--rspboundary\r\n"
+        "Content-Type: application/http\r\n"
+        "Content-ID: <response-item-0>\r\n"
+        "\r\n"
+        "HTTP/1.1 500 Internal Server Error\r\n"
+        "Content-Type: application/json\r\n"
+        "\r\n"
+        '{"unexpected": "shape"}\r\n'
+        "\r\n"
+        "--rspboundary--\r\n"
+    )
+    respx.post(str(Settings().batch_url)).mock(
+        return_value=httpx.Response(
+            200,
+            content=no_error_body.encode("utf-8"),
+            headers={"Content-Type": "multipart/mixed; boundary=rspboundary"},
+        )
+    )
+
+    batch = Batch()
+    batch.add_update("GenericObject", {"id": "issuer.one", "state": "EXPIRED"})
+    results = batch.execute()
+
+    assert results[0].ok is False
+    assert results[0].error is not None
+    assert results[0].error.message  # must not raise, must not be empty
+
+
+@respx.mock
+def test_result_has_an_error_when_the_status_line_could_not_be_parsed(mock_session):
+    """A malformed status line degrades to status_code=0, not to error=None."""
+    malformed_status_line = (
+        "--rspboundary\r\n"
+        "Content-Type: application/http\r\n"
+        "Content-ID: <response-item-0>\r\n"
+        "\r\n"
+        "GARBAGE NOT A STATUS LINE\r\n"
+        "Content-Type: application/json\r\n"
+        "\r\n"
+        "\r\n"
+        "--rspboundary--\r\n"
+    )
+    respx.post(str(Settings().batch_url)).mock(
+        return_value=httpx.Response(
+            200,
+            content=malformed_status_line.encode("utf-8"),
+            headers={"Content-Type": "multipart/mixed; boundary=rspboundary"},
+        )
+    )
+
+    batch = Batch()
+    batch.add_update("GenericObject", {"id": "issuer.one", "state": "EXPIRED"})
+    results = batch.execute()
+
+    assert results[0].status_code == 0
+    assert results[0].ok is False
+    assert results[0].error is not None
+    assert results[0].error.message  # must not raise, must not be empty
