@@ -427,8 +427,9 @@ during review: a part whose status line cannot be parsed must come back as a
 exists because the `try`/`except` above was missing from the first draft of this plan,
 and one malformed part would have destroyed every other result in the same response —
 against this feature's core commitment that partial failures come back as results. Note
-for anyone naming tests here: `codespell` runs in `tox -e lint` and rejects
-"unparseable".
+for anyone naming tests here: `codespell` runs in `tox -e lint` and rejects the
+adjective formed from "un" + "parseable" — use "malformed" instead. (Spelling it out
+would fail this very file, as an earlier revision of this plan discovered.)
 
 - [ ] **Step 9: Lint and commit**
 
