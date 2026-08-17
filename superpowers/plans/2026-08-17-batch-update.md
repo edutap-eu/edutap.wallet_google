@@ -1013,19 +1013,45 @@ message — the request line then needs an HTTP version suffix (`PATCH <path> HT
 its own `Content-Type: application/json` header before the body. Adjust the Task 1 tests
 to match, then re-run.
 
-- [ ] **Step 4: Measure the ceiling**
+- [ ] **Step 4: Confirm the one-call assumption in the Cloud Console**
+
+This step needs a human with console access; an agent cannot do it.
+
+The whole design rests on a batch counting as **one** call against the 20/s limit, and
+that is an operational finding rather than something Google documents. The console can
+turn it into something read off a graph:
+
+1. Note the current request count for `walletobjects.googleapis.com` under
+   **APIs & Services → Google Wallet API → Metrics**.
+2. Send exactly one batch carrying a known number of sub-requests — 100 is a good size:
+   large enough that the two outcomes cannot be confused, small enough to be harmless.
+3. Wait for the graph to catch up, then read the increment. **+1 confirms the assumption;
+   +100 refutes it** and means this whole feature buys connection overhead only, at which
+   point the parallel-`aupdate()` route deserves reconsideration.
+
+While in the console, also check **Quotas & System Limits** for the name and value of the
+quota metric that actually governs this API, and whether a separate batch quota exists.
+
+- [ ] **Step 5: Measure the ceiling**
 
 Still in the integration environment, not as a committed test: run `batch_update` with
 growing item counts (50, 200, 500, 1000) and record where it starts failing, and with what
 error.
 
-- [ ] **Step 5: Write the measurement down**
+- [ ] **Step 6: Write the measurements down**
 
-Add a short section to this plan file recording the numbers, dated, and labelled
-**measured** — what the endpoint did on the day we looked, not what Google guarantees.
-Anyone sizing a batch later needs to know which of those it is.
+Add a short section to this plan file recording, dated and labelled **measured** — what
+the endpoint did on the day we looked, not what Google guarantees:
 
-- [ ] **Step 6: Commit**
+- the console increment from Step 4 (+1 or +N) and therefore whether the one-call finding
+  holds;
+- the name and value of the governing quota metric;
+- the sub-request count at which batches start failing, and the error.
+
+Anyone sizing a batch later needs to know which of these are measured and which are
+documented. As of this writing, none of them is documented.
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add tests/integration/test_batch.py superpowers/plans/2026-08-17-batch-update.md
@@ -1039,6 +1065,7 @@ git commit -m "test(batch): add integration round-trip and record measured limit
 - [ ] `uvx tox -e py313` green.
 - [ ] `uvx tox -e lint` green.
 - [ ] Integration test green against the real API.
+- [ ] The Cloud Console increment confirms a batch counts as one call.
 - [ ] The measured sub-request ceiling is recorded in this file, labelled as measured.
 
 ## Deliberately out of scope
