@@ -217,3 +217,28 @@ class Batch:
         return self._build_results(
             decode_multipart(response.content, response.headers.get("Content-Type", ""))
         )
+
+    async def aexecute(self, *, credentials: dict | None = None) -> list[BatchResult]:
+        """Asynchronously send the collected sub-requests as one API call.
+
+        See :meth:`execute` for the full description; behaviour is identical.
+
+        :param credentials: Optional session credentials as dict.
+        :raises WalletException: When the batch request itself fails.
+        :return: One result per added sub-request, in the order they were added.
+        """
+        if not self._sub_requests:
+            return []
+        boundary = make_boundary()
+
+        client = client_pool.async_client(credentials=credentials)
+        response = await client.post(
+            url=str(client_pool.settings.batch_url),
+            content=encode_multipart(self._ordered_sub_requests(), boundary),
+            headers={"Content-Type": f"multipart/mixed; boundary={boundary}"},
+        )
+        handle_response_errors(response, "batch", "Batch", f"{len(self)} items")
+
+        return self._build_results(
+            decode_multipart(response.content, response.headers.get("Content-Type", ""))
+        )
