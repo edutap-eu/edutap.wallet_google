@@ -88,6 +88,23 @@ path is a registry lookup.
 `BatchResult` per added sub-request, in the order they were added. Exceptions are reserved
 for the batch request itself failing.
 
+**Add order is the result order; wire order is an implementation detail.** `Batch` is free
+to group and sort its sub-requests internally before encoding — currently a stable group
+by pass type — and that freedom costs nothing, because results are correlated back by
+`Content-ID` rather than by position. The same correlation already had to exist for a
+different reason: the specification does not promise the server answers in the order it
+was asked. One mechanism, two problems solved.
+
+State the invariant plainly, because it is the thing that must not break as the internal
+ordering changes: **whatever `Batch` does to the order on the wire, `execute()` returns
+results in the order items were added.** Task 2 has a test that holds this down against a
+server answering in a deliberately shuffled order.
+
+Whether grouping actually makes Google faster is unmeasured and, honestly, unlikely to be
+dramatic — the reason to build it in now is that retrofitting reordering onto a design
+that had promised wire order would be a breaking change, while allowing it from the start
+costs three lines.
+
 **Results carry raw dicts, not parsed models.** Parsing 1000 responses into full models
 costs time for information a bulk update rarely wants. `BatchResult.body` is the decoded
 JSON. Parsing can be added later without breaking the signature.
@@ -566,6 +583,73 @@ def test_executing_an_empty_batch_makes_no_request():
     batch = Batch()
 
     assert batch.execute() == []
+
+
+@respx.mock
+def test_sub_requests_are_grouped_by_pass_type_on_the_wire(mock_session):
+    """Batch may reorder internally; interleaved types come out grouped."""
+    route = _mock_batch_endpoint()
+
+    batch = Batch()
+    batch.add_update("GenericObject", {"id": "issuer.g1", "state": "EXPIRED"})
+    batch.add_update("LoyaltyObject", {"id": "issuer.l1", "state": "EXPIRED"})
+    batch.add_update("GenericObject", {"id": "issuer.g2", "state": "EXPIRED"})
+    batch.execute()
+
+    body = route.calls.last.request.content.decode("utf-8")
+    positions = [
+        body.index("genericObject/issuer.g1"),
+        body.index("genericObject/issuer.g2"),
+        body.index("loyaltyObject/issuer.l1"),
+    ]
+    assert positions == sorted(positions), "the two genericObjects should be adjacent"
+
+
+@respx.mock
+def test_results_follow_add_order_even_when_the_server_shuffles(mock_session):
+    """The invariant: add order is result order, whatever happens in between.
+
+    The canned response deliberately returns item-1 before item-0, which is what
+    correlation by Content-ID is for.
+    """
+    shuffled = (
+        "--rspboundary\r\n"
+        "Content-Type: application/http\r\n"
+        "Content-ID: <response-item-1>\r\n"
+        "\r\n"
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: application/json\r\n"
+        "\r\n"
+        '{"id": "issuer.two"}\r\n'
+        "\r\n"
+        "--rspboundary\r\n"
+        "Content-Type: application/http\r\n"
+        "Content-ID: <response-item-0>\r\n"
+        "\r\n"
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: application/json\r\n"
+        "\r\n"
+        '{"id": "issuer.one"}\r\n'
+        "\r\n"
+        "--rspboundary--\r\n"
+    )
+    respx.post(str(Settings().batch_url)).mock(
+        return_value=httpx.Response(
+            200,
+            content=shuffled.encode("utf-8"),
+            headers={"Content-Type": "multipart/mixed; boundary=rspboundary"},
+        )
+    )
+
+    batch = Batch()
+    batch.add_update("GenericObject", {"id": "issuer.one", "state": "EXPIRED"})
+    batch.add_update("LoyaltyObject", {"id": "issuer.two", "state": "EXPIRED"})
+    results = batch.execute()
+
+    assert [r.resource_id for r in results] == ["issuer.one", "issuer.two"]
+    assert [r.index for r in results] == [0, 1]
+    assert results[0].body["id"] == "issuer.one"
+    assert results[1].body["id"] == "issuer.two"
 ```
 
 - [ ] **Step 2: Run and watch them fail**
@@ -723,6 +807,20 @@ class Batch:
         for item in data:
             self.add_update(name, item)
 
+    def _ordered_sub_requests(self) -> list[SubRequest]:
+        """Return the sub-requests in the order they should go on the wire.
+
+        Grouped by pass type. ``sorted`` is stable, so within a type the add
+        order survives. This is free to change: results are correlated by
+        Content-ID, not by position, so reordering here cannot affect what
+        :meth:`execute` returns.
+        """
+        order = sorted(
+            range(len(self._sub_requests)),
+            key=lambda index: self._items[index][0],
+        )
+        return [self._sub_requests[index] for index in order]
+
     def _build_results(self, sub_responses: list[SubResponse]) -> list[BatchResult]:
         """Correlate sub-responses back to the items that produced them.
 
@@ -770,6 +868,10 @@ class Batch:
         results carrying an ``error``. Only the batch request itself failing
         raises.
 
+        Sub-requests may be grouped and reordered on the wire. The results are
+        not: they come back in the order the items were added, correlated by
+        Content-ID.
+
         This does not chunk, throttle or retry. The Google Wallet API is rate
         limited to 20 calls per second; staying within it is the caller's
         business. Parameters are keyword-only so that a later driver stage can
@@ -786,7 +888,7 @@ class Batch:
         client = client_pool.client(credentials=credentials)
         response = client.post(
             url=str(client_pool.settings.batch_url),
-            content=encode_multipart(self._sub_requests, boundary),
+            content=encode_multipart(self._ordered_sub_requests(), boundary),
             headers={"Content-Type": f"multipart/mixed; boundary={boundary}"},
         )
         handle_response_errors(response, "batch", "Batch", f"{len(self)} items")
@@ -811,7 +913,7 @@ and add `"Batch"`, `"BatchError"` and `"BatchResult"` to `__all__`.
 - [ ] **Step 6: Run and watch them pass**
 
 Run: `uv run pytest tests/test_batch.py -v`
-Expected: PASS, 8 tests
+Expected: PASS, 10 tests
 
 - [ ] **Step 7: Run the whole suite for regressions**
 
@@ -919,7 +1021,7 @@ Add to the `Batch` class in `src/edutap/wallet_google/batch.py`, directly after
         client = client_pool.async_client(credentials=credentials)
         response = await client.post(
             url=str(client_pool.settings.batch_url),
-            content=encode_multipart(self._sub_requests, boundary),
+            content=encode_multipart(self._ordered_sub_requests(), boundary),
             headers={"Content-Type": f"multipart/mixed; boundary={boundary}"},
         )
         handle_response_errors(response, "batch", "Batch", f"{len(self)} items")
@@ -1041,7 +1143,8 @@ results = batch.execute()
 
 A batch is **not** atomic: individual items can fail while the rest succeed, which is why
 failures come back as results rather than exceptions. There is one result per added
-sub-request, in the order they were added.
+sub-request, **in the order they were added** — the batch may group and reorder the
+sub-requests internally, but that never shows in the results.
 
 `execute()` does not split, throttle or retry. The Google Wallet API is rate limited to 20
 calls per second; deciding how many objects go into one batch, and how fast batches follow
