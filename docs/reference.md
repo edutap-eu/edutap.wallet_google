@@ -54,6 +54,32 @@ All functions use persistent, pooled HTTP clients managed by the `ClientPoolMana
 - `new()` is synchronous for both - it just creates model instances
 - `save_link()` is synchronous for both - it uses synchronous JWT signing and should not be awaited
 
+### Batch Requests
+
+`Batch` collects updates and sends them as a single `multipart/mixed` API call, so a
+hundred updates cost what one update costs against the Wallet API's per-call rate limit.
+`Batch`, `BatchResult` and `BatchError` are re-exported on the `api` module, so
+`api.Batch()`, `api.BatchResult` and `api.BatchError` work without a separate import.
+
+```python
+from edutap.wallet_google import api
+
+batch = api.Batch()
+batch.add_update("LoyaltyObject", {"id": "issuer.member-1", "state": "EXPIRED"})
+results = batch.execute()
+```
+
+```{eval-rst}
+.. currentmodule:: edutap.wallet_google.batch
+
+.. autosummary::
+   :toctree: _autosummary
+
+   Batch
+   BatchResult
+   BatchError
+```
+
 ## Models
 
 ### Base Models

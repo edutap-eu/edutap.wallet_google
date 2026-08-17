@@ -207,3 +207,28 @@ def test_results_follow_add_order_even_when_the_server_shuffles(mock_session):
     assert results[1].body is not None
     assert results[0].body["id"] == "issuer.one"
     assert results[1].body["id"] == "issuer.two"
+
+
+@pytest.mark.parametrize(
+    "name,url_part",
+    [
+        ("GenericObject", "genericObject"),
+        ("LoyaltyObject", "loyaltyObject"),
+        ("OfferObject", "offerObject"),
+        ("GiftCardObject", "giftCardObject"),
+        ("EventTicketObject", "eventTicketObject"),
+        ("TransitObject", "transitObject"),
+        ("FlightObject", "flightObject"),
+    ],
+)
+@respx.mock
+def test_batch_builds_the_right_path_for_every_pass_type(mock_session, name, url_part):
+    """The sub-request path comes from the registry, so every type works."""
+    route = _mock_batch_endpoint()
+
+    batch = Batch()
+    batch.add_update(name, {"id": "issuer.one", "state": "EXPIRED"})
+    batch.execute()
+
+    body = route.calls.last.request.content.decode("utf-8")
+    assert f"PATCH /walletobjects/v1/{url_part}/issuer.one" in body

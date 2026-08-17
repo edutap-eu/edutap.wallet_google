@@ -206,6 +206,55 @@ updated_object = api.update(
 )
 ```
 
+## Updating many passes at once
+
+A `Batch` collects updates and sends them as a single API call. Because the Google Wallet
+API is rate limited per call, a hundred updates in one batch cost what one update costs:
+
+```python
+from edutap.wallet_google import api
+
+batch = api.Batch()
+batch.add_update("LoyaltyObject", {"id": "issuer.member-1", "state": "EXPIRED"})
+batch.add_update("LoyaltyObject", {"id": "issuer.member-2", "state": "EXPIRED"})
+results = batch.execute()
+
+for result in results:
+    if not result.ok:
+        print(f"{result.resource_id} failed: {result.error.message}")
+```
+
+Only the attributes you set are sent, so a batch of small changes stays small on the wire.
+
+Pass types may be mixed in one batch — each sub-request carries its own path:
+
+```python
+batch = api.Batch()
+batch.add_update("LoyaltyObject", {"id": "issuer.member-1", "state": "EXPIRED"})
+batch.add_update("EventTicketObject", {"id": "issuer.ticket-9", "state": "COMPLETED"})
+```
+
+For the bulk case, add a whole list at once and use `len(batch)` to decide how much goes
+into one call:
+
+```python
+batch = api.Batch()
+batch.add_updates("LoyaltyObject", changed_members)
+print(f"sending {len(batch)} updates as one request")
+results = batch.execute()
+```
+
+A batch is **not** atomic: individual items can fail while the rest succeed, which is why
+failures come back as results rather than exceptions. There is one result per added
+sub-request, **in the order they were added** — the batch may group and reorder the
+sub-requests internally, but that never shows in the results.
+
+`execute()` does not split, throttle or retry. The Google Wallet API is rate limited to 20
+calls per second; deciding how many objects go into one batch, and how fast batches follow
+each other, is yours.
+
+The asynchronous twin is `await batch.aexecute()` and behaves identically.
+
 ## Send a notification to a pass
 
 You can send messages to passes to notify users about updates or important information:
