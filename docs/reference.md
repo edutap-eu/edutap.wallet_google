@@ -70,9 +70,20 @@ the real system, not something Google documents or guarantees.
 from edutap.wallet_google import api
 
 batch = api.Batch()
+batch.add_create(
+    "LoyaltyObject",
+    {"id": "issuer.member-3", "classId": "issuer.loyalty-class", "state": "ACTIVE"},
+)
 batch.add_update("LoyaltyObject", {"id": "issuer.member-1", "state": "EXPIRED"})
 results = batch.execute()
 ```
+
+`add_create()`/`add_creates()` add a `POST` for a new object and `add_update()`/
+`add_updates()` add a `PATCH` for an existing one; both fit in the same batch, since the
+HTTP method travels with each sub-request. The two validate differently: `add_create()`
+checks the payload against the **full** model, because a new object must supply its
+required fields, while `add_update()` relaxes that requirement, since a `PATCH` carrying
+two changed attributes has no reason to also supply `classId`.
 
 ```{eval-rst}
 .. currentmodule:: edutap.wallet_google.batch

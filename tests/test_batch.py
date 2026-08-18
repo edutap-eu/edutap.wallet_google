@@ -456,3 +456,100 @@ def test_execute_sends_matching_content_type_header_and_boundary(mock_session):
     boundary = content_type.split("boundary=", 1)[1]
     body = request.content.decode("utf-8")
     assert f"--{boundary}" in body
+
+
+@respx.mock
+def test_add_create_posts_to_the_collection_path(mock_session):
+    """Create is a POST to the type's collection, with no id in the path."""
+    route = _mock_batch_endpoint()
+
+    batch = Batch()
+    batch.add_create(
+        "GenericObject",
+        {"id": "issuer.new-one", "classId": "issuer.class", "state": "ACTIVE"},
+    )
+    batch.execute()
+
+    body = route.calls.last.request.content.decode("utf-8")
+    assert "POST /walletobjects/v1/genericObject" in body
+    # the id belongs in the payload, not the path
+    assert "POST /walletobjects/v1/genericObject/issuer.new-one" not in body
+    assert '"id":"issuer.new-one"' in body.replace(" ", "")
+
+
+def test_add_create_requires_the_models_required_fields():
+    """Unlike add_update, create does not relax required fields."""
+    batch = Batch()
+
+    with pytest.raises(ValueError) as exc_info:
+        batch.add_create("GenericObject", {"id": "issuer.new-one"})
+
+    assert "classId" in str(exc_info.value)
+
+
+@respx.mock
+def test_a_batch_may_mix_creates_and_updates(mock_session):
+    """Method is per sub-request, so both fit in one batch."""
+    route = _mock_batch_endpoint()
+
+    batch = Batch()
+    batch.add_create(
+        "GenericObject",
+        {"id": "issuer.new-one", "classId": "issuer.class", "state": "ACTIVE"},
+    )
+    batch.add_update("GenericObject", {"id": "issuer.old-one", "state": "EXPIRED"})
+    batch.execute()
+
+    body = route.calls.last.request.content.decode("utf-8")
+    assert "POST /walletobjects/v1/genericObject" in body
+    assert "PATCH /walletobjects/v1/genericObject/issuer.old-one" in body
+
+
+def test_add_creates_appends_a_whole_list():
+    """The bulk case must not need one call per object."""
+    batch = Batch()
+    batch.add_creates(
+        "GenericObject",
+        [
+            {"id": f"issuer.{n}", "classId": "issuer.class", "state": "ACTIVE"}
+            for n in range(5)
+        ],
+    )
+
+    assert len(batch) == 5
+
+
+@respx.mock
+def test_an_already_existing_object_comes_back_as_a_result(mock_session):
+    """409 is the common create failure and must not raise."""
+    conflict = (
+        "--rspboundary\r\n"
+        "Content-Type: application/http\r\n"
+        "Content-ID: <response-item-0>\r\n"
+        "\r\n"
+        "HTTP/1.1 409 Conflict\r\n"
+        "Content-Type: application/json\r\n"
+        "\r\n"
+        '{"error": {"code": 409, "message": "already exists", '
+        '"status": "ALREADY_EXISTS"}}\r\n'
+        "\r\n"
+        "--rspboundary--\r\n"
+    )
+    respx.post(str(Settings().batch_url)).mock(
+        return_value=httpx.Response(
+            200,
+            content=conflict.encode("utf-8"),
+            headers={"Content-Type": "multipart/mixed; boundary=rspboundary"},
+        )
+    )
+
+    batch = Batch()
+    batch.add_create(
+        "GenericObject",
+        {"id": "issuer.new-one", "classId": "issuer.class", "state": "ACTIVE"},
+    )
+    results = batch.execute()
+
+    assert results[0].ok is False
+    assert results[0].error is not None
+    assert results[0].error.code == 409

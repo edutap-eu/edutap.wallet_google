@@ -21,6 +21,7 @@ from .multipart import SubResponse
 from .registry import lookup_metadata_by_name
 from .registry import raise_when_operation_not_allowed
 from .utils import handle_response_errors
+from .utils import validate_data_and_convert_to_json
 from pydantic import ConfigDict
 from pydantic import ValidationError as PydanticValidationError
 
@@ -91,6 +92,34 @@ class Batch:
         """
         return len(self._sub_requests)
 
+    def _append_sub_request(
+        self,
+        *,
+        method: str,
+        path: str,
+        body: str,
+        name: str,
+        resource_id: str,
+    ) -> None:
+        """Build a SubRequest, append it, and record the item behind it.
+
+        Shared tail of ``add_update`` and ``add_create``: both differ in
+        method, path, validation and serialisation, but agree on everything
+        from here on. ``content_id`` is derived from the pre-append length of
+        ``_sub_requests``, so it stays stable and index-aligned with
+        ``_items`` -- ``_build_results`` correlates by it, and
+        ``_ordered_sub_requests`` may reorder the wire.
+        """
+        self._sub_requests.append(
+            SubRequest(
+                method=method,
+                path=path,
+                body=body,
+                content_id=f"item-{len(self._sub_requests)}",
+            )
+        )
+        self._items.append((name, resource_id))
+
     def add_update(self, name: str, data: dict[str, typing.Any]) -> None:
         """Add a PATCH for one object.
 
@@ -121,15 +150,13 @@ class Batch:
             ) from exc
 
         api_path = urllib.parse.urlparse(str(client_pool.settings.api_url)).path
-        self._sub_requests.append(
-            SubRequest(
-                method="PATCH",
-                path=f"{api_path}/{metadata['url_part']}/{resource_id}",
-                body=verified.model_dump_json(exclude_unset=True, by_alias=True),
-                content_id=f"item-{len(self._sub_requests)}",
-            )
+        self._append_sub_request(
+            method="PATCH",
+            path=f"{api_path}/{metadata['url_part']}/{resource_id}",
+            body=verified.model_dump_json(exclude_unset=True, by_alias=True),
+            name=name,
+            resource_id=resource_id,
         )
-        self._items.append((name, resource_id))
 
     def add_updates(
         self,
@@ -144,6 +171,60 @@ class Batch:
         """
         for item in data:
             self.add_update(name, item)
+
+    def add_create(self, name: str, data: dict[str, typing.Any]) -> None:
+        """Add a POST for one new object.
+
+        Unlike :meth:`add_update`, the payload is validated against the
+        **full** model, not a relaxed one: a new object must bring its
+        required fields, since there is nothing on Google's side yet to fill
+        the gaps from. This mirrors ``_prepare_create()`` in ``api.py``,
+        including the handling of models registered with
+        ``pass_resource_id_on_create=False`` (only ``Issuer`` today), whose
+        id must not be sent in the body.
+
+        :param name: Registered model name, e.g. "LoyaltyObject".
+        :param data: The full object to create.
+        :raises ValueError: When the payload is invalid, or carries a
+            resource id for a model that must not receive one on create.
+        """
+        metadata = lookup_metadata_by_name(name)
+        raise_when_operation_not_allowed(name, "create")
+        resource_id_key = metadata["resource_id"]
+        skip_resource_id = not metadata["pass_resource_id_on_create"]
+
+        try:
+            resource_id, body = validate_data_and_convert_to_json(
+                metadata["model"],
+                data,
+                skip_resource_id=skip_resource_id,
+                resource_id_key=resource_id_key,
+            )
+        except PydanticValidationError as exc:
+            raise ValueError(f"Item is invalid for '{name}': {exc}") from exc
+
+        api_path = urllib.parse.urlparse(str(client_pool.settings.api_url)).path
+        self._append_sub_request(
+            method="POST",
+            path=f"{api_path}/{metadata['url_part']}",
+            body=body,
+            name=name,
+            resource_id=resource_id or "",
+        )
+
+    def add_creates(
+        self,
+        name: str,
+        data: list[dict[str, typing.Any]],
+    ) -> None:
+        """Add a POST for each object in a list.
+
+        :param name: Registered model name, applied to every item.
+        :param data: One dict per object, each carrying its required fields.
+        :raises ValueError: When any payload is invalid.
+        """
+        for item in data:
+            self.add_create(name, item)
 
     def _ordered_sub_requests(self) -> list[SubRequest]:
         """Return the sub-requests in the order they should go on the wire.

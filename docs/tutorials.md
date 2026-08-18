@@ -246,6 +246,32 @@ print(f"sending {len(batch)} updates as one request")
 results = batch.execute()
 ```
 
+## Creating many passes at once
+
+`add_create` adds a `POST` for a new object instead of a `PATCH` for an existing one.
+Unlike `add_update`, it requires the **full** object: a new object must supply its
+required fields, since there is nothing on Google's side yet to fill in the gaps.
+`add_creates` adds a whole list, exactly like `add_updates`:
+
+```python
+batch = api.Batch()
+batch.add_create(
+    "GenericObject",
+    {"id": "issuer.new-member", "classId": "issuer.generic-class", "state": "ACTIVE"},
+)
+results = batch.execute()
+```
+
+Creates and updates fit in the same batch — the HTTP method travels with each
+sub-request:
+
+```python
+batch = api.Batch()
+batch.add_create("LoyaltyObject", new_member_data)
+batch.add_update("LoyaltyObject", {"id": "issuer.member-1", "state": "EXPIRED"})
+results = batch.execute()
+```
+
 A batch is **not** atomic: individual items can fail while the rest succeed, which is why
 failures come back as results rather than exceptions. There is one result per added
 sub-request, **in the order they were added** — the batch may group and reorder the
