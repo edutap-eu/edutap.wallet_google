@@ -388,12 +388,19 @@ def test_results_correlate_correctly_when_wire_order_differs_from_add_order(
 ):
     """Reordering (grouping by pass type) and correlation must work together: each
     result's body must match its own resource_id, not the one that happened to land
-    in the same wire position.
+    in the same wire position. A create is mixed in with the updates, since
+    add_create shares the same _append_sub_request tail and must stay just as
+    index-aligned.
     """
     batch = Batch()
-    # Add order: Loyalty, Generic, Loyalty -- wire order groups by type, so this
-    # differs from add order for at least one item.
-    batch.add_update("LoyaltyObject", {"id": "issuer.l1", "state": "EXPIRED"})
+    # Add order: Loyalty create, Generic update, Loyalty update -- wire order
+    # groups by type, so the Loyalty create (added first) lands on the wire
+    # after the Generic update, genuinely moving it away from its add-order
+    # position.
+    batch.add_create(
+        "LoyaltyObject",
+        {"id": "issuer.l1", "classId": "issuer.loyalty-class", "state": "ACTIVE"},
+    )
     batch.add_update("GenericObject", {"id": "issuer.g1", "state": "ACTIVE"})
     batch.add_update("LoyaltyObject", {"id": "issuer.l2", "state": "EXPIRED"})
 
@@ -402,6 +409,12 @@ def test_results_correlate_correctly_when_wire_order_differs_from_add_order(
     def _respond(request: httpx.Request) -> httpx.Response:
         nonlocal body
         body = request.content.decode("utf-8")
+        # Confirm the reordering actually happened before trusting the rest of
+        # the test: the Loyalty create must be grouped with the Loyalty update,
+        # after the Generic update.
+        assert body.index("POST /walletobjects/v1/loyaltyObject") > body.index(
+            "PATCH /walletobjects/v1/genericObject/issuer.g1"
+        )
         # Build a response whose Content-IDs correlate by content, not by wire
         # position, and whose part order does not match request part order either.
         parts = []
