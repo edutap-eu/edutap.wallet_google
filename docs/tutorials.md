@@ -208,8 +208,10 @@ updated_object = api.update(
 
 ## Updating many passes at once
 
-A `Batch` collects updates and sends them as a single API call. Because the Google Wallet
-API is rate limited per call, a hundred updates in one batch cost what one update costs:
+A `Batch` collects updates and sends them as a single `multipart/mixed` API call. A batch
+appears to count as a single call against the Google Wallet API's rate limit, so a hundred
+updates in one batch cost what one update costs. This is an operational finding from
+running the real system, not something Google documents or guarantees:
 
 ```python
 from edutap.wallet_google import api
@@ -249,9 +251,9 @@ failures come back as results rather than exceptions. There is one result per ad
 sub-request, **in the order they were added** — the batch may group and reorder the
 sub-requests internally, but that never shows in the results.
 
-`execute()` does not split, throttle or retry. The Google Wallet API is rate limited to 20
-calls per second; deciding how many objects go into one batch, and how fast batches follow
-each other, is yours.
+`execute()` does not split, throttle or retry. The Google Wallet API is rate limited to
+[20 calls per second](https://developers.google.com/wallet/generic/resources/faq); deciding
+how many objects go into one batch, and how fast batches follow each other, is yours.
 
 The asynchronous twin is `await batch.aexecute()` and behaves identically.
 

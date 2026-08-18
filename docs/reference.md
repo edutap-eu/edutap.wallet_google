@@ -56,8 +56,13 @@ All functions use persistent, pooled HTTP clients managed by the `ClientPoolMana
 
 ### Batch Requests
 
-`Batch` collects updates and sends them as a single `multipart/mixed` API call, so a
-hundred updates cost what one update costs against the Wallet API's per-call rate limit.
+`Batch` collects updates and sends them as a single `multipart/mixed` API call, following
+the mechanism documented at
+[Google's performance tips](https://developers.google.com/wallet/generic/resources/performance-tips).
+A batch appears to count as a single call against the Wallet API's
+[per-call rate limit](https://developers.google.com/wallet/generic/resources/faq), so a
+hundred updates cost what one update costs. This is an operational finding from running
+the real system, not something Google documents or guarantees.
 `Batch`, `BatchResult` and `BatchError` are re-exported on the `api` module, so
 `api.Batch()`, `api.BatchResult` and `api.BatchError` work without a separate import.
 

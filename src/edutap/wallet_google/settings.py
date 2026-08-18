@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     )
 
     api_url: AnyHttpUrl = AnyHttpUrl(API_URL)
+    # Must be overridden together with `api_url`: they point at two different hosts
+    # by default (`walletobjects.googleapis.com/walletobjects/v1` vs.
+    # `walletobjects.googleapis.com/batch`). Overriding `api_url` alone moves the
+    # sub-request paths that Batch builds but leaves the batch endpoint itself on
+    # Google's real host.
     batch_url: AnyHttpUrl = AnyHttpUrl(BATCH_URL)
     save_url: AnyHttpUrl = AnyHttpUrl(SAVE_URL)
 

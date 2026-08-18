@@ -27,6 +27,15 @@ my_pass = api.new("GenericObject", {...})
 result = await api.acreate(my_pass)
 link = api.save_link([my_pass])  # save_link is sync, not awaited
 ```
+
+Batch updates:
+```python
+from edutap.wallet_google import api
+
+batch = api.Batch()
+batch.add_update("LoyaltyObject", {"id": "issuer.member-1", "state": "EXPIRED"})
+results = batch.execute()  # or `await batch.aexecute()`
+```
 """
 
 from .batch import Batch
