@@ -702,6 +702,13 @@ It is deliberately *not* derived from `api_url`: the batch endpoint sits one lev
 
 Create `src/edutap/wallet_google/batch.py`:
 
+The listing below is the **as-built** implementation, synced after the final review.
+It differs from what this task originally prescribed: the original had neither the
+`isinstance(...)`/`try` guard around `BatchError.model_validate` (an ordinary Google
+error carrying `details` would have raised out of `execute()` and destroyed every
+result in the batch) nor the `elif` establishing the `not ok implies error` invariant.
+Both were added during review. Do not reintroduce the shorter version.
+
 ```python
 """Batch requests against the Google Wallet API.
 
@@ -870,9 +877,37 @@ class Batch:
                 continue
             body = sub_response.body
             error = None
-            if body is not None and "error" in body:
-                error = BatchError.model_validate(body["error"])
+            if body is not None and isinstance(body.get("error"), dict):
+                # Total by construction: no future shape of Google's error object
+                # may raise out of here and take the rest of the batch down with
+                # it -- that is exactly the contract this whole class exists to
+                # keep. BatchError.model_config already ignores unknown fields
+                # (see its docstring); this except is the backstop for whatever
+                # that config does not anticipate, e.g. a field of the wrong type.
+                try:
+                    error = BatchError.model_validate(body["error"])
+                except PydanticValidationError:
+                    error = BatchError(
+                        code=sub_response.status_code, message=str(body["error"])
+                    )
                 body = None
+            elif not (200 <= sub_response.status_code < 300):
+                # Invariant: BatchResult.ok is False implies BatchResult.error is
+                # not None. Google's protocol only guarantees an "error" key in
+                # the body for the errors it recognises; a non-2xx status can
+                # still arrive with no such key (or, per _parse_http_payload, a
+                # status line that could not even be parsed, degraded here to
+                # status_code=0). Without this branch, callers following the
+                # documented `if not result.ok: print(result.error.message)`
+                # pattern would hit AttributeError on error=None.
+                if sub_response.status_code == 0:
+                    message = "Sub-response status line could not be parsed."
+                else:
+                    message = (
+                        f"Sub-response returned status {sub_response.status_code} "
+                        "without an error body."
+                    )
+                error = BatchError(code=sub_response.status_code, message=message)
             results.append(
                 BatchResult(
                     index=index,
