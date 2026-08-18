@@ -206,6 +206,83 @@ updated_object = api.update(
 )
 ```
 
+## Updating many passes at once
+
+A `Batch` collects updates and sends them as a single `multipart/mixed` API call. A batch
+appears to count as a single call against the Google Wallet API's rate limit, so a hundred
+updates in one batch cost what one update costs. This is an operational finding from
+running the real system, not something Google documents or guarantees:
+
+```python
+from edutap.wallet_google import api
+
+batch = api.Batch()
+batch.add_update("LoyaltyObject", {"id": "issuer.member-1", "state": "EXPIRED"})
+batch.add_update("LoyaltyObject", {"id": "issuer.member-2", "state": "EXPIRED"})
+results = batch.execute()
+
+for result in results:
+    if not result.ok:
+        print(f"{result.resource_id} failed: {result.error.message}")
+```
+
+Only the attributes you set are sent, so a batch of small changes stays small on the wire.
+
+Pass types may be mixed in one batch — each sub-request carries its own path:
+
+```python
+batch = api.Batch()
+batch.add_update("LoyaltyObject", {"id": "issuer.member-1", "state": "EXPIRED"})
+batch.add_update("EventTicketObject", {"id": "issuer.ticket-9", "state": "COMPLETED"})
+```
+
+For the bulk case, add a whole list at once and use `len(batch)` to decide how much goes
+into one call:
+
+```python
+batch = api.Batch()
+batch.add_updates("LoyaltyObject", changed_members)
+print(f"sending {len(batch)} updates as one request")
+results = batch.execute()
+```
+
+## Creating many passes at once
+
+`add_create` adds a `POST` for a new object instead of a `PATCH` for an existing one.
+Unlike `add_update`, it requires the **full** object: a new object must supply its
+required fields, since there is nothing on Google's side yet to fill in the gaps.
+`add_creates` adds a whole list, exactly like `add_updates`:
+
+```python
+batch = api.Batch()
+batch.add_create(
+    "GenericObject",
+    {"id": "issuer.new-member", "classId": "issuer.generic-class", "state": "ACTIVE"},
+)
+results = batch.execute()
+```
+
+Creates and updates fit in the same batch — the HTTP method travels with each
+sub-request:
+
+```python
+batch = api.Batch()
+batch.add_create("LoyaltyObject", new_member_data)
+batch.add_update("LoyaltyObject", {"id": "issuer.member-1", "state": "EXPIRED"})
+results = batch.execute()
+```
+
+A batch is **not** atomic: individual items can fail while the rest succeed, which is why
+failures come back as results rather than exceptions. There is one result per added
+sub-request, **in the order they were added** — the batch may group and reorder the
+sub-requests internally, but that never shows in the results.
+
+`execute()` does not split, throttle or retry. The Google Wallet API is rate limited to
+[20 calls per second](https://developers.google.com/wallet/generic/resources/faq); deciding
+how many objects go into one batch, and how fast batches follow each other, is yours.
+
+The asynchronous twin is `await batch.aexecute()` and behaves identically.
+
 ## Send a notification to a pass
 
 You can send messages to passes to notify users about updates or important information:
