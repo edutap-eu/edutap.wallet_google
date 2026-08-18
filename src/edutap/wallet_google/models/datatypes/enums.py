@@ -174,6 +174,16 @@ class GateLabel(CamelCaseAliasEnum):
 class GenericType(CamelCaseAliasEnum):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject#generictype
+
+    Careful: that reference page lists 14 of the 20 values. The six marked
+    below appear only in the machine readable schema, which is where we take
+    them from - they entered it on 2026-03-28 with revision 20260327:
+    https://github.com/googleapis/discovery-artifact-manager/commit/b1b6100bbf443745a0ca80be074a78bc924346f5
+
+    They are modelled so that reading a pass carrying one of them does not fail
+    validation. Whether the API accepts them on write has not been tested, and
+    five months without an entry in the reference is reason enough not to
+    assume it - check against your own issuer before using one.
     """
 
     GENERIC_TYPE_UNSPECIFIED = "GENERIC_TYPE_UNSPECIFIED"  # Unspecified generic type.
@@ -193,13 +203,13 @@ class GenericType(CamelCaseAliasEnum):
     # Prefer the dedicated LoyaltyObject over this one: the dedicated pass type
     # offers more features than a generic pass can.
     GENERIC_LOYALTY_CARD = "GENERIC_LOYALTY_CARD"  # Loyalty cards
-    GENERIC_BUSINESS_CARD = "GENERIC_BUSINESS_CARD"  # Business cards
-    GENERIC_BARCODE_PASS = "GENERIC_BARCODE_PASS"  # Barcode passes
-    GENERIC_MEMBERSHIP_CARD = "GENERIC_MEMBERSHIP_CARD"  # Membership cards
-    GENERIC_STUDENT_CARD = "GENERIC_STUDENT_CARD"  # Student cards
-    GENERIC_TRANSIT_PASS = "GENERIC_TRANSIT_PASS"  # Transit passes
+    GENERIC_BUSINESS_CARD = "GENERIC_BUSINESS_CARD"  # Business cards, schema only
+    GENERIC_BARCODE_PASS = "GENERIC_BARCODE_PASS"  # Barcode passes, schema only
+    GENERIC_MEMBERSHIP_CARD = "GENERIC_MEMBERSHIP_CARD"  # Membership cards, schema only
+    GENERIC_STUDENT_CARD = "GENERIC_STUDENT_CARD"  # Student cards, schema only
+    GENERIC_TRANSIT_PASS = "GENERIC_TRANSIT_PASS"  # Transit passes, schema only
     GENERIC_VEHICLE_REGISTRATION = (
-        "GENERIC_VEHICLE_REGISTRATION"  # Vehicle registrations
+        "GENERIC_VEHICLE_REGISTRATION"  # Vehicle registrations, schema only
     )
     GENERIC_OTHER = "GENERIC_OTHER"  # Other type
 
