@@ -1317,6 +1317,203 @@ git commit -m "test(batch): add integration round-trip and record measured limit
 
 ---
 
+---
+
+### Task 6: `add_create()` — creating objects in a batch
+
+Added 2026-08-18, after Tasks 1-5 shipped. `SubRequest` already carries the method and
+`_build_results` does not care how a part was produced, so this is a method on the
+existing class rather than a new mechanism.
+
+**Files:**
+- Modify: `src/edutap/wallet_google/batch.py`
+- Modify: `tests/test_batch.py`
+- Modify: `docs/tutorials.md`, `docs/reference.md`
+
+**Interfaces:**
+- Consumes: `SubRequest`, `Batch._sub_requests`, `Batch._items` from Task 2.
+- Produces: `Batch.add_create(name: str, data: dict) -> None` and
+  `Batch.add_creates(name: str, data: list[dict]) -> None`.
+
+**How create differs from update.** Five things, all of them readable off the existing
+`_prepare_create()` in `api.py`. Getting any of them wrong produces a batch Google
+rejects, or worse, half-formed passes:
+
+| | `add_update()` | `add_create()` |
+| --- | --- | --- |
+| method | `PATCH` | `POST` |
+| path | `<api_path>/<url_part>/<resource_id>` | `<api_path>/<url_part>` — no id; it travels in the body |
+| validation | `make_partial_model(model)` | the **full** model |
+| serialisation | `exclude_none=False` | `exclude_none=True` |
+| permission check | `raise_when_operation_not_allowed(name, "update")` | `…(name, "create")` |
+
+**The validation difference is the one that matters.** `add_update()` relaxes required
+fields because a PATCH carrying two attributes has no reason to supply a `classId`. Doing
+the same for create would let an object without its required fields reach Google. Create
+therefore validates against the unrelaxed model — `add_create()` is stricter than its
+neighbour even though both take dicts.
+
+**Two registry facts to honour**, both already handled by `_prepare_create()`:
+
+- `Issuer` registers `pass_resource_id_on_create=False`: its id must be stripped from the
+  body on create. `validate_data_and_convert_to_json(..., skip_resource_id=True)` does
+  this, and it *raises* if the field is set — so the caller passing an id for such a model
+  gets a `ValueError`, like every other bad payload. `BatchResult.resource_id` is then the
+  empty string, because there is no id to report yet.
+- `can_create=False` exists in the registry, so the permission check is not decorative.
+
+- [ ] **Step 1: Write the failing tests**
+
+Append to `tests/test_batch.py`:
+
+```python
+@respx.mock
+def test_add_create_posts_to_the_collection_path(mock_session):
+    """Create is a POST to the type's collection, with no id in the path."""
+    route = _mock_batch_endpoint()
+
+    batch = Batch()
+    batch.add_create(
+        "GenericObject",
+        {"id": "issuer.new-one", "classId": "issuer.class", "state": "ACTIVE"},
+    )
+    batch.execute()
+
+    body = route.calls.last.request.content.decode("utf-8")
+    assert "POST /walletobjects/v1/genericObject" in body
+    # the id belongs in the payload, not the path
+    assert "POST /walletobjects/v1/genericObject/issuer.new-one" not in body
+    assert '"id":"issuer.new-one"' in body.replace(" ", "")
+
+
+def test_add_create_requires_the_models_required_fields():
+    """Unlike add_update, create does not relax required fields."""
+    batch = Batch()
+
+    with pytest.raises(ValueError) as exc_info:
+        batch.add_create("GenericObject", {"id": "issuer.new-one"})
+
+    assert "classId" in str(exc_info.value)
+
+
+@respx.mock
+def test_a_batch_may_mix_creates_and_updates(mock_session):
+    """Method is per sub-request, so both fit in one batch."""
+    route = _mock_batch_endpoint()
+
+    batch = Batch()
+    batch.add_create(
+        "GenericObject",
+        {"id": "issuer.new-one", "classId": "issuer.class", "state": "ACTIVE"},
+    )
+    batch.add_update("GenericObject", {"id": "issuer.old-one", "state": "EXPIRED"})
+    batch.execute()
+
+    body = route.calls.last.request.content.decode("utf-8")
+    assert "POST /walletobjects/v1/genericObject" in body
+    assert "PATCH /walletobjects/v1/genericObject/issuer.old-one" in body
+
+
+def test_add_creates_appends_a_whole_list():
+    """The bulk case must not need one call per object."""
+    batch = Batch()
+    batch.add_creates(
+        "GenericObject",
+        [
+            {"id": f"issuer.{n}", "classId": "issuer.class", "state": "ACTIVE"}
+            for n in range(5)
+        ],
+    )
+
+    assert len(batch) == 5
+
+
+@respx.mock
+def test_an_already_existing_object_comes_back_as_a_result(mock_session):
+    """409 is the common create failure and must not raise."""
+    conflict = (
+        "--rspboundary\r\n"
+        "Content-Type: application/http\r\n"
+        "Content-ID: <response-item-0>\r\n"
+        "\r\n"
+        "HTTP/1.1 409 Conflict\r\n"
+        "Content-Type: application/json\r\n"
+        "\r\n"
+        '{"error": {"code": 409, "message": "already exists", '
+        '"status": "ALREADY_EXISTS"}}\r\n'
+        "\r\n"
+        "--rspboundary--\r\n"
+    )
+    respx.post(str(Settings().batch_url)).mock(
+        return_value=httpx.Response(
+            200,
+            content=conflict.encode("utf-8"),
+            headers={"Content-Type": "multipart/mixed; boundary=rspboundary"},
+        )
+    )
+
+    batch = Batch()
+    batch.add_create(
+        "GenericObject",
+        {"id": "issuer.new-one", "classId": "issuer.class", "state": "ACTIVE"},
+    )
+    results = batch.execute()
+
+    assert results[0].ok is False
+    assert results[0].error is not None
+    assert results[0].error.code == 409
+```
+
+- [ ] **Step 2: Run them and watch them fail**
+
+Run: `uv run pytest tests/test_batch.py -k "create" -v`
+Expected: FAIL — `AttributeError: 'Batch' object has no attribute 'add_create'`
+
+- [ ] **Step 3: Implement**
+
+The two `add_*` methods share everything except method, path, validation and
+serialisation, so factor the common tail (build the `SubRequest`, append to
+`_sub_requests` and `_items`) rather than copying it — this is logic, not the
+sync/async boilerplate the codebase tolerates elsewhere.
+
+`add_create()` must:
+
+1. `metadata = lookup_metadata_by_name(name)`; `raise_when_operation_not_allowed(name, "create")`.
+2. Validate against `metadata["model"]` — **not** `make_partial_model(...)` — and serialise
+   with `exclude_none=True, by_alias=True`, mirroring `_prepare_create()`. Reuse
+   `validate_data_and_convert_to_json(model, data, skip_resource_id=..., resource_id_key=...)`
+   with `skip_resource_id = not metadata["pass_resource_id_on_create"]`; it returns
+   `(resource_id, json)` and already raises `ValueError` when an id is set on a model that
+   must not carry one.
+3. Wrap any `PydanticValidationError` into `ValueError`, so a bad create payload fails the
+   same way a bad update payload does.
+4. Build `SubRequest(method="POST", path=f"{api_path}/{metadata['url_part']}", body=…,
+   content_id=f"item-{len(self._sub_requests)}")`.
+5. Record `(name, resource_id or "")` in `_items`.
+
+`add_creates(name, data)` loops over `add_create`, exactly as `add_updates` does.
+
+- [ ] **Step 4: Run them and watch them pass**
+
+Run: `uv run pytest tests/test_batch.py -v`
+
+- [ ] **Step 5: Full suite and lint**
+
+Run: `uvx tox -e py313` then `uvx tox -e lint`
+
+- [ ] **Step 6: Document it**
+
+`docs/tutorials.md`: a short block showing `add_create` and a mixed create/update batch,
+and stating that create requires the full object while update does not. `docs/reference.md`:
+add both methods beside the update ones.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/edutap/wallet_google/batch.py tests/test_batch.py docs/
+git commit -m "feat(batch): add add_create() for creating objects in a batch"
+```
+
 ## Verification
 
 - [ ] `uvx tox -e py313` green.
@@ -1334,8 +1531,8 @@ Each of these is a plausible next stage, and none belongs in this one:
   today's meaning of one request, a set value splits transparently — so nothing in this
   plan has to be undone to get there. This is where a daily reconciliation over tens of thousands of objects
   actually gets decided, and it wants its own design once the measured ceiling is known.
-- **`add_create()` and other operations.** `SubRequest` already carries the method, and
-  `Batch` already mixes types, so adding create is a method on the existing class.
+- ~~**`add_create()` and other operations.**~~ Done in Task 6 (2026-08-18). Other
+  operations (delete, message) remain out of scope; Google Wallet has no delete.
 - **Parsing results into models.** `BatchResult.body` stays a dict; adding a parsed model
   later does not break the signature.
 - **Delta detection.** Writing only genuinely changed objects would cut the daily volume
