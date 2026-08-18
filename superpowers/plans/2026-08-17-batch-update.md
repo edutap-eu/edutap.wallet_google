@@ -50,8 +50,8 @@ should not pretend otherwise.
   Wallet pages and the FAQ are silent.
 - **Operational finding, not a documented guarantee** (maintainer, 2026-08-17): a batch
   counts as **one** request regardless of how many sub-requests it carries. This is why
-  batching is worth building — it turns 70,000 daily updates from roughly an hour of
-  wall-clock into minutes. Task 5 verifies it against the Cloud Console. Do not cite a
+  batching is worth building — it turns a daily run over tens of thousands of
+  objects from roughly an hour of wall-clock into minutes. Task 5 verifies it against the Cloud Console. Do not cite a
   Google URL for it; there isn't one.
 
 Consequence for the code: **no sub-request count is hard-coded anywhere.** A `Batch` takes
@@ -64,7 +64,7 @@ the caller decides what to do about it.
 part of the multipart body carries its own method and path, so there is no technical
 reason for the parts to share a pass type. It also makes the boundary visible — filling a
 `Batch` and calling `execute()` makes it obvious that one HTTP request is being built,
-where a function taking a 70,000-item list would hide that it produces a single request
+where a function taking a list of tens of thousands would hide that it produces one request
 running straight into a ceiling nobody has measured.
 
 **Sub-requests carry a `name` plus a plain dict, not a model instance.** `update()` today
@@ -1332,7 +1332,7 @@ Each of these is a plausible next stage, and none belongs in this one:
 - **The driver.** Chunking, throttling to 20 calls/s, retry, resume and progress
   reporting. It arrives as keyword arguments to `execute()` — `chunk_size=None` keeps
   today's meaning of one request, a set value splits transparently — so nothing in this
-  plan has to be undone to get there. This is where a daily 70,000-object reconciliation
+  plan has to be undone to get there. This is where a daily reconciliation over tens of thousands of objects
   actually gets decided, and it wants its own design once the measured ceiling is known.
 - **`add_create()` and other operations.** `SubRequest` already carries the method, and
   `Batch` already mixes types, so adding create is a method on the existing class.
