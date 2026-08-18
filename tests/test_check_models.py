@@ -75,10 +75,16 @@ def find_all_models() -> dict[str, type[BaseModel]]:
     models: dict[str, type[BaseModel]] = {}
     for module in modules:
         for cls_name, cls in inspect.getmembers(module, inspect.isclass):
-            if cls.__module__.startswith("edutap.wallet_google.models") and issubclass(
-                cls, BaseModel
-            ):
-                models[cls_name] = cls
+            if not cls.__module__.startswith("edutap.wallet_google.models"):
+                continue
+            if not issubclass(cls, BaseModel):
+                continue
+            # models/deprecated.py duplicates Image, ImageUri, LocalizedString
+            # and friends to break an import cycle. Those copies are reduced to
+            # what the deprecated fields need, so the real ones win.
+            if cls.__module__.endswith(".deprecated") and cls_name in models:
+                continue
+            models[cls_name] = cls
     return models
 
 
@@ -323,19 +329,12 @@ def test_known_schemas(wallet_api_data: dict[str, Any]):
             print(f"Model: '{name}' has no property: '{e}'")
 
         model_schema_names = set(model.model_json_schema().get("properties", {}).keys())
-        model_schema = model.model_json_schema().get("properties", {})
 
         assert set(api_schema["properties"].keys()) == model_schema_names, (
             f"Set of properties does not match for: '{name}'"
         )
-
-        for prop, prop_schema in api_schema["properties"].items():
-            assert prop in model_schema_names
-            if "deprecated" in prop_schema:
-                our_prop = model_schema[prop]
-                assert our_prop.get("deprecated", False) is True, (
-                    f"The property: '{prop}' is deprecated, but not marked as such in our schema."
-                )
+        # Deprecations are checked in both directions by
+        # test_deprecated_properties, types by test_property_types.
 
 
 def test_methods(wallet_api_data: dict[str, Any]):
@@ -467,3 +466,161 @@ def test_enum_values(wallet_api_data: dict[str, Any]):
         if findings
     )
     assert not report, f"\nOur enums and the Wallet API disagree:\n{report}"
+
+
+def api_wire_shape(property_schema: dict[str, Any], api_schemas: dict[str, Any]) -> str:
+    """The JSON shape a discovery property describes.
+
+    Reduced to what actually travels over the wire, because that is what both
+    sides have to agree on. Google encodes int64 as a JSON string, so a
+    ``format`` never changes the shape.
+    """
+    if "$ref" in property_schema:
+        target = property_schema["$ref"]
+        if api_schemas.get(target, {}).get("type") == "object":
+            return f"object:{target}"
+        return f"unknown:{target}"
+    if "enum" in property_schema:
+        return "enum"
+    kind = property_schema.get("type")
+    if kind == "array":
+        return (
+            f"array of {api_wire_shape(property_schema.get('items', {}), api_schemas)}"
+        )
+    return str(kind)
+
+
+def our_wire_shape(property_schema: dict[str, Any], definitions: dict[str, Any]) -> str:
+    """The JSON shape one of our model properties describes.
+
+    Pydantic writes ``Foo | None`` as an ``anyOf`` over the type and null, and
+    refines strings via ``format`` (uri, email, date-time). Neither changes the
+    shape, so both are collapsed away.
+    """
+    if "anyOf" in property_schema:
+        shapes = {
+            our_wire_shape(variant, definitions)
+            for variant in property_schema["anyOf"]
+            if variant.get("type") != "null"
+        }
+        return shapes.pop() if len(shapes) == 1 else f"anyOf{sorted(shapes)}"
+    if "$ref" in property_schema:
+        key = property_schema["$ref"].rsplit("/", 1)[-1]
+        definition = definitions.get(key, {})
+        if "enum" in definition:
+            return "enum"
+        # Pydantic qualifies a $defs key with its module path whenever a class
+        # name occurs twice: "..._deprecated__Image" instead of "Image".
+        name = key.rsplit("__", 1)[-1]
+        return f"object:{MODEL_ALIAS_DICT.get(name, name)}"
+    kind = property_schema.get("type")
+    if kind == "array":
+        return (
+            f"array of {our_wire_shape(property_schema.get('items', {}), definitions)}"
+        )
+    return str(kind)
+
+
+def test_property_types(wallet_api_data: dict[str, Any]):
+    """Compare the JSON type of every property against the discovery document.
+
+    ``test_known_schemas`` compares property *names*; a field Google moved from
+    ``string`` to ``object`` would not show up there.
+
+    Required fields cannot be compared: the discovery document carries no
+    ``required`` key on any schema, so there is nothing on Google's side to
+    check ours against.
+    """
+    api_schemas: dict[str, dict[str, Any]] = wallet_api_data["schemas"]
+    our_models = {
+        MODEL_ALIAS_DICT.get(name, name): model
+        for name, model in find_all_models().items()
+    }
+
+    mismatches: dict[str, str] = {}
+    for schema_name, api_schema in sorted(api_schemas.items()):
+        if schema_name in GOOGLE_INTERNAL_SCHEMAS or schema_name not in our_models:
+            continue
+        our_schema = our_models[schema_name].model_json_schema()
+        our_properties = our_schema.get("properties", {})
+        definitions = our_schema.get("$defs", {})
+
+        for name, api_property in sorted(api_schema.get("properties", {}).items()):
+            if name not in our_properties:
+                continue  # covered by test_known_schemas
+            expected = api_wire_shape(api_property, api_schemas)
+            actual = our_wire_shape(our_properties[name], definitions)
+            if expected != actual:
+                mismatches[f"{schema_name}.{name}"] = (
+                    f"API says {expected}, we say {actual}"
+                )
+
+    report = "\n".join(
+        f"  {where}: {what}" for where, what in sorted(mismatches.items())
+    )
+    assert not report, f"\nProperty types disagree with the Wallet API:\n{report}"
+
+
+# Properties we mark as deprecated although the discovery document does not.
+# Google flags "locations" on every class but not on OfferObject; the wording of
+# the description is identical, so this is an oversight on their side rather
+# than a statement about the object.
+DEPRECATED_BEYOND_THE_API = {
+    "OfferObject.locations",
+}
+
+
+def api_says_deprecated(property_schema: dict[str, Any]) -> bool:
+    """Whether the discovery document declares a property deprecated.
+
+    The ``deprecated`` flag alone is not enough: Google sets it on
+    ``EventTicketClass.infoModuleData`` but not on
+    ``EventTicketObject.infoModuleData``, even though both descriptions read
+    "Deprecated. Use textModulesData instead."
+    """
+    return bool(property_schema.get("deprecated")) or property_schema.get(
+        "description", ""
+    ).startswith("Deprecated")
+
+
+def test_deprecated_properties(wallet_api_data: dict[str, Any]):
+    """Every deprecation has to be visible on both sides.
+
+    ``test_known_schemas`` only checks one direction - the API deprecates it, so
+    we have to mark it. A field we still flag after Google has revived it is
+    just as wrong, because our users see a warning that no longer applies.
+    """
+    api_schemas: dict[str, dict[str, Any]] = wallet_api_data["schemas"]
+    our_models = {
+        MODEL_ALIAS_DICT.get(name, name): model
+        for name, model in find_all_models().items()
+    }
+
+    not_marked: list[str] = []
+    marked_without_reason: list[str] = []
+    for schema_name, api_schema in sorted(api_schemas.items()):
+        if schema_name in GOOGLE_INTERNAL_SCHEMAS or schema_name not in our_models:
+            continue
+        our_properties = (
+            our_models[schema_name].model_json_schema().get("properties", {})
+        )
+
+        for name, api_property in sorted(api_schema.get("properties", {}).items()):
+            if name not in our_properties:
+                continue  # covered by test_known_schemas
+            where = f"{schema_name}.{name}"
+            if where in DEPRECATED_BEYOND_THE_API:
+                continue
+            ours_says = bool(our_properties[name].get("deprecated"))
+            if api_says_deprecated(api_property) and not ours_says:
+                not_marked.append(where)
+            if ours_says and not api_says_deprecated(api_property):
+                marked_without_reason.append(where)
+
+    assert not not_marked, (
+        f"\nThe API deprecates these, we do not mark them: {not_marked}"
+    )
+    assert not marked_without_reason, (
+        f"\nWe mark these deprecated, the API does not: {marked_without_reason}"
+        f"\nEither drop the marker or add it to DEPRECATED_BEYOND_THE_API."
+    )
