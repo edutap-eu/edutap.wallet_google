@@ -46,6 +46,25 @@ If work is ready, remove the draft status from the PR to signalize readiness for
 
 On of the core contributors will review, comment and - if all is fine - merge it.
 
+## Staying in sync with the Google Wallet API
+
+The models are held against Google's machine readable schema, not against the
+HTML documentation. `tests/test_check_models.py` fetches
+
+* `https://walletobjects.googleapis.com/$discovery/rest?version=v1` and
+* `https://discovery.googleapis.com/discovery/v1/apis?name=walletobjects`
+
+and compares the set of schemas, the property names, their JSON types, their
+deprecations and every enum value against what we declare. It therefore needs
+network access; both endpoints are reachable without authentication.
+
+When Google adds something, that test is where it shows up first. Whatever it
+cannot know belongs in one of the named lists at the top of the file, together
+with the reason - never as a silent exception.
+
+The API revision is deliberately not pinned: Google turns it over almost daily,
+which would make the test red without telling us anything.
+
 ## Dependency updates
 
 Dependency updates arrive as pull requests from up to three bots, none of
