@@ -4,7 +4,6 @@ from enum import Enum
 from httpx import get
 from httpx import HTTPError
 from pydantic import BaseModel
-from pydantic._internal._model_construction import ModelMetaclass
 from typing import Any
 
 import importlib
@@ -36,29 +35,52 @@ GOOGLE_INTERNAL_SCHEMAS = {
     "ObjectId",
 }
 
+# Bodies of the two endpoints we do not implement: jwt.insert / jwt.validate
+# and loyaltyobject.modifylinkedofferobjects. Both are only ever reachable
+# through a request envelope, so neither is a gap in the pass data model.
+UNIMPLEMENTED_ENDPOINT_SCHEMAS = {
+    "JsonResource",
+    "ModifyLinkedOfferObjects",
+}
 
-def find_models() -> dict[str, type]:
-    models: dict[str, type] = {}
-    pkg = importlib.import_module("edutap.wallet_google")
-    datatypes_module = pkg.models.datatypes
-    for name, module in inspect.getmembers(datatypes_module, inspect.ismodule):
-        # print(f"Module: 'name', '{module}'")
-        for cls_name, cls in inspect.getmembers(module, inspect.isclass):
-            if (
-                cls.__module__.startswith("edutap.wallet_google.models.datatypes")
-                and cls.__class__ == ModelMetaclass
-            ):
-                # print(f"Class: '{cls_name}', '{cls}'")
-                models[cls_name] = cls
-    return models
+# Models that are ours, not Google's, and therefore in no discovery document.
+OUR_OWN_MODELS = {
+    # base classes every pass model derives from
+    "Model",
+    "WithIdModel",
+    "ClassModel",
+    "ObjectModel",
+    # the "Add to Google Wallet" JWT we sign ourselves
+    "JWTClaims",
+    "JWTPayload",
+    "Reference",
+    # payloads Google posts to our callback endpoint
+    "CallbackData",
+    "ImageData",
+    "IntermediateSigningKey",
+    "RootSigningPublicKey",
+    "RootSigningPublicKeys",
+    "SignedKey",
+    "SignedMessage",
+}
+
+
+def is_envelope(schema_name: str) -> bool:
+    """Whether a schema is a per-endpoint request or response envelope.
+
+    Those wrap a resource for one call - GenericObjectListResponse and the like
+    - instead of describing a piece of the Wallet data model. Applied to both
+    sides so the two sets of names stay comparable.
+    """
+    return schema_name.endswith(("Request", "Response"))
 
 
 def find_all_models() -> dict[str, type[BaseModel]]:
     """All Pydantic models of the package, keyed by class name.
 
-    Unlike :func:`find_models` this walks the whole ``models`` package, so
-    models living outside ``models/datatypes/`` (``models/misc.py``,
-    ``models/deprecated.py``, ``models/passes/``) are found as well.
+    Walks the whole ``models`` package, so models living outside
+    ``models/datatypes/`` are found as well - ``models/misc.py``,
+    ``models/deprecated.py``, ``models/passes/``.
     """
     package = importlib.import_module("edutap.wallet_google.models")
     root = pathlib.Path(package.__path__[0])
@@ -276,40 +298,29 @@ def test_known_schemas(wallet_api_data: dict[str, Any]):
     assert isinstance(schemas, dict)
     assert len(schemas) > 0
 
-    api_schemas: set[str] = set()
-    for elem in schemas.keys():
-        if elem.endswith("Request") or elem.endswith("Response"):
-            continue
-        api_schemas.add(elem)
+    # Per-endpoint envelopes are dropped on both sides, by the same rule, so
+    # that the two sets stay comparable.
+    api_schemas = (
+        {name for name in schemas if not is_envelope(name)}
+        - GOOGLE_INTERNAL_SCHEMAS
+        - UNIMPLEMENTED_ENDPOINT_SCHEMAS
+    )
 
-    our_schemas: dict[str, type] = {}
-    our_known_schemas: set[str] = set(_MODEL_REGISTRY_BY_NAME.keys())
-    for name in our_known_schemas:
-        our_schemas[name] = lookup_metadata_by_name(name)["model"]
+    our_schemas: dict[str, type] = {
+        name: lookup_metadata_by_name(name)["model"] for name in _MODEL_REGISTRY_BY_NAME
+    }
+    our_schemas.update(find_all_models())
+    our_schemas = {
+        name: model
+        for name, model in sorted(our_schemas.items())
+        if not is_envelope(name) and name not in OUR_OWN_MODELS
+    }
 
-    for name, model in find_models().items():
-        our_known_schemas.add(name)
-        our_schemas[name] = model
-
-    for name in [
-        "JWTClaims",
-        "JWTPayload",
-        "PaginatedResponse",
-        "Reference",
-    ]:
-        del our_schemas[name]
-
-    # assert api_schemas == our_known_schemas, (
-    #     f"\nAPI schemas do not match our known schemas."
-    #     f"\nAPI schemas: {api_schemas}, "
-    #     f"\nOur known schemas: {our_known_schemas}"
-    #     f"\nDifference: {api_schemas - our_known_schemas}"
-    # )
-
-    our_schemas = dict(sorted(our_schemas.items()))
-    # print("Our known schemas:")
-    # for name in our_schemas.keys():
-    #     print(f" * {name}")
+    assert api_schemas == {MODEL_ALIAS_DICT.get(name, name) for name in our_schemas}, (
+        "\nThe set of schemas the API knows and the set of models we have differ."
+        f"\nOnly in the API: {sorted(api_schemas - {MODEL_ALIAS_DICT.get(n, n) for n in our_schemas})}"
+        f"\nOnly ours: {sorted({MODEL_ALIAS_DICT.get(n, n) for n in our_schemas} - api_schemas)}"
+    )
 
     for name, model in our_schemas.items():
         # print(f"\nCheck: '{name}'", end=" ")
