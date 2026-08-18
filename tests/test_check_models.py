@@ -1,7 +1,9 @@
 from edutap.wallet_google.registry import _MODEL_REGISTRY_BY_NAME
 from edutap.wallet_google.registry import lookup_metadata_by_name
+from enum import Enum
 from httpx import get
 from httpx import HTTPError
+from pydantic import BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
 from typing import Any
 
@@ -10,6 +12,7 @@ import inspect
 import json
 import pathlib
 import pytest
+import typing
 
 
 MODEL_ALIAS_DICT = {
@@ -18,6 +21,19 @@ MODEL_ALIAS_DICT = {
     "Jwt": "JwtResource",
     "TotpDetails": "RotatingBarcodeTotpDetails",
     "TotpParameters": "RotatingBarcodeTotpDetailsTotpParameters",
+}
+
+# Schemas of Google's internal media/upload machinery. They are part of every
+# discovery document Google publishes, they are not part of the Wallet data
+# model, and no Wallet endpoint we call ever returns them.
+GOOGLE_INTERNAL_SCHEMAS = {
+    "Blobstore2Info",
+    "CompositeMedia",
+    "ContentTypeInfo",
+    "DownloadParameters",
+    "Media",
+    "MediaRequestInfo",
+    "ObjectId",
 }
 
 
@@ -35,6 +51,99 @@ def find_models() -> dict[str, type]:
                 # print(f"Class: '{cls_name}', '{cls}'")
                 models[cls_name] = cls
     return models
+
+
+def find_all_models() -> dict[str, type[BaseModel]]:
+    """All Pydantic models of the package, keyed by class name.
+
+    Unlike :func:`find_models` this walks the whole ``models`` package, so
+    models living outside ``models/datatypes/`` (``models/misc.py``,
+    ``models/deprecated.py``, ``models/passes/``) are found as well.
+    """
+    package = importlib.import_module("edutap.wallet_google.models")
+    root = pathlib.Path(package.__path__[0])
+
+    # Walking the file tree rather than using pkgutil: 'datatypes' carries no
+    # __init__.py, so pkgutil does not descend into it.
+    modules = []
+    for path in sorted(root.rglob("*.py")):
+        parts = path.relative_to(root).with_suffix("").parts
+        if parts[-1] == "__init__":
+            parts = parts[:-1]
+        modules.append(importlib.import_module(".".join((package.__name__, *parts))))
+
+    models: dict[str, type[BaseModel]] = {}
+    for module in modules:
+        for cls_name, cls in inspect.getmembers(module, inspect.isclass):
+            if cls.__module__.startswith("edutap.wallet_google.models") and issubclass(
+                cls, BaseModel
+            ):
+                models[cls_name] = cls
+    return models
+
+
+def enum_types_of(annotation: Any) -> set[type[Enum]]:
+    """Every Enum class reachable from a Pydantic field annotation.
+
+    Fields are declared as ``Foo | None``, ``list[Foo]`` and the like, so the
+    annotation has to be unwrapped recursively.
+    """
+    found: set[type[Enum]] = set()
+    if isinstance(annotation, type) and issubclass(annotation, Enum):
+        found.add(annotation)
+    for argument in typing.get_args(annotation):
+        found |= enum_types_of(argument)
+    return found
+
+
+def find_enum_fields() -> dict[tuple[str, str], type[Enum]]:
+    """Map ``(API schema name, property name)`` to the Enum class we use there.
+
+    Derived from the models themselves rather than from a hand written table,
+    so it cannot drift away from the code it describes.
+    """
+    fields: dict[tuple[str, str], type[Enum]] = {}
+    for name, model in find_all_models().items():
+        schema_name = MODEL_ALIAS_DICT.get(name, name)
+        for field_name, field in model.model_fields.items():
+            enums = enum_types_of(field.annotation)
+            if len(enums) != 1:
+                # No enum at all, or an ambiguous union - nothing to compare.
+                continue
+            fields[(schema_name, field.alias or field_name)] = enums.pop()
+    return fields
+
+
+def canonical_values(enum_class: type[Enum]) -> set[str]:
+    """The values declared in the enum's class body, without generated aliases.
+
+    :class:`~edutap.wallet_google.models.bases.CamelCaseAliasEnum` registers its
+    aliases as extra members, so plain iteration would also yield them. An alias
+    member does not carry the name it is registered under - that is what tells
+    the two apart.
+    """
+    return {
+        member.value
+        for name, member in enum_class._member_map_.items()
+        if member.name == name
+    }
+
+
+def api_enum_of(property_schema: dict[str, Any]) -> tuple[list[str], list[bool]] | None:
+    """The enum values of a discovery property and their deprecation flags.
+
+    Returns ``None`` for properties without an enum. Array properties carry the
+    enum on their ``items``. ``enumDeprecated`` is absent whenever no value is
+    deprecated, so a missing flag list means "nothing is deprecated".
+    """
+    schema = property_schema
+    if schema.get("type") == "array":
+        schema = schema.get("items", {})
+    values = schema.get("enum")
+    if values is None:
+        return None
+    deprecated = schema.get("enumDeprecated", [False] * len(values))
+    return values, deprecated
 
 
 def request_api_data_write_to_file(url: str, file_path: pathlib.Path) -> bool:
@@ -281,3 +390,80 @@ def test_methods(wallet_api_data: dict[str, Any]):
             f"\nExpected methods: {expected_methods}"
             f"\nDifference: {available_methods - expected_methods}"
         )
+
+
+def test_enum_values(wallet_api_data: dict[str, Any]):
+    """Compare our enum values against the enums inlined in the discovery document.
+
+    The discovery document holds no standalone enum schemas; every enum is
+    inlined into the property that uses it. Google lists deprecated legacy
+    spellings next to the canonical values and marks them via
+    ``enumDeprecated``.
+
+    Three things have to hold:
+
+    1. Our canonical values are exactly Google's canonical values.
+    2. Every value Google may send - legacy spellings included - is accepted by
+       our enum, so reading an API response never fails on an alias.
+    3. Wherever the API declares an enum, we use an enum too.
+    """
+    schemas: dict[str, dict[str, Any]] = wallet_api_data["schemas"]
+    our_enum_fields = find_enum_fields()
+
+    problems: dict[str, dict[str, list[str]]] = {
+        "Google knows canonical values we do not": {},
+        "we know canonical values Google does not": {},
+        "our enum rejects values the API may send": {},
+        "the API declares an enum where we use a plain type": {},
+    }
+
+    for schema_name, schema in sorted(schemas.items()):
+        if schema_name in GOOGLE_INTERNAL_SCHEMAS:
+            continue
+        for property_name, property_schema in sorted(
+            schema.get("properties", {}).items()
+        ):
+            api_enum = api_enum_of(property_schema)
+            if api_enum is None:
+                continue
+            values, deprecated = api_enum
+            where = f"{schema_name}.{property_name}"
+
+            our_enum = our_enum_fields.get((schema_name, property_name))
+            if our_enum is None:
+                problems["the API declares an enum where we use a plain type"][
+                    where
+                ] = sorted(values)
+                continue
+
+            where = f"{our_enum.__name__} ({where})"
+            api_canonical = {
+                value
+                for value, is_deprecated in zip(values, deprecated)
+                if not is_deprecated
+            }
+            our_canonical = canonical_values(our_enum)
+
+            if api_canonical - our_canonical:
+                problems["Google knows canonical values we do not"][where] = sorted(
+                    api_canonical - our_canonical
+                )
+            if our_canonical - api_canonical:
+                problems["we know canonical values Google does not"][where] = sorted(
+                    our_canonical - api_canonical
+                )
+            rejected = [
+                value for value in values if value not in our_enum._value2member_map_
+            ]
+            if rejected:
+                problems["our enum rejects values the API may send"][where] = rejected
+
+    report = "\n".join(
+        f"\n{headline}:\n"
+        + "\n".join(
+            f"  {where}: {values}" for where, values in sorted(findings.items())
+        )
+        for headline, findings in problems.items()
+        if findings
+    )
+    assert not report, f"\nOur enums and the Wallet API disagree:\n{report}"

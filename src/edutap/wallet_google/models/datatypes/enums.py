@@ -21,7 +21,8 @@ class ActivationState(CamelCaseAliasEnum):
     """
 
     UNKNOWN_STATE = "UNKNOWN_STATE"
-    NOT_ACTIVATED = "NOT_ACTIVATED"
+    # Google's deprecated legacy spelling is "not_activated", not "notActivated".
+    NOT_ACTIVATED = "NOT_ACTIVATED", "not_activated"
     ACTIVATED = "ACTIVATED"
 
 
@@ -55,10 +56,12 @@ class BarcodeType(CamelCaseAliasEnum):
     CODABAR = "CODABAR"
     DATA_MATRIX = "DATA_MATRIX"
     EAN_8 = "EAN_8"
-    EAN_13 = "EAN_13"
+    # Google carries two deprecated legacy spellings for these three, and the
+    # second one is not the camelCase form that gets generated automatically.
+    EAN_13 = "EAN_13", "EAN13"
     ITF_14 = "ITF_14"
-    PDF_417 = "PDF_417"
-    QR_CODE = "QR_CODE"
+    PDF_417 = "PDF_417", "PDF417"
+    QR_CODE = "QR_CODE", "qrcode"
     UPC_A = "UPC_A"
     TEXT_ONLY = "TEXT_ONLY"
 
@@ -118,6 +121,8 @@ class DateFormat(CamelCaseAliasEnum):
     TIME_ONLY = "TIME_ONLY"
     DATE_TIME_YEAR = "DATE_TIME_YEAR"
     DATE_YEAR = "DATE_YEAR"
+    YEAR_MONTH = "YEAR_MONTH"  # renders 2018-12-14T13:00:00 as 2018-12
+    YEAR_MONTH_DAY = "YEAR_MONTH_DAY"  # renders 2018-12-14T13:00:00 as 2018-12-14
 
 
 class DoorsOpenLabel(CamelCaseAliasEnum):
@@ -185,6 +190,17 @@ class GenericType(CamelCaseAliasEnum):
     GENERIC_HOME_INSURANCE = "GENERIC_HOME_INSURANCE"  # Home-insurance cards
     GENERIC_ENTRY_TICKET = "GENERIC_ENTRY_TICKET"  # Entry tickets
     GENERIC_RECEIPT = "GENERIC_RECEIPT"  # Receipts
+    # Prefer the dedicated LoyaltyObject over this one: the dedicated pass type
+    # offers more features than a generic pass can.
+    GENERIC_LOYALTY_CARD = "GENERIC_LOYALTY_CARD"  # Loyalty cards
+    GENERIC_BUSINESS_CARD = "GENERIC_BUSINESS_CARD"  # Business cards
+    GENERIC_BARCODE_PASS = "GENERIC_BARCODE_PASS"  # Barcode passes
+    GENERIC_MEMBERSHIP_CARD = "GENERIC_MEMBERSHIP_CARD"  # Membership cards
+    GENERIC_STUDENT_CARD = "GENERIC_STUDENT_CARD"  # Student cards
+    GENERIC_TRANSIT_PASS = "GENERIC_TRANSIT_PASS"  # Transit passes
+    GENERIC_VEHICLE_REGISTRATION = (
+        "GENERIC_VEHICLE_REGISTRATION"  # Vehicle registrations
+    )
     GENERIC_OTHER = "GENERIC_OTHER"  # Other type
 
 
