@@ -12,6 +12,7 @@ from email.parser import BytesParser
 from email.policy import HTTP
 
 import json
+import re
 import uuid
 
 
@@ -49,15 +50,38 @@ def make_boundary() -> str:
     return f"batch_{uuid.uuid4().hex}"
 
 
+def _reject_crlf(value: str, field: str) -> None:
+    """Raise if *value* contains a bare CR or LF.
+
+    A resource id (or, in principle, a method) is interpolated straight into the
+    request line. Nothing upstream constrains it: ``api.update()`` cannot carry a
+    CR/LF because httpx rejects it in the URL, but ``Batch.add_update()`` builds the
+    path itself with no equivalent guard. Left unchecked, a CR or LF injects extra
+    lines into the part and shifts the body -- surfacing later as an opaque error
+    from Google instead of a clear one from here.
+
+    :param value: The value to check.
+    :param field: Name of the field, for the error message.
+    :raises ValueError: When *value* contains ``\\r`` or ``\\n``.
+    """
+    if "\r" in value or "\n" in value:
+        raise ValueError(f"{field} must not contain CR or LF: {value!r}")
+
+
 def encode_multipart(sub_requests: list[SubRequest], boundary: str) -> bytes:
     """Encode sub-requests as a ``multipart/mixed`` body.
 
     :param sub_requests: The requests to carry, in order.
     :param boundary:     Delimiter between the parts, without leading dashes.
+    :raises ValueError:  When a sub-request's ``path``, ``method`` or ``content_id``
+                          contains a CR or LF, which would corrupt the framing.
     :return:             The encoded body, ready to be sent as request content.
     """
     lines: list[str] = []
     for sub_request in sub_requests:
+        _reject_crlf(sub_request.path, "path")
+        _reject_crlf(sub_request.method, "method")
+        _reject_crlf(sub_request.content_id, "content_id")
         lines.append(f"--{boundary}")
         lines.append(f"Content-Type: {_PART_CONTENT_TYPE}")
         lines.append(f"Content-ID: <{sub_request.content_id}>")
@@ -78,8 +102,12 @@ def _parse_http_payload(payload: str) -> tuple[int, dict | None]:
     :param payload: A raw HTTP response: status line, headers, blank line, body.
     :return:        Tuple of status code and decoded body (None when not JSON).
     """
-    head, _, body = payload.partition(f"{_CRLF}{_CRLF}")
-    status_line = head.split(_CRLF, 1)[0]
+    # Split on the blank line between headers and body. RFC 2046 requires CRLF,
+    # but tolerate a bare LF too: an LF-only sub-response must still surface its
+    # body rather than silently losing it.
+    head, *rest = re.split(r"\r?\n\r?\n", payload, maxsplit=1)
+    body = rest[0] if rest else ""
+    status_line = re.split(r"\r?\n", head, maxsplit=1)[0]
     try:
         # "HTTP/1.1 404 Not Found" -> 404
         status_code = int(status_line.split(" ")[1])
@@ -93,9 +121,13 @@ def _parse_http_payload(payload: str) -> tuple[int, dict | None]:
     if not body:
         return status_code, None
     try:
-        return status_code, json.loads(body)
+        parsed = json.loads(body)
     except json.JSONDecodeError:
         return status_code, None
+    # json.loads() may return a list or a scalar. SubResponse.body is typed
+    # ``dict | None``; a non-dict shape must degrade to None rather than being
+    # carried through into a strict pydantic model it was never declared for.
+    return status_code, parsed if isinstance(parsed, dict) else None
 
 
 def decode_multipart(content: bytes, content_type: str) -> list[SubResponse]:

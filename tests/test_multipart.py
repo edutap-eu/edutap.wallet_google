@@ -1,5 +1,6 @@
 """Tests for multipart/mixed encoding and decoding."""
 
+from edutap.wallet_google.multipart import _PART_CONTENT_TYPE
 from edutap.wallet_google.multipart import decode_multipart
 from edutap.wallet_google.multipart import encode_multipart
 from edutap.wallet_google.multipart import SubRequest
@@ -108,3 +109,130 @@ def test_decode_returns_status_code_zero_for_malformed_status_line():
 
     assert len(responses) == 1
     assert responses[0].status_code == 0
+
+
+NON_DICT_JSON_BODY_RESPONSE = (
+    "--rspboundary\r\n"
+    "Content-Type: application/http\r\n"
+    "Content-ID: <response-item-0>\r\n"
+    "\r\n"
+    "HTTP/1.1 200 OK\r\n"
+    "Content-Type: application/json\r\n"
+    "\r\n"
+    "[1, 2, 3]\r\n"
+    "\r\n"
+    "--rspboundary--\r\n"
+)
+
+
+def test_decode_degrades_a_non_dict_json_body_to_none():
+    """json.loads() may return a list or scalar. SubResponse.body is typed
+    ``dict | None``; a list must degrade to None rather than being carried
+    through and later exploding a strict pydantic model with a shape it never
+    declared.
+    """
+    responses = decode_multipart(
+        NON_DICT_JSON_BODY_RESPONSE.encode("utf-8"),
+        "multipart/mixed; boundary=rspboundary",
+    )
+
+    assert len(responses) == 1
+    assert responses[0].status_code == 200
+    assert responses[0].body is None
+
+
+def test_encode_rejects_a_path_with_a_bare_cr_or_lf():
+    """A CR or LF inside a resource id would inject lines into the part and shift
+    the body -- api.update() cannot do this because httpx rejects it, but
+    add_update() builds the path itself with no equivalent guard.
+    """
+    sub_requests = [
+        SubRequest(
+            method="PATCH",
+            path="/walletobjects/v1/genericObject/issuer.one\r\nEvil-Header: x",
+            body='{"state":"EXPIRED"}',
+            content_id="item-0",
+        )
+    ]
+
+    try:
+        encode_multipart(sub_requests, boundary="testboundary")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("expected ValueError for a path containing CRLF")
+
+
+def test_encode_rejects_a_content_id_with_a_bare_lf():
+    """Same injection risk via content_id."""
+    sub_requests = [
+        SubRequest(
+            method="PATCH",
+            path="/walletobjects/v1/genericObject/issuer.one",
+            body='{"state":"EXPIRED"}',
+            content_id="item-0\nContent-Type: text/evil",
+        )
+    ]
+
+    try:
+        encode_multipart(sub_requests, boundary="testboundary")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("expected ValueError for a content_id containing LF")
+
+
+def test_encode_rejects_a_method_with_a_bare_cr():
+    """Same injection risk via method, for completeness."""
+    sub_requests = [
+        SubRequest(
+            method="PATCH\rEvil: x",
+            path="/walletobjects/v1/genericObject/issuer.one",
+            body='{"state":"EXPIRED"}',
+            content_id="item-0",
+        )
+    ]
+
+    try:
+        encode_multipart(sub_requests, boundary="testboundary")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("expected ValueError for a method containing CR")
+
+
+LF_ONLY_RESPONSE = (
+    "--rspboundary\r\n"
+    "Content-Type: application/http\r\n"
+    "Content-ID: <response-item-0>\r\n"
+    "\r\n"
+    "HTTP/1.1 200 OK\n"
+    "Content-Type: application/json\n"
+    "\n"
+    '{"id": "issuer.one"}\r\n'
+    "\r\n"
+    "--rspboundary--\r\n"
+)
+
+
+def test_decode_finds_the_body_when_the_part_uses_lf_only_headers():
+    """_parse_http_payload splits on CRLFCRLF; an LF-only sub-response must still
+    surface its body rather than silently losing it (ok=True, body=None, no error).
+    """
+    responses = decode_multipart(
+        LF_ONLY_RESPONSE.encode("utf-8"),
+        "multipart/mixed; boundary=rspboundary",
+    )
+
+    assert len(responses) == 1
+    assert responses[0].status_code == 200
+    assert responses[0].body == {"id": "issuer.one"}
+
+
+def test_part_content_type_is_pinned_to_application_json():
+    """_PART_CONTENT_TYPE's whole purpose is that flipping it to application/http is
+    a deliberate, larger change (it also needs an HTTP-version suffix on the request
+    line and a per-part Content-Type header). Pin the current value so a bare flip
+    announces itself as a broken test rather than passing silently.
+    """
+    assert _PART_CONTENT_TYPE == "application/json"
