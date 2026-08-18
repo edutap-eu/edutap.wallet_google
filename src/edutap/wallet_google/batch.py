@@ -1,11 +1,13 @@
 """Batch requests against the Google Wallet API.
 
 A :class:`Batch` collects sub-requests and sends them as a single
-``multipart/mixed`` request. One Batch is one HTTP request — which is the point:
-the Google Wallet API is rate limited per call, so a hundred updates in one
-Batch cost what one update costs.
+``multipart/mixed`` request, following the mechanism documented at
+https://developers.google.com/wallet/generic/resources/performance-tips.
 
-See https://developers.google.com/wallet/generic/resources/performance-tips
+A batch appears to count as a single call against the 20-calls-per-second rate
+limit (https://developers.google.com/wallet/generic/resources/faq), so a hundred
+updates in one Batch cost what one update costs. This is an operational finding
+from running the real system, not something Google documents or guarantees.
 """
 
 from .clientpool import client_pool
@@ -19,6 +21,7 @@ from .multipart import SubResponse
 from .registry import lookup_metadata_by_name
 from .registry import raise_when_operation_not_allowed
 from .utils import handle_response_errors
+from pydantic import ConfigDict
 from pydantic import ValidationError as PydanticValidationError
 
 import typing
@@ -26,7 +29,17 @@ import urllib.parse
 
 
 class BatchError(Model):
-    """The error Google reports for a single failed sub-request."""
+    """The error Google reports for a single failed sub-request.
+
+    Unlike the wallet models, this describes a *foreign* response payload, not
+    something of ours: Google's real error object carries fields beyond the three
+    modeled here (``details``, and in the classic error envelope, ``errors``).
+    ``extra="ignore"`` -- rather than the strict base's ``extra="forbid"`` -- keeps
+    those extra fields from turning an ordinary error response into a
+    ``ValidationError`` that would take the whole batch down with it.
+    """
+
+    model_config = ConfigDict(extra="ignore")
 
     code: int
     message: str
@@ -59,6 +72,10 @@ class Batch:
         results = batch.execute()
 
     Pass types may be mixed freely — each sub-request carries its own path.
+
+    A ``Batch`` is single-use: :meth:`execute` (and :meth:`aexecute`) neither clears
+    nor locks the collected sub-requests, so calling it a second time sends
+    everything again as a new request. Build a fresh ``Batch`` for the next call.
     """
 
     def __init__(self) -> None:
@@ -167,8 +184,19 @@ class Batch:
                 continue
             body = sub_response.body
             error = None
-            if body is not None and "error" in body:
-                error = BatchError.model_validate(body["error"])
+            if body is not None and isinstance(body.get("error"), dict):
+                # Total by construction: no future shape of Google's error object
+                # may raise out of here and take the rest of the batch down with
+                # it -- that is exactly the contract this whole class exists to
+                # keep. BatchError.model_config already ignores unknown fields
+                # (see its docstring); this except is the backstop for whatever
+                # that config does not anticipate, e.g. a field of the wrong type.
+                try:
+                    error = BatchError.model_validate(body["error"])
+                except PydanticValidationError:
+                    error = BatchError(
+                        code=sub_response.status_code, message=str(body["error"])
+                    )
                 body = None
             elif not (200 <= sub_response.status_code < 300):
                 # Invariant: BatchResult.ok is False implies BatchResult.error is

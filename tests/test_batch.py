@@ -1,6 +1,7 @@
 """Tests for building and executing a Batch."""
 
 from edutap.wallet_google.batch import Batch
+from edutap.wallet_google.exceptions import QuotaExceededException
 from edutap.wallet_google.settings import Settings
 
 import httpx
@@ -298,3 +299,160 @@ def test_result_has_an_error_when_the_status_line_could_not_be_parsed(mock_sessi
     assert results[0].ok is False
     assert results[0].error is not None
     assert results[0].error.message  # must not raise, must not be empty
+
+
+@respx.mock
+def test_a_normally_shaped_google_error_does_not_destroy_the_whole_batch(mock_session):
+    """A real Google error body carries `details` (and sometimes `errors`); it must not
+    make BatchError.model_validate() raise and discard every result in the batch,
+    including the successful ones sitting right next to it.
+    """
+    realistic_error_and_a_success = (
+        "--rspboundary\r\n"
+        "Content-Type: application/http\r\n"
+        "Content-ID: <response-item-0>\r\n"
+        "\r\n"
+        "HTTP/1.1 400 Bad Request\r\n"
+        "Content-Type: application/json\r\n"
+        "\r\n"
+        '{"error": {"code": 400, "message": "bad", "status": "INVALID_ARGUMENT", '
+        '"details": [{"@type": "type.googleapis.com/google.rpc.BadRequest"}], '
+        '"errors": [{"message": "bad", "domain": "global", "reason": "invalid"}]}}\r\n'
+        "\r\n"
+        "--rspboundary\r\n"
+        "Content-Type: application/http\r\n"
+        "Content-ID: <response-item-1>\r\n"
+        "\r\n"
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: application/json\r\n"
+        "\r\n"
+        '{"id": "issuer.two", "state": "EXPIRED"}\r\n'
+        "\r\n"
+        "--rspboundary--\r\n"
+    )
+    respx.post(str(Settings().batch_url)).mock(
+        return_value=httpx.Response(
+            200,
+            content=realistic_error_and_a_success.encode("utf-8"),
+            headers={"Content-Type": "multipart/mixed; boundary=rspboundary"},
+        )
+    )
+
+    batch = Batch()
+    batch.add_update("GenericObject", {"id": "issuer.one", "state": "EXPIRED"})
+    batch.add_update("GenericObject", {"id": "issuer.two", "state": "EXPIRED"})
+    results = batch.execute()
+
+    assert results[0].ok is False
+    assert results[0].error is not None
+    assert results[0].error.code == 400
+    assert results[0].error.message == "bad"
+    # The point: a realistically-shaped error must not take the successful
+    # sub-request down with it.
+    assert results[1].ok is True
+    assert results[1].body is not None
+    assert results[1].body["id"] == "issuer.two"
+
+
+@respx.mock
+def test_batch_post_failure_raises_instead_of_returning_results(mock_session):
+    """A 403 quota response to the batch POST itself must raise, not be handed to
+    decode_multipart as if it were a multipart body.
+    """
+    respx.post(str(Settings().batch_url)).mock(
+        return_value=httpx.Response(
+            403,
+            json={
+                "error": {
+                    "code": 403,
+                    "message": (
+                        "Quota exceeded for quota metric 'Write requests' and "
+                        "limit 'Write requests per day'"
+                    ),
+                    "status": "RESOURCE_EXHAUSTED",
+                }
+            },
+        )
+    )
+
+    batch = Batch()
+    batch.add_update("GenericObject", {"id": "issuer.one", "state": "EXPIRED"})
+
+    with pytest.raises(QuotaExceededException):
+        batch.execute()
+
+
+@respx.mock
+def test_results_correlate_correctly_when_wire_order_differs_from_add_order(
+    mock_session,
+):
+    """Reordering (grouping by pass type) and correlation must work together: each
+    result's body must match its own resource_id, not the one that happened to land
+    in the same wire position.
+    """
+    batch = Batch()
+    # Add order: Loyalty, Generic, Loyalty -- wire order groups by type, so this
+    # differs from add order for at least one item.
+    batch.add_update("LoyaltyObject", {"id": "issuer.l1", "state": "EXPIRED"})
+    batch.add_update("GenericObject", {"id": "issuer.g1", "state": "ACTIVE"})
+    batch.add_update("LoyaltyObject", {"id": "issuer.l2", "state": "EXPIRED"})
+
+    body = None
+
+    def _respond(request: httpx.Request) -> httpx.Response:
+        nonlocal body
+        body = request.content.decode("utf-8")
+        # Build a response whose Content-IDs correlate by content, not by wire
+        # position, and whose part order does not match request part order either.
+        parts = []
+        for content_id, resource_id in [
+            ("item-2", "issuer.l2"),
+            ("item-0", "issuer.l1"),
+            ("item-1", "issuer.g1"),
+        ]:
+            parts.append(
+                "--rspboundary\r\n"
+                "Content-Type: application/http\r\n"
+                f"Content-ID: <response-{content_id}>\r\n"
+                "\r\n"
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: application/json\r\n"
+                "\r\n"
+                f'{{"id": "{resource_id}"}}\r\n'
+                "\r\n"
+            )
+        parts.append("--rspboundary--\r\n")
+        return httpx.Response(
+            200,
+            content="".join(parts).encode("utf-8"),
+            headers={"Content-Type": "multipart/mixed; boundary=rspboundary"},
+        )
+
+    respx.post(str(Settings().batch_url)).mock(side_effect=_respond)
+
+    results = batch.execute()
+
+    assert [r.resource_id for r in results] == ["issuer.l1", "issuer.g1", "issuer.l2"]
+    for result in results:
+        assert result.body is not None
+        assert result.body["id"] == result.resource_id
+
+
+@respx.mock
+def test_execute_sends_matching_content_type_header_and_boundary(mock_session):
+    """The Content-Type header must announce multipart/mixed with a boundary that
+    matches the one actually used in the body -- a mismatch here would leave the
+    suite green while making every real request fail.
+    """
+    _mock_batch_endpoint()
+
+    batch = Batch()
+    batch.add_update("GenericObject", {"id": "issuer.one", "state": "EXPIRED"})
+    batch.execute()
+
+    request = respx.calls.last.request
+    content_type = request.headers["Content-Type"]
+    assert content_type.startswith("multipart/mixed; boundary=")
+    boundary = content_type.split("boundary=", 1)[1]
+    body = request.content.decode("utf-8")
+    assert f"--{boundary}" in body

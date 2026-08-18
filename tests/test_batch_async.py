@@ -1,6 +1,7 @@
 """Tests for Batch.aexecute()."""
 
 from edutap.wallet_google.batch import Batch
+from edutap.wallet_google.exceptions import QuotaExceededException
 from edutap.wallet_google.settings import Settings
 
 import httpx
@@ -59,3 +60,34 @@ async def test_aexecute_matches_the_sync_behaviour(mock_async_session):
 async def test_aexecute_on_an_empty_batch_makes_no_request(mock_async_session):
     """Nothing added, nothing sent."""
     assert await Batch().aexecute() == []
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_aexecute_batch_post_failure_raises_instead_of_returning_results(
+    mock_async_session,
+):
+    """A 403 quota response to the batch POST itself must raise, not be handed to
+    decode_multipart as if it were a multipart body.
+    """
+    respx.post(str(Settings().batch_url)).mock(
+        return_value=httpx.Response(
+            403,
+            json={
+                "error": {
+                    "code": 403,
+                    "message": (
+                        "Quota exceeded for quota metric 'Write requests' and "
+                        "limit 'Write requests per day'"
+                    ),
+                    "status": "RESOURCE_EXHAUSTED",
+                }
+            },
+        )
+    )
+
+    batch = Batch()
+    batch.add_update("GenericObject", {"id": "issuer.one", "state": "EXPIRED"})
+
+    with pytest.raises(QuotaExceededException):
+        await batch.aexecute()
