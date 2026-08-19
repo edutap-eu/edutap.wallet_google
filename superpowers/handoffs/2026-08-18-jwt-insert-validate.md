@@ -77,12 +77,26 @@ at the cost of a network round trip `save_link()` does not need today. Not worth
 ### The loose end it leaves — worth fixing on its own
 
 `JwtResource` is registered with `url_part="jwt"` and `can_create=True`
-(`models/misc.py:89`), and `create()` parses the response with the same model it sent.
-So `api.create(JwtResource(jwt="..."))` posts to the correct URL and then fails on the
-response. Verified by constructing the objects, not by reading the code:
+(`models/misc.py:89`), promising an operation that cannot work. Two separate things stand
+in the way, and it is worth keeping them apart:
+
+1. `JwtResource` has no `id`, and `create()` reads one unconditionally
+   (`utils.py:104`).
+2. The endpoint answers with `{saveUri, resources}` while `create()` parses the response
+   with the same model it sent.
+
+**The first one wins, so (2) is never reached.** Measured by calling it, not by reading
+the code — an earlier draft of this handoff claimed the call reaches Google and dies on
+the response, which is wrong:
+
+```
+>>> api.create(JwtResource(jwt="eyJ..."))
+AttributeError: 'JwtResource' object has no attribute 'id'      # utils.py:104
+```
+
+(2) is real all the same, just latent behind (1):
 
 ```python
->>> from edutap.wallet_google.models.misc import JwtResource, JwtResponse
 >>> body = {"saveUri": "https://pay.google.com/gp/v/save/eyJ...",
 ...         "resources": {"genericObjects": [{"id": "...", "classId": "...", "state": "ACTIVE"}]}}
 >>> JwtResource.model_validate(body)
@@ -94,8 +108,8 @@ ValidationError: 3 validation errors for JwtResource
 
 Now that `insert` is off the table, the honest fix is small: **set `can_create=False` on
 `JwtResource`**. `_prepare_create()` then raises through
-`raise_when_operation_not_allowed()` — a clear "not allowed" instead of a confusing
-`ValidationError` three fields deep.
+`raise_when_operation_not_allowed()` — "Operation 'create' not allowed for
+'JwtResource'" instead of an `AttributeError` about a field nobody asked for.
 
 `JwtResource` itself has to stay either way: the API declares that schema, and
 `is_envelope()` does not drop it — "Resource" is not "Response". Whether `JwtResponse`
@@ -107,7 +121,7 @@ While in there: `MODEL_ALIAS_DICT` in `tests/test_check_models.py` maps `"Jwt"` 
 and is harmless — the map is only ever read with `.get()` — but it is dead and can go.
 
 This is a one-line change plus a test. It does not belong in PR #99 and was deliberately
-not smuggled in there.
+not smuggled in there — it is PR #100 instead.
 
 ## `jwt.validate` — open
 
