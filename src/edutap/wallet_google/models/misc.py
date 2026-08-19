@@ -89,6 +89,11 @@ class AddMessageRequest(Model):
 @register_model(
     "JwtResource",
     url_part="jwt",
+    # Registered for lookup by name only - none of the CRUD operations apply.
+    # url_part points at walletobjects.jwt.insert, which this package does not
+    # implement: that endpoint answers with JwtResponse, not with what it was
+    # given, and JwtResource has no id for create() to work with either.
+    can_create=False,
     can_read=False,
     can_update=False,
     can_list=False,
