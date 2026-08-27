@@ -11,9 +11,7 @@ import datetime
 
 
 class EventVenue(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventvenue
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventvenue."""
 
     # inherits kind (deprecated)
     name: LocalizedString | None = None
@@ -21,9 +19,7 @@ class EventVenue(DeprecatedKindFieldMixin, Model):
 
 
 class EventDateTime(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventdatetime
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#eventdatetime."""
 
     # inherits kind (deprecated)
     # TODO: can't be properly resolved because we have a custom module named datetime, i.e. global datetime is shadowed
@@ -35,9 +31,7 @@ class EventDateTime(DeprecatedKindFieldMixin, Model):
 
 
 class EventSeat(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/eventticketobject#eventseat
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/eventticketobject#eventseat."""
 
     # inherits kind (deprecated)
     seat: LocalizedString | None = None
@@ -47,9 +41,7 @@ class EventSeat(DeprecatedKindFieldMixin, Model):
 
 
 class EventReservationInfo(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/eventticketobject#eventreservationinfo
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/eventticketobject#eventreservationinfo."""
 
     # inherits kind (deprecated)
     confirmationCode: str | None = None

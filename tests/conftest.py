@@ -54,6 +54,7 @@ def mock_session(monkeypatch):
 @pytest.fixture
 def mock_request_response(mock_session):
     """Fixture to load a mock request response from a json file.
+
     Prepares a mock response and status code for a given url and method.
     """
     import httpx

@@ -16,9 +16,7 @@ from typing_extensions import deprecated
 
 
 class Uri(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/Uri
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/Uri."""
 
     # inherits kind (deprecated)
     uri: AnyUrl | str | None = None
@@ -28,9 +26,7 @@ class Uri(DeprecatedKindFieldMixin, Model):
 
 
 class ImageUri(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/Image#imageuri
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/Image#imageuri."""
 
     uri: AnyUrl
     description: Annotated[
@@ -56,9 +52,7 @@ class ImageUri(Model):
 
 
 class Image(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/Image
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/Image."""
 
     # inherits kind (deprecated)
     sourceUri: ImageUri | None = None
@@ -67,9 +61,7 @@ class Image(DeprecatedKindFieldMixin, Model):
 
 
 class PassConstraints(Model):
-    """
-    see https://developers.google.com/wallet/generic/rest/v1/PassConstraints
-    """
+    """see https://developers.google.com/wallet/generic/rest/v1/PassConstraints."""
 
     screenshotEligibility: ScreenshotEligibility = (
         ScreenshotEligibility.SCREENSHOT_ELIGIBILITY_UNSPECIFIED
@@ -82,26 +74,20 @@ class PassConstraints(Model):
 
 
 class SecurityAnimation(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/SecurityAnimation
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/SecurityAnimation."""
 
     animationType: AnimationType = AnimationType.ANIMATION_UNSPECIFIED
 
 
 class GroupingInfo(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/GroupingInfo
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/GroupingInfo."""
 
     sortIndex: int | None = None
     groupingId: str | None = None
 
 
 class Pagination(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/Pagination
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/Pagination."""
 
     # inherits kind (deprecated)
     resultsPerPage: int
@@ -110,13 +96,14 @@ class Pagination(DeprecatedKindFieldMixin, Model):
 
 class PaginatedResponse(Model):
     """All Class and Object List Responses are paginated.
+
     see: https://developers.google.com/wallet/reference/rest/v1/loyaltyclass/list
          https://developers.google.com/wallet/reference/rest/v1/loyaltyobject/list
          https://developers.google.com/wallet/reference/rest/v1/offerclass/list
          https://developers.google.com/wallet/reference/rest/v1/offerobject/list
          https://developers.google.com/wallet/reference/rest/v1/eventticketclass/list
          https://developers.google.com/wallet/reference/rest/v1/eventticketobject/list
-         ... and many more
+         ... and many more.
 
     The List Response for Issuer is not paginated (see: https://developers.google.com/wallet/reference/rest/v1/issuer/list),
     therefore the pagination attribute is optional.
@@ -127,9 +114,7 @@ class PaginatedResponse(Model):
 
 
 class CallbackOptions(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/CallbackOptions
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/CallbackOptions."""
 
     url: AnyHttpUrl | None = None
     updateRequestUrl: Annotated[
@@ -145,8 +130,6 @@ class CallbackOptions(Model):
 
 
 class SaveRestrictions(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/SaveRestrictions
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/SaveRestrictions."""
 
     restrictToEmailSha256: str | None = None

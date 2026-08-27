@@ -56,7 +56,7 @@ class ClientPoolManager:
         :param credentials: Service account credentials dict.
         :return:            Configuration dict for AssertionClient/AsyncAssertionClient.
         """
-        token_endpoint = "https://oauth2.googleapis.com/token"
+        token_endpoint = "https://oauth2.googleapis.com/token"  # noqa: S105  # a URL, not a secret
         return {
             "token_endpoint": token_endpoint,
             "issuer": credentials["client_email"],

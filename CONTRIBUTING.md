@@ -29,6 +29,19 @@ This approach minimizes duplicates, streamlines issue management, and saves time
 
 Use the issue template addressing your problem.
 
+## Common tasks
+
+    make help              # list every target
+    make venv              # create .venv and install the package for development
+    make lint              # ruff check, ruff format --check, ty check
+    make reformat          # ruff format and ruff check --fix
+    make test-local        # the unit suite
+    make test-matrix       # the full tox matrix, py310 through py314
+
+`make test-integration` runs against the real Google Wallet API. It needs
+credentials and it creates objects that cannot be deleted; read
+`tests/integration/` before running it.
+
 ## Pull Requests
 
 First check if someone else already created a pull request solving your problem.

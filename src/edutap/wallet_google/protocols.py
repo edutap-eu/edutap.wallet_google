@@ -6,7 +6,8 @@ from typing import runtime_checkable
 @runtime_checkable
 class ImageProvider(Protocol):
     async def image_by_id(self, image_id: str) -> ImageData:
-        """
+        """Fetch the image data for the given image identifier.
+
         :param image_id: Unique image identifier as string.
         :return: ImageData instance.
 
@@ -25,7 +26,8 @@ class CallbackHandler(Protocol):
         count: int,
         nonce: str,
     ) -> None:
-        """
+        """Handle a Google Wallet callback event.
+
         :param class_id: ClassId
         :param object_id: ObjectId
         :param event_type: EventType

@@ -10,14 +10,28 @@ authors = [
     {name = "Jens Klein", email = "jk@kleinundpartner.at"},
     {name = "Robert Niederreiter", email = "office@squarewave.at"},
 ]
+# Python 3.10 reaches end of life on 2026-10-31. Dropping it narrows this
+# field, which is a breaking change for consumers, so it gets its own release
+# rather than riding along with something else.
+#
+# Everything that changes with it — configuration:
+#   requires-python below, and the 3.10 entry in classifiers
+#   [tool.ruff] target-version
+#   [tool.ty.environment] python-version
+#   [tool.tox] env_list, and [tool.tox.gh.python]
+#   .github/workflows/tests.yaml, the python-version matrix
+# and prose, which is the half that gets forgotten, because nothing fails when
+# it goes stale:
+#   README.md "Built with httpx, Pydantic v2, and Python 3.10+"
+#   README.md "Python 3.10 or later (3.13 recommended)"
+#   docs/installation.md "Python 3.10+, currently up to 3.14 is tested"
+#   Makefile, the test-matrix help text "py310 through py314"
+#   CONTRIBUTING.md, the same sentence as the Makefile
+# The two README lines are the user-facing statement of the supported floor; if
+# only one thing on this list gets updated, make it those.
 requires-python = ">=3.10"
-license = { text = "EUPL 1.2" }
-# TODO for PEP 639 https://peps.python.org/pep-0639
-# -> when implemented in PyPI, twine, pyroma, etc.
-# add license-expression = EUPL-1.2
-# add license-file = LICENSE
-# remove license field
-# remove License classifier
+license = "EUPL-1.2"
+license-files = ["LICENSE"]
 
 classifiers = [
     "Programming Language :: Python :: 3.10",
@@ -25,7 +39,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
-    "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries",
@@ -37,7 +50,11 @@ dependencies = [
     # resolve the actual version against their own environment.
     "authlib>=1.7.2",
     "cryptography>=48.0.1",  # <48.0.1: vulnerable OpenSSL bundled in wheels (high)
-    "httpx",
+    # A feature floor, not a security one and not a statement about what is
+    # tested: api.py sends request bodies with `content=`, added in httpx 0.15.0
+    # ("Added Request(content=...) for byte content, instead of overloading
+    # Request(data=...)"). Below that the calls would raise TypeError.
+    "httpx>=0.15",
     "joserfc",
     "pydantic-settings>=2.14.2",  # 2.12.0..2.14.1: symlink escape in secrets source
     "pydantic[email]>=2.0",
@@ -49,24 +66,60 @@ Issues = "https://github.com/edutap-eu/edutap.wallet_google/issues"
 Documentation = "https://docs.edutap.eu/packages/edutap_wallet_google/index.html"
 
 [project.optional-dependencies]
+# The only extra a consumer of this library installs. Everything else that used
+# to live here is a dependency group below: groups are not published in the
+# wheel metadata, which is the right place for tooling nobody downstream needs.
+#
+# `callback` is different from those groups precisely because it *is*
+# published: every consumer of `edutap.wallet-google[callback]` resolves this
+# entry against their own environment, exactly like the six entries in
+# `[project.dependencies]` (spec's Part 5). It therefore follows that part's
+# rule, not the dependency-groups' rule: a floor only when a real code
+# requirement backs it, no ceiling, and no Renovate `rangeStrategy: "bump"` —
+# bumping this floor on every FastAPI release would force lockstep upgrades on
+# every application that depends on this extra. handlers/fastapi.py imports
+# only APIRouter, Request, Response, HTTPException, JSONResponse and logger,
+# all present since FastAPI's earliest 0.x releases, so no floor is justified
+# here yet. Add one if and when the code actually needs it.
 callback = [
     "fastapi",
 ]
+
+[dependency-groups]
 test = [
-    "edutap.wallet-google[callback]",
-    "freezegun",
-    "pytest-asyncio",
-    "pytest-cov",
-    "pytest-explicit",
-    "pytest",
-    "respx",
-    "tox",
+    "freezegun>=1.5.5",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "pytest-explicit>=1.0.1",
+    "pytest>=9.1.1",
+    "respx>=0.23.1",
+    "tox>=4.58.0",
 ]
-typecheck  = [
-    "ty",
+lint = [
+    # Ceiling as well as floor: a ruff minor release changes what it reports
+    # and reformats files that were correct under the previous one — matches
+    # edutap.data_provider's own ruff>=0.16,<0.17, and matches the version
+    # already pinned in .pre-commit-config.yaml (v0.16.1) — cross-referenced
+    # there too, and kept honest by tests/test_tool_version_pins.py rather
+    # than by the comment alone. ruff was never a project dependency before
+    # this; it only ran inside pre-commit/prek's own isolated environment.
+    "ruff>=0.16.1,<0.17",
 ]
-develop = [
-    "pdbp>=1.7.1", # the maintained successor to pdbpp
+typecheck = [
+    # Ceiling as well as floor, for the same reason as ruff: ty is pre-1.0
+    # and moves fast enough that Task 3 jumps it 49 releases in one commit.
+    # Its releases are all 0.0.x, so there is no separate minor line to float
+    # within — the ceiling pins the current release exactly and asks for a
+    # deliberate bump, and a look at what changed, every single time. Matches
+    # .pre-commit-config.yaml (v0.0.66), enforced by
+    # tests/test_tool_version_pins.py, not just claimed in this comment.
+    "ty>=0.0.66,<0.0.67",
+]
+dev = [
+    {include-group = "test"},
+    {include-group = "lint"},
+    {include-group = "typecheck"},
+    "pdbp>=1.7.1", # the maintained successor to pdbpp; already floored, unchanged
     # "ipython",  not recommended with pdpb, better use ipdb then
 ]
 
@@ -74,7 +127,17 @@ develop = [
 generate-fernet-key = "edutap.wallet_google.utils:generate_fernet_key"
 
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = [
+    # 1.27.0 is the first hatchling release that builds a PEP 639 license
+    # expression as Metadata-Version 2.4 with License-Expression/License-File
+    # fields, which `license = "EUPL-1.2"` and `license-files` above rely on.
+    # 1.26.x accepts the license-files array syntax
+    # without erroring but silently builds Metadata-Version 2.3 with no
+    # license fields at all; 1.24.0 and 1.25.0 reject the syntax outright.
+    # Verified by building a throwaway package against all four.
+    "hatchling>=1.27.0",
+    "hatch-vcs>=0.5.0",  # the version currently resolving; no feature drives this floor
+]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
@@ -86,6 +149,30 @@ version-file = "src/edutap/wallet_google/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/edutap"]
+
+[tool.hatch.build.targets.sdist]
+# hatchling does not read MANIFEST.in — that is a setuptools file, and an sdist
+# built with it in place still contained docs/ and .claude/, both of which it
+# claimed to exclude. These are the contents on purpose:
+#   tests/ and the Makefile stay together: `make test-local` itself needs
+#     network (its `venv` prerequisite runs `uv venv` plus an install), which
+#     a distro packager's sandboxed build usually does not have — but the
+#     Makefile is still the authoritative, minimal reference for which
+#     command runs the suite (`pytest`, see the `test-local` target), so a
+#     packager who already has a populated environment can read it and run
+#     that command directly instead of guessing.
+#   superpowers/, .claude/, CLAUDE.md are internal working documents.
+#   .github/, docs/, examples/ and renovate.json5 are not needed to build or
+#     test the package.
+include = [
+    "/src",
+    "/tests",
+    "/Makefile",
+    "/README.md",
+    "/CONTRIBUTING.md",
+    "/LICENSE",
+    "/pyproject.toml",
+]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -106,8 +193,29 @@ target-version = "py310"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP"]
-ignore = ["E501"]
+select = ["B", "D", "E", "F", "I", "S", "UP", "W"]
+ignore = [
+    "E501",
+    # The "undocumented public …" rules. 144 findings, every one of which needs
+    # a docstring written rather than a fix applied. Enabling them now would buy
+    # 144 hasty docstrings or a permanent blanket ignore. Write the docstrings,
+    # then delete these lines — not the other way round.
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D107",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# assert *is* the test framework here; S101 in tests is not a finding.
+"tests/**" = ["S101"]
+
+[tool.ruff.lint.pydocstyle]
+# Also settles the D203/D211 and D212/D213 incompatibilities, which ruff
+# otherwise warns about on every single run.
+convention = "pep257"
 
 [tool.ruff.lint.isort]
 force-single-line = true
@@ -124,23 +232,83 @@ exclude = ["worktrees/"]
 python-version = "3.10"
 extra-paths = ["src", "tests"]
 
+[tool.ty.terminal]
+# ty exits 1 on warning-level diagnostics by default. Every rule set to "warn"
+# below is one this project has deliberately decided not to block on yet, and a
+# non-zero exit for them makes "warn" mean exactly the same thing as "error" —
+# at which point the downgrades say nothing. The diagnostics are still printed;
+# only the exit code changes, and error-level ones still fail. Configured here
+# rather than as a --exit-zero-on-warning flag, so a bare `ty check` in a
+# terminal, `make lint` and the pre-commit hook all behave the same way.
+error-on-warning = false
+
 [tool.ty.rules]
+# Environment-dependent, and the only rule here that genuinely is: it reports
+# nothing in a checkout that installed the optional `callback` extra, because
+# handlers/fastapi.py imports fastapi unconditionally while fastapi lives in
+# [project.optional-dependencies]. Held at "warn" so a checkout without the
+# extra is not a failing checkout.
 unresolved-import = "warn"
-# the following rules are stricter than mypy; downgrade to warnings for now
+# The following rules are stricter than mypy. As of ty 0.0.66 they report
+# nothing at all in src/ — every remaining instance is in tests/ — so this is
+# about how much type discipline the test suite is held to, not the library.
+#
+# unresolved-attribute (71x, all in tests/): the CRUD functions in api.py select
+#   the model class from a runtime registry lookup by string name, so they are
+#   annotated `-> Model` and cannot be narrower. Every test that reads a pass
+#   back and touches a concrete field — `read("EventTicketObject", ...).state` —
+#   is therefore an attribute access on the base class. Narrowing this needs a
+#   different public API shape (Literal overloads, or a model-class-first
+#   variant of read()), which is a design change and not a lint fix.
+# invalid-argument-type (31x, all in tests/): two causes, both test-local.
+#   Fixtures such as `@register_model("Foo", ...) class Foo: pass` in
+#   test_clientpool.py register a plain class that is not a Model subclass — the
+#   registry only stores it, so the tests pass, but the annotation is honest
+#   that this is not what the decorator is for. And test_handler_fastapi.py
+#   feeds hand-written JSON-ish dicts straight into models, so the declared
+#   field types do not match what a `dict[str, str | list[str]]` literal infers.
+#
+# unknown-argument reports nothing as of this commit, but only because fixing
+#   register_model's annotation cleared all 34 instances at once. Kept at "warn"
+#   rather than promoted on the strength of one clean checkout: it was grouped
+#   with the two above as "stricter than mypy" by whoever wrote this section,
+#   and there are no instances left to judge that call from.
 unresolved-attribute = "warn"
 invalid-argument-type = "warn"
 unknown-argument = "warn"
-not-iterable = "warn"
+# not-iterable is an error, unlike its neighbours above. Its single instance was
+# a test unpacking the result of dict.get() without checking for None, fixed in
+# the same commit as this line. It does not depend on which extras are installed
+# and it does not depend on the api.py `-> Model` annotations, so neither reason
+# for downgrading the others applies to it.
+not-iterable = "error"
 
 [tool.codespell]
 ignore-words-list = "discreet,"
 
 [tool.check-manifest]
+# Mirror image of [tool.hatch.build.targets.sdist].include: everything that
+# section deliberately leaves out of the sdist has to be named here too, or
+# check-manifest reports it as "missing" on every run. Edit the two together.
+# One pattern per excluded top-level area, not per file, so a new file added
+# inside docs/, examples/, superpowers/ or .claude/ does not reopen this —
+# but nothing broader than that: a new top-level file or directory nobody
+# accounted for should still make this hook complain.
 ignore = [
     ".editorconfig",
     ".pre-commit-config.yaml",
     "worktrees/**",
     "src/edutap/wallet_google/_version.py",
+    ".claude/**",
+    ".dockerignore",
+    "CLAUDE.md",
+    "RELEASING.md",
+    "docs/**",
+    "examples/**",
+    "superpowers/**",
+    # CI/tooling configuration, same category as .github/: not needed to
+    # build or test the package.
+    "renovate.json5",
 ]
 
 [tool.tox]
@@ -160,19 +328,20 @@ use_develop = true
 skip_install = false
 deps = ["-e tests/data/test_wallet_google_plugins"]
 commands = [["pytest", { replace = "posargs", extend = true }]]
-extras = ["test", "develop"]
+extras = ["callback"]
+dependency_groups = ["dev"]
 
 [tool.tox.env.format]
 description = "automatically reformats code"
 skip_install = true
-deps = ["pre-commit"]
+deps = ["prek"]
 commands = [
-    ["pre-commit", "run", "-a", "ruff"],
-    ["pre-commit", "run", "-a", "ruff-format"],
+    ["prek", "run", "-a", "ruff"],
+    ["prek", "run", "-a", "ruff-format"],
 ]
 
 [tool.tox.env.lint]
 description = "run linters that will help improve the code style"
 skip_install = true
-deps = ["pre-commit"]
-commands = [["pre-commit", "run", "-a"]]
+deps = ["prek"]
+commands = [["prek", "run", "-a"]]

@@ -39,9 +39,7 @@ class GiftCardClass(
     StyleableMixin,
     ClassModel,
 ):
-    """
-    see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass
-    """
+    """see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardclass."""
 
     # inherits kind (deprecated)
     merchantName: str | None = None
@@ -96,9 +94,7 @@ class GiftCardObject(
     DeprecatedInfoModuleDataFieldMixin,
     ObjectModel,
 ):
-    """
-    see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject
-    """
+    """see: https://developers.google.com/wallet/retail/gift-cards/rest/v1/giftcardobject."""
 
     # inherits kind (deprecated)
     classReference: GiftCardClass | None = None
@@ -148,9 +144,7 @@ class LoyaltyClass(
     StyleableMixin,
     ClassModel,
 ):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass
-    """
+    """see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass."""
 
     programName: str | None = None
     programLogo: Image | None = None
@@ -210,10 +204,7 @@ class LoyaltyObject(
     DeprecatedInfoModuleDataFieldMixin,
     ObjectModel,
 ):
-    """
-    data-type,
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject
-    """
+    """data-type, see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyobject."""
 
     # inherits kind (deprecated)
     classReference: LoyaltyClass | None = None
@@ -264,9 +255,7 @@ class OfferClass(
     StyleableMixin,
     ClassModel,
 ):
-    """
-    see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass
-    """
+    """see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass."""
 
     # inherits kind (deprecated)
     title: str | None = None
@@ -327,9 +316,7 @@ class OfferObject(
     # StyleableMixin,
     ObjectModel,
 ):
-    """
-    see: https://developers.google.com/wallet/retail/offers/rest/v1/offerobject
-    """
+    """see: https://developers.google.com/wallet/retail/offers/rest/v1/offerobject."""
 
     # inherits kind (deprecated)
     classReference: OfferClass | None = None

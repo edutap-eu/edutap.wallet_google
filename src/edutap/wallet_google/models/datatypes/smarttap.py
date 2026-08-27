@@ -11,35 +11,27 @@ from pydantic import Field
 
 
 class Permission(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/permissions#permission
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/permissions#permission."""
 
     emailAddress: EmailStr | None
     role: Role | None
 
 
 class AuthenticationKey(Model):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/issuer#authenticationkey
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/issuer#authenticationkey."""
 
     id: int
     publicKeyPem: str
 
 
 class SignUpInfo(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/smarttap#signupinfo
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/smarttap#signupinfo."""
 
     classId: str
 
 
 class IssuerToUserInfo(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/smarttap#issuertouserinfo
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/smarttap#issuertouserinfo."""
 
     action: Action = Action.ACTION_UNSPECIFIED
     url: AnyHttpUrl | None = Field(
@@ -50,9 +42,7 @@ class IssuerToUserInfo(Model):
 
 
 class IssuerContactInfo(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/issuer#issuercontactinfo
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/issuer#issuercontactinfo."""
 
     name: str | None = None
     phone: str | None = None
@@ -61,9 +51,7 @@ class IssuerContactInfo(Model):
 
 
 class SmartTapMerchantData(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/issuer#smarttapmerchantdata
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/issuer#smarttapmerchantdata."""
 
     smartTapMerchantId: str | None = None
     authenticationKeys: list[AuthenticationKey] | None = None

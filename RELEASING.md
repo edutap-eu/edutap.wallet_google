@@ -12,14 +12,18 @@ The version is automatically derived from Git tags using `hatch-vcs`:
 
 ## Creating a Release
 
-1. Ensure all changes are merged to `main` and CI is green
-2. Go to [GitHub Releases](https://github.com/edutap-eu/edutap.wallet_google/releases)
-3. Click "Draft a new release"
-4. Click "Choose a tag" and **type a new tag** (e.g., `v0.5.0`, `v1.0.0a1`)
-5. Select "Create new tag on publish"
-6. Target: `main` branch
-7. Generate release notes or write them manually
-8. Click "Publish release"
+1. Check whether any supported Python version has reached end of life
+   (<https://endoflife.date/python>). Dropping one narrows `requires-python`
+   and is a breaking change: it needs its own release and a note in the
+   release description, not a quiet ride along with other work.
+2. Ensure all changes are merged to `main` and CI is green
+3. Go to [GitHub Releases](https://github.com/edutap-eu/edutap.wallet_google/releases)
+4. Click "Draft a new release"
+5. Click "Choose a tag" and **type a new tag** (e.g., `v0.5.0`, `v1.0.0a1`)
+6. Select "Create new tag on publish"
+7. Target: `main` branch
+8. Generate release notes or write them manually
+9. Click "Publish release"
 
 The release workflow will automatically:
 - Run all tests
@@ -65,7 +69,7 @@ with environment `release-test-pypi`.
 The `_version.py` file is not generated. Run:
 
 ```bash
-uv sync  # or uv pip install -e .
+uv pip install -e .
 ```
 
 ### Package not uploading

@@ -91,13 +91,15 @@ async def test_handler_validate_ok(mock_settings):
 
 @pytest.mark.asyncio
 async def test_handler_validate_invalid(mock_settings):
-    """Test that invalid signature raises exception (async)."""
+    """Test that an invalid (expired) message raises ValueError."""
     from edutap.wallet_google.handlers.validate import verified_signed_message
 
     mock_settings.handler_callback_verify_signature = "1"
 
+    # expTimeMillis is 0 in the fixture, so this always fails the expiry
+    # check with a ValueError, before signature verification is even reached.
     data = CallbackData.model_validate(callback_data_for_test_failure)
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError, match="Expired message"):
         await verified_signed_message(data)
 
 
@@ -155,10 +157,7 @@ async def test_message_expiration_just_before_expiry(mock_settings):
 @pytest.mark.asyncio
 @freeze_time("2025-10-15 10:01:00")
 async def test_message_expiration_expiry_check_ignored(mock_settings):
-    """
-    Test that the handler_callback_verify_expiry set to 0 disables
-    check for key expiration (needed for testing) (async).
-    """
+    """Test that the handler_callback_verify_expiry set to 0 disables check for key expiration (needed for testing) (async)."""
     from edutap.wallet_google.handlers.validate import verified_signed_message
 
     mock_settings.handler_callback_verify_signature = "1"
@@ -213,6 +212,10 @@ async def test_cache_expiration_refresh(mock_settings):
     cached_after = GOOGLE_ROOT_SIGNING_PUBLIC_KEYS_VALUE.get(
         mock_settings.google_environment
     )
+    # dict.get() returns None for a missing key; assert the entry is there so a
+    # cache that was not refilled fails on this line instead of on the unpacking
+    # below with a bare "cannot unpack non-iterable NoneType".
+    assert cached_after is not None
     _, cache_exp_after = cached_after
     assert cache_exp_after > time.time()  # New expiration in future
 

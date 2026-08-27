@@ -47,7 +47,7 @@ def generate_fernet_key():
 
 
 def validate_data(model: type[Model], data: dict[str, typing.Any] | Model) -> Model:
-    """Takes a model and data, validates it and returns a model instance.
+    """Take a model and data, validate it, and return a model instance.
 
     :param model:      Pydantic model class to use for validation.
     :param data:       Data to pass to the Google RESTful API.
@@ -72,7 +72,7 @@ def validate_data_and_convert_to_json(
     resource_id_key: str = "id",
     skip_resource_id: bool = False,
 ) -> tuple[str | None, str]:
-    """Takes a model and data, validates it and convert to a json string.
+    """Take a model and data, validate it, and convert it to a JSON string.
 
     :param model:           Pydantic model class to use for validation.
     :param data:            Data to pass to the Google RESTful API.

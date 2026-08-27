@@ -1,6 +1,4 @@
-"""
-This module contains models that are not directly related to passes but to other Google Wallet APIs
-"""
+"""This module contains models that are not directly related to passes but to other Google Wallet APIs."""
 
 from ..registry import register_model
 from .bases import Model
@@ -32,9 +30,7 @@ from pydantic import Field
     can_message=False,
 )
 class SmartTap(DeprecatedKindFieldMixin, WithIdModel):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/smarttap#resource:-smarttap
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/smarttap#resource:-smarttap."""
 
     # inherits id
     merchantId: str
@@ -49,9 +45,7 @@ class SmartTap(DeprecatedKindFieldMixin, WithIdModel):
     can_message=False,
 )
 class Issuer(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/issuer
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/issuer."""
 
     issuerId: str | None = None
     name: str
@@ -70,18 +64,14 @@ class Issuer(Model):
     can_message=False,
 )
 class Permissions(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/permissions
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/permissions."""
 
     issuerId: str | None = None
     permissions: list[Permission] = Field(default_factory=list)
 
 
 class AddMessageRequest(Model):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/AddMessageRequest
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/AddMessageRequest."""
 
     message: Message | None = None
 
@@ -95,20 +85,13 @@ class AddMessageRequest(Model):
     can_message=False,
 )
 class JwtResource(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/jwt
-         https://developers.google.com/wallet/tickets/events/rest/v1/jwt
-         https://developers.google.com/wallet/generic/web/javascript-button#google-pay-api-for-passes-jwt
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/jwt, https://developers.google.com/wallet/tickets/events/rest/v1/jwt and https://developers.google.com/wallet/generic/web/javascript-button#google-pay-api-for-passes-jwt."""
 
     jwt: str
 
 
 class Resources(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/jwt/insert#resources
-         https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert#resources
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/jwt/insert#resources and https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert#resources."""
 
     eventTicketClasses: list[tickets_and_transit.EventTicketClass] | None = None
     eventTicketObjects: list[tickets_and_transit.EventTicketObject] | None = None
@@ -127,9 +110,7 @@ class Resources(Model):
 
 
 class JwtResponse(Model):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/jwt/insert."""
 
     saveUri: AnyHttpUrl
     resources: Resources

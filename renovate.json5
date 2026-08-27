@@ -44,12 +44,14 @@
   // No automerge anywhere. Green CI proves the suite still passes, not that the
   // update is one we want.
   //
-  // The two rules below cover project.dependencies and
-  // project.optional-dependencies, not the whole pep621 surface: build-system.requires
-  // (hatchling, hatch-vcs) and requires-python are also extracted by the pep621
-  // manager and match neither rule, so an update to either would arrive ungrouped
-  // under config:recommended's defaults. Nobody pins either today, so this is
-  // acknowledged rather than given a third rule.
+  // The two rules below cover project.dependencies and, since
+  // chore/package-modernisation folded it in, dependency-groups plus
+  // build-system.requires — not the whole pep621 surface: requires-python is also
+  // extracted by the pep621 manager and matches neither rule, so an update to it
+  // would arrive ungrouped under config:recommended's defaults. Nobody proposes
+  // updating it via Renovate today (Python floor bumps are a deliberate,
+  // reviewed decision, not a routine dependency update), so this is acknowledged
+  // rather than given a third rule.
   packageRules: [
     {
       // `.github/dependabot.yml` watches this same ecosystem, on purpose, for a
@@ -62,19 +64,83 @@
       groupName: "GitHub Actions",
     },
     {
-      // Everything under [project.optional-dependencies] — the callback, test,
-      // typecheck and develop extras. None of it is installed by a consumer of the
-      // library, so one pull request for the batch would be proportionate — if this
-      // rule ever matched anything. It currently does not: all eleven entries
-      // (`fastapi`, `freezegun`, `pytest`, `pytest-asyncio`, `pytest-cov`,
-      // `pytest-explicit`, `respx`, `tox`, `ty`, and the `edutap.wallet-google[callback]`
-      // self-reference) are bare names with skipReason: "unspecified-version", except
-      // `pdbp>=1.7.1`, whose open floor `rangeStrategy: "replace"` leaves unchanged.
-      // Same mechanism, same nil result, as the runtime-dependency rule below — see
-      // there for the detail.
-      matchManagers: ["pep621"],
-      matchDepTypes: ["project.optional-dependencies"],
+      // Everything now in [dependency-groups] (test, lint, typecheck, dev) and in
+      // build-system.requires (hatchling, hatch-vcs): none of it is installed by
+      // a consumer of the library, and none of it is published in the wheel or
+      // sdist metadata a consumer resolves. Every entry here carries a version
+      // constraint as of chore/package-modernisation (Task 1) — but a floor alone
+      // is not sufficient. pdbp>=1.7.1 was already floored before that work, and
+      // a dry run against this repository (--dry-run=full, v44.11.6) still
+      // produced nothing for it: the default rangeStrategy for pep621 is "replace",
+      // which leaves an open floor unchanged whenever the newest release already
+      // satisfies it — which it always does. rangeStrategy: "bump" instead raises
+      // the floor itself to each new release. That is safe here specifically
+      // because nothing downstream resolves these ranges — unlike the
+      // runtime-dependency rule below, where the same setting would force every
+      // consumer to upgrade in lockstep.
+      //
+      // project.optional-dependencies is deliberately NOT in matchDepTypes below,
+      // even though it matched the "before" rule above. After Task 1 it holds only
+      // the callback extra, and callback is published wheel metadata that a
+      // consumer of this library actually resolves — unlike everything else this
+      // rule groups. bump would ratchet callback's fastapi floor to each new
+      // FastAPI release and force every application using this extra to upgrade
+      // in lockstep, which is exactly the harm the runtime-dependency rule below
+      // exists to avoid. callback currently carries no floor at all (Task 1 found
+      // no code reason for one), so this rule has nothing to match there today
+      // regardless; if callback ever gets a real floor, it belongs with the
+      // runtime-dependency rule's reasoning, not this one.
+      //
+      // matchManagers is ["pep621", "poetry"], not just ["pep621"] as this rule
+      // originally shipped: measured, not assumed, by a --dry-run=full against
+      // this repository (v44.13.2). With matchManagers: ["pep621"] alone, pdbp —
+      // the control case above — still showed "updates": [] despite bump being
+      // configured, identical to before this rule existed. Renovate's "poetry"
+      // manager declares `supersedesManagers: ["pep621"]`
+      // (modules/manager/poetry/index.js) and, per
+      // workers/repository/extract/supersedes.ts, discards pep621's extraction of
+      // any packageFile poetry also claims. Poetry's manager matches pyproject.toml
+      // whether or not a [tool.poetry] table exists — it now understands PEP 621
+      // syntax directly (modules/manager/poetry/schema.js) — so it wins here even
+      // though this project has no [tool.poetry] section, and every dep Renovate
+      // sees for this file is tagged manager: "poetry", which matchManagers:
+      // ["pep621"] never matches. Adding "poetry" to matchManagers is what made the
+      // dry run change pdbp's proposal to "newValue": ">=1.8.2" — confirmed by
+      // re-running with only that one line changed.
+      //
+      // Two things that fix does NOT reach, both measured the same way:
+      // build-system.requires (hatchling, hatch-vcs) still produces zero deps —
+      // Renovate's poetry manager only populates build-system.requires when
+      // build-backend is Poetry's own ("poetry.masonry.api" or
+      // "poetry.core.masonry.api"; see the z.string().refine(...) in
+      // modules/manager/poetry/schema.js) and silently drops it to `undefined`
+      // otherwise via `.catch(void 0)` — this project's build-backend is
+      // "hatchling.build". Because poetry supersedes pep621 for this file, pep621's
+      // own build-system.requires extraction (which has no such restriction) never
+      // survives to be seen. This is a Renovate limitation in the manager it picked
+      // for this file, not something this config can route around; build-system.requires
+      // stays in matchDepTypes below so this rule is already correct the day
+      // Renovate's poetry manager stops dropping it. requires-python is unaffected
+      // either way — no rule here claims it (see the top-level comment above).
+      //
+      // The ceiling question this rule's design left unverified — whether bump
+      // respects an explicit upper bound rather than proposing to jump past it —
+      // is answered by the same dry run, now that bump is confirmed to actually
+      // run: ty>=0.0.66,<0.0.67 had a same-day release, 0.0.67, sitting exactly on
+      // the ceiling (excluded by the old range's `<0.0.67`). bump's proposal was
+      // "newValue": ">=0.0.67,<0.0.68" — it slid the whole one-patch window
+      // forward, floor and ceiling together, rather than emitting an unbounded
+      // ">=0.0.67" or leaving the stale "<0.0.67" in place (which would have
+      // rejected the very release it just proposed). ruff>=0.16.1,<0.17 had no
+      // release past its own ceiling on the day this ran, so it stayed silent —
+      // consistent, not a second data point.
+      matchManagers: ["pep621", "poetry"],
+      matchDepTypes: [
+        "dependency-groups",
+        "build-system.requires",
+      ],
       groupName: "development dependencies",
+      rangeStrategy: "bump",
     },
     {
       // The runtime dependencies, which every consumer of this library resolves
@@ -96,6 +162,16 @@
       // them visible to Renovate at all, is `chore/package-modernisation`'s job, not
       // this branch's.
       //
+      // matchManagers gained "poetry" for the identical reason as the
+      // development-dependencies rule above — see there for the full finding.
+      // Renovate's poetry manager, not pep621, is what actually extracts this
+      // file's deps (supersedesManagers: ["pep621"]), so matchManagers: ["pep621"]
+      // alone matched nothing here either. Fixing it changes no dependency's
+      // proposed update today — rangeStrategy is untouched (still the "replace"
+      // default) and config:recommended's own default already produces one PR per
+      // dep — but it is what actually makes `groupName: null` this rule's own
+      // decision rather than an accident of the default applying anyway.
+      //
       // Until that lands, the only thing that reaches a Python dependency here is a
       // security advisory, which bypasses all of the above. vulnerabilityAlerts
       // defaults to rangeStrategy: "update-lockfile", which with no lockfile here
@@ -113,7 +189,7 @@
       // there being no lockfile: track uv.lock again and advisories go back to editing
       // the lockfile instead of raising the floors here, which removes the only
       // mechanism this paragraph describes.
-      matchManagers: ["pep621"],
+      matchManagers: ["pep621", "poetry"],
       matchDepTypes: ["project.dependencies"],
       groupName: null,
     },

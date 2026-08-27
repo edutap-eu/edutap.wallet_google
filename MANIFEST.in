@@ -1,4 +1,0 @@
-recursive-include tests *.json *.py
-recursive-exclude docs *
-recursive-exclude .claude *
-exclude .git

@@ -11,9 +11,7 @@ from .localized_string import LocalizedString
 
 
 class Barcode(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/Barcode
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/Barcode."""
 
     # inherits kind (deprecated)
     type: BarcodeType = BarcodeType.BARCODE_TYPE_UNSPECIFIED
@@ -26,18 +24,14 @@ class Barcode(DeprecatedKindFieldMixin, Model):
 
 
 class TotpParameters(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode#totpparameters
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode#totpparameters."""
 
     key: str
     valueLength: int
 
 
 class TotpDetails(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode#totpdetails
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode#totpdetails."""
 
     periodMillis: str
     algorithm: TotpAlgorithm = TotpAlgorithm.TOTP_ALGORITHM_UNSPECIFIED
@@ -45,9 +39,7 @@ class TotpDetails(Model):
 
 
 class RotatingBarcodeValues(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/RotatingBarcode#rotatingbarcodevalues
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/RotatingBarcode#rotatingbarcodevalues."""
 
     startDateTime: str | None = None
     values: list[str] | None = None
@@ -55,9 +47,7 @@ class RotatingBarcodeValues(Model):
 
 
 class RotatingBarcode(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode."""
 
     type: BarcodeType = BarcodeType.BARCODE_TYPE_UNSPECIFIED
     renderEncoding: BarcodeRenderEncoding = (
