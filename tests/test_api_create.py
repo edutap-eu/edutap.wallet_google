@@ -94,3 +94,30 @@ def test_api_create_issuer_raises_when_issuer_id_set(mock_session):
 
     assert "must not be set" in str(exc_info.value)
     assert "issuerId" in str(exc_info.value)
+
+
+def test_api_create_jwt_resource_is_not_allowed(mock_session):
+    """JwtResource is not a CRUD resource, and create() must say so.
+
+    It is registered so the model can be looked up by name, and its url_part
+    points at the jwt.insert endpoint. That endpoint is not implemented, and
+    two things stand in the way of it ever working through create():
+    JwtResource has no id, and the endpoint answers with {saveUri, resources}
+    while create() parses the response with the model it sent.
+
+    Without this guard the first of the two wins and the caller gets
+    "AttributeError: 'JwtResource' object has no attribute 'id'" out of
+    utils.py, which says nothing about the real cause.
+
+    jwt.insert is deliberately not wanted - the JWT length ceiling it would
+    solve is already handled by putting a Reference into the JWT rather than
+    the full object.
+    """
+    from edutap.wallet_google.api import create
+    from edutap.wallet_google.models.misc import JwtResource
+
+    with pytest.raises(ValueError) as exc_info:
+        create(JwtResource(jwt="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.e30.signature"))
+
+    assert "not allowed" in str(exc_info.value)
+    assert "JwtResource" in str(exc_info.value)
