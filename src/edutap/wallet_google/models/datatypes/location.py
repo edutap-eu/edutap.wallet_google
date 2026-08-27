@@ -4,7 +4,7 @@ from pydantic import Field
 
 
 # Attribute order as in Google's documentation to make future updates easier!
-# last check: 2025-06-19
+# Parity with the API is checked by tests/test_check_models.py
 
 
 class LatLongPoint(DeprecatedKindFieldMixin, Model):

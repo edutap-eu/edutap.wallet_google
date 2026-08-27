@@ -69,22 +69,41 @@ class CamelCaseAliasEnum(Enum):
 
     FooExample("fooBarBaz")
 
+    Google also publishes deprecated legacy spellings that follow no rule at
+    all - ``EAN13`` for ``EAN_13``, ``qrcode`` for ``QR_CODE``. Those cannot be
+    derived and are spelled out after the canonical value:
+
+    class FooExample(CamelCaseAliasEnum):
+        FOO_BAR_BAZ = "FOO_BAR_BAZ", "foobarbaz"
+
+    The canonical value stays the member's value; the extra spellings are only
+    accepted as input.
     """
 
-    def __new__(cls: type["CamelCaseAliasEnum"], value: str) -> "CamelCaseAliasEnum":
+    def __new__(
+        cls: type["CamelCaseAliasEnum"], value: str, *extra_aliases: str
+    ) -> "CamelCaseAliasEnum":
         obj: CamelCaseAliasEnum = object.__new__(cls)
+        # Set explicitly: with extra aliases given, Enum would otherwise make
+        # the whole argument tuple the member's value.
+        obj._value_ = value
         obj._name_ = f"{cls.__name__} snake case literal"
-        camel = _snake_to_camel(value)
 
-        # create a second object with the camelcase name
+        # create a second object per alias
         # creating an alias only does not work out since
         # pydantic checks for the value in the enum and not only the name
-        camel_obj = object.__new__(cls)
-        camel_obj._value_ = camel
-        camel_obj._name_ = f"{cls.__name__} camel case alias"
-        cls._value2member_map_[camel] = camel_obj
-        cls._member_map_[camel] = camel_obj
-        cls._member_names_.append(camel)
+        for alias, kind in [
+            (_snake_to_camel(value), "camel case alias"),
+            *[(alias, "legacy alias") for alias in extra_aliases],
+        ]:
+            if alias in cls._value2member_map_:
+                continue
+            alias_obj = object.__new__(cls)
+            alias_obj._value_ = alias
+            alias_obj._name_ = f"{cls.__name__} {kind}"
+            cls._value2member_map_[alias] = alias_obj
+            cls._member_map_[alias] = alias_obj
+            cls._member_names_.append(alias)
         return obj
 
     def __eq__(self, other: typing.Any | Enum) -> bool:
