@@ -31,18 +31,24 @@ pip install edutap.wallet_google
 from edutap.wallet_google import api
 
 # Create a pass class (template)
-my_class = api.new("GenericClass", {
-    "id": "your-issuer-id.your-class-name",
-    "classTemplateInfo": {"cardTemplateOverride": {"cardRowTemplateInfos": [...]}}
-})
+my_class = api.new(
+    "GenericClass",
+    {
+        "id": "your-issuer-id.your-class-name",
+        "classTemplateInfo": {"cardTemplateOverride": {"cardRowTemplateInfos": [...]}},
+    },
+)
 api.create(my_class)
 
 # Create a pass object (the actual pass)
-my_pass = api.new("GenericObject", {
-    "id": "your-issuer-id.unique-pass-id",
-    "classId": "your-issuer-id.your-class-name",
-    "state": "ACTIVE"
-})
+my_pass = api.new(
+    "GenericObject",
+    {
+        "id": "your-issuer-id.unique-pass-id",
+        "classId": "your-issuer-id.your-class-name",
+        "state": "ACTIVE",
+    },
+)
 api.create(my_pass)
 
 # Generate "Add to Google Wallet" link
