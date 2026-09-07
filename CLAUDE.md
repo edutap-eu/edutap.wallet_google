@@ -171,8 +171,7 @@ All top-level Google Wallet models use the `@register_model()` decorator:
     plural="genericClasses",
     can_message=True,
 )
-class GenericClass(ClassModel):
-    ...
+class GenericClass(ClassModel): ...
 ```
 
 ### API Function Pattern

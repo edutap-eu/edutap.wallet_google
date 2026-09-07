@@ -26,18 +26,21 @@ import os
 
 # if you run the code more than once, you need to change the ID of the class,
 # like by incrementing the number part.
-class_id = f"{os.environ.get('EDUTAP_WALLET_GOOGLE_ISSUER_ID')}.example_class01.edutap_example"
+class_id = (
+    f"{os.environ.get('EDUTAP_WALLET_GOOGLE_ISSUER_ID')}.example_class01.edutap_example"
+)
 
 # Option 1: Create with model
-new_class = api.create(
-    api.new("GenericClass", GenericClass(id=class_id))
-)
+new_class = api.create(api.new("GenericClass", GenericClass(id=class_id)))
 
 # Option 2: Create with dict directly (also works)
 new_class = api.create(
-    api.new("GenericClass", {
-        "id": class_id,
-    })
+    api.new(
+        "GenericClass",
+        {
+            "id": class_id,
+        },
+    )
 )
 ```
 
@@ -48,25 +51,25 @@ Now we create a simple Wallet Object based on the freshly created class.
 object_id = f"{os.environ.get('EDUTAP_WALLET_GOOGLE_ISSUER_ID')}.example_object01.edutap_example"
 
 new_object = api.create(
-    api.new("GenericObject", {
-        "id": object_id,
-        "classId": class_id,
-        "cardTitle": {
-            "defaultValue": {
-                "language": "en",
-                "value": "Edutap Example Pass 01"
+    api.new(
+        "GenericObject",
+        {
+            "id": object_id,
+            "classId": class_id,
+            "cardTitle": {
+                "defaultValue": {"language": "en", "value": "Edutap Example Pass 01"},
+                "translatedValues": [],
             },
-            "translatedValues": []
-        },
-        "header": {
-            "defaultValue": {
-                "language": "en",
-                "value": "This is an example pass from the edutap tutorial."
+            "header": {
+                "defaultValue": {
+                    "language": "en",
+                    "value": "This is an example pass from the edutap tutorial.",
+                },
+                "translatedValues": [],
             },
-            "translatedValues": []
+            "state": "ACTIVE",
         },
-        "state": "ACTIVE"
-    })
+    )
 )
 ```
 
@@ -151,24 +154,26 @@ existing_class = api.read("GenericClass", class_id)
 
 # Partial update (only updates specified fields)
 updated_class = api.update(
-    api.new("GenericClass", {
-        "id": class_id,
-        "heroImage": {
-            "sourceUri": {
-                "uri": "https://example.com/hero.png"
-            }
-        }
-    }),
-    partial=True  # default
+    api.new(
+        "GenericClass",
+        {
+            "id": class_id,
+            "heroImage": {"sourceUri": {"uri": "https://example.com/hero.png"}},
+        },
+    ),
+    partial=True,  # default
 )
 
 # Full replacement (replaces entire object)
 updated_class = api.update(
-    api.new("GenericClass", {
-        "id": class_id,
-        # ... all required fields ...
-    }),
-    partial=False
+    api.new(
+        "GenericClass",
+        {
+            "id": class_id,
+            # ... all required fields ...
+        },
+    ),
+    partial=False,
 )
 ```
 
@@ -179,30 +184,22 @@ Updating a pass (object) works the same way as updating a class:
 ```python
 # Partial update to change the state
 updated_object = api.update(
-    api.new("GenericObject", {
-        "id": object_id,
-        "state": "EXPIRED"
-    }),
-    partial=True
+    api.new("GenericObject", {"id": object_id, "state": "EXPIRED"}), partial=True
 )
 
 # Update multiple fields
 updated_object = api.update(
-    api.new("GenericObject", {
-        "id": object_id,
-        "header": {
-            "defaultValue": {
-                "language": "en",
-                "value": "Updated header text"
-            }
+    api.new(
+        "GenericObject",
+        {
+            "id": object_id,
+            "header": {
+                "defaultValue": {"language": "en", "value": "Updated header text"}
+            },
+            "validTimeInterval": {"end": {"date": "2024-12-31T23:59:59"}},
         },
-        "validTimeInterval": {
-            "end": {
-                "date": "2024-12-31T23:59:59"
-            }
-        }
-    }),
-    partial=True
+    ),
+    partial=True,
 )
 ```
 
@@ -219,8 +216,8 @@ result = api.message(
     object_id,
     Message(
         header="Important Update",
-        body="Your pass has been updated with new information."
-    )
+        body="Your pass has been updated with new information.",
+    ),
 )
 
 # Send with custom message type
@@ -230,8 +227,8 @@ result = api.message(
     {
         "header": "Expiring Soon",
         "body": "This pass will expire in 7 days.",
-        "messageType": "EXPIRATION_NOTIFICATION"
-    }
+        "messageType": "EXPIRATION_NOTIFICATION",
+    },
 )
 ```
 
@@ -244,20 +241,12 @@ To disable a pass, update its state to `INACTIVE` or `EXPIRED`:
 ```python
 # Mark as inactive (can be reactivated later)
 api.update(
-    api.new("GenericObject", {
-        "id": object_id,
-        "state": "INACTIVE"
-    }),
-    partial=True
+    api.new("GenericObject", {"id": object_id, "state": "INACTIVE"}), partial=True
 )
 
 # Mark as expired (permanent)
 api.update(
-    api.new("GenericObject", {
-        "id": object_id,
-        "state": "EXPIRED"
-    }),
-    partial=True
+    api.new("GenericObject", {"id": object_id, "state": "EXPIRED"}), partial=True
 )
 ```
 
@@ -274,7 +263,7 @@ You can list all passes (objects) for a given class or all classes for an issuer
 ```python
 import os
 
-issuer_id = os.environ.get('EDUTAP_WALLET_GOOGLE_ISSUER_ID')
+issuer_id = os.environ.get("EDUTAP_WALLET_GOOGLE_ISSUER_ID")
 
 # List all classes for an issuer
 for wallet_class in api.listing("GenericClass", issuer_id=issuer_id):
@@ -288,12 +277,14 @@ for wallet_object in api.listing("GenericObject", resource_id=class_id):
 page_size = 10
 next_token = None
 while True:
-    results = list(api.listing(
-        "GenericObject",
-        resource_id=class_id,
-        result_per_page=page_size,
-        next_page_token=next_token
-    ))
+    results = list(
+        api.listing(
+            "GenericObject",
+            resource_id=class_id,
+            result_per_page=page_size,
+            next_page_token=next_token,
+        )
+    )
 
     # Process objects (all but potentially last item which is the token)
     for item in results:
@@ -317,23 +308,20 @@ All the examples above can be used with the async API by using the `a`-prefixed 
 from edutap.wallet_google import api
 import asyncio
 
+
 async def create_pass():
     """Example async function to create a pass."""
     class_id = f"{os.environ.get('EDUTAP_WALLET_GOOGLE_ISSUER_ID')}.async_example"
 
     # Create class (new() is still sync)
-    new_class = await api.acreate(
-        api.new("GenericClass", {"id": class_id})
-    )
+    new_class = await api.acreate(api.new("GenericClass", {"id": class_id}))
 
     # Create object
     object_id = f"{class_id}.object01"
     new_object = await api.acreate(
-        api.new("GenericObject", {
-            "id": object_id,
-            "classId": class_id,
-            "state": "ACTIVE"
-        })
+        api.new(
+            "GenericObject", {"id": object_id, "classId": class_id, "state": "ACTIVE"}
+        )
     )
 
     # Read
@@ -341,23 +329,18 @@ async def create_pass():
 
     # Update
     updated = await api.aupdate(
-        api.new("GenericObject", {
-            "id": object_id,
-            "state": "EXPIRED"
-        }),
-        partial=True
+        api.new("GenericObject", {"id": object_id, "state": "EXPIRED"}), partial=True
     )
 
     # Send message
     result = await api.amessage(
-        "GenericObject",
-        object_id,
-        {"header": "Test", "body": "Async message"}
+        "GenericObject", object_id, {"header": "Test", "body": "Async message"}
     )
 
     # List (using async generator)
     async for obj in api.alisting("GenericObject", resource_id=class_id):
         print(f"Found: {obj.id}")
+
 
 # Run the async function
 asyncio.run(create_pass())
@@ -380,14 +363,17 @@ When using async operations, you should close async clients before shutting down
 ```python
 from edutap.wallet_google.clientpool import client_pool
 
+
 async def shutdown():
     """Clean up async clients on application shutdown."""
     await client_pool.aclose_all_clients()
+
 
 # In FastAPI:
 @app.on_event("shutdown")
 async def app_shutdown():
     await client_pool.aclose_all_clients()
+
 
 # In asyncio:
 async def main():
@@ -396,6 +382,7 @@ async def main():
         pass
     finally:
         await client_pool.aclose_all_clients()
+
 
 asyncio.run(main())
 ```
