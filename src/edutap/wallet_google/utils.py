@@ -9,6 +9,12 @@ import typing
 
 logger = logging.getLogger(__name__)
 
+# The model class a caller asked for. `parse_response_json` validates the response
+# against exactly that class and hands the instance back, so returning plain `Model`
+# discarded what the caller already knew. The partial path stays within the bound
+# because `make_partial_model` returns a SUBCLASS of the model it was given.
+ModelT = typing.TypeVar("ModelT", bound=Model)
+
 
 def encrypt_data(data: str) -> str:
     """Encrypt string using the Fernet symmetric encryption algorithm.
@@ -158,8 +164,8 @@ def handle_response_errors(
 
 
 def parse_response_json(
-    response, model: type[Model], *, partial: bool = False
-) -> Model:
+    response, model: "type[ModelT]", *, partial: bool = False
+) -> "ModelT":
     """Parse response JSON and return validated model instance.
 
     When *partial* is ``True``, a dynamic subclass is used where all required

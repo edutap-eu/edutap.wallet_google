@@ -65,6 +65,13 @@ import typing
 
 logger = logging.getLogger(__name__)
 
+# The concrete model a caller handed in. `create` and `update` return an instance
+# of the SAME registered model they were given -- `_prepare_*` looks the class up
+# from the data -- so annotating the return as plain `Model` threw that away and
+# left callers with the base: no fields, no attributes. A partial response stays
+# within the bound, because `make_partial_model` builds a SUBCLASS of the original.
+ModelT = typing.TypeVar("ModelT", bound=Model)
+
 
 __all__ = [
     "new",
@@ -268,7 +275,7 @@ def _validate_partial_response_fields(
     return False
 
 
-def _prepare_create(data: Model) -> tuple[str, str, type[Model], dict]:
+def _prepare_create(data: ModelT) -> tuple[str, str, type[ModelT], dict]:
     """Prepare data for create operation.
 
     Returns: (name, verified_json, model_type, headers)
@@ -276,7 +283,10 @@ def _prepare_create(data: Model) -> tuple[str, str, type[Model], dict]:
     model_metadata = lookup_metadata_by_model_instance(data)
     name = model_metadata["name"]
     raise_when_operation_not_allowed(name, "create")
-    model = model_metadata["model"]
+    # The registry is one heterogeneous store, so its entries are typed `type[Model]`.
+    # That the metadata found FOR an instance holds that instance's own class is a
+    # runtime invariant of `register_model`, and no checker can see it from here.
+    model = typing.cast("type[ModelT]", model_metadata["model"])
 
     # Check if resource_id should be skipped (not passed on create)
     skip_resource_id = not model_metadata.get("pass_resource_id_on_create", True)
@@ -300,8 +310,8 @@ def _prepare_read(name: str, resource_id: str) -> tuple[type[Model]]:
 
 
 def _prepare_update(
-    data: Model,
-) -> tuple[str, str, str, type[Model]]:
+    data: ModelT,
+) -> tuple[str, str, str, type[ModelT]]:
     """Prepare data for update operation.
 
     Returns: (name, resource_id, verified_json, model_type)
@@ -309,7 +319,8 @@ def _prepare_update(
     model_metadata = lookup_metadata_by_model_instance(data)
     name = model_metadata["name"]
     raise_when_operation_not_allowed(name, "update")
-    model = model_metadata["model"]
+    # Same runtime invariant as in `_prepare_create`.
+    model = typing.cast("type[ModelT]", model_metadata["model"])
     resource_id, verified_json = validate_data_and_convert_to_json(
         model, data, existing=True, resource_id_key=model_metadata["resource_id"]
     )
@@ -430,11 +441,11 @@ def _setup_pagination_params(
 
 
 def create(
-    data: Model,
+    data: ModelT,
     *,
     credentials: dict | None = None,
     fields: list[str] | None = None,
-) -> Model:
+) -> ModelT:
     """
     Creates a Google Wallet items. `C` in CRUD.
 
@@ -505,12 +516,12 @@ def read(
 
 
 def update(
-    data: Model,
+    data: ModelT,
     *,
     credentials: dict | None = None,
     fields: list[str] | None = None,
     partial: bool = True,
-) -> Model:
+) -> ModelT:
     """
     Updates a Google Wallet Class or Object. `U` in CRUD.
 
@@ -678,11 +689,11 @@ def listing(
 
 
 async def acreate(
-    data: Model,
+    data: ModelT,
     *,
     credentials: dict | None = None,
     fields: list[str] | None = None,
-) -> Model:
+) -> ModelT:
     """
     Creates a Google Wallet item asynchronously. `C` in CRUD.
 
@@ -752,12 +763,12 @@ async def aread(
 
 
 async def aupdate(
-    data: Model,
+    data: ModelT,
     *,
     credentials: dict | None = None,
     fields: list[str] | None = None,
     partial: bool = True,
-) -> Model:
+) -> ModelT:
     """
     Updates a Google Wallet Class or Object asynchronously. `U` in CRUD.
 

@@ -29,8 +29,14 @@ class WithIdModel(Model):
     id: str
 
 
+# The model a caller asked to relax. The result is built with `create_model` and a
+# `__base__` of the given model, so it IS a subclass -- the docstring below says so,
+# and `isinstance` checks rely on it. Returning plain `type[Model]` threw that away.
+ModelT = typing.TypeVar("ModelT", bound="Model")
+
+
 @functools.cache
-def make_partial_model(model: type[Model]) -> type[Model]:
+def make_partial_model(model: "type[ModelT]") -> "type[ModelT]":
     """Create a model variant where all required fields become Optional with None default.
 
     The result is a subclass of the original model, so isinstance() checks
@@ -42,10 +48,15 @@ def make_partial_model(model: type[Model]) -> type[Model]:
             field_overrides[name] = (field_info.annotation | None, None)
     if not field_overrides:
         return model
-    return create_model(
-        f"Partial{model.__name__}",
-        __base__=model,
-        **field_overrides,
+    # `create_model` is dynamic, so no checker can see that `__base__=model` makes the
+    # result a subclass of `model`. The cast states the invariant the docstring promises.
+    return typing.cast(
+        "type[ModelT]",
+        create_model(
+            f"Partial{model.__name__}",
+            __base__=model,
+            **field_overrides,
+        ),
     )
 
 
