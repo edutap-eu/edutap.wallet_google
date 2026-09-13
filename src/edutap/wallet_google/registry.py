@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 from typing import TypedDict
+from typing import TypeVar
 
 import functools
 import importlib
@@ -11,6 +12,14 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .models.bases import Model
+
+
+# The class `register_model` was applied to. Bound rather than plain `Model`,
+# because the decorator has to hand BACK what it was given: annotating the return
+# as `type[Model]` made every registered model indistinguishable from its base to
+# a type checker, so the fields declared on the subclass were not there at all --
+# every keyword argument read as unknown, every attribute access as unresolved.
+ModelT = TypeVar("ModelT", bound="Model")
 
 
 class RegistryMetadataDict(TypedDict, total=False):
@@ -86,10 +95,13 @@ class register_model:
 
     def __call__(
         self,
-        cls: "type[Model]",
-    ) -> "type[Model]":
+        cls: "type[ModelT]",
+    ) -> "type[ModelT]":
         """
-        Registers the given class in the registry.
+        Registers the given class in the registry and returns it unchanged.
+
+        The return type follows the argument, so a decorated model keeps its own
+        signature. `-> type[Model]` would erase it.
         """
         name = self.metadata["name"]
         if name in _MODEL_REGISTRY_BY_NAME:
