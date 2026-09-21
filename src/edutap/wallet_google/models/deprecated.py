@@ -245,7 +245,7 @@ class DeprecatedWordMarkFieldMixin:
     """
 
     wordMark: Annotated[
-        list[Image] | None,
+        Image | None,
         Field(
             deprecated=deprecated(
                 'Attribute "wordMark" was used in the past to specify the word mark but is now deprecated.'

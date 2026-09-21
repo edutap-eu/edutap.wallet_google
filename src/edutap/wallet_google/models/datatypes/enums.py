@@ -2,7 +2,7 @@ from ..bases import CamelCaseAliasEnum
 
 
 # Attribute order as in Google's documentation to make future updates easier!
-# last check: 2025-01-22
+# Parity with the API is checked by tests/test_check_models.py
 
 
 class Action(CamelCaseAliasEnum):
@@ -21,7 +21,8 @@ class ActivationState(CamelCaseAliasEnum):
     """
 
     UNKNOWN_STATE = "UNKNOWN_STATE"
-    NOT_ACTIVATED = "NOT_ACTIVATED"
+    # Google's deprecated legacy spelling is "not_activated", not "notActivated".
+    NOT_ACTIVATED = "NOT_ACTIVATED", "not_activated"
     ACTIVATED = "ACTIVATED"
 
 
@@ -55,10 +56,12 @@ class BarcodeType(CamelCaseAliasEnum):
     CODABAR = "CODABAR"
     DATA_MATRIX = "DATA_MATRIX"
     EAN_8 = "EAN_8"
-    EAN_13 = "EAN_13"
+    # Google carries two deprecated legacy spellings for these three, and the
+    # second one is not the camelCase form that gets generated automatically.
+    EAN_13 = "EAN_13", "EAN13"
     ITF_14 = "ITF_14"
-    PDF_417 = "PDF_417"
-    QR_CODE = "QR_CODE"
+    PDF_417 = "PDF_417", "PDF417"
+    QR_CODE = "QR_CODE", "qrcode"
     UPC_A = "UPC_A"
     TEXT_ONLY = "TEXT_ONLY"
 
@@ -118,6 +121,8 @@ class DateFormat(CamelCaseAliasEnum):
     TIME_ONLY = "TIME_ONLY"
     DATE_TIME_YEAR = "DATE_TIME_YEAR"
     DATE_YEAR = "DATE_YEAR"
+    YEAR_MONTH = "YEAR_MONTH"  # renders 2018-12-14T13:00:00 as 2018-12
+    YEAR_MONTH_DAY = "YEAR_MONTH_DAY"  # renders 2018-12-14T13:00:00 as 2018-12-14
 
 
 class DoorsOpenLabel(CamelCaseAliasEnum):
@@ -169,6 +174,16 @@ class GateLabel(CamelCaseAliasEnum):
 class GenericType(CamelCaseAliasEnum):
     """
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject#generictype
+
+    Careful: that reference page lists 14 of the 20 values. The six marked
+    below appear only in the machine readable schema, which is where we take
+    them from - they entered it on 2026-03-28 with revision 20260327:
+    https://github.com/googleapis/discovery-artifact-manager/commit/b1b6100bbf443745a0ca80be074a78bc924346f5
+
+    They are modelled so that reading a pass carrying one of them does not fail
+    validation. Whether the API accepts them on write has not been tested, and
+    five months without an entry in the reference is reason enough not to
+    assume it - check against your own issuer before using one.
     """
 
     GENERIC_TYPE_UNSPECIFIED = "GENERIC_TYPE_UNSPECIFIED"  # Unspecified generic type.
@@ -185,6 +200,17 @@ class GenericType(CamelCaseAliasEnum):
     GENERIC_HOME_INSURANCE = "GENERIC_HOME_INSURANCE"  # Home-insurance cards
     GENERIC_ENTRY_TICKET = "GENERIC_ENTRY_TICKET"  # Entry tickets
     GENERIC_RECEIPT = "GENERIC_RECEIPT"  # Receipts
+    # Prefer the dedicated LoyaltyObject over this one: the dedicated pass type
+    # offers more features than a generic pass can.
+    GENERIC_LOYALTY_CARD = "GENERIC_LOYALTY_CARD"  # Loyalty cards
+    GENERIC_BUSINESS_CARD = "GENERIC_BUSINESS_CARD"  # Business cards, schema only
+    GENERIC_BARCODE_PASS = "GENERIC_BARCODE_PASS"  # Barcode passes, schema only
+    GENERIC_MEMBERSHIP_CARD = "GENERIC_MEMBERSHIP_CARD"  # Membership cards, schema only
+    GENERIC_STUDENT_CARD = "GENERIC_STUDENT_CARD"  # Student cards, schema only
+    GENERIC_TRANSIT_PASS = "GENERIC_TRANSIT_PASS"  # Transit passes, schema only
+    GENERIC_VEHICLE_REGISTRATION = (
+        "GENERIC_VEHICLE_REGISTRATION"  # Vehicle registrations, schema only
+    )
     GENERIC_OTHER = "GENERIC_OTHER"  # Other type
 
 

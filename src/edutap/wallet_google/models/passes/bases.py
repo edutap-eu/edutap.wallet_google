@@ -70,7 +70,7 @@ class ClassModel(WithIdModel):
     """
 
     # Attribute order as in Google's documentation to make future updates easier!
-    # last check: 2024-12-02
+    # Parity with the API is checked by tests/test_check_models.py
 
     # inherits id
     classTemplateInfo: ClassTemplateInfo | None = None
