@@ -66,6 +66,11 @@
             uses: pypa/gh-action-pypi-publish@release/v1
             with:
               repository-url: https://test.pypi.org/legacy/
+              # The version is static, so a commit on main that does not bump
+              # it rebuilds a filename Test PyPI already holds. Without this
+              # the upload is a hard error and main goes red for a reason that
+              # says nothing about the code.
+              skip-existing: true
 
       # Upload to real PyPI on GitHub Releases.
       release-pypi:
