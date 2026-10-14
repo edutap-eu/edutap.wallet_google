@@ -95,9 +95,7 @@ class DummyCallbackHandler:
 
 
 def test_add_plugin():
-    """
-    test adding plugins at runtime
-    """
+    """Test adding plugins at runtime."""
     from edutap.wallet_google.plugins import add_plugin
     from edutap.wallet_google.plugins import get_callback_handlers
     from edutap.wallet_google.plugins import get_image_providers

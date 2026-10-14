@@ -1,16 +1,28 @@
 from typing import TYPE_CHECKING
 from typing import TypedDict
+from typing import TypeVar
 
 import functools
 import importlib
 import inspect
 import logging
+import pkgutil
 
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .models.bases import Model
+
+
+# The decorated class flows through `register_model.__call__` unchanged at
+# runtime, so the annotation has to carry its concrete type through as well.
+# Annotating the parameter and the return value both as `type[Model]` erased
+# every decorated class down to that base: `EventTicketClass` stopped being a
+# class for a type checker and became a variable holding some `type[Model]`,
+# which then cannot be used in a type expression at all. TypeVar and not PEP
+# 695 syntax because this package still supports Python 3.10.
+ModelT = TypeVar("ModelT", bound="Model")
 
 
 class RegistryMetadataDict(TypedDict, total=False):
@@ -34,8 +46,8 @@ _MODEL_REGISTRY_BY_MODEL: "dict[type[Model], RegistryMetadataDict]" = {}
 
 
 class register_model:
-    """
-    Registers a Pydantic model based on Model in a registry.
+    """Register a Pydantic model based on Model in a registry.
+
     To be used as a decorator.
     """
 
@@ -54,7 +66,7 @@ class register_model:
         can_message: bool = True,
     ):
         """
-        Prepares the registration of a Model or its subclasses.
+        Prepare the registration of a Model or its subclasses.
 
         :param name:        Name of the model. Usually the same as the class name.
         :param url_part:    Part of the URL to be used for the RESTful API endpoint.
@@ -86,11 +98,9 @@ class register_model:
 
     def __call__(
         self,
-        cls: "type[Model]",
-    ) -> "type[Model]":
-        """
-        Registers the given class in the registry.
-        """
+        cls: type[ModelT],
+    ) -> type[ModelT]:
+        """Register the given class in the registry."""
         name = self.metadata["name"]
         if name in _MODEL_REGISTRY_BY_NAME:
             raise ValueError(f"Duplicate registration of '{name}'")
@@ -101,16 +111,12 @@ class register_model:
 
 
 def lookup_model_by_name(name: str) -> "type[Model]":
-    """
-    Returns the model with the given name.
-    """
+    """Return the model with the given name."""
     return _MODEL_REGISTRY_BY_NAME[name]["model"]
 
 
 def lookup_model_by_plural_name(plural_name: str) -> "type[Model]":
-    """
-    Returns the model with the given plural name.
-    """
+    """Return the model with the given plural name."""
     for model in _MODEL_REGISTRY_BY_NAME.values():
         if model["plural"] == plural_name:
             return model["model"]
@@ -118,28 +124,22 @@ def lookup_model_by_plural_name(plural_name: str) -> "type[Model]":
 
 
 def lookup_metadata_by_name(name: str) -> RegistryMetadataDict:
-    """
-    Returns the metadata of the model with the given name.
-    """
+    """Return the metadata of the model with the given name."""
     return _MODEL_REGISTRY_BY_NAME[name]
 
 
 def lookup_metadata_by_model_instance(model: "Model") -> RegistryMetadataDict:
-    """
-    Returns the registry metadata by a given instance of a model
-    """
+    """Return the registry metadata by a given instance of a model."""
     return _MODEL_REGISTRY_BY_MODEL[type(model)]
 
 
 def lookup_metadata_by_model_type(model_type: "type[Model]") -> RegistryMetadataDict:
-    """
-    Returns the registry metadata by a given model type
-    """
+    """Return the registry metadata by a given model type."""
     return _MODEL_REGISTRY_BY_MODEL[model_type]
 
 
 def raise_when_operation_not_allowed(name: str, operation: str) -> None:
-    """Verifies that the given operation is allowed for the given registered name.
+    """Verify that the given operation is allowed for the given registered name.
 
     :raises: ValueError when the operation is not allowed.
     """
@@ -201,9 +201,14 @@ def _find_models() -> dict[str, "type[Model]"]:
     from .models.bases import Model
 
     models: dict[str, type[Model]] = {}
-    pkg = importlib.import_module("edutap.wallet_google")
-    datatypes_module = pkg.models.datatypes
-    deprecated_module = pkg.models.deprecated
+    # `models/__init__.py` does not import `.deprecated`; it is only ever set as
+    # an attribute of its parent because `misc.py` and `passes/retail.py` import
+    # from it. Importing it by name here does execute it, so this no longer
+    # depends on who else imported what first.
+    deprecated_module = importlib.import_module(
+        "edutap.wallet_google.models.deprecated"
+    )
+    datatypes = importlib.import_module("edutap.wallet_google.models.datatypes")
 
     def _collect_classes(mod):
         for cls_name, cls in inspect.getmembers(mod, inspect.isclass):
@@ -219,30 +224,40 @@ def _find_models() -> dict[str, "type[Model]"]:
         ):
             models[cls_name] = cls
 
-    # datatypes/*
-    for name, module in inspect.getmembers(datatypes_module, inspect.ismodule):
-        if module.__name__.startswith("edutap.wallet_google.models.datatypes"):
-            _collect_classes(module)
+    # datatypes/* — enumerate the submodules from the package path and import
+    # each one, rather than asking the package object which submodules it has.
+    # `datatypes` is a namespace package: it has no `__init__.py`, so importing
+    # it executes no code and binds no submodule attributes. Anything reading
+    # the attributes therefore sees only the submodules some *other* module
+    # already imported, and a new datatypes module that nothing else imports
+    # would be silently skipped by model discovery. pkgutil.iter_modules reads
+    # the directory, so it sees every submodule whether or not it is loaded.
+    for module_info in pkgutil.iter_modules(datatypes.__path__):
+        _collect_classes(
+            importlib.import_module(
+                f"edutap.wallet_google.models.datatypes.{module_info.name}"
+            )
+        )
 
     return models
 
 
 @functools.cache
 def _find_enums() -> list[str]:
-    """
-    Returns a list of all enum class names.
-    """
-    pkg = importlib.import_module("edutap.wallet_google")
-    enums_module = pkg.models.datatypes.enums
+    """Return a list of all enum class names."""
+    # Imported by name for the same reason as in _find_models() above.
+    enums_module = importlib.import_module(
+        "edutap.wallet_google.models.datatypes.enums"
+    )
     enums: list[str] = []
-    for enum_name, enum in inspect.getmembers(enums_module, inspect.isclass):
+    for enum_name, _enum in inspect.getmembers(enums_module, inspect.isclass):
         enums.append(enum_name)
     return enums
 
 
 @functools.cache
 def _get_fields_for_model(model: "type[Model]") -> list[str]:
-    """Returns the list of valid fields for the given registered name."""
+    """Return the list of valid fields for the given model class."""
     from .models.bases import Model
 
     fields: set[str] = set()
@@ -259,7 +274,7 @@ def _get_fields_for_model(model: "type[Model]") -> list[str]:
 
 @functools.cache
 def _get_fields_for_name(name: str) -> list[str]:
-    """Returns the list of valid fields for the given registered name."""
+    """Return the list of valid fields for the given registered name."""
     from .models.bases import Model
 
     if "__" in name:
@@ -286,7 +301,7 @@ def _get_fields_for_name(name: str) -> list[str]:
 
 
 def _get_fields_from_definition(name, definition: dict) -> list[str]:
-    """Returns the list of valid fields for the given schema object."""
+    """Return the list of valid fields for the given schema object."""
     fields: set[str] = set()
     if definition in ("string", "boolean"):
         fields.add(name)

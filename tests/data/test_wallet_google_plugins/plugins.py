@@ -4,9 +4,7 @@ import asyncio
 
 
 class TestImageProvider:
-    """
-    Implementation of edutap.wallet_google.protocols.ImageProvider
-    """
+    """Implementation of edutap.wallet_google.protocols.ImageProvider."""
 
     async def image_by_id(self, image_id: str) -> ImageData:
         # return some predictable data for unit testing
@@ -23,7 +21,7 @@ class TestImageProvider:
 
 class TestCallbackHandler:
     """
-    Implementation of edutap.wallet_google.protocols.CallbackHandler
+    Implementation of edutap.wallet_google.protocols.CallbackHandler.
 
     Used in tests to simulate a callback handler and possible errors.
     """

@@ -20,8 +20,8 @@ from .bases import StyleableMixin
     can_message=True,
 )
 class GenericClass(ClassModel):
-    """
-    The GenericClass is the implicitly the base class for all other Wallet Class models.
+    """The GenericClass is implicitly the base class for all other Wallet Class models.
+
     The Google documentation does not mention this fact.
     This might change in future updates, do not depend on this assumption!
 
@@ -51,7 +51,7 @@ class GenericClass(ClassModel):
 @register_model("GenericObject", url_part="genericObject", can_message=True)
 class GenericObject(StyleableMixin, CommonLogosMixin, ObjectModel):
     """
-    The GenericObject is a specific object and does not act as the base for other wallet objects!
+    The GenericObject is a specific object and does not act as the base for other wallet objects.
 
     see: https://developers.google.com/wallet/generic/rest/v1/genericobject
     """

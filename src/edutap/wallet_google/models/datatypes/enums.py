@@ -6,9 +6,7 @@ from ..bases import CamelCaseAliasEnum
 
 
 class Action(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/smarttap#action
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/smarttap#action."""
 
     ACTION_UNSPECIFIED = "ACTION_UNSPECIFIED"
     S2AP = "S2AP"
@@ -16,9 +14,7 @@ class Action(CamelCaseAliasEnum):
 
 
 class ActivationState(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#state
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#state."""
 
     UNKNOWN_STATE = "UNKNOWN_STATE"
     NOT_ACTIVATED = "NOT_ACTIVATED"
@@ -26,27 +22,21 @@ class ActivationState(CamelCaseAliasEnum):
 
 
 class AnimationType(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/SecurityAnimation#animationtype
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/SecurityAnimation#animationtype."""
 
     ANIMATION_UNSPECIFIED = "ANIMATION_UNSPECIFIED"
     FOIL_SHIMMER = "FOIL_SHIMMER"
 
 
 class BarcodeRenderEncoding(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/BarcodeRenderEncoding
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/BarcodeRenderEncoding."""
 
     RENDER_ENCODING_UNSPECIFIED = "RENDER_ENCODING_UNSPECIFIED"
     UTF_8 = "UTF_8"
 
 
 class BarcodeType(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/BarcodeType
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/BarcodeType."""
 
     BARCODE_TYPE_UNSPECIFIED = "BARCODE_TYPE_UNSPECIFIED"
     AZTEC = "AZTEC"
@@ -64,9 +54,7 @@ class BarcodeType(CamelCaseAliasEnum):
 
 
 class BoardingDoor(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightobject#BoardingDoor
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightobject#BoardingDoor."""
 
     BOARDING_DOOR_UNSPECIFIED = "BOARDING_DOOR_UNSPECIFIED"
     FRONT = "FRONT"
@@ -74,9 +62,7 @@ class BoardingDoor(CamelCaseAliasEnum):
 
 
 class BoardingPolicy(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#boardingpolicy
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightclass#boardingpolicy."""
 
     BOARDING_POLICY_UNSPECIFIED = "BOARDING_POLICY_UNSPECIFIED"
     ZONE_BASED = "ZONE_BASED"
@@ -85,9 +71,7 @@ class BoardingPolicy(CamelCaseAliasEnum):
 
 
 class ConcessionCategory(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#concessioncategory
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#concessioncategory."""
 
     CONCESSION_CATEGORY_UNSPECIFIED = "CONCESSION_CATEGORY_UNSPECIFIED"
     ADULT = "ADULT"
@@ -96,9 +80,7 @@ class ConcessionCategory(CamelCaseAliasEnum):
 
 
 class ConfirmationCodeLabel(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#confirmationcodelabel
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#confirmationcodelabel."""
 
     CONFIRMATION_CODE_LABEL_UNSPECIFIED = "CONFIRMATION_CODE_LABEL_UNSPECIFIED"
     CONFIRMATION_CODE = "CONFIRMATION_CODE"
@@ -108,9 +90,7 @@ class ConfirmationCodeLabel(CamelCaseAliasEnum):
 
 
 class DateFormat(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/ClassTemplateInfo#dateformat
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/ClassTemplateInfo#dateformat."""
 
     DATE_FORMAT_UNSPECIFIED = "DATE_FORMAT_UNSPECIFIED"
     DATE_TIME = "DATE_TIME"
@@ -121,9 +101,7 @@ class DateFormat(CamelCaseAliasEnum):
 
 
 class DoorsOpenLabel(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#doorsopenlabel
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#doorsopenlabel."""
 
     DOORS_OPEN_LABEL_UNSPECIFIED = "DOORS_OPEN_LABEL_UNSPECIFIED"
     DOORS_OPEN = "DOORS_OPEN"
@@ -131,9 +109,7 @@ class DoorsOpenLabel(CamelCaseAliasEnum):
 
 
 class FareClass(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#fareclass
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#fareclass."""
 
     FARE_CLASS_UNSPECIFIED = "FARE_CLASS_UNSPECIFIED"
     ECONOMY = "ECONOMY"
@@ -142,9 +118,7 @@ class FareClass(CamelCaseAliasEnum):
 
 
 class FlightStatus(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightstatus
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightclass#flightstatus."""
 
     FLIGHT_STATUS_UNSPECIFIED = "FLIGHT_STATUS_UNSPECIFIED"
     SCHEDULED = "SCHEDULED"
@@ -156,9 +130,7 @@ class FlightStatus(CamelCaseAliasEnum):
 
 
 class GateLabel(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#gatelabel
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#gatelabel."""
 
     GATE_LABEL_UNSPECIFIED = "GATE_LABEL_UNSPECIFIED"
     GATE = "GATE"
@@ -167,14 +139,12 @@ class GateLabel(CamelCaseAliasEnum):
 
 
 class GenericType(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/genericobject#generictype
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/genericobject#generictype."""
 
     GENERIC_TYPE_UNSPECIFIED = "GENERIC_TYPE_UNSPECIFIED"  # Unspecified generic type.
-    GENERIC_SEASON_PASS = "GENERIC_SEASON_PASS"  # Season pass
+    GENERIC_SEASON_PASS = "GENERIC_SEASON_PASS"  # noqa: S105  # an enum member, not a secret  # Season pass
     GENERIC_UTILITY_BILLS = "GENERIC_UTILITY_BILLS"  # Utility bills
-    GENERIC_PARKING_PASS = "GENERIC_PARKING_PASS"  # Parking pass
+    GENERIC_PARKING_PASS = "GENERIC_PARKING_PASS"  # noqa: S105  # an enum member, not a secret  # Parking pass
     GENERIC_VOUCHER = "GENERIC_VOUCHER"  # Voucher
     GENERIC_GYM_MEMBERSHIP = "GENERIC_GYM_MEMBERSHIP"  # Gym membership cards
     GENERIC_LIBRARY_MEMBERSHIP = (
@@ -189,9 +159,7 @@ class GenericType(CamelCaseAliasEnum):
 
 
 class MessageType(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/Message#messagetype
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/Message#messagetype."""
 
     MESSAGE_TYPE_UNSPECIFIED = "MESSAGE_TYPE_UNSPECIFIED"
     TEXT = "TEXT"
@@ -200,9 +168,7 @@ class MessageType(CamelCaseAliasEnum):
 
 
 class MultipleDevicesAndHoldersAllowedStatus(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/MultipleDevicesAndHoldersAllowedStatus
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/MultipleDevicesAndHoldersAllowedStatus."""
 
     STATUS_UNSPECIFIED = "STATUS_UNSPECIFIED"
     MULTIPLE_HOLDERS = "MULTIPLE_HOLDERS"
@@ -211,9 +177,7 @@ class MultipleDevicesAndHoldersAllowedStatus(CamelCaseAliasEnum):
 
 
 class NfcConstraint(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/PassConstraints#NfcConstraint
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/PassConstraints#NfcConstraint."""
 
     NFC_CONSTRAINT_UNSPECIFIED = "NFC_CONSTRAINT_UNSPECIFIED"
     BLOCK_PAYMENT = "BLOCK_PAYMENT"
@@ -221,9 +185,7 @@ class NfcConstraint(CamelCaseAliasEnum):
 
 
 class NotificationSettingsForUpdates(CamelCaseAliasEnum):
-    """
-    see https://developers.google.com/wallet/reference/rest/v1/NotificationSettingsForUpdates
-    """
+    """see https://developers.google.com/wallet/reference/rest/v1/NotificationSettingsForUpdates."""
 
     NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED = (
         "NOTIFICATION_SETTINGS_FOR_UPDATES_UNSPECIFIED"
@@ -232,9 +194,7 @@ class NotificationSettingsForUpdates(CamelCaseAliasEnum):
 
 
 class PassengerType(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#passengertype
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#passengertype."""
 
     PASSENGER_TYPE_UNSPECIFIED = "PASSENGER_TYPE_UNSPECIFIED"
     SINGLE_PASSENGER = "SINGLE_PASSENGER"
@@ -242,9 +202,7 @@ class PassengerType(CamelCaseAliasEnum):
 
 
 class PredefinedItem(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/retail/offers/rest/v1/ClassTemplateInfo#predefineditem
-    """
+    """see: https://developers.google.com/wallet/retail/offers/rest/v1/ClassTemplateInfo#predefineditem."""
 
     PREDEFINED_ITEM_UNSPECIFIED = "PREDEFINED_ITEM_UNSPECIFIED"
     FREQUENT_FLYER_PROGRAM_NAME_AND_NUMBER = "FREQUENT_FLYER_PROGRAM_NAME_AND_NUMBER"
@@ -254,9 +212,7 @@ class PredefinedItem(CamelCaseAliasEnum):
 
 
 class RedemptionChannel(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass#OfferClass.RedemptionChannel
-    """
+    """see: https://developers.google.com/wallet/retail/offers/rest/v1/offerclass#OfferClass.RedemptionChannel."""
 
     REDEMPTION_CHANNEL_UNSPECIFIED = "REDEMPTION_CHANNEL_UNSPECIFIED"
     INSTORE = "INSTORE"
@@ -266,9 +222,7 @@ class RedemptionChannel(CamelCaseAliasEnum):
 
 
 class ReviewStatus(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/ReviewStatus
-    """
+    """see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/ReviewStatus."""
 
     REVIEW_STATUS_UNSPECIFIED = "REVIEW_STATUS_UNSPECIFIED"
     UNDER_REVIEW = "UNDER_REVIEW"
@@ -278,9 +232,7 @@ class ReviewStatus(CamelCaseAliasEnum):
 
 
 class Role(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/permissions#role
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/permissions#role."""
 
     ROLE_UNSPECIFIED = "ROLE_UNSPECIFIED"
     OWNER = "OWNER"
@@ -289,18 +241,14 @@ class Role(CamelCaseAliasEnum):
 
 
 class RowLabel(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#rowlabel
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#rowlabel."""
 
     ROW_LABEL_UNSPECIFIED = "ROW_LABEL_UNSPECIFIED"
     ROW = "ROW"
 
 
 class ScreenshotEligibility(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/PassConstraints#screenshoteligibility
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/PassConstraints#screenshoteligibility."""
 
     SCREENSHOT_ELIGIBILITY_UNSPECIFIED = "SCREENSHOT_ELIGIBILITY_UNSPECIFIED"
     ELIGIBLE = "ELIGIBLE"
@@ -308,9 +256,7 @@ class ScreenshotEligibility(CamelCaseAliasEnum):
 
 
 class SeatClassPolicy(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightclass#seatclasspolicy
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightclass#seatclasspolicy."""
 
     SEAT_CLASS_POLICY_UNSPECIFIED = "SEAT_CLASS_POLICY_UNSPECIFIED"
     CABIN_BASED = "CABIN_BASED"
@@ -320,18 +266,14 @@ class SeatClassPolicy(CamelCaseAliasEnum):
 
 
 class SeatLabel(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#seatlabel
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#seatlabel."""
 
     SEAT_LABEL_UNSPECIFIED = "SEAT_LABEL_UNSPECIFIED"
     SEAT = "SEAT"
 
 
 class SectionLabel(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#sectionlabel
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass#sectionlabel."""
 
     SECTION_LABEL_UNSPECIFIED = "SECTION_LABEL_UNSPECIFIED"
     SECTION = "SECTION"
@@ -339,9 +281,7 @@ class SectionLabel(CamelCaseAliasEnum):
 
 
 class SharedDataType(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#shareddatatype
-    """
+    """see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#shareddatatype."""
 
     SHARED_DATA_TYPE_UNSPECIFIED = "SHARED_DATA_TYPE_UNSPECIFIED"
     FIRST_NAME = "FIRST_NAME"
@@ -359,9 +299,7 @@ class SharedDataType(CamelCaseAliasEnum):
 
 
 class State(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/State
-         https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/State
+    """see: https://developers.google.com/wallet/generic/rest/v1/State and https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/State.
 
     The official reference page does not spell out the semantic difference
     between COMPLETED, EXPIRED, and INACTIVE — in the Wallet app they all
@@ -393,9 +331,7 @@ class State(CamelCaseAliasEnum):
 
 
 class RetailState(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#state
-    """
+    """see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#state."""
 
     STATE_UNSPECIFIED = "STATE_UNSPECIFIED"
     TRUSTED_TESTERS = "TRUSTED_TESTERS"
@@ -404,9 +340,7 @@ class RetailState(CamelCaseAliasEnum):
 
 
 class TicketStatus(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketstatus
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#ticketstatus."""
 
     TICKET_STATUS_UNSPECIFIED = "TICKET_STATUS_UNSPECIFIED"
     USED = "USED"
@@ -415,18 +349,14 @@ class TicketStatus(CamelCaseAliasEnum):
 
 
 class TotpAlgorithm(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode#totpalgorithm
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/RotatingBarcode#totpalgorithm."""
 
     TOTP_ALGORITHM_UNSPECIFIED = "TOTP_ALGORITHM_UNSPECIFIED"
     TOTP_SHA1 = "TOTP_SHA1"
 
 
 class TransitType(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitclass#transittype
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitclass#transittype."""
 
     TRANSIT_TYPE_UNSPECIFIED = "TRANSIT_TYPE_UNSPECIFIED"
     BUS = "BUS"
@@ -437,9 +367,7 @@ class TransitType(CamelCaseAliasEnum):
 
 
 class TransitOption(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#transitoption
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/ClassTemplateInfo#transitoption."""
 
     TRANSIT_OPTION_UNSPECIFIED = "TRANSIT_OPTION_UNSPECIFIED"
     ORIGIN_AND_DESTINATION_NAMES = "ORIGIN_AND_DESTINATION_NAMES"
@@ -448,9 +376,7 @@ class TransitOption(CamelCaseAliasEnum):
 
 
 class TripType(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject#triptype
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject#triptype."""
 
     TRIP_TYPE_UNSPECIFIED = "TRIP_TYPE_UNSPECIFIED"
     ROUND_TRIP = "ROUND_TRIP"
@@ -458,9 +384,7 @@ class TripType(CamelCaseAliasEnum):
 
 
 class ViewUnlockRequirement(CamelCaseAliasEnum):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/ViewUnlockRequirement
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/ViewUnlockRequirement."""
 
     VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED = "VIEW_UNLOCK_REQUIREMENT_UNSPECIFIED"
     UNLOCK_NOT_REQUIRED = "UNLOCK_NOT_REQUIRED"

@@ -2,7 +2,7 @@
 
 ## Preconditions
 
-Python 3.10+, currently up to 3.13 is tested.
+Python 3.10+, currently up to 3.14 is tested.
 Version 3.13 is recommended.
 
 ## Installation
@@ -196,6 +196,27 @@ Google API URLs, normally not subject of change:
 
 ## Development
 
+In a clone of the repository, create the development environment with `make venv`, which
+runs `uv venv` followed by `uv pip install -U -e ".[callback]" --group dev` — the extra
+this package's consumers install, plus the `dev` dependency group (tests, linting, type
+checking):
+
+```bash
+make venv
+```
+
+The common tasks are all `make` targets:
+
+```text
+make help              # list every target
+make venv              # create .venv and install the package for development
+make lint              # ruff check, ruff format --check, ty check
+make reformat          # ruff format and ruff check --fix
+make test-local        # the unit suite
+make test-integration  # against the real Google Wallet API, needs credentials
+make test-matrix       # the full tox matrix, py310 through py314
+```
+
 ### Running the tests
 
 Copy the value of the above remembered Issuer Id and point the environment variable `EDUTAP_WALLET_GOOGLE_TEST_ISSUER_ID` to it. Example:
@@ -204,24 +225,30 @@ Copy the value of the above remembered Issuer Id and point the environment varia
 export EDUTAP_WALLET_GOOGLE_TEST_ISSUER_ID=1234567890123456789
 ```
 
-In a clone of the repository:
-
 Run unit tests:
 
 ```bash
-uvx --with tox-uv tox -e test
+make test-local
 ```
 
 Run integration tests:
 
 ```bash
-uvx --with tox-uv tox -e test -- --run-integration
+make test-integration
 ```
 
 Format code and run checks:
 
 ```bash
-uvx --with tox-uv tox -e lint
+make reformat
+make lint
+```
+
+To run the suite against every supported Python version instead of just the one `.venv`
+uses, run the full tox matrix:
+
+```bash
+make test-matrix
 ```
 
 ### Debugging

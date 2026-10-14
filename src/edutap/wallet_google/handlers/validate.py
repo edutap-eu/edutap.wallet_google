@@ -1,8 +1,9 @@
 """
-Parts of this module are rewrites and borrows from from https://github.com/yoyowallet/google-pay-token-decryption
+Parts of this module are rewrites and borrows from https://github.com/yoyowallet/google-pay-token-decryption.
+
 The above packages does not fulfill the needs we have here, but was a great starting point.
 Copyright is by its original authors at Yoyo Wallet <dev@yoyowallet.com>
-This file is under the MIT License, as found here https://github.com/yoyowallet/google-pay-token-decryption/blob/5cd006da9687171c1e35b55507b671c6e4eb513d/pyproject.toml#L8
+This file is under the MIT License, as found here https://github.com/yoyowallet/google-pay-token-decryption/blob/5cd006da9687171c1e35b55507b671c6e4eb513d/pyproject.toml#L8.
 
 The google-pay-token-decryption uses ECv2 for verification and decryption of payment tokens.
 
@@ -92,10 +93,10 @@ def _calculate_cache_expiration(keys: RootSigningPublicKeys) -> float:
 
 
 def _construct_signed_data(*args: str) -> bytes:
-    """
-    Construct the signed message from the list of its components by concatenating the
-    byte length of each component in 4 bytes little-endian format plus the UTF-8 encoded
-    component.
+    """Construct the signed message from its components.
+
+    Concatenates, for each component, its byte length in 4-byte
+    little-endian format followed by the UTF-8 encoded component.
 
     See https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#verify-signature
     or  https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#how-to-construct-the-byte-string-for-intermediate-signing-key-signature
@@ -243,9 +244,7 @@ async def google_root_signing_public_keys(
 
 
 async def verified_signed_message(data: CallbackData) -> SignedMessage:
-    """
-    Verifies the signature of the callback data asynchronously.
-    and returns the parsed SignedMessage
+    """Verify the signature of the callback data and return the parsed SignedMessage, asynchronously.
 
     Async version using httpx.AsyncClient for fetching Google root signing keys.
     """
@@ -331,9 +330,15 @@ async def verified_signed_message(data: CallbackData) -> SignedMessage:
         logger.error(
             f"Message signature verification failed: {e.__class__.__name__}: {e}"
         )
+        # This is cryptographic signature verification on an inbound
+        # webhook callback: the class name and message are already logged
+        # above for server-side debugging. Not chaining keeps whatever the
+        # `cryptography` library put into its exception (which is not
+        # documented to avoid leaking key- or padding-related detail) out
+        # of any downstream trace of this security-sensitive failure.
         raise ValueError(
             "Invalid message signature: verification failed with intermediate signing key"
-        )
+        ) from None
 
     logger.info(
         f"Successfully verified callback for {message.classId}/{message.objectId} "

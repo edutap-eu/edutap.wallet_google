@@ -6,25 +6,19 @@ from ..bases import Model
 
 
 class ExpiryNotification(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/genericobject#expirynotification
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/genericobject#expirynotification."""
 
     enableNotification: bool = False
 
 
 class UpcomingNotification(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/genericobject#upcomingnotification
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/genericobject#upcomingnotification."""
 
     enableNotification: bool = False
 
 
 class Notifications(Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/genericobject#notifications
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/genericobject#notifications."""
 
     expiryNotification: ExpiryNotification | None = None
     upcomingNotification: UpcomingNotification | None = None

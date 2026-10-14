@@ -9,6 +9,7 @@ import importlib
 import inspect
 import json
 import pathlib
+import pkgutil
 import pytest
 
 
@@ -23,10 +24,16 @@ MODEL_ALIAS_DICT = {
 
 def find_models() -> dict[str, type]:
     models: dict[str, type] = {}
-    pkg = importlib.import_module("edutap.wallet_google")
-    datatypes_module = pkg.models.datatypes
-    for name, module in inspect.getmembers(datatypes_module, inspect.ismodule):
-        # print(f"Module: 'name', '{module}'")
+    # Enumerate the submodules from the package path and import each one: see
+    # the note in edutap.wallet_google.registry._find_models(). This test exists
+    # to catch a datatypes model that drifted from Google's schema, so it has to
+    # see modules nothing else imported — that is precisely the case where a
+    # model would go unchecked.
+    datatypes_module = importlib.import_module("edutap.wallet_google.models.datatypes")
+    for module_info in pkgutil.iter_modules(datatypes_module.__path__):
+        module = importlib.import_module(
+            f"edutap.wallet_google.models.datatypes.{module_info.name}"
+        )
         for cls_name, cls in inspect.getmembers(module, inspect.isclass):
             if (
                 cls.__module__.startswith("edutap.wallet_google.models.datatypes")
@@ -78,7 +85,7 @@ def discovery_api_data(module_tmp_path):
 
 @pytest.fixture(scope="module")
 def wallet_api_data(module_tmp_path):
-    """Loads the Google Wallet API data from the local file."""
+    """Load the Google Wallet API data from the local file."""
     filename = module_tmp_path / "wallet_api_data.json"
     if not filename.exists():
         request_api_data_write_to_file(

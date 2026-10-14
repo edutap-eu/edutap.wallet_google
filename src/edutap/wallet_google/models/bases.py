@@ -22,9 +22,7 @@ class Model(BaseModel):
 
 
 class WithIdModel(Model):
-    """
-    Model for Google Wallet models with an identifier.
-    """
+    """Model for Google Wallet models with an identifier."""
 
     id: str
 
@@ -42,7 +40,22 @@ def make_partial_model(model: type[Model]) -> type[Model]:
             field_overrides[name] = (field_info.annotation | None, None)
     if not field_overrides:
         return model
-    return create_model(
+    # This call cannot be overload-checked by any conforming type checker, and
+    # that is not going to change. A **kwargs unpacking has statically unknown
+    # keys, so a checker cannot tell whether it supplies create_model's
+    # keyword-only parameters (__base__, __config__, ...) or its arbitrary field
+    # definitions — and therefore cannot pick an overload. Confirmed on a
+    # reduced case with no pydantic involved: ty 0.0.66 and mypy 1.18.2 both
+    # reject the same call against an overloaded signature and both accept it
+    # against a non-overloaded one.
+    #
+    # So do not read this as a bug to re-test on a newer ty. If it ever needs to
+    # go away, the fix is at this call site — building the model without a
+    # dict unpacking — not upstream.
+    #
+    # Suppressed on the line rather than by downgrading no-matching-overload in
+    # [tool.ty.rules], because the rule does catch real errors elsewhere.
+    return create_model(  # ty: ignore[no-matching-overload]
         f"Partial{model.__name__}",
         __base__=model,
         **field_overrides,
@@ -57,8 +70,7 @@ def _snake_to_camel(snake_str: str) -> str:
 
 
 class CamelCaseAliasEnum(Enum):
-    """Add an value alias in camelcase to the enum,
-    given the value in snake-case.
+    """Add a value alias in camelcase to the enum, given the value in snake-case.
 
     example: a enum like
 
@@ -89,7 +101,8 @@ class CamelCaseAliasEnum(Enum):
 
     def __eq__(self, other: typing.Any | Enum) -> bool:
         """Allow comparison with the camelcase value.
-        Take into account that UPPER_CASE and camelCase are equal
+
+        Take into account that UPPER_CASE and camelCase are equal.
         """
         if not isinstance(other, Enum):
             other = self.__class__(other)

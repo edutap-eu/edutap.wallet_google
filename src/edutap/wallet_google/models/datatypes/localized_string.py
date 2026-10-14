@@ -8,9 +8,7 @@ from pydantic import Field
 
 
 class TranslatedString(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString#translatedstring
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString#translatedstring."""
 
     # inherits kind (deprecated)
     language: str | None = Field(default=None)
@@ -18,9 +16,7 @@ class TranslatedString(DeprecatedKindFieldMixin, Model):
 
 
 class LocalizedString(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString
-    """
+    """see: https://developers.google.com/wallet/generic/rest/v1/LocalizedString."""
 
     # inherits kind (deprecated)
     translatedValues: list[TranslatedString] = Field(default_factory=list)

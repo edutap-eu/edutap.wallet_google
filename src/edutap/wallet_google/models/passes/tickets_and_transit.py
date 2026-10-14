@@ -67,9 +67,7 @@ class EventTicketClass(
     CommonLogosMixin,
     ClassModel,
 ):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketclass."""
 
     # inherits kind (deprecated)
     eventName: LocalizedString | None = None
@@ -132,9 +130,7 @@ class EventTicketObject(
     HeroImageMixin,
     ObjectModel,
 ):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketobject
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/eventticketobject."""
 
     # inherits kind (deprecated)
     classReference: EventTicketClass | None = None
@@ -186,9 +182,7 @@ class TransitClass(
     CommonLogosMixin,
     ClassModel,
 ):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitclass
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitclass."""
 
     transitOperatorName: LocalizedString | None = None
     # inherits logo
@@ -259,9 +253,7 @@ class TransitObject(
     HeroImageMixin,
     ObjectModel,
 ):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/transitobject
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/transitobject."""
 
     classReference: TransitClass | None = None
     ticketNumber: str | None = None
@@ -344,9 +336,7 @@ class FlightClass(
     HeroImageMixin,
     ClassModel,
 ):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightclass
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightclass."""
 
     # inherits kind (deprecated)
     localScheduledDepartureDateTime: str | None = Field(default=None)
@@ -403,9 +393,7 @@ class FlightObject(
     StyleableMixin,
     ObjectModel,
 ):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/flightobject
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/flightobject."""
 
     # inherits kind (deprecated)
     classReference: FlightClass | None = None

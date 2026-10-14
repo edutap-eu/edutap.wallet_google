@@ -105,7 +105,7 @@ def new(
 
 
 def _create_payload(models: list[ClassModel | ObjectModel | Reference]) -> JWTPayload:
-    """Creates a payload for the JWT."""
+    """Create a payload for the JWT."""
     payload = JWTPayload()
 
     for model in models:
@@ -123,7 +123,7 @@ def _create_payload(models: list[ClassModel | ObjectModel | Reference]) -> JWTPa
 
 
 def _convert_str_or_datetime_to_str(value: str | datetime.datetime) -> str:
-    """convert and check the value to be a valid string for the JWT claim timestamps"""
+    """Convert and check the value to be a valid string for the JWT claim timestamps."""
     if isinstance(value, datetime.datetime):
         return str(int(value.timestamp()))
     if value == "":
@@ -144,7 +144,7 @@ def _create_claims(
     iat: str | datetime.datetime,
     exp: str | datetime.datetime,
 ) -> JWTClaims:
-    """Creates a JWTClaims instance based on the given issuer, origins and models."""
+    """Create a JWTClaims instance based on the given issuer, origins and models."""
     return JWTClaims(
         iss=issuer,
         iat=_convert_str_or_datetime_to_str(iat),
@@ -163,7 +163,7 @@ def save_link(
     credentials: dict | None = None,
 ) -> str:
     """
-    Creates a link to save a Google Wallet Object to the wallet on the device.
+    Create a link to save a Google Wallet Object to the wallet on the device.
 
     Besides the capability to save an object to the wallet, it is also able create classes on-the-fly.
 
@@ -313,7 +313,16 @@ def _prepare_update(
     resource_id, verified_json = validate_data_and_convert_to_json(
         model, data, existing=True, resource_id_key=model_metadata["resource_id"]
     )
-    assert resource_id is not None, "resource_id is required for update"
+    if resource_id is None:
+        # A caller can pass a model instance whose resource-id field was never
+        # set; validate_data_and_convert_to_json() then legitimately returns
+        # None (see its `skip_resource_id` branch for the other case that
+        # yields None). That is a caller mistake, not an internal invariant,
+        # so it must survive python -O as a real, actionable error.
+        raise ValueError(
+            f"resource_id (field '{model_metadata['resource_id']}') must be "
+            f"set on the model instance for an update"
+        )
     return name, resource_id, verified_json, model
 
 
@@ -411,7 +420,7 @@ def _setup_pagination_params(
     result_per_page: int,
     next_page_token: str | None,
 ) -> dict:
-    """Setup pagination parameters for listing operations.
+    """Set up pagination parameters for listing operations.
 
     Returns: params dict with pagination settings
     """
@@ -436,7 +445,7 @@ def create(
     fields: list[str] | None = None,
 ) -> Model:
     """
-    Creates a Google Wallet items. `C` in CRUD.
+    Create a Google Wallet item. `C` in CRUD.
 
     :param data:                          Data to pass to the Google RESTful API.
                                           A model instance, has to be a registered model.
@@ -458,7 +467,7 @@ def create(
     client = client_pool.client(credentials=credentials)
     response = client.post(
         url=url,
-        data=verified_json.encode("utf-8"),
+        content=verified_json.encode("utf-8"),
         headers=headers,
         params=params,
     )
@@ -477,7 +486,7 @@ def read(
     fields: list[str] | None = None,
 ) -> Model:
     """
-    Reads a Google Wallet Class or Object. `R` in CRUD.
+    Read a Google Wallet Class or Object. `R` in CRUD.
 
     :param name:             Registered name of the model to use
     :param resource_id:      Identifier of the resource to read from the Google RESTful API
@@ -512,7 +521,7 @@ def update(
     partial: bool = True,
 ) -> Model:
     """
-    Updates a Google Wallet Class or Object. `U` in CRUD.
+    Update a Google Wallet Class or Object. `U` in CRUD.
 
     :param data:                    Data to pass to the Google RESTful API.
                                     A model instance, has to be a registered model.
@@ -534,13 +543,13 @@ def update(
     if partial:
         response = session.patch(
             url=client_pool.url(name, f"/{resource_id}"),
-            data=verified_json.encode("utf-8"),
+            content=verified_json.encode("utf-8"),
             params=params,
         )
     else:
         response = session.put(
             url=client_pool.url(name, f"/{resource_id}"),
-            data=verified_json.encode("utf-8"),
+            content=verified_json.encode("utf-8"),
             params=params,
         )
 
@@ -559,7 +568,7 @@ def message(
     credentials: dict | None = None,
     fields: list[str] | None = None,
 ) -> Model:
-    """Sends a message to a Google Wallet Class or Object.
+    """Send a message to a Google Wallet Class or Object.
 
     :param name:                      Registered name of the model to use
     :param resource_id:               Identifier of the resource to send to
@@ -579,7 +588,9 @@ def message(
             params = {"fields": ",".join(fields)}
 
     client = client_pool.client(credentials=credentials)
-    response = client.post(url=url, data=verified_json.encode("utf-8"), params=params)
+    response = client.post(
+        url=url, content=verified_json.encode("utf-8"), params=params
+    )
 
     handle_response_errors(response, "send message to", name, resource_id)
     logger.debug(f"RAW-Response: {response.content!r}")
@@ -600,7 +611,7 @@ def listing(
     credentials: dict | None = None,
     fields: list[str] | None = None,
 ) -> Generator[Model | str, None, None]:
-    """Lists wallet related resources.
+    """List wallet related resources.
 
     It is possible to list all classes of an issuer. Parameter 'name' has to end with 'Class',
     all objects of a registered object type by it's classes resource id,
@@ -684,7 +695,7 @@ async def acreate(
     fields: list[str] | None = None,
 ) -> Model:
     """
-    Creates a Google Wallet item asynchronously. `C` in CRUD.
+    Create a Google Wallet item asynchronously. `C` in CRUD.
 
     :param data:                          Data to pass to the Google RESTful API.
                                           A model instance, has to be a registered model.
@@ -705,7 +716,7 @@ async def acreate(
     client = client_pool.async_client(credentials=credentials)
     response = await client.post(
         url=url,
-        data=verified_json.encode("utf-8"),
+        content=verified_json.encode("utf-8"),
         headers=headers,
         params=params,
     )
@@ -724,7 +735,7 @@ async def aread(
     fields: list[str] | None = None,
 ) -> Model:
     """
-    Reads a Google Wallet Class or Object asynchronously. `R` in CRUD.
+    Read a Google Wallet Class or Object asynchronously. `R` in CRUD.
 
     :param name:             Registered name of the model to use
     :param resource_id:      Identifier of the resource to read from the Google RESTful API
@@ -759,7 +770,7 @@ async def aupdate(
     partial: bool = True,
 ) -> Model:
     """
-    Updates a Google Wallet Class or Object asynchronously. `U` in CRUD.
+    Update a Google Wallet Class or Object asynchronously. `U` in CRUD.
 
     :param data:                    Data to pass to the Google RESTful API.
                                     A model instance, has to be a registered model.
@@ -781,13 +792,13 @@ async def aupdate(
     if partial:
         response = await session.patch(
             url=client_pool.url(name, f"/{resource_id}"),
-            data=verified_json.encode("utf-8"),
+            content=verified_json.encode("utf-8"),
             params=params,
         )
     else:
         response = await session.put(
             url=client_pool.url(name, f"/{resource_id}"),
-            data=verified_json.encode("utf-8"),
+            content=verified_json.encode("utf-8"),
             params=params,
         )
 
@@ -806,7 +817,7 @@ async def amessage(
     credentials: dict | None = None,
     fields: list[str] | None = None,
 ) -> Model:
-    """Sends a message to a Google Wallet Class or Object asynchronously.
+    """Send a message to a Google Wallet Class or Object asynchronously.
 
     :param name:                      Registered name of the model to use
     :param resource_id:               Identifier of the resource to send to
@@ -827,7 +838,7 @@ async def amessage(
 
     client = client_pool.async_client(credentials=credentials)
     response = await client.post(
-        url=url, data=verified_json.encode("utf-8"), params=params
+        url=url, content=verified_json.encode("utf-8"), params=params
     )
 
     handle_response_errors(response, "send message to", name, resource_id)
@@ -849,7 +860,7 @@ async def alisting(
     credentials: dict | None = None,
     fields: list[str] | None = None,
 ) -> AsyncGenerator[Model | str, None]:
-    """Lists wallet related resources asynchronously.
+    """List wallet related resources asynchronously.
 
     It is possible to list all classes of an issuer. Parameter 'name' has to end with 'Class',
     all objects of a registered object type by it's classes resource id,

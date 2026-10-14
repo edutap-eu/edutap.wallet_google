@@ -1,6 +1,4 @@
-"""
-see https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions
-"""
+"""see https://developers.google.com/wallet/generic/use-cases/use-callbacks-for-saves-and-deletions."""
 
 from .datatypes.enums import CamelCaseAliasEnum
 from pydantic import BaseModel
@@ -53,9 +51,7 @@ class CallbackData(BaseModel):
 
 
 class RootSigningPublicKey(BaseModel):
-    """
-    see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys
-    """
+    """see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys."""
 
     keyValue: str
     protocolVersion: str
@@ -63,8 +59,6 @@ class RootSigningPublicKey(BaseModel):
 
 
 class RootSigningPublicKeys(BaseModel):
-    """
-    see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys
-    """
+    """see https://developers.google.com/pay/api/android/guides/resources/payment-data-cryptography#root-signing-keys."""
 
     keys: list[RootSigningPublicKey]

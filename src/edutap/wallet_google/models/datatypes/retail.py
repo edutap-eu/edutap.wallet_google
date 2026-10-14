@@ -9,26 +9,20 @@ from .general import Uri
 
 
 class DiscoverableProgramMerchantSignupInfo(Model):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#discoverableprogrammerchantsignupinfo
-    """
+    """see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#discoverableprogrammerchantsignupinfo."""
 
     signupWebsite: Uri
     signupSharedDatas: list[SharedDataType]
 
 
 class DiscoverableProgramMerchantSigninInfo(Model):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#discoverableprogrammerchantsignininfo
-    """
+    """see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#discoverableprogrammerchantsignininfo."""
 
     signinWebsite: Uri
 
 
 class DiscoverableProgram(Model):
-    """
-    see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#discoverableprogram
-    """
+    """see: https://developers.google.com/wallet/retail/loyalty-cards/rest/v1/loyaltyclass#discoverableprogram."""
 
     merchantSignupInfo: DiscoverableProgramMerchantSignupInfo | None = None
     merchantSigninInfo: DiscoverableProgramMerchantSigninInfo | None = None

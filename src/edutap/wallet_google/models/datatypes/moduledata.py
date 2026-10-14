@@ -9,17 +9,13 @@ from .localized_string import LocalizedString
 
 
 class ModuleViewConstraints(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/ValueAddedModuleData
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/ValueAddedModuleData."""
 
     displayInterval: TimeInterval | None = None
 
 
 class ValueAddedModuleData(Model):
-    """
-    see: https://developers.google.com/wallet/reference/rest/v1/ValueAddedModuleData
-    """
+    """see: https://developers.google.com/wallet/reference/rest/v1/ValueAddedModuleData."""
 
     header: LocalizedString | None = None
     body: LocalizedString | None = None

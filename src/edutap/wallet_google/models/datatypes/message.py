@@ -10,9 +10,7 @@ from .localized_string import LocalizedString
 
 
 class Message(DeprecatedKindFieldMixin, Model):
-    """
-    see: https://developers.google.com/wallet/tickets/events/rest/v1/Message
-    """
+    """see: https://developers.google.com/wallet/tickets/events/rest/v1/Message."""
 
     # inherits kind (deprecated)
     header: str | None = None

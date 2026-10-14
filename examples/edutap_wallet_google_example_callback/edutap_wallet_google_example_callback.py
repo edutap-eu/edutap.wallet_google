@@ -11,9 +11,7 @@ app.include_router(router_callback)
 
 
 class LoggingCallbackHandler:
-    """
-    Implementation of edutap.wallet_google.protocols.CallbackHandler
-    """
+    """Implementation of edutap.wallet_google.protocols.CallbackHandler."""
 
     async def handle(
         self,

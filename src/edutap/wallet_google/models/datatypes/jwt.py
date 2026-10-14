@@ -1,6 +1,4 @@
-"""
-Models to be used to assemble the JWT for the save link (add to wallet link).
-"""
+"""Models to be used to assemble the JWT for the save link (add to wallet link)."""
 
 from ..bases import Model
 from ..passes import generic
@@ -37,7 +35,7 @@ class JWTPayload(Model):
 
 class JWTClaims(Model):
     """
-    see: https://developers.google.com/wallet/reference/rest/v1/Jwt
+    see: https://developers.google.com/wallet/reference/rest/v1/Jwt.
 
     Note: `exp` is added to the model as standard field of the JWT specification,
     see https://datatracker.ietf.org/doc/html/rfc7519#section-4.1.4,

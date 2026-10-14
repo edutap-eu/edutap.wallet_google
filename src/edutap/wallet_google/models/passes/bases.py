@@ -134,9 +134,7 @@ class ObjectModel(WithIdModel):
 
 
 class StyleableMixin:
-    """
-    Mixin for Google Wallet Classes/Objects that can be styled.
-    """
+    """Mixin for Google Wallet Classes/Objects that can be styled."""
 
     hexBackgroundColor: str | None = None
 
@@ -154,8 +152,6 @@ class CommonLogosMixin:
 
 
 class HeroImageMixin:
-    """
-    Mixin for Google Wallet Classes/Object with a hero image.
-    """
+    """Mixin for Google Wallet Classes/Object with a hero image."""
 
     heroImage: Image | None = None

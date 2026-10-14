@@ -181,6 +181,20 @@ def test_update_404_not_found(mock_session):
     assert "not found" in str(exc_info.value)
 
 
+def test_update_missing_resource_id_raises_value_error(mock_session):
+    """Test that update() raises ValueError when the resource-id field is unset.
+
+    Issuer.issuerId is `str | None`, unlike most models whose resource-id
+    field is required, so this is reachable through the public API: a
+    caller can build an Issuer without ever setting issuerId and pass it
+    to update().
+    """
+    data = new("Issuer", {"name": "Test Issuer"})
+
+    with pytest.raises(ValueError, match="resource_id"):
+        update(data)
+
+
 @respx.mock
 def test_message_generic_object(mock_session):
     """Test sending a message to a GenericObject."""

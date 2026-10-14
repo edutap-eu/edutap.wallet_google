@@ -41,7 +41,7 @@ def test_settings_cached(mock_settings):
 def test_settings_no_credentials_file(mock_settings):
     mock_settings.credentials_file = pathlib.Path("nonexistent.json")
     with pytest.raises(FileNotFoundError):
-        mock_settings.credentials_info
+        assert mock_settings.credentials_info
 
 
 def test_settings_wrong_credentials_file(mock_settings):
@@ -49,4 +49,4 @@ def test_settings_wrong_credentials_file(mock_settings):
         ROOT_DIR / "tests" / "data" / "credentials_fake_wrong.json"
     )
     with pytest.raises(ValueError):
-        mock_settings.credentials_info
+        assert mock_settings.credentials_info
