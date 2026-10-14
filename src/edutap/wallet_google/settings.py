@@ -11,6 +11,7 @@ import json
 ENV_PREFIX = "EDUTAP_WALLET_GOOGLE_"
 ROOT_DIR = Path(__file__).parent.parent.parent.parent.resolve()
 API_URL = "https://walletobjects.googleapis.com/walletobjects/v1"
+BATCH_URL = "https://walletobjects.googleapis.com/batch"
 SAVE_URL = "https://pay.google.com/gp/v/save"
 SCOPES = ["https://www.googleapis.com/auth/wallet_object.issuer"]
 
@@ -33,6 +34,12 @@ class Settings(BaseSettings):
     )
 
     api_url: AnyHttpUrl = AnyHttpUrl(API_URL)
+    # Must be overridden together with `api_url`: they point at two different hosts
+    # by default (`walletobjects.googleapis.com/walletobjects/v1` vs.
+    # `walletobjects.googleapis.com/batch`). Overriding `api_url` alone moves the
+    # sub-request paths that Batch builds but leaves the batch endpoint itself on
+    # Google's real host.
+    batch_url: AnyHttpUrl = AnyHttpUrl(BATCH_URL)
     save_url: AnyHttpUrl = AnyHttpUrl(SAVE_URL)
 
     handler_prefix: str = "/wallet/google"

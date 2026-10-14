@@ -54,6 +54,48 @@ All functions use persistent, pooled HTTP clients managed by the `ClientPoolMana
 - `new()` is synchronous for both - it just creates model instances
 - `save_link()` is synchronous for both - it uses synchronous JWT signing and should not be awaited
 
+### Batch Requests
+
+`Batch` collects updates and sends them as a single `multipart/mixed` API call, following
+the mechanism documented at
+[Google's performance tips](https://developers.google.com/wallet/generic/resources/performance-tips).
+A batch appears to count as a single call against the Wallet API's
+[per-call rate limit](https://developers.google.com/wallet/generic/resources/faq), so a
+hundred updates cost what one update costs. This is an operational finding from running
+the real system, not something Google documents or guarantees.
+`Batch`, `BatchResult` and `BatchError` are re-exported on the `api` module, so
+`api.Batch()`, `api.BatchResult` and `api.BatchError` work without a separate import.
+
+```python
+from edutap.wallet_google import api
+
+batch = api.Batch()
+batch.add_create(
+    "LoyaltyObject",
+    {"id": "issuer.member-3", "classId": "issuer.loyalty-class", "state": "ACTIVE"},
+)
+batch.add_update("LoyaltyObject", {"id": "issuer.member-1", "state": "EXPIRED"})
+results = batch.execute()
+```
+
+`add_create()`/`add_creates()` add a `POST` for a new object and `add_update()`/
+`add_updates()` add a `PATCH` for an existing one; both fit in the same batch, since the
+HTTP method travels with each sub-request. The two validate differently: `add_create()`
+checks the payload against the **full** model, because a new object must supply its
+required fields, while `add_update()` relaxes that requirement, since a `PATCH` carrying
+two changed attributes has no reason to also supply `classId`.
+
+```{eval-rst}
+.. currentmodule:: edutap.wallet_google.batch
+
+.. autosummary::
+   :toctree: _autosummary
+
+   Batch
+   BatchResult
+   BatchError
+```
+
 ## Models
 
 ### Base Models

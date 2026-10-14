@@ -27,8 +27,20 @@ my_pass = api.new("GenericObject", {...})
 result = await api.acreate(my_pass)
 link = api.save_link([my_pass])  # save_link is sync, not awaited
 ```
+
+Batch updates:
+```python
+from edutap.wallet_google import api
+
+batch = api.Batch()
+batch.add_update("LoyaltyObject", {"id": "issuer.member-1", "state": "EXPIRED"})
+results = batch.execute()  # or `await batch.aexecute()`
+```
 """
 
+from .batch import Batch
+from .batch import BatchError
+from .batch import BatchResult
 from .clientpool import client_pool
 from .credentials import credentials_manager
 from .models.bases import make_partial_model
@@ -67,6 +79,9 @@ logger = logging.getLogger(__name__)
 
 
 __all__ = [
+    "Batch",
+    "BatchError",
+    "BatchResult",
     "new",
     "save_link",
     "create",
